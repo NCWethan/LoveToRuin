@@ -323,6 +323,10 @@ Elric is a traveling adventurer with no fixed home.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
 4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time** — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
+   - **The corrupted boss:** the **3rd fragment's** power has twisted something in the area into a monster. Elric and Hop fight it, but it **overpowers them** — this is a fight they can't win.
+   - **Hop takes the hit:** the next attack is aimed at Elric. **Hop jumps in front of it** and is badly hurt.
+   - **Hopkuna erupts:** tattoos spread, the red tint washes over Hop's body, and Hopkuna **wipes out the boss in seconds**. Terrifying — but Hopkuna technically **saved Elric's life**, which makes "Go with Hop" a genuinely tempting choice.
+   - Elric is still shaken when the Corps arrives.
 5. **The route choice ends Chapter 1.** Right after the reveal, the full **REVOLUTION Corps** finds Elric and asks what Elric wants to do (see [The route choice](#the-route-choice)). The player knows exactly what "Go with Hop" means. Chapters 2–4 play out differently depending on the answer.
 
 #### The tutorial fight: Eggo & BigJoe6 *(proposed — open to changes)*
@@ -405,7 +409,8 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
-- What puts Hop in genuine danger at the Chapter 1 climax?
+- What is the corrupted boss at the Chapter 1 climax (what did the 3rd fragment twist into a monster)?
+- Which real places between Westview and Mt. Carmel appear in Chapter 1?
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
