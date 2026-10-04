@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cn2nw18jh73gj" path="res://art/soul.png" id="1_ip7xm"]
 [ext_resource type="Script" uid="uid://bc66us2nowxvc" path="res://scripts/soul.gd" id="2_oxp8w"]
+[ext_resource type="Script" uid="uid://bhu143leuc21b" path="res://scripts/battle_box.gd" id="3_7sfm4"]
 
 [node name="Battle" type="Node2D" unique_id=566058373]
 
@@ -9,3 +10,6 @@
 position = Vector2(316, 243)
 texture = ExtResource("1_ip7xm")
 script = ExtResource("2_oxp8w")
+
+[node name="BattleBox" type="Node2D" parent="." unique_id=1446072159]
+script = ExtResource("3_7sfm4")
