@@ -4,6 +4,9 @@ extends Node
 ## and has helpers every scene uses: dialogue, fades, sounds, battles and saving.
 
 const SAVE_PATH := "user://save.json"
+## Automated test runs (started with --script) save here instead, so they can
+## never overwrite or delete the player's real save.
+const TEST_SAVE_PATH := "user://test_save.json"
 const TITLE_SCENE := "res://scenes/title.tscn"
 const BATTLE_SCENE := "res://battle.tscn"
 
@@ -21,6 +24,9 @@ var money: int = 0
 const MAX_ITEMS := 8
 ## Story progress, e.g. flags["met_hop"] = true.
 var flags: Dictionary = {}
+
+## Where the game is saved (see TEST_SAVE_PATH).
+var save_path: String = SAVE_PATH
 
 ## True while a cutscene, dialogue or menu is running (the player can't walk).
 var busy: bool = false
@@ -45,6 +51,8 @@ var _sounds: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	if OS.get_cmdline_args().has("--script"):
+		save_path = TEST_SAVE_PATH
 	_add_input_actions()
 
 	_sounds = Sfx.make_all()
@@ -183,7 +191,7 @@ func continue_after_game_over() -> void:
 # --- Saving and loading ---------------------------------------------------
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path)
 
 
 func save_game(scene_path: String, at: Vector2) -> void:
@@ -198,7 +206,7 @@ func save_game(scene_path: String, at: Vector2) -> void:
 		"items": items,
 		"party": party.map(func(m: PartyMember) -> Dictionary: return {"name": m.name, "hp": m.hp}),
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	file.store_string(JSON.stringify(data, "  "))
 
 
@@ -236,7 +244,7 @@ func load_game() -> void:
 func _read_save() -> Dictionary:
 	if not has_save():
 		return {}
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(save_path))
 	return parsed if parsed is Dictionary else {}
 
 
