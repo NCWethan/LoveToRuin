@@ -24,6 +24,9 @@ var party_only: Array[String] = []
 ## and it ends, showing `survive_lines`.
 var survive_turns: int = 0
 var survive_lines: Array = []
+## If not transparent: during the enemy's turns, the screen around the box pulses
+## this color and the box glows (Hopkuna's red aura).
+var aura: Color = Color(0, 0, 0, 0)
 
 
 func flavor_text(turn: int) -> String:

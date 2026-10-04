@@ -24,6 +24,7 @@ static func make_all() -> Dictionary:
 		"crack": noise(0.12, 0.3),
 		"shatter": noise(0.35, 0.3),
 		"fragment": slide(120, 60, 0.6, 0.3),
+		"slash": slide(1600, 250, 0.14, 0.22),
 	}
 
 

@@ -227,7 +227,8 @@ func finish_battle(result: Dictionary) -> void:
 		if member.is_down():
 			member.hp = maxi(1, member.max_hp / 4)
 	busy = false
-	await change_scene(return_scene, spawn_position)
+	# (Falls back to the title screen if nobody said where to go back to.)
+	await change_scene(return_scene if return_scene != "" else TITLE_SCENE, spawn_position)
 
 
 ## After a GAME OVER: go back to the last save, or start over if there isn't one.

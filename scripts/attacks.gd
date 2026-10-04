@@ -48,6 +48,8 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 			return _red_arrows(enemy, parent, area, soul_position)
 		"burst":
 			return _burst(enemy, parent, area, soul_position)
+		"fire_arrow":
+			return _fire_arrow(enemy, parent, area)
 	return 1.0
 
 
@@ -272,70 +274,143 @@ static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 # --- Hopkuna ------------------------------------------------------------------
+# Every Hopkuna attack is aimed at where the SOUL is, shows a warning first,
+# and gets faster each turn (enemy.fury counts his turns).
 
-const HOPKUNA_RED := Color(1.0, 0.22, 0.28)
-
-
-## A straight slash: a line of marks that flashes as a warning, then cuts for a moment.
-static func _slash_line(enemy: Enemy, parent: Node, area: Rect2, from: Vector2, to: Vector2, delay: float) -> void:
-	var length := from.distance_to(to)
-	var t := 0.0
-	while t <= length:
-		var mark := _bullet(enemy, parent, area, from.lerp(to, t / length))
-		mark.size = 5.0
-		mark.color = HOPKUNA_RED
-		mark.delay = delay
-		mark.lifetime = 0.25
-		t += 7.0
+const HOPKUNA_RED := Color(1.0, 0.18, 0.25)
+const EMBER := Color(1.0, 0.45, 0.15)
 
 
-## Hopkuna: two horizontal slashes across the box.
+## How much faster Hopkuna is this turn: 1.0 at first, down to 0.65 (35% faster).
+static func _haste(enemy: Enemy) -> float:
+	return 1.0 - 0.07 * mini(enemy.fury, 5)
+
+
+static func _soul(parent: Node) -> Node2D:
+	return parent.get_node_or_null("Soul") as Node2D
+
+
+## A glowing slash across the whole box, along `direction`, through `through`.
+## A thin flickering line shows where it will land, then it cuts for a moment.
+static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, direction: Vector2, delay: float) -> void:
+	# Find where the line through `through` enters and leaves the box, so the
+	# slash reaches exactly from one wall to the other.
+	var dir := direction.normalized()
+	var inner := area.grow(-2)
+	var t_min := -INF
+	var t_max := INF
+	for axis in 2:
+		if absf(dir[axis]) < 0.0001:
+			continue
+		var t1 := (inner.position[axis] - through[axis]) / dir[axis]
+		var t2 := (inner.end[axis] - through[axis]) / dir[axis]
+		t_min = maxf(t_min, minf(t1, t2))
+		t_max = minf(t_max, maxf(t1, t2))
+	var from := through + dir * t_min
+	var to := through + dir * t_max
+
+	var beam := _bullet(enemy, parent, area, (from + to) / 2)
+	beam.shape = "beam"
+	beam.size = 9.0
+	beam.color = HOPKUNA_RED
+	beam.beam_vector = (to - from) / 2
+	beam.delay = delay
+	beam.lifetime = 0.22
+	# Beams are as long as the box is wide; keep them from being removed for "leaving" it.
+	beam.bounds = Rect2()
+
+
+## Hopkuna: CLEAVE. One slash right through the SOUL, and a second one close by.
 static func _cleave(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var first := randf_range(area.position.y + 8, area.end.y - 8)
-	var second := fposmod(first - area.position.y + area.size.y * 0.5, area.size.y - 16) + area.position.y + 8
-	for y in [first, second]:
-		_slash_line(enemy, parent, area, Vector2(area.position.x + 3, y), Vector2(area.end.x - 3, y), 0.6)
-	return 1.0
+	var soul := _soul(parent)
+	var y := soul.global_position.y if soul else area.get_center().y
+	var horizontal := randf() < 0.65
+	var warn := 0.55 * _haste(enemy)
+	if horizontal:
+		_beam(enemy, parent, area, Vector2(area.get_center().x, y), Vector2.RIGHT, warn)
+		var other_y := clampf(y + (36.0 if randf() < 0.5 else -36.0), area.position.y + 6, area.end.y - 6)
+		_beam(enemy, parent, area, Vector2(area.get_center().x, other_y), Vector2.RIGHT, warn + 0.2)
+	else:
+		var x := soul.global_position.x if soul else area.get_center().x
+		_beam(enemy, parent, area, Vector2(x, area.get_center().y), Vector2.DOWN, warn)
+		var other_x := clampf(x + (36.0 if randf() < 0.5 else -36.0), area.position.x + 6, area.end.x - 6)
+		_beam(enemy, parent, area, Vector2(other_x, area.get_center().y), Vector2.DOWN, warn + 0.2)
+	return 0.9 * _haste(enemy)
 
 
-## Hopkuna: a crisscross of slashes, some across and some up-and-down.
+## Hopkuna: SLASH GRID. Three slashes cross right where the SOUL is (across, down,
+## and diagonal), each a beat after the last, so you have to keep moving.
 static func _slash_grid(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	for i in 3:
-		if randf() < 0.5:
-			var y := randf_range(area.position.y + 8, area.end.y - 8)
-			_slash_line(enemy, parent, area, Vector2(area.position.x + 3, y), Vector2(area.end.x - 3, y), 0.7)
-		else:
-			var x := randf_range(area.position.x + 8, area.end.x - 8)
-			_slash_line(enemy, parent, area, Vector2(x, area.position.y + 3), Vector2(x, area.end.y - 3), 0.7)
-	return 1.4
+	var soul := _soul(parent)
+	var at := soul.global_position if soul else area.get_center()
+	var directions := [Vector2.RIGHT, Vector2.DOWN, Vector2(1, 1 if randf() < 0.5 else -1)]
+	directions.shuffle()
+	var warn := 0.6 * _haste(enemy)
+	for i in directions.size():
+		_beam(enemy, parent, area, at, directions[i], warn + i * 0.28)
+	return 1.6 * _haste(enemy)
 
 
-## Hopkuna: arrows appear at the edge, lock onto the SOUL, then fire.
+## Hopkuna: RED ARROWS. A volley of three arrows from one spot on the edge.
+## They lock on, fire, and curve toward the SOUL for a moment.
 static func _red_arrows(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
 	var start: Vector2
 	match randi() % 3:
 		0: start = Vector2(randf_range(area.position.x, area.end.x), area.position.y + 4)
 		1: start = Vector2(area.position.x + 4, randf_range(area.position.y, area.end.y))
 		_: start = Vector2(area.end.x - 4, randf_range(area.position.y, area.end.y))
-	var arrow := _bullet(enemy, parent, area, start)
-	arrow.shape = "arrow"
-	arrow.size = 10.0
-	arrow.color = HOPKUNA_RED
-	arrow.delay = 0.35
-	arrow.velocity = (soul_position - start).normalized() * 170.0
-	return 0.5
+	var aim := (soul_position - start).normalized()
+	for spread in [-0.28, 0.0, 0.28]:
+		var arrow := _bullet(enemy, parent, area, start)
+		arrow.shape = "arrow"
+		arrow.size = 10.0
+		arrow.color = HOPKUNA_RED
+		arrow.delay = 0.35 * _haste(enemy)
+		arrow.velocity = aim.rotated(spread) * 200.0
+		arrow.homing = _soul(parent)
+		arrow.homing_time = 0.35
+		arrow.turn_rate = 2.5
+		arrow.trail_length = 6
+		arrow.glow = true
+	return 0.8 * _haste(enemy)
 
 
-## Hopkuna: a ring of shards bursts outward from one spot.
+## Hopkuna: CLOSING RING. Shards appear in a circle around the SOUL and collapse
+## inward. Two neighboring shards are missing: that gap is your way out.
 static func _burst(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
-	var center := Vector2(randf_range(area.position.x + 20, area.end.x - 20), randf_range(area.position.y + 20, area.end.y - 20))
-	if center.distance_to(soul_position) < 40:
-		center = area.get_center() + (area.get_center() - soul_position).normalized() * 40
-	for i in 10:
-		var shard := _bullet(enemy, parent, area, center)
-		shard.size = 6.0
-		shard.color = HOPKUNA_RED
+	const COUNT := 14
+	var gap := randi() % COUNT
+	for i in COUNT:
+		if i == gap or i == (gap + 1) % COUNT:
+			continue
+		var angle := i * TAU / COUNT
+		var spot := soul_position + Vector2.from_angle(angle) * 62.0
+		# Keep the shards inside the box.
+		spot = spot.clamp(area.position + Vector2(4, 4), area.end - Vector2(4, 4))
+		var shard := _bullet(enemy, parent, area, spot)
 		shard.shape = "star"
-		shard.delay = 0.5
-		shard.velocity = Vector2.from_angle(i * TAU / 10 + randf() * 0.3) * 100.0
-	return 1.5
+		shard.size = 7.0
+		shard.color = HOPKUNA_RED
+		shard.delay = 0.65 * _haste(enemy)
+		shard.velocity = (soul_position - spot).normalized() * 115.0
+		shard.trail_length = 5
+		shard.glow = true
+	return 1.6 * _haste(enemy)
+
+
+## Hopkuna: FLAMING ARROW. One big burning arrow that chases the SOUL before it commits.
+static func _fire_arrow(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var x := randf_range(area.position.x + 10, area.end.x - 10)
+	var arrow := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
+	arrow.shape = "arrow"
+	arrow.size = 15.0
+	arrow.damage = enemy.attack + 1
+	arrow.color = EMBER
+	arrow.delay = 0.4 * _haste(enemy)
+	arrow.velocity = Vector2(0, 150)
+	arrow.homing = _soul(parent)
+	arrow.homing_time = 1.1
+	arrow.turn_rate = 2.2
+	arrow.trail_length = 12
+	arrow.glow = true
+	return 1.1 * _haste(enemy)

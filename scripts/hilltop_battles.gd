@@ -14,6 +14,7 @@ static func create(id: String) -> BattleData:
 	data.party_only.assign(["Elric"])
 	data.player_first = false
 	data.survive_turns = SURVIVE_TURNS
+	data.aura = Color(0.95, 0.1, 0.18)
 	data.intro = [
 		"* Hopkuna attacks!",
 		"* (Hop isn't here to fight beside you.\n*  You're on your own.)",
@@ -45,7 +46,7 @@ static func _hopkuna() -> Enemy:
 	e.name = "Hopkuna"
 	e.max_hp = 9999
 	e.hp = 9999
-	e.attack = 4
+	e.attack = 6
 	e.defense = 999
 	e.position = Vector2(470, 140)
 	e.sprite = load("res://art/sprites/hopkuna.png")
@@ -69,7 +70,7 @@ static func _hopkuna() -> Enemy:
 			],
 		},
 	]
-	e.patterns = ["cleave", "red_arrows", "slash_grid", "burst"]
+	e.patterns = ["cleave", "red_arrows", "slash_grid", "burst", "fire_arrow"]
 	e.taunts = ["Run, little wanderer.", "Is that all?", "Hop can't hear you.", "Give me the fragments.", "Finally. FREE."]
 	e.spare_refusal = "* You can't spare Hopkuna.\n* He isn't fighting the way you are."
 	e.hit_line = "* It barely leaves a mark."

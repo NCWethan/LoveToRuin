@@ -37,6 +37,8 @@ var bullet_speed: float = 100.0
 var spare_refusal: String = ""
 ## If set, shown after every FIGHT hit (e.g. "It barely leaves a mark.").
 var hit_line: String = ""
+## How many turns this enemy has attacked so far (some attacks speed up over time).
+var fury: int = 0
 
 ## Lines that can appear in the text box at the start of the player's turn.
 var flavor_lines: Array[String] = []

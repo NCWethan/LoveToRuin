@@ -534,6 +534,7 @@ func _start_enemy_turn() -> void:
 		_spawn_timers[enemy] = 0.0
 		_spawn_steps[enemy] = 0
 		_turn_patterns[enemy] = _pick_pattern(enemy)
+		enemy.fury = enemy_turn - 1
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
 
@@ -591,8 +592,11 @@ func _check_hits() -> void:
 
 	for child in get_children():
 		var bullet := child as Bullet
-		if bullet and bullet.get_hitbox().intersects(soul_hitbox):
-			bullet.queue_free()
+		if bullet and bullet.hits(soul_hitbox):
+			# Slashes stay to finish their flash (the SOUL is briefly invincible
+			# after a hit, so they can't hit twice). Everything else vanishes.
+			if bullet.shape != "beam":
+				bullet.queue_free()
 			_hurt_party(bullet.damage)
 			return
 
@@ -831,6 +835,7 @@ func _draw_overlay() -> void:
 		_draw_game_over()
 		return
 
+	_draw_aura()
 	_draw_party_sprites()
 	_draw_enemies()
 	_draw_party_panel()
@@ -876,6 +881,25 @@ func _draw_enemies() -> void:
 
 		if _speech.has(enemy) and _speech[enemy] != "":
 			_draw_speech(_speech[enemy], Vector2(pos.x, top - 30))
+
+
+## Some enemies (Hopkuna) fill the screen with a pulsing aura during their turns:
+## everything around the box darkens toward their color, and the box glows.
+func _draw_aura() -> void:
+	if _data == null or _data.aura.a <= 0.0 or state != State.ENEMY_TURN:
+		return
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 180.0)
+	var frame := box.get_inner_rect().grow(box.border)
+	var screen := Rect2(0, 0, 640, 480)
+	var tint := Color(_data.aura, 0.08 + 0.08 * pulse)
+	# Four bands around the box, so the inside of the box stays clear.
+	_overlay.draw_rect(Rect2(screen.position, Vector2(640, frame.position.y)), tint)
+	_overlay.draw_rect(Rect2(0, frame.end.y, 640, 480 - frame.end.y), tint)
+	_overlay.draw_rect(Rect2(0, frame.position.y, frame.position.x, frame.size.y), tint)
+	_overlay.draw_rect(Rect2(frame.end.x, frame.position.y, 640 - frame.end.x, frame.size.y), tint)
+	# The glowing edge of the box.
+	for i in 3:
+		_overlay.draw_rect(frame.grow(2 + i * 3), Color(_data.aura, (0.45 - i * 0.13) * (0.6 + 0.4 * pulse)), false, 2.0)
 
 
 ## Draws Elric's party on the left side of the screen, facing the enemies.
