@@ -49,14 +49,14 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Ronin** | See [Ronin](#ronin) below. |
 | **Rooster** | See [Rooster](#rooster) below. |
 | **Crayola** | See [Crayola](#crayola) below. |
-| **Supreme** | |
+| **Supreme** | See [Supreme](#supreme) below. |
 | **Nat** | |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
 
 ### Eggo
 
-Pronouns: he/him · Co-founder of Revolution
+Pronouns: any/all · Co-founder of Revolution
 
 **Personality**
 - Chill.
@@ -203,6 +203,24 @@ Pronouns: he/him
 - Gray, worn pants.
 
 ![Crayola reference](art/reference/crayola.png)
+
+### Supreme
+
+Pronouns: he/him
+
+**Personality**
+- A **nerd**.
+- Loves to pull out **facts and statistics**.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/supreme.png))
+- Spiky black hair with a yellow-and-white headband/visor on top.
+- Black face mask with a little bear face on it; one glowing **purple eye** visible.
+- Navy striped scarf.
+- Yellow long-sleeve shirt with black designs on the sleeves and a big **burger** on the front.
+- Black ripped jeans.
+- Green-and-white sneakers.
+
+![Supreme reference](art/reference/supreme.png)
 
 ### Hop
 
