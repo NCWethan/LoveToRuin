@@ -458,6 +458,52 @@ const SONGS := {
 		],
 	},
 
+	# Wally Wolverine. A peppy pep-band fight song, like a halftime show
+	# that's slightly too intense. Big drums, bouncy bass, a melody you could cheer to.
+	"wally": {
+		"bpm": 152,
+		"lead": [
+			"G5 - G5 - B5 - D6 . . . B5 - G5 - A5 .",
+			"B5 . . . A5 . G5 . E5 . . . D5 . . .",
+			"C6 - C6 - C6 - B5 . A5 . . . G5 - A5 .",
+			"B5 . . . . . . . D5 - E5 - F#5 - G5 -",
+			"G5 - G5 - B5 - D6 . . . E6 - D6 - B5 .",
+			"C6 . . . B5 . A5 . G5 . . . E5 - G5 -",
+			"A5 - A5 - B5 - C6 . D6 . . . B5 - A5 .",
+			"G5 . . . D5 . . . G5 - G5 - G5 . . .",
+		],
+		"harm": [
+			"- - B4 . - - B4 . - - D5 . - - B4 .",
+			"- - G4 . - - G4 . - - E4 . - - G4 .",
+			"- - E5 . - - E5 . - - G4 . - - E5 .",
+			"- - F#4 . - - A4 . - - F#4 . - - A4 .",
+			"- - B4 . - - B4 . - - D5 . - - B4 .",
+			"- - E5 . - - E5 . - - G4 . - - E5 .",
+			"- - C5 . - - C5 . - - F#4 . - - A4 .",
+			"- - B4 . - - D5 . - - B4 . - - D5 .",
+		],
+		"bass": [
+			"G2 . D3 . G2 . D3 . G2 . D3 . G2 . D3 .",
+			"E2 . B2 . E2 . B2 . E2 . B2 . E2 . B2 .",
+			"C3 . G2 . C3 . G2 . C3 . G2 . C3 . G2 .",
+			"D3 . A2 . D3 . A2 . D3 . A2 . D3 . F#2 .",
+			"G2 . D3 . G2 . D3 . G2 . D3 . G2 . D3 .",
+			"C3 . G2 . C3 . G2 . E2 . B2 . E2 . B2 .",
+			"A2 . E3 . A2 . E3 . D3 . A2 . D3 . A2 .",
+			"G2 . D3 . G2 . D3 . G2 . G2 . G2 . . .",
+		],
+		"drums": [
+			"K - S - K K S - K - S - K K S S",
+			"K - S - K K S - K - S - K - S S",
+			"K - S - K K S - K - S - K K S S",
+			"K - S - K K S - S S S S S S S S",
+			"K - S - K K S - K - S - K K S S",
+			"K - S - K K S - K - S - K - S S",
+			"K - S - K K S - K - S - K K S S",
+			"K S K S K S K S K - K - K - - -",
+		],
+	},
+
 	# GAME OVER. Slow and somber.
 	"game_over": {
 		"bpm": 60,

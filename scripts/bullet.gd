@@ -41,6 +41,19 @@ var homing: Node2D
 var homing_time: float = 0.0
 ## How fast it can turn while homing, in radians per second.
 var turn_rate: float = 3.0
+## Rings only ("ring"): a circle of sound that grows outward from `position`.
+## `size` is how thick it is; `radius` grows by `ring_speed` each second. A gap of
+## `gap_width` radians, centered on `gap_angle`, is safe to pass through.
+var radius: float = 4.0
+var ring_speed: float = 60.0
+var gap_angle: float = 0.0
+var gap_width: float = 0.0
+## Clappers only ("clapper"): a bell clapper hanging from `position`, swinging back
+## and forth by `swing_amplitude` radians, `swing_length` pixels long.
+var swing_amplitude: float = 1.0
+var swing_speed: float = 2.5
+var swing_length: float = 100.0
+var _swing_angle: float = 0.0
 ## How many past positions to draw as a glowing trail (0 = no trail).
 var trail_length: int = 0
 ## Draws a soft glow around the bullet.
@@ -85,6 +98,17 @@ func _process(delta: float) -> void:
 		var wanted := (homing.global_position - global_position).angle()
 		var turn := clampf(angle_difference(velocity.angle(), wanted), -turn_rate * delta, turn_rate * delta)
 		velocity = velocity.rotated(turn)
+
+	if shape == "ring":
+		radius += ring_speed * delta
+		if radius > 260.0:
+			queue_free()
+		queue_redraw()
+		return
+	if shape == "clapper":
+		_swing_angle = sin((_time - delay) * swing_speed) * swing_amplitude
+		queue_redraw()
+		return
 
 	velocity += acceleration * delta
 	position += velocity * delta
@@ -139,6 +163,17 @@ func get_hitbox() -> Rect2:
 func hits(rect: Rect2) -> bool:
 	if not is_armed():
 		return false
+	if shape == "ring":
+		var offset := rect.get_center() - global_position
+		if absf(offset.length() - radius) > size * 0.5 + rect.size.x * 0.5:
+			return false
+		# Inside the gap? Then it's safe.
+		return gap_width <= 0.0 or absf(angle_difference(offset.angle(), gap_angle)) > gap_width / 2
+	if shape == "clapper":
+		var center := rect.get_center()
+		var tip := _clapper_tip()
+		var closest := Geometry2D.get_closest_point_to_segment(center, global_position, tip)
+		return closest.distance_to(center) < 3.0 + rect.size.x * 0.5 or tip.distance_to(center) < size + rect.size.x * 0.5
 	if shape == "beam":
 		var center := rect.get_center()
 		var closest := Geometry2D.get_closest_point_to_segment(center, global_position - beam_vector, global_position + beam_vector)
@@ -160,6 +195,29 @@ func _draw() -> void:
 		draw_circle(Vector2.ZERO, size * 0.7, Color(color, 0.25))
 
 	match shape:
+		"ring":
+			# A ring of sound, drawn as an arc that skips the gap.
+			# Only the parts inside the box are drawn.
+			var segments := 64
+			for k in segments:
+				var a0 := gap_angle + gap_width / 2 + (TAU - gap_width) * k / segments
+				var a1 := gap_angle + gap_width / 2 + (TAU - gap_width) * (k + 1) / segments
+				var p0 := Vector2.from_angle(a0) * radius
+				var p1 := Vector2.from_angle(a1) * radius
+				if bounds.has_area() and not bounds.has_point(global_position + (p0 + p1) / 2):
+					continue
+				draw_line(p0, p1, Color(color, 0.3), size * 2.0)
+				draw_line(p0, p1, color, size * 0.7)
+		"clapper":
+			# The bell's clapper: a rod with a heavy ball on the end.
+			var tip := _clapper_tip() - global_position
+			if not is_armed():
+				draw_line(Vector2.ZERO, tip, Color(color, 0.6), 1.0)
+			else:
+				draw_line(Vector2.ZERO, tip, Color(0.3, 0.3, 0.32), 4.0)
+				draw_circle(tip, size + 3.0, Color(color, 0.25))
+				draw_circle(tip, size, color)
+				draw_circle(tip + Vector2(-size * 0.3, -size * 0.3), size * 0.35, Color(1, 1, 1, 0.6))
 		"beam":
 			if not is_armed():
 				# The warning: a thin line showing exactly where the slash will land.
@@ -218,6 +276,11 @@ func _draw() -> void:
 			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)
 		_:
 			draw_rect(Rect2(-half, -half, size, size), color)
+
+
+## Where the end of a clapper is right now, in screen coordinates.
+func _clapper_tip() -> Vector2:
+	return global_position + Vector2.DOWN.rotated(_swing_angle) * swing_length
 
 
 ## False while the bullet is still just a warning.

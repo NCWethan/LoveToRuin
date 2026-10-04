@@ -56,6 +56,13 @@ var _beam_time: float = 0.0
 var _beam_target: Vector2
 ## While above 0, sparks and flames fly around Hopkuna.
 var _spark_time: float = 0.0
+## While above 0, NCWethan's lightning / Ronin's fire stream into Hopkuna.
+var _lightning_time: float = 0.0
+var _fire_time: float = 0.0
+## While above 0, NCWethan is zapping everyone in his group hug.
+var _hug_zap_time: float = 0.0
+var _hug_center: Vector2
+var _fx: Node2D
 
 
 func _ready() -> void:
@@ -72,6 +79,15 @@ func _ready() -> void:
 	_decor.draw.connect(_draw_decor)
 	# Drawn just above the ground but below everyone walking around.
 	move_child(_decor, world.get_index())
+
+	# Effects that glow on top of everyone, unaffected by the night tint (they're on
+	# their own layer, which still scrolls with the camera).
+	var fx_layer := CanvasLayer.new()
+	fx_layer.follow_viewport_enabled = true
+	add_child(fx_layer)
+	_fx = Node2D.new()
+	fx_layer.add_child(_fx)
+	_fx.draw.connect(_draw_fx)
 
 	_place_people()
 	world.add_child(Hotspot.create(Vector2(110, 96), _read_map))
@@ -110,7 +126,11 @@ func _process(delta: float) -> void:
 	_time += delta
 	_beam_time = maxf(_beam_time - delta, 0.0)
 	_spark_time = maxf(_spark_time - delta, 0.0)
+	_lightning_time = maxf(_lightning_time - delta, 0.0)
+	_fire_time = maxf(_fire_time - delta, 0.0)
+	_hug_zap_time = maxf(_hug_zap_time - delta, 0.0)
 	_decor.queue_redraw()
+	_fx.queue_redraw()
 
 
 func _draw_decor() -> void:
@@ -147,13 +167,78 @@ func _draw_decor() -> void:
 		_decor.draw_line(CRATER, _beam_target, Color(1, 0.2, 0.25, 0.9), 8.0)
 		_decor.draw_line(CRATER, _beam_target, Color(1, 0.8, 0.8), 3.0)
 
-	# Lightning and fire from the Corps.
+
+
+## Effects drawn on top of everyone: the Corps' lightning and fire, and the group hug zap.
+func _draw_fx() -> void:
+	# NCWethan's lightning and Ronin's fire.
+	if _lightning_time > 0.0 and hop and corps.has("NCWethan"):
+		_draw_lightning(corps["NCWethan"].position + Vector2(0, -20), hop.position + Vector2(0, -16), _lightning_time)
+	if _fire_time > 0.0 and hop and corps.has("Ronin"):
+		_draw_fire(corps["Ronin"].position + Vector2(0, -18), hop.position + Vector2(0, -16), _fire_time)
+	# Sparks where they hit.
 	if _spark_time > 0.0 and hop:
 		for i in 14:
 			var dir := Vector2.from_angle(randf() * TAU)
 			var color := Color(0.5, 0.85, 1.0) if i % 2 == 0 else Color(1.0, 0.55, 0.15)
 			var from := hop.position + Vector2(0, -16) + dir * randf_range(6, 16)
-			_decor.draw_line(from, from + dir * randf_range(6, 14), color, 2.0)
+			_fx.draw_line(from, from + dir * randf_range(6, 14), color, 2.0)
+	# The group hug: little bolts crackling all over the huddle.
+	if _hug_zap_time > 0.0:
+		var fade := clampf(_hug_zap_time / 0.3, 0.0, 1.0)
+		_fx.draw_circle(_hug_center, 46.0, Color(0.6, 0.9, 1.0, 0.18 * fade))
+		for i in 12:
+			var start := _hug_center + Vector2(randf_range(-36, 36), randf_range(-40, 4))
+			var points := PackedVector2Array([start])
+			for s in 3:
+				points.append(points[-1] + Vector2(randf_range(-8, 8), randf_range(-9, 9)))
+			_fx.draw_polyline(points, Color(0.6, 0.92, 1.0, fade), 3.0)
+			_fx.draw_polyline(points, Color(1, 1, 1, fade), 1.0)
+
+
+## A crackling bolt from `from` to `to`: a jagged line that re-forks every frame,
+## with a cyan glow, a white-hot core, little side branches, and flashes at both ends.
+func _draw_lightning(from: Vector2, to: Vector2, left: float) -> void:
+	var fade := clampf(left / 0.3, 0.0, 1.0)
+	var points := PackedVector2Array([from])
+	var steps := 9
+	var side := (to - from).orthogonal().normalized()
+	for i in range(1, steps):
+		var along := from.lerp(to, float(i) / steps)
+		points.append(along + side * randf_range(-11.0, 11.0))
+	points.append(to)
+	var cyan := Color(0.45, 0.85, 1.0)
+	_fx.draw_polyline(points, Color(cyan, 0.3 * fade), 14.0)
+	_fx.draw_polyline(points, Color(cyan, fade), 5.0)
+	_fx.draw_polyline(points, Color(1, 1, 1, fade), 2.0)
+	# Branches that fork off and fizzle.
+	for i in range(2, steps - 1, 2):
+		var start := points[i]
+		var branch := start + (to - from).normalized().rotated(randf_range(-1.2, 1.2)) * randf_range(10, 22)
+		_fx.draw_line(start, branch, Color(cyan, 0.8 * fade), 1.5)
+	for end in [from, to]:
+		_fx.draw_circle(end, 7.0 + randf() * 4.0, Color(cyan, 0.35 * fade))
+		_fx.draw_circle(end, 3.0, Color(1, 1, 1, fade))
+
+
+## A roaring stream of fire from `from` to `to`: flame blobs racing along a wavy
+## path, big and yellow near Ronin, smaller and redder as they fly, bursting on impact.
+func _draw_fire(from: Vector2, to: Vector2, left: float) -> void:
+	var fade := clampf(left / 0.3, 0.0, 1.0)
+	var side := (to - from).orthogonal().normalized()
+	for k in 22:
+		var t := fmod(_time * 1.8 + k / 22.0, 1.0)
+		var wobble := sin(t * 9.0 + k) * 7.0 * sin(t * PI)
+		var at := from.lerp(to, t) + side * wobble
+		var size := lerpf(7.0, 3.0, t) + (k % 3)
+		var color := Color(1.0, 0.9, 0.3).lerp(Color(1.0, 0.25, 0.1), t)
+		_fx.draw_circle(at, size * 1.8, Color(color, 0.25 * fade))
+		_fx.draw_circle(at, size, Color(color, 0.9 * fade))
+	# Flames licking up off the target.
+	for k in 8:
+		var flick := fmod(_time * 3.0 + k * 0.125, 1.0)
+		var at := to + Vector2((k - 3.5) * 4.0, -flick * 22.0)
+		_fx.draw_circle(at, 4.0 * (1.0 - flick), Color(1.0, 0.5 + 0.4 * (1.0 - flick), 0.15, 0.8 * fade))
 
 
 ## A sprinkler head in the middle of a corner of the field, sweeping a fan of
@@ -250,6 +335,8 @@ func _place_people() -> void:
 		hop.position = Vector2(150, 140) if Game.flags.get("route") != "genocide" else player.position + Vector2(-20, -4)
 		if Game.flags.get("route") == "genocide":
 			hop.follow = player
+		hop.on_interact = _talk_to_hop_after
+		hop.add_to_group("interactable")
 		return
 
 	if flag("hp_erupted") and not flag("has_fragment_3"):
@@ -458,12 +545,29 @@ func _corps_arrives() -> void:
 		{"who": "Supreme", "text": "Ten. Elric can barely stand.", "mood": "shocked"},
 		{"who": "Agent", "text": "Eleven. Keep up."},
 		{"who": "NCWethan", "text": "LIGHTNING TIME!!!", "mood": "happy"},
-		{"who": "Ronin", "text": "FIRE TIME!!!", "mood": "angry"},
 	])
+	# NCWethan's lightning arcs into Hopkuna...
+	_lightning_time = 1.3
+	Game.play_sfx("zap")
+	shake(4.0, 0.5)
+	await get_tree().create_timer(0.35).timeout
+	Game.play_sfx("zap", 1.3)
+	await get_tree().create_timer(1.0).timeout
+	await Game.dialogue.say([{"who": "Ronin", "text": "FIRE TIME!!!", "mood": "angry"}])
+	# ...then Ronin's fire roars in...
+	_fire_time = 1.3
+	Game.play_sfx("shatter")
+	shake(4.0, 0.6)
+	await get_tree().create_timer(1.3).timeout
+	# ...and then both at once.
+	await Game.dialogue.say([{"who": "NCWethan", "text": "TOGETHER!!!", "mood": "happy"}])
+	_lightning_time = 1.4
+	_fire_time = 1.4
 	_spark_time = 1.4
 	Game.play_sfx("hit")
+	Game.play_sfx("zap", 0.8)
 	shake(8.0, 1.0)
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(1.4).timeout
 	await Game.dialogue.say([
 		"* (A storm of sparks and flame slams into Hopkuna.)",
 		"* (He barely moves. But he isn't smiling anymore.)",
@@ -558,7 +662,11 @@ func _ending_pacifist() -> void:
 		{"who": "BigJoe6", "text": "Then welcome to the REVOLUTION Corps.", "mood": "happy"},
 		{"who": "Eggo", "text": "membership: a lot more than two now.", "mood": "happy"},
 		{"who": "NCWethan", "text": "GROUP HUG!!!", "mood": "happy"},
+	])
+	await _group_hug()
+	await Game.dialogue.say([
 		"* (NCWethan hugs everyone at once.\n*  There is a small electrical shock.)",
+		{"who": "Rooster", "text": "...My hair is standing up. My HAIR.", "mood": "angry"},
 		{"who": "Hop", "text": "...You'd still want me around?\nAfter all that?", "mood": "sad"},
 		{"who": "Elric", "text": "...You saved me. We'll save you."},
 		{"who": "Hop", "text": "...Okay. Okay.", "mood": "happy"},
@@ -567,6 +675,34 @@ func _ending_pacifist() -> void:
 		{"who": "Agent", "text": "Good. You're smarter than you look.\n...That's a compliment. Take it.", "mood": "smug"},
 		{"who": "Nassan", "text": "Nine fragments left. Let's find them before he does."},
 	])
+
+
+## NCWethan yanks everyone into one big huddle around him, zaps them all, and
+## they bounce back to where they were standing.
+func _group_hug() -> void:
+	var center: Vector2 = corps["NCWethan"].position if corps.has("NCWethan") else player.position
+	var people: Array[Node2D] = [player, hop]
+	for who in corps:
+		if who != "NCWethan":
+			people.append(corps[who])
+	var home: Array[Vector2] = []
+	var pull := create_tween().set_parallel()
+	for i in people.size():
+		home.append(people[i].position)
+		var spot := center + Vector2.from_angle(i * TAU / people.size()) * Vector2(24, 12)
+		pull.tween_property(people[i], "position", spot, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	await pull.finished
+	_hug_center = center
+	_hug_zap_time = 0.9
+	Game.play_sfx("zap")
+	shake(3.0, 0.5)
+	await get_tree().create_timer(0.3).timeout
+	Game.play_sfx("zap", 1.4)
+	await get_tree().create_timer(0.6).timeout
+	var release := create_tween().set_parallel()
+	for i in people.size():
+		release.tween_property(people[i], "position", home[i], 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	await release.finished
 
 
 func _ending_neutral() -> void:
@@ -596,6 +732,42 @@ func _ending_genocide() -> void:
 		"* (You and Hop walk into the dark.)",
 		{"who": "Hopkuna", "tag": "???", "face": false, "text": "Good choice, little wanderer."},
 	])
+
+
+## Talking to Hop after Chapter 1 is over. What he says depends on the choice Elric made.
+func _talk_to_hop_after() -> void:
+	hop.face(player.position - hop.position)
+	match Game.flags.get("route", "neutral"):
+		"pacifist":
+			await chat("hop_after", [
+				{"who": "Hop", "text": "Hey, partner. ...Is that weird? Partner?\nI'm trying it out.", "mood": "happy"},
+				{"who": "Hop", "text": "Nassan made me a schedule. For ME.\nIt's color-coded. I'm in purple. I think it means \"danger.\"", "mood": "smug"},
+				{"who": "Hop", "text": "...Thanks for not running.", "mood": "sad"},
+				{"who": "Hop", "text": "Nine fragments left. Whenever you're ready,\nI'm ready. Probably. Mostly.", "mood": "happy"},
+			], [
+				[{"who": "Hop", "text": "NCWethan says the zap was \"bonding.\"\nMy left arm is still buzzing.", "mood": "shocked"}],
+				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "text": "...Right."}, {"who": "Hop", "text": "...Okay. Good.", "mood": "happy"}],
+				[{"who": "Hop", "text": "Agent says I'm \"statistically a liability.\"\nSupreme says Agent's math is wrong. They're still arguing.", "mood": "smug"}],
+			])
+		"genocide":
+			await chat("hop_after", [
+				{"who": "Hop", "text": "...So. Where are we going, Elric?", "mood": "sad"},
+				{"who": "Hop", "text": "They looked at me like I was him.\nMaybe they're right.", "mood": "sad"},
+				{"who": "Hopkuna", "tag": "???", "face": false, "text": "They are."},
+				{"who": "Hop", "text": "...Did you hear that? ...No? Okay.", "mood": "shocked"},
+			], [
+				[{"who": "Hop", "text": "I'll follow you. Wherever. That's the deal, right?", "mood": "sad"}],
+				[{"who": "Hop", "text": "My head's been really loud since Hilltop.", "mood": "sad"}],
+			])
+		_:
+			await chat("hop_after", [
+				{"who": "Hop", "text": "You came back. ...To think, or to stay?", "mood": "sad"},
+				{"who": "Hop", "text": "The Corps' offer is still open, you know.\nNassan wrote it down. In pen. That's serious, for him."},
+				{"who": "Hop", "text": "No pressure, mysterious traveler.\nI'll be here.", "mood": "happy"},
+			], [
+				[{"who": "Hop", "text": "Still thinking? That's okay. I think too.\nMostly about tacos.", "mood": "smug"}],
+				[{"who": "Hop", "text": "Whatever you decide... thanks. For before.", "mood": "sad"}],
+			])
 
 
 func _leave_after_chapter() -> void:

@@ -250,7 +250,7 @@ func finish_battle(result: Dictionary) -> void:
 	battle_result["random"] = battle_random
 	# A wandering enemy (or boss) you fought is gone for good. Marking it now,
 	# before the area reloads, keeps it from popping back up.
-	if not battle_random:
+	if not battle_random and not result.get("fled", false):
 		flags["beat_" + str(result.get("id", ""))] = true
 	battle_random = false
 	bond += int(result.get("bond", 0))

@@ -84,6 +84,8 @@ const WANDERERS := {
 const AFTERNOON_TALKS := 3
 
 var hop: Character
+## Everyone at the mall right now, by name.
+var people: Dictionary = {}
 
 
 func _ready() -> void:
@@ -209,6 +211,7 @@ func _place_people() -> void:
 	for who in spots:
 		var talk: Callable = day_talks[who] if time == "day" else _talk_later.bind(who)
 		var npc := add_npc(who, spots[who], talk)
+		people[who] = npc
 		var wander: Dictionary = WANDERERS.get(time, {})
 		if wander.has(who):
 			npc.patrol(wander[who][0], wander[who][1], 45.0)
@@ -623,17 +626,16 @@ func _talk_nassan() -> void:
 
 
 # --- Killing time: Rock Paper Scissors --------------------------------------
-# NCWethan and Ronin need a tiebreaker. Neither of them can hide what they're
-# about to throw, if you look closely.
+# A minigame (see rps_game.gd). NCWethan and Ronin can't hide their throws if
+# you look closely. Then Agent steps in, and he plays the odds out loud.
 
-const THROWS := ["Rock", "Paper", "Scissors"]
-
-## What each opponent throws each round, and the tell that gives it away.
+const RPS_GAME := preload("res://scripts/ui/rps_game.gd")
 const ROUNDS := [
-	["NCWethan", 0, "* (NCWethan's fist is crackling with lightning.\n*  He is NOT good at hiding it.)"],
-	["NCWethan", 2, "* (NCWethan wiggles two sparking fingers at you.\n*  Snip snip.)"],
-	["NCWethan", 1, "* (NCWethan is holding his hand out flat,\n*  like he's about to high-five the air.)"],
-	["Ronin", 2, "* (Ronin hides his hand behind his back.)\n* (...But his shadow on the ground is making a V.)"],
+	{"opponent": "NCWethan", "throw": 0, "tell": "sparks"},
+	{"opponent": "NCWethan", "throw": 2, "tell": "sparks"},
+	{"opponent": "NCWethan", "throw": 1, "tell": "sparks"},
+	{"opponent": "Ronin", "throw": 2, "tell": "shadow"},
+	{"opponent": "Agent", "throw": -1, "tell": "math"},
 ]
 
 
@@ -643,64 +645,58 @@ func _play_games() -> void:
 		{"who": "Ronin", "text": "We need a tiebreaker. He says he won checkers.\nHe did NOT win checkers.", "mood": "angry"},
 		{"who": "NCWethan", "text": "So we're settling it with the most scientific\ngame ever invented!!", "mood": "happy"},
 		{"who": "NCWethan", "text": "ROCK!! PAPER!! SCISSORS!!", "mood": "happy"},
-		{"who": "Ronin", "text": "Three rounds against him, then one against me.\nBeat us both and you're the champion.", "mood": "smug"},
-		{"who": "Hop", "text": "I'll hold your stuff. And judge. Mostly judge.", "mood": "happy"},
+		{"who": "Agent", "tag": "???", "face": false, "text": "Scientific. Sure."},
 	])
-	var wins := 0
-	for i in ROUNDS.size():
-		var opponent: String = ROUNDS[i][0]
-		var their_throw: int = ROUNDS[i][1]
-		await Game.dialogue.say([
-			"* (Round %d. You face %s.)" % [i + 1, opponent],
-			ROUNDS[i][2],
-		])
-		var mine := await Game.dialogue.ask({"who": opponent, "text": "ROCK... PAPER... SCISSORS... SHOOT!!"}, THROWS)
-		var result := _rps(mine, their_throw)
-		var line := "* (You throw %s. %s throws %s.)" % [THROWS[mine].to_upper(), opponent, THROWS[their_throw].to_upper()]
-		if result > 0:
-			wins += 1
-			Game.play_sfx("select")
-			await Game.dialogue.say([line, "* (You win the round!)"])
-		elif result == 0:
-			await Game.dialogue.say([line, "* (A tie.)"])
-		else:
-			Game.play_sfx("miss")
-			await Game.dialogue.say([line, "* (You lose the round.)"])
+	# Agent strolls over from the empty store.
+	if people.has("Agent"):
+		await people["Agent"].walk_to(Vector2(470, 220), 150.0)
+		people["Agent"].face(Vector2.DOWN)
+	await Game.dialogue.say([
+		{"who": "Agent", "text": "Rock Paper Scissors is a game of probability.\nYou two are playing it like a game of yelling.", "mood": "smug"},
+		{"who": "Agent", "text": "Three rounds against NCWethan. One against Ronin.\nThen me. I don't lose. I calculate."},
+		{"who": "Hop", "text": "I'll hold your stuff. And judge. Mostly judge.", "mood": "happy"},
+		"* (Watch your opponent closely. Pick a throw with LEFT/RIGHT.\n*  Press ENTER to start the countdown.)",
+	])
+	var game = RPS_GAME.new()
+	add_child(game)
+	var wins: int = await game.play(ROUNDS)
+	var beat_agent: bool = game._result == 1
+	game.queue_free()
 
 	Game.flags["played_games"] = true
 	Game.flags["rps_wins"] = wins
 	if wins == ROUNDS.size():
 		Game.flags["rps_champion"] = true
 		await Game.dialogue.say([
-			{"who": "NCWethan", "text": "FOUR FOR FOUR?! Are you PSYCHIC?!", "mood": "shocked"},
+			{"who": "NCWethan", "text": "FIVE FOR FIVE?! Are you PSYCHIC?!", "mood": "shocked"},
 			{"who": "Ronin", "text": "...How did you know? I hid my hand.\nI hid it PERFECTLY.", "mood": "shocked"},
+			{"who": "Agent", "text": "...", "mood": "shocked"},
+			{"who": "Agent", "text": "You read my reasoning and countered it.\nThat's... a 0.4% outcome. I ran it twice.", "mood": "shocked"},
+			{"who": "Agent", "text": "Fine. You're smart. Second smartest here.", "mood": "smug"},
 			{"who": "Hop", "text": "Elric's the champion! Bow before the champion!", "mood": "happy"},
-			{"who": "Ronin", "text": "Fine. Loser buys the curly fries. Here.", "mood": "sad"},
+			{"who": "Ronin", "text": "Loser buys the curly fries. ...That's me. Here.", "mood": "sad"},
 		])
 		if Game.items.size() < Game.MAX_ITEMS:
 			Game.items.append({"name": "Curly Fries", "heal": 20})
 			Game.play_sfx("item")
 			await Game.dialogue.say(["* (You got the Curly Fries.)"])
 	else:
-		await Game.dialogue.say([
-			{"who": "NCWethan", "text": "%d out of 4! Not bad, new person!" % wins, "mood": "happy"},
-			{"who": "Ronin", "text": "Rematch. We need a rematch.\nBest of... a hundred.", "mood": "angry"},
-		])
+		var lines: Array = [{"who": "NCWethan", "text": "%d out of 5! Not bad, new person!" % wins, "mood": "happy"}]
+		if beat_agent:
+			lines.append({"who": "Agent", "text": "You beat me. Statistically, that was luck.\n...I'm going to be thinking about it all day.", "mood": "angry"})
+		else:
+			lines.append({"who": "Agent", "text": "As calculated. I told you exactly what I'd do.\nYou just had to do the math.", "mood": "smug"})
+		lines.append({"who": "Ronin", "text": "Rematch. We need a rematch.\nBest of... a hundred.", "mood": "angry"})
+		await Game.dialogue.say(lines)
 	await Game.dialogue.say([
 		{"who": "Hop", "text": "Oh no. They're doing best of a hundred.", "mood": "shocked"},
+		{"who": "Agent", "text": "A best of a hundred takes about three hours.\nPerfect. It'll be dark by then."},
 		{"who": "Hop", "text": "...Well. We DID have time to kill.", "mood": "smug"},
 		"* (You play. And play. And play.)",
-		"* (Hop loses eleven games of checkers in a row\n*  and blames the board.)",
+		"* (Agent keeps score in his head. He's never wrong.\n*  Hop loses eleven games of checkers and blames the board.)",
 		"* (The shadows in the parking lot get longer.)",
 	])
 	await _pass_time("afternoon")
-
-
-## +1 if `mine` beats `theirs`, 0 for a tie, -1 if it loses.
-func _rps(mine: int, theirs: int) -> int:
-	if mine == theirs:
-		return 0
-	return 1 if (mine - theirs + 3) % 3 == 1 else -1
 
 
 # --- The day goes on ---------------------------------------------------------

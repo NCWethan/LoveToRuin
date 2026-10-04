@@ -47,7 +47,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Nat** | By the bench near Jack in the Box | **Lore:** the old story of twelve fragments and Hopkuna, with the last page torn out. Hop goes still. |
 | **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. |
 
-**The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. NCWethan yells for a third player, and he and Ronin rope Elric into **Rock Paper Scissors** (3 rounds vs. NCWethan, 1 vs. Ronin). Neither can hide their throw: NCWethan's fist crackles, his fingers go "snip snip", and Ronin's *shadow* gives his away. Win all four and Ronin pays up with Curly Fries. Then hours pass:
+**The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. NCWethan yells for a third player, and Elric gets roped into a **Rock Paper Scissors minigame** (drawn hands, a "ROCK... PAPER... SCISSORS... SHOOT!" countdown, a score). Three rounds vs. NCWethan, whose lightning crackles in the *shape* of his throw; one vs. Ronin, who hides his hand but not his *shadow*; and a final round vs. **Agent**, who counts every throw you've made, says the odds out loud, and always plays the counter to your most likely throw. Follow his math and you can beat him. Win all five and Ronin pays up with Curly Fries. Then hours pass:
 - **Afternoon** (golden light): everyone has moved. Supreme does "field research" at Jack in the Box, Crayola and MuffinMage play a made-up card game, Rooster power-walks laps, Sansworth checks every car. Talking to three people makes the sky go orange.
 - **Evening** (pink): shops close, people say goodbye, and Nassan waves Elric over. Talking to him brings nightfall.
 - **Night** (blue): only NCWethan, Ronin (stargazing), Nat and Nassan are left. The road east finally opens. Trying to leave before dark, Hop stops you.
@@ -538,6 +538,9 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] FIGHT: a "READY..." wind-up before the timing bar moves, colored zones (green = CRITICAL), a slash animation, white hit flash, bouncing damage numbers and draining HP bars
 - [x] Bigger HP bars
 - [x] Hop attacks differently from Elric: three fast punches with red shockwaves and a red X (a hint of Hopkuna)
+- [x] **Flee**: MERCY opens Spare / Flee. Fleeing turns Elric and Hop around and they walk off the left side of the screen, then you're back in the overworld where the fight started. (Not allowed in boss, story or scripted fights.)
+- [x] The title screen: centered, with a red glow, twelve red fragments circling the title, rising embers and a glowing crack under "LOVE TO RUIN"
+- [x] People walking around stop when you talk to them
 - [x] Boss health bars across the top of the screen, styled per boss (Wally: gold fur and claw marks; Hopkuna: pulsing red with tattoo zigzags and "??? / ???")
 
 ### Milestone 6 — Westview High School
@@ -553,11 +556,11 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
   - **Pop Quiz**: pencils, answer bubbles, scantron columns (one blank bubble is the way through). ACT: Answer, Study.
   - **Hall Pass**: fluttering passes, dashing zoom, tardy slips from the corners. ACT: Sign It, Ask Directions.
   - **Mystery Meat** (cafeteria): gravy blobs that splatter, spinning lunch trays, a spread of peas. ACT: Compliment, Add Salt, Take a Bite (don't).
-  - **Tardy Bell**: rolling sound waves with a gap, a ring of notes, the alarm (a flickering line that blasts). ACT: Cover Ears, Be On Time.
+  - **Tardy Bell** (all sound): rolling sound waves with a gap, SONAR rings that pulse out with a quiet gap to slip through, the CLAPPER swinging across the box like a pendulum, a ring of notes, and the alarm. ACT: Cover Ears, Be On Time.
   - **Overdue Book** (47 years late): fluttering pages, bookmarks aimed at you, a sliding bookshelf with a gap. ACT: Read It, Return It, Shush.
   - **The tent** (very rare, ~1%): a three-person tent. The music cuts off. Red text crawls into the box ("We were here, too." "Three of us." "We remember."), then **DID YOU THINK WE WOULD FORGET?** shakes across the screen, everything goes black, a distorted laugh plays, and you're put back where you were.
-- **Wally is a miniboss**: a gold boss health bar with claw marks, 200 HP, and three extra attacks (rising bleachers, a mascot spin that flings claws in a spiral, and FRENZY: claws and dodgeballs at once). Sparing him is a challenge: four ACTs (Cheer, Look Inside, Paw Five, The Wave) worth a little each, and he gets bored if the same ACT is used twice in a row, even by different party members.
-- **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
+- **Wally is a miniboss** with **his own upbeat fight song** ("wally"), a dance in battle (hopping to the beat, swaying, spinning every eighth beat), a gold boss health bar with claw marks, **350 HP**, faster attacks that speed up again below half health, and three extra attacks (rising bleachers, a mascot spin that flings claws in a spiral, and FRENZY: claws and dodgeballs at once). Sparing him is a challenge: four ACTs (Cheer, Look Inside, Paw Five, The Wave) worth a little each, and he gets bored if the same ACT is used twice in a row, even by different party members.
+- **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it and **hangs in the air**. Elric has to walk over to take it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
 
 ### Milestone 7 — Hilltop Park and the climax
 - [x] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)
@@ -566,7 +569,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **The route choice** — end of Chapter 1
 
 **As built:**
-- **Hilltop Park at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Hilltop at Night."
+- **Hilltop Park at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Hilltop at Night." NCWethan's lightning visibly arcs from him into Hopkuna, then Ronin's fire roars in, then both at once ("TOGETHER!!!"). In the Corps ending, NCWethan's group hug yanks everyone into a huddle and zaps them. After the chapter, Hop can be talked to (different on each route).
 - **The eruption** — walking toward the glow, the fragment fires at Elric. Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
 - **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks (all aimed at the SOUL, with warnings, 6 damage, faster every turn): **Cleave** (glowing slashes through your position), **Slash Grid** (three slashes crossing where you stand, one after another), **Red Arrows** (volleys of three that curve toward you), **Closing Ring** (shards circle you and collapse inward; one gap), **Flaming Arrow** (a big burning arrow that chases you). A red aura pulses around the box during his turns. ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
 - **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola, Rooster and Agent surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.

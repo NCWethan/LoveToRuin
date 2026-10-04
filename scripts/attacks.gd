@@ -66,6 +66,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 			return _sound_waves(enemy, parent, area)
 		"alarm":
 			return _alarm(enemy, parent, area, step)
+		"sonar":
+			return _sonar(enemy, parent, area, soul_position)
+		"clapper":
+			return _clapper(enemy, parent, area, step)
 		"pages":
 			return _pages(enemy, parent, area)
 		"bookmark":
@@ -327,6 +331,49 @@ static func _alarm(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	return 0.85
 
 
+## Tardy Bell: SONAR. Rings of sound pulse out from a corner of the box, one after
+## another. Each ring has a quiet gap in it, aimed somewhere different: slip through it.
+static func _sonar(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var corners := [area.position, Vector2(area.end.x, area.position.y), Vector2(area.get_center().x, area.position.y)]
+	var from: Vector2 = corners[randi() % corners.size()]
+	var ring := _bullet(enemy, parent, area, from)
+	ring.shape = "ring"
+	ring.size = 4.0
+	ring.color = Color(1.0, 0.9, 0.45)
+	ring.delay = 0.25
+	ring.ring_speed = 75.0
+	# The gap points near the SOUL, but not right at it, so you still have to move.
+	ring.gap_angle = (soul_position - from).angle() + randf_range(-0.6, 0.6)
+	ring.gap_width = 0.55
+	Game.play_sfx("ping")
+	return 0.95
+
+
+## Tardy Bell: the CLAPPER swings across the box like a pendulum, ringing out
+## little notes at the top of each swing.
+static func _clapper(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	if step == 0:
+		var clapper := _bullet(enemy, parent, area, Vector2(area.get_center().x, area.position.y + 2))
+		clapper.shape = "clapper"
+		clapper.size = 9.0
+		clapper.color = Color(0.95, 0.8, 0.3)
+		clapper.delay = 0.6
+		clapper.lifetime = 3.6
+		clapper.swing_length = area.size.y * 0.82
+		clapper.swing_amplitude = 0.95
+		clapper.swing_speed = 2.6
+		clapper.bounds = Rect2()
+		return 0.9
+	# Notes ding out from the sides as it swings.
+	var from_left := step % 2 == 0
+	var note := _bullet(enemy, parent, area, Vector2(area.position.x + 6 if from_left else area.end.x - 6, area.position.y + 30))
+	note.shape = "star"
+	note.size = 7.0
+	note.color = Color(1.0, 0.9, 0.4)
+	note.velocity = Vector2(70 if from_left else -70, 40)
+	return 0.6
+
+
 ## Overdue Book: loose pages flutter down, drifting side to side.
 static func _pages(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var x := randf_range(area.position.x + 8, area.end.x - 8)
@@ -371,6 +418,11 @@ static func _shelf(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	return 1.6
 
 
+## Wally gets more fired up once he's below half health: his attacks come 15% faster.
+static func _pep(enemy: Enemy) -> float:
+	return 0.85 if enemy.hp < enemy.max_hp / 2 else 1.0
+
+
 ## Wally (miniboss): the bleachers rise. A row comes up from the floor with a gap in it.
 static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var gap := randf_range(area.position.x + 18, area.end.x - 18)
@@ -383,7 +435,7 @@ static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2) -> float:
 			seat.delay = 0.35
 			seat.velocity = Vector2(0, -95)
 		x += 10
-	return 1.15
+	return 1.0 * _pep(enemy)
 
 
 ## Wally (miniboss): a spinning mascot twirl that flings claws out in a spiral.
@@ -396,8 +448,8 @@ static func _mascot_spin(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 		claw.shape = "claw"
 		claw.size = 8.0
 		claw.color = Color(1.0, 0.95, 0.85)
-		claw.velocity = Vector2.from_angle(angle) * 120.0
-	return 0.17
+		claw.velocity = Vector2.from_angle(angle) * 135.0
+	return 0.15 * _pep(enemy)
 
 
 ## Wally (miniboss): FRENZY. Claws and dodgeballs at the same time, faster than usual.
@@ -406,7 +458,7 @@ static func _frenzy(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float
 		_claw_drop(enemy, parent, area)
 	else:
 		_dodgeballs(enemy, parent, area, step)
-	return 0.55
+	return 0.45 * _pep(enemy)
 
 
 ## Wally: a shower of colorful confetti.
@@ -416,9 +468,9 @@ static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var bit := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
 	bit.size = 4.0
 	bit.color = colors.pick_random()
-	bit.velocity = Vector2(0, randf_range(80, 120))
+	bit.velocity = Vector2(0, randf_range(95, 135))
 	bit.sway = 35.0
-	return 0.14
+	return 0.11 * _pep(enemy)
 
 
 ## Wally: a giant foam finger swings across the box (after a warning).
@@ -431,8 +483,8 @@ static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 	finger.size = 18.0
 	finger.color = Color(1.0, 0.85, 0.2)
 	finger.delay = 0.5
-	finger.velocity = Vector2(190 if from_left else -190, 0)
-	return 0.9
+	finger.velocity = Vector2(220 if from_left else -220, 0)
+	return 0.75 * _pep(enemy)
 
 
 ## Wally: red dodgeballs. Some roll in from the sides, some drop from the top,
@@ -456,7 +508,7 @@ static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, step: int) -> f
 	ball.acceleration = Vector2(0, 330)
 	ball.bounce_speed = randf_range(110, 250)
 	ball.bounce_variance = 0.15
-	return 1.0
+	return 0.8 * _pep(enemy)
 
 
 ## Wally: three claw marks flash as a warning across the box, then slash for a moment.
@@ -473,10 +525,10 @@ static func _claw_swipe(enemy: Enemy, parent: Node, area: Rect2) -> float:
 				var mark := _bullet(enemy, parent, area, Vector2(x, y))
 				mark.size = 5.0
 				mark.color = Color(1.0, 0.95, 0.85)
-				mark.delay = 0.6
+				mark.delay = 0.5
 				mark.lifetime = 0.3
 			t += 7.0
-	return 1.2
+	return 1.0 * _pep(enemy)
 
 
 ## Wally: sets of three claws plunge down from the top (they flash first).
@@ -488,8 +540,8 @@ static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
 		claw.size = 9.0
 		claw.color = Color(1.0, 0.95, 0.85)
 		claw.delay = 0.45
-		claw.velocity = Vector2(0, 230)
-	return 0.75
+		claw.velocity = Vector2(0, 260)
+	return 0.6 * _pep(enemy)
 
 
 # --- Hopkuna ------------------------------------------------------------------

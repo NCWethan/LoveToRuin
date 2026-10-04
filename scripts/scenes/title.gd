@@ -33,8 +33,9 @@ func _ready() -> void:
 	_font = ThemeDB.fallback_font
 	Game.play_music("title")
 
-	var source_left := 320.0 - LETTER_SPACING * SOURCE.length() / 2.0
-	var target_left := 320.0 - LETTER_SPACING * TARGET.length() / 2.0
+	# Centers of the first letters, so each word is centered on the screen.
+	var source_left := 320.0 - LETTER_SPACING * (SOURCE.length() - 1) / 2.0
+	var target_left := 320.0 - LETTER_SPACING * (TARGET.length() - 1) / 2.0
 	_starts.resize(SOURCE.length())
 	_ends.resize(SOURCE.length())
 	for i in SOURCE.length():
@@ -78,10 +79,22 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+const RED := Color(0.9, 0.12, 0.2)
+## Twelve fragments, like the twelve in the story.
+const FRAGMENTS := 12
+
+
 func _draw() -> void:
 	var move := clampf((_time - HOLD_TIME) / MOVE_TIME, 0.0, 1.0)
 	move = move * move * (3.0 - 2.0 * move)  # ease in and out
 	var appear := clampf(_time / 0.8, 0.0, 1.0)
+	# How much the red "after the anagram" look has faded in.
+	var red_in := clampf((_time - HOLD_TIME - MOVE_TIME + 0.4) / 1.2, 0.0, 1.0)
+	var pulse := 0.5 + 0.5 * sin(_time * 1.8)
+
+	_draw_glow(red_in, pulse)
+	_draw_embers(appear)
+	_draw_fragments(red_in)
 
 	for i in SOURCE.length():
 		var start := _starts[i]
@@ -92,7 +105,11 @@ func _draw() -> void:
 		var color := Color(1, 1, 1, appear)
 		if move >= 1.0:
 			color = Color(1, 1, 1)
+		# A red shadow behind each letter that grows in once it becomes LOVE TO RUIN.
+		_draw_letter(SOURCE[i], pos + Vector2(3, 3), Color(RED, 0.25 * appear + 0.55 * red_in))
 		_draw_letter(SOURCE[i], pos, color)
+
+	_draw_crack(red_in, pulse)
 
 	if _ready_for_input:
 		var fade := clampf((_time - HOLD_TIME - MOVE_TIME - 0.4) / 0.5, 0.0, 1.0)
@@ -104,6 +121,73 @@ func _draw() -> void:
 		if summary != "" and _options[_choice] == "Continue":
 			_draw_centered(summary, Vector2(320, 380), 14, Color(0.7, 0.7, 0.7, fade))
 		_draw_centered("Arrow keys to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
+
+
+## A dim red glow behind the title that slowly breathes.
+func _draw_glow(amount: float, pulse: float) -> void:
+	if amount <= 0.0:
+		return
+	var center := Vector2(320, TITLE_Y - 16)
+	for i in 8:
+		var radius := 60.0 + i * 26.0
+		draw_set_transform(center, 0.0, Vector2(2.2, 0.75))
+		draw_circle(Vector2.ZERO, radius, Color(RED, amount * (0.035 + 0.015 * pulse)))
+	draw_set_transform(Vector2.ZERO)
+
+
+## Tiny red embers drifting up from the bottom of the screen.
+func _draw_embers(amount: float) -> void:
+	for i in 26:
+		var speed := 14.0 + (i * 37 % 23)
+		var y := 490.0 - fmod(_time * speed + i * 61.0, 520.0)
+		var x := fmod(i * 97.0, 640.0) + sin(_time * 0.7 + i) * 12.0
+		var fade := clampf((490.0 - y) / 120.0, 0.0, 1.0) * clampf(y / 160.0, 0.0, 1.0)
+		var size := 2.0 if i % 3 != 0 else 3.0
+		draw_rect(Rect2(x, y, size, size), Color(RED.lightened(0.2), 0.55 * fade * amount))
+
+
+## Twelve jagged red fragments slowly circling the title, each glowing in turn.
+func _draw_fragments(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	var center := Vector2(320, TITLE_Y - 16)
+	for i in FRAGMENTS:
+		var angle := _time * 0.18 + i * TAU / FRAGMENTS
+		# An ellipse: wide around the words, flatter top to bottom.
+		var at := center + Vector2(cos(angle) * 270.0, sin(angle) * 95.0)
+		# The ones "behind" the title (top of the ellipse) are dimmer and smaller.
+		var depth := 0.55 + 0.45 * (sin(angle) + 1.0) / 2.0
+		var glow := 0.5 + 0.5 * sin(_time * 2.5 - i * 0.9)
+		var spin := _time * (0.6 if i % 2 == 0 else -0.8) + i
+		var size := 7.0 * depth
+		var shard := PackedVector2Array([
+			Vector2(0, -1.4), Vector2(0.7, -0.3), Vector2(0.45, 0.9), Vector2(-0.2, 1.3), Vector2(-0.75, 0.1)])
+		for p in shard.size():
+			shard[p] = at + shard[p].rotated(spin) * size
+		draw_circle(at, size * 1.8, Color(RED, 0.12 * glow * depth * amount))
+		draw_colored_polygon(shard, Color(0.55, 0.05, 0.12, amount * depth))
+		draw_polyline(shard + PackedVector2Array([shard[0]]), Color(1.0, 0.35 + 0.3 * glow, 0.4, amount * depth), 1.0)
+
+
+## A thin red crack running under the title, glowing.
+func _draw_crack(amount: float, pulse: float) -> void:
+	if amount <= 0.0:
+		return
+	var points := PackedVector2Array()
+	var x := 120.0
+	var i := 0
+	while x <= 520.0:
+		var jag := ((i * 7) % 5 - 2) * 2.0
+		points.append(Vector2(x, TITLE_Y + 22 + jag))
+		x += 16.0
+		i += 1
+	# It opens up from the middle outward.
+	var shown := int(points.size() * amount)
+	var from := (points.size() - shown) / 2
+	var line := points.slice(from, from + shown)
+	if line.size() > 1:
+		draw_polyline(line, Color(RED, 0.35 * amount), 4.0)
+		draw_polyline(line, Color(1.0, 0.45 + 0.3 * pulse, 0.5, amount), 1.5)
 
 
 func _draw_letter(letter: String, center: Vector2, color: Color) -> void:

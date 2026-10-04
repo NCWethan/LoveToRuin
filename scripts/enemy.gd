@@ -45,6 +45,8 @@ var flavor_lines: Array[String] = []
 
 ## How many times bigger the sprite is drawn in battle (bosses can be bigger).
 var battle_scale: float = 3.0
+## Bounces to the beat, sways, and spins now and then (Wally's halftime show).
+var dance: bool = false
 
 ## Short lines shown in a speech bubble during the enemy's turn.
 var taunts: Array[String] = []

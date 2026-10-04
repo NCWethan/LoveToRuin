@@ -46,6 +46,8 @@ const BELL_ORDER := [3, 1, 2]
 
 var hop: Character
 var mascot: Character
+## Fragment 2, floating over Wally's costume until Elric takes it.
+var floating_fragment: Character
 var _decor: Node2D
 var _font: Font
 var _bells_rung: Array = []
@@ -209,11 +211,27 @@ func _place_people() -> void:
 		"* (Something in here is waiting.\n*  It fills you with DETERMINATION.)",
 	])
 
-	if not flag("has_fragment_2"):
+	if flag("has_fragment_2"):
+		_add_empty_costume()
+	elif flag("wally_done"):
+		# Wally's beaten, but nobody's picked up the fragment yet.
+		_add_empty_costume()
+		_add_floating_fragment(MASCOT_SPOT + Vector2(-30, -26))
+	else:
 		mascot = Cast.make("wally")
 		add_character(mascot, MASCOT_SPOT if not flag("mascot_started") else MASCOT_SPOT + Vector2(-30, 0))
-	else:
-		_add_empty_costume()
+
+
+## Fragment 2, hovering over Wally's costume and bobbing gently, waiting to be taken.
+func _add_floating_fragment(at: Vector2) -> Character:
+	floating_fragment = Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
+	floating_fragment.glow = true
+	floating_fragment.on_interact = _claim_fragment
+	add_character(floating_fragment, at)
+	var bob := floating_fragment.create_tween().set_loops()
+	bob.tween_property(floating_fragment, "position:y", at.y - 4, 0.8).set_trans(Tween.TRANS_SINE)
+	bob.tween_property(floating_fragment, "position:y", at.y, 0.8).set_trans(Tween.TRANS_SINE)
+	return floating_fragment
 
 
 ## Wally's empty costume, slumped on the gym floor after the fight.
@@ -285,6 +303,9 @@ func _physics_process(_delta: float) -> void:
 	# Approaching Wally.
 	elif mascot and not flag("mascot_started") and _px(GYM).has_point(player.position) and player.position.x > 93 * T:
 		run_cutscene(_wake_mascot)
+	# Walking up to the floating fragment takes it.
+	elif floating_fragment and player.position.distance_to(MASCOT_SPOT + Vector2(-30, 0)) < 28.0:
+		run_cutscene(_claim_fragment)
 
 
 func _back_from_battle() -> bool:
@@ -505,7 +526,9 @@ func _after_mascot() -> void:
 	await get_tree().create_timer(0.6).timeout
 	await Game.dialogue.say(["* (Then he slumps to the floor.\n*  Just a costume now.)" if spared else "* (The costume crumples to the floor.)"])
 
-	# ...and the fragment rises out of it, glowing.
+	# ...and the fragment rises out of it, glowing, and hangs there.
+	Game.flags["wally_done"] = true
+	Game.flags["wally_spared"] = spared
 	var shard := Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
 	shard.glow = true
 	add_character(shard, at + Vector2(0, -4))
@@ -513,13 +536,29 @@ func _after_mascot() -> void:
 	var rise := create_tween()
 	rise.tween_property(shard, "position:y", at.y - 26, 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	await rise.finished
-	await Game.dialogue.say(["* (Something red floats up out of the costume.)"])
-	await get_tree().create_timer(0.2).timeout
 	shard.queue_free()
+	_add_floating_fragment(at + Vector2(0, -26))
+	await Game.dialogue.say([
+		"* (Something red floats up out of the costume.)",
+		"* (It hangs in the air, humming.)",
+		{"who": "Hop", "text": "...That's it. That's the fragment.", "mood": "shocked"},
+		{"who": "Hop", "text": "Go on. You grab it. I'm not touching\nanything that came out of a mascot.", "mood": "smug"},
+	])
+	Game.set_objective("Take the fragment.")
+
+
+## Elric walks up to the floating fragment and takes it.
+func _claim_fragment() -> void:
+	if floating_fragment == null:
+		return
+	var spared: bool = Game.flags.get("wally_spared", false)
+	Game.play_sfx("fragment")
+	floating_fragment.queue_free()
+	floating_fragment = null
 
 	var lines: Array = []
 	lines.append_array([
-		"* (You take it. It's warm, and it hums.)",
+		"* (You reach up and take it. It's warm, and it hums.)",
 		"* (You got the second FRAGMENT.)",
 		"* (Hop reaches toward it.)",
 		"* (For a second, his shadow looks... wrong.)",

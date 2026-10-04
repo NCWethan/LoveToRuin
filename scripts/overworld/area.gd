@@ -269,7 +269,8 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 	var random: bool = Game.battle_result.get("random", false)
 	var spared: bool = not Game.battle_result.get("spared", []).is_empty()
 	Game.battle_result = {}
-	if not random and goodbyes.has(battle_id):
+	var fled: bool = Game.battle_result.get("fled", false)
+	if not random and not fled and goodbyes.has(battle_id):
 		await Game.dialogue.say([goodbyes[battle_id][0 if spared else 1]])
 	return true
 

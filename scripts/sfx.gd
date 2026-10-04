@@ -29,6 +29,8 @@ static func make_all() -> Dictionary:
 		"door": noise(0.06, 0.25),
 		"punch": slide(260, 70, 0.09, 0.32),
 		"thud": slide(140, 40, 0.25, 0.35),
+		"ping": slide(1400, 1100, 0.18, 0.12),
+		"zap": noise(0.18, 0.28),
 		"laugh": laugh(),
 	}
 

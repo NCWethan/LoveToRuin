@@ -123,6 +123,7 @@ func _process(delta: float) -> void:
 		else:
 			_walking = false
 
+	_update_patrol(delta)
 	_update_sprite()
 	if glow:
 		var pulse := 0.5 + 0.5 * sin(_time * 4.0)
@@ -144,22 +145,38 @@ func _update_sprite() -> void:
 		_sprite.position.y = -absf(sin(_time * 12.0)) * 1.5 if _walking else 0.0
 
 
-## Walks back and forth between two points forever (pausing during dialogue).
+## Walks back and forth between two points forever. Stops in place (and stays
+## stopped) whenever anyone is talking, so you can chat with someone mid-walk.
 func patrol(a: Vector2, b: Vector2, speed: float = 50.0) -> void:
-	_patrol.call_deferred(a, b, speed)
+	_patrol_points = [b, a]
+	_patrol_speed = speed
 
 
-func _patrol(a: Vector2, b: Vector2, speed: float) -> void:
-	var targets := [b, a]
-	var i := 0
-	while is_inside_tree():
-		if Game.busy or Game.transitioning:
-			await get_tree().process_frame
-			continue
-		await walk_to(targets[i % 2], speed)
-		i += 1
-		if is_inside_tree():
-			await get_tree().create_timer(0.6).timeout
+var _patrol_points: Array = []
+var _patrol_speed: float = 50.0
+var _patrol_index: int = 0
+var _patrol_rest: float = 0.0
+
+
+## One frame of patrolling (called from _process).
+func _update_patrol(delta: float) -> void:
+	if _patrol_points.is_empty():
+		return
+	if Game.busy or Game.transitioning:
+		_walking = false
+		return
+	if _patrol_rest > 0.0:
+		_patrol_rest -= delta
+		_walking = false
+		return
+	var target: Vector2 = _patrol_points[_patrol_index]
+	if position.distance_to(target) < 1.0:
+		_patrol_index = 1 - _patrol_index
+		_patrol_rest = 0.6
+		return
+	face(target - position)
+	position = position.move_toward(target, _patrol_speed * delta)
+	_walking = true
 
 
 ## Changes how the character looks (e.g. Hop becoming Hopkuna) to another

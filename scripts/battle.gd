@@ -8,7 +8,7 @@ extends Node2D
 ## The fighters and their lines come from tutorial_battle.gd.
 ## Controls: arrow keys to move, Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, EVENT, DONE }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, MERCY_MENU, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, EVENT, FLEEING, DONE }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -173,7 +173,7 @@ func _process(delta: float) -> void:
 			_process_text()
 		State.MENU:
 			_process_menu()
-		State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY:
+		State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU:
 			_process_list()
 		State.READY:
 			_process_ready()
@@ -187,6 +187,8 @@ func _process(delta: float) -> void:
 			_process_game_over(delta)
 		State.EVENT:
 			_process_tent(delta)
+		State.FLEEING:
+			_process_flee(delta)
 
 	_overlay.queue_redraw()
 	_backdrop.queue_redraw()
@@ -340,8 +342,10 @@ func _process_menu() -> void:
 		Game.play_sfx("select")
 		_pending = BUTTONS[_button]
 		match _pending:
-			"FIGHT", "ACT", "MERCY":
+			"FIGHT", "ACT":
 				_open_list(State.TARGET_ENEMY, _active_enemies())
+			"MERCY":
+				_open_list(State.MERCY_MENU, ["Spare", "Flee"])
 			"ITEM":
 				var available := _available_items()
 				if not available.is_empty():
@@ -404,6 +408,8 @@ func _process_list() -> void:
 			_open_list(State.TARGET_ENEMY, _active_enemies())
 		elif state == State.TARGET_PARTY:
 			_open_list(State.ITEM_LIST, _available_items())
+		elif state == State.TARGET_ENEMY and _pending == "MERCY":
+			_open_list(State.MERCY_MENU, ["Spare", "Flee"])
 		else:
 			_open_menu()
 		return
@@ -428,6 +434,11 @@ func _confirm_list_choice() -> void:
 			_open_list(State.TARGET_PARTY, party)
 		State.TARGET_PARTY:
 			_choose({"type": "ITEM", "item": _chosen_item, "target": choice})
+		State.MERCY_MENU:
+			if choice == "Spare":
+				_open_list(State.TARGET_ENEMY, _active_enemies())
+			else:
+				_try_flee()
 
 
 # --- Player turn: running the actions -------------------------------------
@@ -864,6 +875,59 @@ func _draw_game_over() -> void:
 			_draw_centered("(press ENTER)", Vector2(320, 360), 14, Color.GRAY)
 
 
+# --- Fleeing ----------------------------------------------------------------
+# MERCY -> Flee: everyone turns and walks off the left side of the screen,
+# then it's back to the overworld, right where the fight started.
+
+const FLEE_TIME := 1.8
+var _flee_time: float = 0.0
+## Side-view walking frames for each party member, loaded when someone flees.
+var _side_frames: Dictionary = {}
+
+
+## True for fights you can't run from: bosses, story fights and scripted ones.
+func _can_flee() -> bool:
+	return _data.boss_style == "" and _data.survive_turns == 0 and _data.event == "" and _data.id != "tutorial"
+
+
+func _try_flee() -> void:
+	if not _can_flee():
+		Game.play_sfx("miss")
+		_text = "* You can't run from this fight!"
+		_typed = _text.length()
+		state = State.MENU
+		_place_soul_on_button()
+		return
+	Game.play_sfx("select")
+	for member in party:
+		member.defending = false
+		var base := "res://art/sprites/" + member.name.to_lower()
+		_side_frames[member] = [load(base + "_side.png"), load(base + "_side2.png")]
+	var names := party.filter(func(m: PartyMember) -> bool: return not m.is_down()).map(func(m: PartyMember) -> String: return m.name)
+	_text = "* %s ran away!" % " and ".join(names)
+	_typed = _text.length()
+	soul.visible = false
+	_flee_time = 0.0
+	state = State.FLEEING
+
+
+func _process_flee(delta: float) -> void:
+	_flee_time += delta
+	if _flee_time >= FLEE_TIME:
+		var result := {"id": _data.id, "fled": true, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
+		if Game.pending_battle != "":
+			_leave_battle(func() -> void: Game.finish_battle(result))
+		else:
+			_leave_battle(get_tree().reload_current_scene)
+
+
+## How far a party member has walked off to the left while fleeing.
+## Everyone turns around first, then walks (the second one a moment later).
+func _flee_offset(index: int) -> float:
+	var walking := maxf(0.0, _flee_time - 0.25 - index * 0.12)
+	return -walking * 230.0
+
+
 # --- The tent -------------------------------------------------------------
 # A very rare "encounter" in Westview. It's just a tent. Then the music stops.
 
@@ -1074,6 +1138,21 @@ func _draw_slash() -> void:
 			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(color, fade), 2.0)
 
 
+## Wally's dance, in time with his song (152 beats per minute): a hop on every beat
+## (squashing a little when he lands), a sway side to side, and every eighth beat
+## a full spin. `feet` is where his feet touch the ground.
+func _dance_transform(feet: Vector2) -> void:
+	var beat := Time.get_ticks_msec() / 1000.0 * 152.0 / 60.0
+	var hop := absf(sin(beat * PI))
+	var squash := 1.0 - 0.08 * (1.0 - hop)
+	var sway := sin(beat * PI * 0.5) * 0.07
+	var spin := 1.0
+	var into_bar := fmod(beat, 8.0)
+	if into_bar > 7.0:
+		spin = cos((into_bar - 7.0) * TAU)
+	_overlay.draw_set_transform(feet - Vector2(0, hop * 10.0), sway, Vector2(spin * (2.0 - squash), squash))
+
+
 ## When each of Hop's three punches lands, in seconds after the bar is stopped.
 const HOP_PUNCHES := [0.06, 0.18, 0.3]
 
@@ -1134,10 +1213,18 @@ func _draw_enemies() -> void:
 			# Pixel art is drawn big (3x by default) so each pixel shows up as a crisp block.
 			var sprite_size := enemy.sprite.get_size() * enemy.battle_scale
 			top = pos.y + 40.0 - sprite_size.y
-			_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
-			# Flash white for a moment when hit.
-			if enemy.flash > 0.0:
-				_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, Color(4, 4, 4, enemy.flash * 3.0))
+			if enemy.dance and enemy.is_active():
+				_dance_transform(Vector2(pos.x, pos.y + 40.0))
+				var feet_rect := Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size)
+				_overlay.draw_texture_rect(enemy.sprite, feet_rect, false, tint)
+				if enemy.flash > 0.0:
+					_overlay.draw_texture_rect(enemy.sprite, feet_rect, false, Color(4, 4, 4, enemy.flash * 3.0))
+				_overlay.draw_set_transform(Vector2.ZERO)
+			else:
+				_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+				# Flash white for a moment when hit.
+				if enemy.flash > 0.0:
+					_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, Color(4, 4, 4, enemy.flash * 3.0))
 		else:
 			# Placeholder figure: a blocky head and body.
 			_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), enemy.body_color * tint)
@@ -1275,6 +1362,22 @@ func _draw_party_sprites() -> void:
 			_overlay.draw_circle(Vector2.ZERO, 34, Color(member.color, 0.25 + 0.15 * pulse))
 			_overlay.draw_circle(Vector2.ZERO, 22, Color(member.color, 0.25 + 0.15 * pulse))
 			_overlay.draw_set_transform(Vector2.ZERO)
+		if state == State.FLEEING and _side_frames.has(member) and not member.is_down():
+			# Turned around (side view, flipped to face left) and walking off screen.
+			var frames: Array = _side_frames[member]
+			var walk_x := _flee_offset(i)
+			var frame: Texture2D = frames[int(_flee_time / 0.12) % 2] if walk_x < 0.0 else frames[0]
+			var size := frame.get_size() * 3.0
+			var feet := Vector2(pos.x + walk_x, pos.y + 40.0)
+			_overlay.draw_set_transform(feet, 0.0, Vector2(-1, 1))
+			_overlay.draw_texture_rect(frame, Rect2(Vector2(-size.x / 2, -size.y), size), false)
+			_overlay.draw_set_transform(Vector2.ZERO)
+			# Little dust puffs behind their heels.
+			if walk_x < 0.0:
+				for d in 3:
+					var puff := fmod(_flee_time * 3.0 + d * 0.33, 1.0)
+					_overlay.draw_circle(feet + Vector2(14 + puff * 18, -3 - puff * 6), 3.0 * (1.0 - puff), Color(0.8, 0.8, 0.8, 0.5 * (1.0 - puff)))
+			continue
 		_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
 
 		if choosing:
@@ -1287,7 +1390,7 @@ func _draw_party_sprites() -> void:
 
 
 func _is_choosing(member_index: int) -> bool:
-	var picking := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY]
+	var picking := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU]
 	return picking and member_index == current_member
 
 
@@ -1383,6 +1486,12 @@ func _draw_box_contents() -> void:
 			for i in _list.size():
 				var member: PartyMember = _list[i]
 				_draw_row(i, "%s   HP %d / %d" % [member.name, member.hp, member.max_hp], member.color)
+		State.MERCY_MENU:
+			var anyone_spareable := _active_enemies().any(func(e: Enemy) -> bool: return e.can_spare())
+			_draw_row(0, "Spare", YELLOW if anyone_spareable else Color.WHITE)
+			_draw_row(1, "Flee", Color.WHITE)
+		State.FLEEING:
+			_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		State.FIGHT_BAR, State.FIGHT_ANIM:
 			_draw_fight_bar(area)
 
@@ -1390,7 +1499,7 @@ func _draw_box_contents() -> void:
 	var hint := ""
 	if state == State.MENU:
 		hint = "ENTER: choose   X: back" if _can_go_back() else "ENTER: choose"
-	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY]:
+	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU]:
 		hint = "ENTER: choose   X: back"
 	if hint != "":
 		var width := _font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x

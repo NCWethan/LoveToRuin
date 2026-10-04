@@ -35,7 +35,7 @@ static func create(id: String) -> BattleData:
 			data.intro = ["* A tent."]
 		"wally":
 			data.enemies.append(_wally())
-			data.music = "boss"
+			data.music = "wally"
 			data.backdrop = Color(0.9, 0.62, 0.2)
 			data.boss_style = "wally"
 			data.intro = [
@@ -201,7 +201,7 @@ static func _tardy_bell() -> Enemy:
 			],
 		},
 	]
-	e.patterns = ["sound_waves", "ring", "alarm"]
+	e.patterns = ["sound_waves", "sonar", "clapper", "ring", "alarm"]
 	e.taunts = ["RRRING!", "YOU'RE LATE!", "DING DING DING!", "Class started!"]
 	e.spare_taunts = ["...ding."]
 	e.flavor_lines = [
@@ -281,8 +281,9 @@ static func _tent() -> Enemy:
 static func _wally() -> Enemy:
 	var e := Enemy.new()
 	e.name = "Wally Wolverine"
-	e.max_hp = 200
-	e.hp = 200
+	e.max_hp = 350
+	e.hp = 350
+	e.dance = true
 	e.attack = 5
 	e.defense = 2
 	e.position = Vector2(470, 170)
