@@ -420,7 +420,7 @@ Build the game in **milestones**. Each one ends with something playable, so prog
 ### Milestone 1 — The tutorial fight (battle system)
 Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the battle system works.
 - [x] Battle box and SOUL movement
-- [ ] Enemy attacks (bullets) and taking damage / HP
+- [x] Enemy attacks (bullets) and taking damage / HP
 - [ ] Battle menu: **FIGHT · ACT · ITEM · MERCY** (+ DEFEND)
 - [ ] FIGHT timing bar
 - [ ] ACT options and CHECK

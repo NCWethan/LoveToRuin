@@ -1,10 +1,12 @@
 [gd_scene format=3 uid="uid://cs3fw7xidu4g4"]
 
+[ext_resource type="Script" uid="uid://cpt8si6bheqq2" path="res://scripts/battle.gd" id="1_i431l"]
 [ext_resource type="Texture2D" uid="uid://cn2nw18jh73gj" path="res://art/soul.png" id="1_ip7xm"]
 [ext_resource type="Script" uid="uid://bc66us2nowxvc" path="res://scripts/soul.gd" id="2_oxp8w"]
 [ext_resource type="Script" uid="uid://bhu143leuc21b" path="res://scripts/battle_box.gd" id="3_7sfm4"]
 
 [node name="Battle" type="Node2D" unique_id=566058373]
+script = ExtResource("1_i431l")
 
 [node name="Soul" type="Sprite2D" parent="." unique_id=1935390785]
 position = Vector2(316, 243)
