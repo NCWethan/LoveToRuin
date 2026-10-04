@@ -13,7 +13,7 @@ extends Area
 ##   read_board, bells_solved, ww_gym, mascot_started, has_fragment_2
 
 const SCENE := "res://scenes/westview.tscn"
-const DEMO_END_SCENE := "res://scenes/demo_end.tscn"
+const HILLTOP_SCENE := "res://scenes/hilltop.tscn"
 const T := Room.TILE
 
 # The four rooms, in tiles: Rect2(x, y, width, height). Each is at least one
@@ -147,6 +147,8 @@ func _add_decor() -> void:
 	_decor = Node2D.new()
 	add_child(_decor)
 	_decor.draw.connect(_draw_decor)
+	# Drawn just above the ground but below everyone walking around.
+	move_child(_decor, world.get_index())
 
 
 func _process(delta: float) -> void:
@@ -508,4 +510,4 @@ func _emergency_exit() -> void:
 		{"who": "Hop", "text": "Where to next, mysterious traveler?", "mood": "smug"},
 	])
 	Game.flags["westview_done"] = true
-	await Game.change_scene(DEMO_END_SCENE)
+	await Game.change_scene(HILLTOP_SCENE)

@@ -40,6 +40,7 @@ const SPEAKERS := {
 	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "pitch": 1.3},
 	"Nassan": {"color": Color(0.55, 0.55, 0.6), "pitch": 0.85},
 	"Wally": {"color": Color(0.75, 0.5, 0.3), "pitch": 0.55},
+	"Hopkuna": {"color": Color(1.0, 0.25, 0.3), "pitch": 0.5},
 }
 
 ## Where the box is drawn. It moves to the top when Elric is in the
@@ -146,8 +147,10 @@ func _process(delta: float) -> void:
 	_last_beep = shown
 
 	if _finished() and not _choices.is_empty():
-		if Input.is_action_just_pressed("ui_left") or Input.is_action_just_pressed("ui_right"):
-			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed("ui_right") else -1), 0, _choices.size())
+		var back := "ui_up" if _choices_stacked() else "ui_left"
+		var forward := "ui_down" if _choices_stacked() else "ui_right"
+		if Input.is_action_just_pressed(back) or Input.is_action_just_pressed(forward):
+			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed(forward) else -1), 0, _choices.size())
 			Game.play_sfx("move")
 
 	if Input.is_action_just_pressed("confirm"):
@@ -192,13 +195,28 @@ func _draw_box() -> void:
 		_panel.draw_string(_font, _box.position + Vector2(text_left, 28 + i * LINE_HEIGHT), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 
 	if _finished() and not _choices.is_empty():
-		var y := _box.end.y - 20
 		for i in _choices.size():
-			var x := _box.position.x + 120 + i * 200
+			var at: Vector2
+			if _choices_stacked():
+				# One option per line, under the question.
+				at = _box.position + Vector2(text_left + 30, 28 + (lines.size() + i) * LINE_HEIGHT)
+			else:
+				# Side by side along the bottom.
+				at = Vector2(_box.position.x + 120 + i * 200, _box.end.y - 20)
 			var color := Color.YELLOW if i == _choice else Color.WHITE
-			_panel.draw_string(_font, Vector2(x, y), str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+			_panel.draw_string(_font, at, str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 			if i == _choice:
-				_draw_heart(Vector2(x - 18, y - 6))
+				_draw_heart(at + Vector2(-18, -6))
+
+
+## Long or many choices are listed one per line (Up/Down) instead of side by side (Left/Right).
+func _choices_stacked() -> bool:
+	if _choices.size() > 2:
+		return true
+	for choice in _choices:
+		if str(choice).length() > 14:
+			return true
+	return false
 
 
 ## A tiny red heart used as the choice cursor.

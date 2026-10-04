@@ -119,7 +119,15 @@ func _ready() -> void:
 		items = TutorialBattle.create_items()
 	# Which fight this is (the tutorial when testing with F6).
 	_data = Battles.create(Game.pending_battle if Game.pending_battle != "" else "tutorial")
-	Game.play_music("boss" if _data.id == "wally" else "battle", 0.2)
+	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
+	# Some fights only let certain party members join in.
+	# (A new list, so the real party in Game isn't changed.)
+	if not _data.party_only.is_empty():
+		var fighting: Array[PartyMember] = []
+		for member in party:
+			if member.name in _data.party_only:
+				fighting.append(member)
+		party = fighting
 	enemies = _data.enemies
 
 	box.center = BOX_CENTER
@@ -438,6 +446,8 @@ func _use_item(member: PartyMember, item: Dictionary, target: PartyMember) -> vo
 func _try_spare(member: PartyMember, target: Enemy) -> void:
 	if not target.is_active():
 		_run_next_action()
+	elif target.spare_refusal != "":
+		_show_messages([target.spare_refusal], _run_next_action)
 	elif target.can_spare():
 		target.state = "spared"
 		bond_gained += target.bond_reward
@@ -498,6 +508,8 @@ func _resolve_hit(accuracy: float) -> void:
 	Game.play_sfx("hit")
 
 	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, damage]]
+	if target.hit_line != "":
+		lines[0] += "\n" + target.hit_line
 	if target.hp == 0:
 		target.state = "defeated"
 		exp_gained += target.exp_reward
@@ -615,7 +627,20 @@ func _end_enemy_turn() -> void:
 	for member in party:
 		member.defending = false
 	create_tween().tween_property(box, "size", TEXT_BOX_SIZE, 0.25)
-	_start_player_turn()
+	# In a fight you can't win, lasting long enough ends it.
+	if _data.survive_turns > 0 and enemy_turn >= _data.survive_turns:
+		_survived()
+	else:
+		_start_player_turn()
+
+
+## The player lasted long enough in an unwinnable fight.
+func _survived() -> void:
+	var result := {"id": _data.id, "survived": true, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
+	if Game.pending_battle != "":
+		_show_messages(_data.survive_lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
+	else:
+		_show_messages(_data.survive_lines + ["* (Press Z to fight again.)"], func() -> void: _leave_battle(get_tree().reload_current_scene))
 
 
 func _clear_bullets() -> void:

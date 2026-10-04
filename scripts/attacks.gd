@@ -40,6 +40,14 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 			return _claw_swipe(enemy, parent, area)
 		"claw_drop":
 			return _claw_drop(enemy, parent, area)
+		"cleave":
+			return _cleave(enemy, parent, area)
+		"slash_grid":
+			return _slash_grid(enemy, parent, area)
+		"red_arrows":
+			return _red_arrows(enemy, parent, area, soul_position)
+		"burst":
+			return _burst(enemy, parent, area, soul_position)
 	return 1.0
 
 
@@ -261,3 +269,73 @@ static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
 		claw.delay = 0.45
 		claw.velocity = Vector2(0, 230)
 	return 0.75
+
+
+# --- Hopkuna ------------------------------------------------------------------
+
+const HOPKUNA_RED := Color(1.0, 0.22, 0.28)
+
+
+## A straight slash: a line of marks that flashes as a warning, then cuts for a moment.
+static func _slash_line(enemy: Enemy, parent: Node, area: Rect2, from: Vector2, to: Vector2, delay: float) -> void:
+	var length := from.distance_to(to)
+	var t := 0.0
+	while t <= length:
+		var mark := _bullet(enemy, parent, area, from.lerp(to, t / length))
+		mark.size = 5.0
+		mark.color = HOPKUNA_RED
+		mark.delay = delay
+		mark.lifetime = 0.25
+		t += 7.0
+
+
+## Hopkuna: two horizontal slashes across the box.
+static func _cleave(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var first := randf_range(area.position.y + 8, area.end.y - 8)
+	var second := fposmod(first - area.position.y + area.size.y * 0.5, area.size.y - 16) + area.position.y + 8
+	for y in [first, second]:
+		_slash_line(enemy, parent, area, Vector2(area.position.x + 3, y), Vector2(area.end.x - 3, y), 0.6)
+	return 1.0
+
+
+## Hopkuna: a crisscross of slashes, some across and some up-and-down.
+static func _slash_grid(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	for i in 3:
+		if randf() < 0.5:
+			var y := randf_range(area.position.y + 8, area.end.y - 8)
+			_slash_line(enemy, parent, area, Vector2(area.position.x + 3, y), Vector2(area.end.x - 3, y), 0.7)
+		else:
+			var x := randf_range(area.position.x + 8, area.end.x - 8)
+			_slash_line(enemy, parent, area, Vector2(x, area.position.y + 3), Vector2(x, area.end.y - 3), 0.7)
+	return 1.4
+
+
+## Hopkuna: arrows appear at the edge, lock onto the SOUL, then fire.
+static func _red_arrows(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var start: Vector2
+	match randi() % 3:
+		0: start = Vector2(randf_range(area.position.x, area.end.x), area.position.y + 4)
+		1: start = Vector2(area.position.x + 4, randf_range(area.position.y, area.end.y))
+		_: start = Vector2(area.end.x - 4, randf_range(area.position.y, area.end.y))
+	var arrow := _bullet(enemy, parent, area, start)
+	arrow.shape = "arrow"
+	arrow.size = 10.0
+	arrow.color = HOPKUNA_RED
+	arrow.delay = 0.35
+	arrow.velocity = (soul_position - start).normalized() * 170.0
+	return 0.5
+
+
+## Hopkuna: a ring of shards bursts outward from one spot.
+static func _burst(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var center := Vector2(randf_range(area.position.x + 20, area.end.x - 20), randf_range(area.position.y + 20, area.end.y - 20))
+	if center.distance_to(soul_position) < 40:
+		center = area.get_center() + (area.get_center() - soul_position).normalized() * 40
+	for i in 10:
+		var shard := _bullet(enemy, parent, area, center)
+		shard.size = 6.0
+		shard.color = HOPKUNA_RED
+		shard.shape = "star"
+		shard.delay = 0.5
+		shard.velocity = Vector2.from_angle(i * TAU / 10 + randf() * 0.3) * 100.0
+	return 1.5

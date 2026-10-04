@@ -16,6 +16,14 @@ var flavor: Callable
 ## Optional. Called as attackers.call(enemy_turn, enemies) -> Array[Enemy] to decide
 ## who attacks. If not set, every enemy still fighting attacks.
 var attackers: Callable
+## Song to play ("battle" if left empty). See audio/music/.
+var music: String = ""
+## If not empty, only these party members fight (e.g. ["Elric"] when Hop can't).
+var party_only: Array[String] = []
+## If above 0, this is a fight you can't win: survive this many enemy turns
+## and it ends, showing `survive_lines`.
+var survive_turns: int = 0
+var survive_lines: Array = []
 
 
 func flavor_text(turn: int) -> String:

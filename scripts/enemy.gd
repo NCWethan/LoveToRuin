@@ -28,10 +28,15 @@ var check_text: String
 ##            "{actor}" is replaced by whoever is acting.
 var acts: Array[Dictionary] = []
 
-## The attacks this enemy knows (see attacks.gd). It uses a different one each turn, in order.
+## The attacks this enemy knows (see attacks.gd). Each turn it picks one at random.
 var patterns: Array[String] = []
 ## Speed for its simple bullets, in pixels per second.
 var bullet_speed: float = 100.0
+
+## If set, MERCY doesn't work on this enemy and this is shown instead.
+var spare_refusal: String = ""
+## If set, shown after every FIGHT hit (e.g. "It barely leaves a mark.").
+var hit_line: String = ""
 
 ## Lines that can appear in the text box at the start of the player's turn.
 var flavor_lines: Array[String] = []

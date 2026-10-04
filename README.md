@@ -6,7 +6,7 @@ A Deltarune/Undertale-style RPG made with [Godot](https://godotengine.org/).
 
 ## Status
 
-Chapter 1 in progress. Playable from the title screen: Mt. Carmel High School (meet Hop, fragment 1, the tutorial fight), the PQ Mall hub, and Westview High School after dark (fragment 2 and the Mascot).
+**Chapter 1 is playable from start to finish:** Mt. Carmel High School (meet Hop, fragment 1, the tutorial fight), the PQ Mall hub, Westview High School after dark (fragment 2 and Wally Wolverine), and Hilltop Park (fragment 3, Hopkuna, the REVOLUTION Corps, and the route choice: Pacifist, Neutral or Genocide).
 
 See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 

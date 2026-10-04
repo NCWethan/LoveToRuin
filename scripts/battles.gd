@@ -5,6 +5,8 @@ extends RefCounted
 
 static func create(id: String) -> BattleData:
 	match id:
+		"hopkuna":
+			return HilltopBattles.create(id)
 		"pop_quiz", "hall_pass", "wally":
 			return WestviewBattles.create(id)
 		_:

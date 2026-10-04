@@ -185,3 +185,15 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 	if goodbyes.has(battle_id):
 		await Game.dialogue.say([goodbyes[battle_id][0 if spared else 1]])
 	return true
+
+
+# --- Effects ------------------------------------------------------------------
+
+## Shakes the camera for a moment (explosions, big hits).
+func shake(strength: float = 6.0, duration: float = 0.4) -> void:
+	var tween := create_tween()
+	var steps := int(duration / 0.04)
+	for i in steps:
+		var fade := 1.0 - float(i) / steps
+		tween.tween_property(camera, "offset", Vector2(randf_range(-1, 1), randf_range(-1, 1)) * strength * fade, 0.04)
+	tween.tween_property(camera, "offset", Vector2.ZERO, 0.04)

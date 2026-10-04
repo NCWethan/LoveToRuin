@@ -81,6 +81,12 @@ $palette['6'] = @(132, 86, 52)     # brown fur
 $palette['8'] = @(78, 48, 28)      # dark brown markings / paws
 $palette['9'] = @(196, 156, 110)   # tan snout and belly
 $palette['Z'] = @(205, 205, 85)    # yellow-green eyes
+# Hopkuna (Hop, tinted red)
+$palette['U'] = @(196, 138, 140)   # red-tinted head
+$palette['X'] = @(96, 54, 62)      # red-tinted shirt
+$palette['q'] = @(206, 150, 152)   # red-tinted arms
+$palette['z'] = @(146, 104, 122)   # red-tinted pants
+$palette['I'] = @(255, 40, 50)     # glowing red eyes
 $outline = @(125, 125, 140)
 
 $sprites = @{
@@ -748,6 +754,42 @@ $sprites['wally'] = @(
     "......888888888..888888888......"
 )
 
+
+# Hopkuna: Hop's body, tinted red, covered in black tattoo markings, eyes glowing red.
+$sprites['hopkuna'] = @(
+    "........................",
+    "........KKKKKKKK........",
+    "........KKKKKKKK........",
+    "........DDDDDDDD........",
+    "......KKKKKKKKKKKK......",
+    "........UKUUUUKU........",
+    "........UKKUUKKU........",
+    "........UUIUUIUU........",
+    "........KUUUUUUK........",
+    "........UKKKKKKU........",
+    "........UKWKWKWU........",
+    "........KKKKKKKK........",
+    "...qqqqXXXXXXXXXXqqqq...",
+    "...KKKKXXKXXXXKXXKKKK...",
+    "...qqqqXXXKXXKXXXqqqq...",
+    "...qqqqXXXXKKXXXXqqqq...",
+    "...qKqqXXXKXXKXXXqqKq...",
+    "...qqqqXXKXXXXKXXqqqq...",
+    "...KKKKXXXXXXXXXXKKKK...",
+    "...qqqqXXXXXXXXXXqqqq...",
+    "...qqKqXXXXXXXXXXqKqq...",
+    "...qqqqXXXXXXXXXXqqqq...",
+    ".......zzzzznzzzz.......",
+    ".......zKzzznzzKz.......",
+    ".......zzzzznzzzz.......",
+    ".......zzKzznzKzz.......",
+    ".......zzzzznzzzz.......",
+    ".......zKzzznzzKz.......",
+    ".......zzzzznzzzz.......",
+    ".......zzzzznzzzz.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
 
 # --- Side views (walking right; the game flips them for walking left) -------
 # Each character gets two frames: legs together and mid-step.

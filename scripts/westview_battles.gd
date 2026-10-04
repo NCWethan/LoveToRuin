@@ -15,6 +15,7 @@ static func create(id: String) -> BattleData:
 			data.intro = ["* A Hall Pass sprints into you!", "* (It's late for something.)"]
 		"wally":
 			data.enemies.append(_wally())
+			data.music = "boss"
 			data.intro = [
 				"* Wally Wolverine rises from center court!",
 				"* (Something inside the costume is glowing red.)",

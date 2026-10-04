@@ -14,7 +14,7 @@ extends Node2D
 @export var damage: int = 3
 @export var color: Color = Color.WHITE
 ## How it's drawn: "square", "egg", "bunny", "star", "pencil", "bubble", "card",
-## "finger", "ball" or "claw".
+## "finger", "ball", "claw" or "arrow".
 @export var shape: String = "square"
 
 ## Bounces up when it reaches the bottom of the box (for hopping things).
@@ -138,6 +138,12 @@ func _draw() -> void:
 			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN
 			draw_line(-dir * size, dir * size * 0.5, color, 3.0)
 			draw_line(dir * size * 0.5, dir * size, color, 1.5)
+		"arrow":
+			# An arrow pointing the way it flies.
+			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN
+			var side := dir.orthogonal() * size * 0.4
+			draw_line(-dir * size, dir * size * 0.6, color, 2.0)
+			draw_colored_polygon(PackedVector2Array([dir * size, dir * size * 0.3 + side, dir * size * 0.3 - side]), color)
 		"ball":
 			draw_circle(Vector2.ZERO, half, color)
 			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)

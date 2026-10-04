@@ -151,3 +151,20 @@ func _patrol(a: Vector2, b: Vector2, speed: float) -> void:
 		i += 1
 		if is_inside_tree():
 			await get_tree().create_timer(0.6).timeout
+
+
+## Changes how the character looks (e.g. Hop becoming Hopkuna) to another
+## character's pictures, by name.
+func set_look(who: String) -> void:
+	var look := Cast.make(who)
+	front = look.front
+	back = look.back
+	side = look.side
+	look.free()
+
+
+## Lies down (fallen over) or gets back up.
+func lie_down(down: bool = true) -> void:
+	# Tipping the picture over around the feet lays it flat on the ground.
+	if _sprite:
+		_sprite.rotation = PI / 2 if down else 0.0

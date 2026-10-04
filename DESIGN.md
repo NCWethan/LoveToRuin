@@ -499,10 +499,25 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - **Afterwards** — fragment 2 rolls out of Wally's costume. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
 
 ### Milestone 7 — Hilltop Park and the climax
-- [ ] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)
-- [ ] The final battle against **Hopkuna** on the big field
-- [ ] The REVOLUTION Corps arrives
-- [ ] **The route choice** — end of Chapter 1
+- [x] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)
+- [x] The final battle against **Hopkuna** on the big field
+- [x] The REVOLUTION Corps arrives
+- [x] **The route choice** — end of Chapter 1
+
+**As built:**
+- **Hilltop Park at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Hilltop at Night."
+- **The eruption** — walking toward the glow, the fragment fires at Elric. Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
+- **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks: Cleave, Slash Grid, Red Arrows, Burst (all with warnings). ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
+- **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola and Rooster surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
+- **The route choice** (with an "Are you sure?" confirm):
+
+| Choice | What happens | Locks |
+|---|---|---|
+| **Join the REVOLUTION Corps? (Pacifist)** | Elric joins; NCWethan's group hug; "You saved me. We'll save you." The Corps resolves to destroy the fragments. | Genocide, Neutral |
+| **Chart your own path? (Neutral)** | Elric walks away alone; the Corps' offer stays open; Hop stays with the Corps. | Genocide |
+| **Go with Hop? (Genocide)** | The Corps throws Elric out ("GET OUT."); Elric and Hop walk into the dark. *"Good choice, little wanderer."* | Pacifist, Neutral |
+
+- The game saves the choice, then shows **CHAPTER 1 COMPLETE** with the route.
 
 ### Throughout
 - Pixel-art sprites for Elric and the cast (from the [reference images](art/reference/))
