@@ -133,3 +133,21 @@ func _update_sprite() -> void:
 	else:
 		_sprite.texture = back if _facing == Vector2.UP else front
 		_sprite.position.y = -absf(sin(_time * 12.0)) * 1.5 if _walking else 0.0
+
+
+## Walks back and forth between two points forever (pausing during dialogue).
+func patrol(a: Vector2, b: Vector2, speed: float = 50.0) -> void:
+	_patrol.call_deferred(a, b, speed)
+
+
+func _patrol(a: Vector2, b: Vector2, speed: float) -> void:
+	var targets := [b, a]
+	var i := 0
+	while is_inside_tree():
+		if Game.busy or Game.transitioning:
+			await get_tree().process_frame
+			continue
+		await walk_to(targets[i % 2], speed)
+		i += 1
+		if is_inside_tree():
+			await get_tree().create_timer(0.6).timeout

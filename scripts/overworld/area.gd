@@ -11,6 +11,10 @@ var room: Room
 ## so people further down are drawn in front.
 var world: Node2D
 var player: Player
+var camera: Camera2D
+## Rooms within this area's map (in pixels). The camera stays inside whichever
+## room Elric is in. Leave empty to use the whole map as one room.
+var rooms: Array[Rect2] = []
 
 var _cutscene_running: bool = false
 
@@ -34,7 +38,7 @@ func setup_area(default_spawn: Vector2) -> void:
 	Game.spawn_position = null
 	world.add_child(player)
 
-	var camera := Camera2D.new()
+	camera = Camera2D.new()
 	camera.limit_left = 0
 	camera.limit_top = 0
 	camera.limit_right = int(room.pixel_size().x)
@@ -106,3 +110,78 @@ func push_player(offset: Vector2) -> void:
 	var tween := create_tween()
 	tween.tween_property(player, "position", player.position + offset, 0.25)
 	await tween.finished
+
+
+# --- Rooms and doors --------------------------------------------------------
+
+## Keeps the camera inside the room Elric is standing in (if the area has rooms).
+func fit_camera_to_room() -> void:
+	var bounds := Rect2(Vector2.ZERO, room.pixel_size())
+	for r in rooms:
+		if r.has_point(player.position):
+			bounds = r
+			break
+	camera.limit_left = int(bounds.position.x)
+	camera.limit_top = int(bounds.position.y)
+	camera.limit_right = int(bounds.end.x)
+	camera.limit_bottom = int(bounds.end.y)
+	camera.reset_smoothing()
+
+
+## Moves Elric (and anyone following) to `to`, with a quick fade, like walking through a door.
+func go_through_door(to: Vector2) -> void:
+	await Game.fade_out(0.2)
+	teleport_player(to)
+	await Game.fade_in(0.2)
+
+
+## Moves Elric (and followers) instantly, keeping everyone in the same formation.
+func teleport_player(to: Vector2) -> void:
+	var offset := to - player.position
+	player.position = to
+	for i in player.trail.size():
+		player.trail[i] += offset
+	for node in world.get_children():
+		var character := node as Character
+		if character and character.follow == player:
+			character.position += offset
+	fit_camera_to_room()
+
+
+# --- Wandering enemies ------------------------------------------------------
+
+## An enemy walking back and forth between `from` and `to`. Touching it starts the
+## battle `battle_id`. Once it's been beaten or spared, it doesn't come back.
+func add_roamer(sprite_name: String, battle_id: String, from: Vector2, to: Vector2) -> Character:
+	if flag("beat_" + battle_id):
+		return null
+	var roamer := add_character(Cast.make(sprite_name, false), from)
+	roamer.set_meta("battle", battle_id)
+	roamer.patrol(from, to)
+	return roamer
+
+
+## Call from _physics_process: starts a battle if Elric touches a wandering enemy.
+func check_roamers(scene_path: String) -> void:
+	for node in world.get_children():
+		var roamer := node as Character
+		if roamer and roamer.has_meta("battle") and roamer.position.distance_to(player.position) < 20.0:
+			var battle_id: String = roamer.get_meta("battle")
+			roamer.remove_meta("battle")
+			run_cutscene(func() -> void:
+				await Game.start_battle(battle_id, scene_path, player.position))
+			return
+
+
+## Call at the start of the area: if we just came back from a wandering enemy's
+## battle, mark it as beaten and say how it went. Returns true if that happened.
+func handle_battle_return(goodbyes: Dictionary) -> bool:
+	var battle_id: String = Game.battle_result.get("id", "")
+	if battle_id == "" or flag("beat_" + battle_id):
+		return false
+	Game.flags["beat_" + battle_id] = true
+	var spared: bool = not Game.battle_result.get("spared", []).is_empty()
+	Game.battle_result = {}
+	if goodbyes.has(battle_id):
+		await Game.dialogue.say([goodbyes[battle_id][0 if spared else 1]])
+	return true

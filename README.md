@@ -6,7 +6,7 @@ A Deltarune/Undertale-style RPG made with [Godot](https://godotengine.org/).
 
 ## Status
 
-Chapter 1 in progress. The opening is playable from the title screen: arrive at Mt. Carmel High School, meet Hop, find the first fragment, and survive the tutorial fight against Eggo and BigJoe6.
+Chapter 1 in progress. Playable from the title screen: Mt. Carmel High School (meet Hop, fragment 1, the tutorial fight), the PQ Mall hub, and Westview High School after dark (fragment 2 and the Mascot).
 
 See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 

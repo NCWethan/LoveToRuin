@@ -13,13 +13,18 @@ extends Node2D
 ## How much HP the SOUL loses when this bullet hits it.
 @export var damage: int = 3
 @export var color: Color = Color.WHITE
-## How it's drawn: "square", "egg", "bunny" or "star".
+## How it's drawn: "square", "egg", "bunny", "star", "pencil", "bubble", "card",
+## "finger" or "ball".
 @export var shape: String = "square"
 
 ## Bounces up when it reaches the bottom of the box (for hopping things).
 var bounce_speed: float = 0.0
 ## Cracks into this many small pieces when it reaches the bottom of the box.
 var splits_into: int = 0
+## Seconds it waits as a faint, harmless warning before it starts moving.
+var delay: float = 0.0
+## How far it drifts side to side while moving (for falling paper and confetti).
+var sway: float = 0.0
 
 ## The area the bullet lives in. Once it flies out, it disappears.
 var bounds: Rect2
@@ -34,8 +39,16 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
+	if not is_armed():
+		# Still a warning: see-through and not moving yet.
+		modulate.a = 0.35
+		queue_redraw()
+		return
+	modulate.a = 1.0
 	velocity += acceleration * delta
 	position += velocity * delta
+	if sway != 0.0:
+		position.x += cos(_time * 6.0) * sway * delta
 
 	if bounds.has_area():
 		var floor_y := bounds.end.y - size / 2
@@ -71,6 +84,8 @@ func _split() -> void:
 
 ## Returns the square the SOUL has to touch to get hit, in screen coordinates.
 func get_hitbox() -> Rect2:
+	if not is_armed():
+		return Rect2()
 	return Rect2(global_position - Vector2(size, size) / 2, Vector2(size, size))
 
 
@@ -91,5 +106,32 @@ func _draw() -> void:
 			for i in 4:
 				var dir := Vector2.from_angle(spin + i * PI / 2) * half
 				draw_line(-dir, dir, color, 2.0)
+		"pencil":
+			# A yellow pencil pointing the way it flies, pink eraser at the back.
+			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN
+			draw_line(-dir * size, dir * size * 0.6, Color(0.95, 0.8, 0.2), 3.0)
+			draw_line(dir * size * 0.6, dir * size, Color(0.3, 0.25, 0.2), 2.0)
+			draw_line(-dir * size, -dir * size * 0.7, Color(1.0, 0.6, 0.7), 3.0)
+		"bubble":
+			# An answer bubble from a test sheet.
+			draw_arc(Vector2.ZERO, half, 0, TAU, 16, color, 2.0)
+			draw_circle(Vector2.ZERO, half * 0.45, color)
+		"card":
+			# A small wooden hall pass.
+			draw_rect(Rect2(-half, -half * 0.6, size, size * 0.6), color)
+			draw_rect(Rect2(-half * 0.5, -half * 0.3, size * 0.5, 2), Color(0.2, 0.15, 0.1))
+		"finger":
+			# A big foam finger.
+			var point := 1.0 if velocity.x >= 0 else -1.0
+			draw_rect(Rect2(-half, -half * 0.5, size * 0.7, size * 0.6), color)
+			draw_rect(Rect2(Vector2(half * 0.2 if point > 0 else -half * 0.9, -half), Vector2(half * 0.7, half * 0.6)), color)
+		"ball":
+			draw_circle(Vector2.ZERO, half, color)
+			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)
 		_:
 			draw_rect(Rect2(-half, -half, size, size), color)
+
+
+## False while the bullet is still just a warning.
+func is_armed() -> bool:
+	return _time >= delay

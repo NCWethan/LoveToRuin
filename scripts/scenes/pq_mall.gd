@@ -5,11 +5,11 @@ extends Area
 ##   mall_arrived      First visit: Hop shows Elric around.
 ##   heard_lore        Nat tells the old story about the fragments (optional).
 ##   heard_westview    Nassan points Elric toward Westview High School (needed to move on).
-##   mall_done         Elric heads east toward Westview (end of the demo for now).
+##   mall_done         Elric heads east to Westview High School.
 
 const SCENE := "res://scenes/pq_mall.tscn"
 const MT_CARMEL_SCENE := "res://scenes/mt_carmel.tscn"
-const DEMO_END_SCENE := "res://scenes/demo_end.tscn"
+const WESTVIEW_SCENE := "res://scenes/westview.tscn"
 
 ## Where Elric appears when arriving from Mt. Carmel (bottom-left sidewalk).
 const ENTRY := Vector2(50, 535)
@@ -207,7 +207,7 @@ func _head_east() -> void:
 		{"who": "Hop", "text": "...You're going first, by the way.", "mood": "smug"},
 	])
 	Game.flags["mall_done"] = true
-	await Game.change_scene(DEMO_END_SCENE)
+	await Game.change_scene(WESTVIEW_SCENE)
 
 
 func _head_west() -> void:

@@ -37,6 +37,8 @@ const YELLOW := Color(1.0, 1.0, 0.0)
 ## After getting hit, how long the SOUL can't be hurt again, in seconds.
 @export var invincibility_time: float = 1.0
 
+## The fight being played (enemies, intro text, turn text). See battles.gd.
+var _data: BattleData
 var party: Array[PartyMember] = []
 var enemies: Array[Enemy] = []
 var items: Array[Dictionary] = []
@@ -115,13 +117,15 @@ func _ready() -> void:
 		# Started on its own (F6 in the editor): use a fresh party for testing.
 		party = TutorialBattle.create_party()
 		items = TutorialBattle.create_items()
-	enemies = TutorialBattle.create_enemies()
+	# Which fight this is (the tutorial when testing with F6).
+	_data = Battles.create(Game.pending_battle if Game.pending_battle != "" else "tutorial")
+	enemies = _data.enemies
 
 	box.center = BOX_CENTER
 	box.size = TEXT_BOX_SIZE
 	soul.can_move = false
 
-	_show_messages(TutorialBattle.INTRO, _start_enemy_turn)
+	_show_messages(_data.intro, _start_player_turn if _data.player_first else _start_enemy_turn)
 
 
 func _process(delta: float) -> void:
@@ -204,7 +208,7 @@ func _start_player_turn() -> void:
 	turn += 1
 	actions.clear()
 	current_member = -1
-	_flavor = TutorialBattle.flavor_text(turn, enemies)
+	_flavor = _data.flavor_text(turn)
 	_set_text(_flavor)
 	# Wait for the box to finish growing back before the text starts typing.
 	_typed = -0.3 * TYPE_SPEED
@@ -506,7 +510,7 @@ func _start_enemy_turn() -> void:
 	state = State.ENEMY_TURN
 	_text = ""
 	_enemy_timer = ENEMY_TURN_TIME
-	_attackers = TutorialBattle.attackers(enemy_turn, enemies)
+	_attackers = _data.who_attacks(enemy_turn)
 	enemy_turn += 1
 
 	_spawn_timers.clear()
@@ -635,7 +639,7 @@ func _victory() -> void:
 
 	if Game.pending_battle != "":
 		# Tell the overworld how it went, so the story can react.
-		var result := {"spared": [], "defeated": [], "bond": bond_gained, "exp": exp_gained, "money": money}
+		var result := {"id": _data.id, "spared": [], "defeated": [], "bond": bond_gained, "exp": exp_gained, "money": money}
 		for enemy in enemies:
 			if enemy.state == "spared":
 				result["spared"].append(enemy.name)
@@ -818,8 +822,8 @@ func _draw_enemies() -> void:
 		var top := pos.y - 40.0
 
 		if enemy.sprite:
-			# Pixel art is drawn at 3x so each pixel shows up as a crisp 3x3 block.
-			var sprite_size := enemy.sprite.get_size() * 3.0
+			# Pixel art is drawn big (3x by default) so each pixel shows up as a crisp block.
+			var sprite_size := enemy.sprite.get_size() * enemy.battle_scale
 			top = pos.y + 40.0 - sprite_size.y
 			_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
 		else:

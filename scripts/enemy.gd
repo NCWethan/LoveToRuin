@@ -33,6 +33,12 @@ var patterns: Array[String] = []
 ## Speed for its simple bullets, in pixels per second.
 var bullet_speed: float = 100.0
 
+## Lines that can appear in the text box at the start of the player's turn.
+var flavor_lines: Array[String] = []
+
+## How many times bigger the sprite is drawn in battle (bosses can be bigger).
+var battle_scale: float = 3.0
+
 ## Short lines shown in a speech bubble during the enemy's turn.
 var taunts: Array[String] = []
 ## Used instead of taunts once the enemy can be spared.

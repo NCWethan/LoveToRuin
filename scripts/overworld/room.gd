@@ -9,11 +9,13 @@ const TILE := 20
 
 enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
-	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL }
+	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
+	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
-	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL]
+	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
+	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK]
 
 var width: int = 0
 var height: int = 0
@@ -210,6 +212,39 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			draw_rect(r, Color8(196, 120, 82))
 			draw_circle(p + Vector2(10, 10), 9.0, Color8(40, 110, 70))
 			draw_circle(p + Vector2(10, 10), 2.0, Color8(230, 230, 220))
+		VOID:
+			draw_rect(r, Color.BLACK)
+		INTERIOR_WALL:
+			# Painted school wall with a darker strip along the bottom.
+			draw_rect(r, Color8(196, 190, 170))
+			draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(120, 110, 95))
+		HALL_FLOOR:
+			# Speckled school tiles in a checker pattern.
+			var light := (x + y) % 2 == 0
+			draw_rect(r, Color8(205, 205, 195) if light else Color8(185, 185, 178))
+			_specks(x, y, r, Color8(160, 160, 155), 2)
+		LOCKER:
+			draw_rect(r, Color8(70, 95, 130))
+			draw_rect(Rect2(p + Vector2(0, 0), Vector2(1, TILE)), Color8(45, 62, 88))
+			draw_rect(Rect2(p + Vector2(4, 3), Vector2(12, 1)), Color8(45, 62, 88))
+			draw_rect(Rect2(p + Vector2(4, 5), Vector2(12, 1)), Color8(45, 62, 88))
+			draw_rect(Rect2(p + Vector2(15, 10), Vector2(2, 3)), Color8(190, 190, 190))
+		CHALKBOARD:
+			draw_rect(r, Color8(120, 90, 60))
+			draw_rect(Rect2(p + Vector2(0, 2), Vector2(TILE, 15)), Color8(40, 75, 55))
+			if (x + y) % 3 == 0:
+				draw_line(p + Vector2(3, 7), p + Vector2(15, 6), Color8(220, 225, 215), 1.0)
+		DESK:
+			var floor_light := (x + y) % 2 == 0
+			draw_rect(r, Color8(205, 205, 195) if floor_light else Color8(185, 185, 178))
+			draw_rect(Rect2(p + Vector2(2, 3), Vector2(16, 9)), Color8(170, 125, 80))
+			draw_rect(Rect2(p + Vector2(4, 12), Vector2(12, 5)), Color8(90, 90, 100))
+		GYM_FLOOR, GYM_LINE:
+			# Shiny wooden planks.
+			draw_rect(r, Color8(214, 168, 108))
+			draw_rect(Rect2(p + Vector2(0, (x % 2) * 10), Vector2(TILE, 1)), Color8(190, 145, 90))
+			if tile == GYM_LINE:
+				draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(250, 250, 250))
 		PALM:
 			_grass(x, y, r)
 			draw_rect(Rect2(p + Vector2(9, 8), Vector2(3, 12)), Color8(140, 105, 60))

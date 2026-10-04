@@ -138,3 +138,15 @@ static func flavor_text(turn: int, enemies: Array[Enemy]) -> String:
 			return "* (Low on HP? ITEM heals.\n*  DEFEND halves the damage you take.)"
 		_:
 			return "* Eggo and BigJoe6 stand their ground."
+
+
+## The tutorial fight as BattleData (enemies attack first, scripted hints each turn).
+static func create_data() -> BattleData:
+	var data := BattleData.new()
+	data.id = "tutorial"
+	data.enemies = create_enemies()
+	data.intro = INTRO
+	data.player_first = false
+	data.flavor = TutorialBattle.flavor_text
+	data.attackers = TutorialBattle.attackers
+	return data
