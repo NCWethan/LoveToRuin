@@ -366,8 +366,16 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 ## 7. Size
 
-- **Chapter 1:** the Westview High School ↔ Mt. Carmel High School area.
-- Later chapters can expand the world, like Deltarune.
+- **4 chapters**, with **3 fragments each** (12 total).
+
+| Chapter | Fragments | Area |
+|---|---|---|
+| **1** | 3 (fragments 1–3) | Westview High School ↔ Mt. Carmel High School and everything in between |
+| **2** | 3 (fragments 4–6) | *to be decided* |
+| **3** | 3 (fragments 7–9) | *to be decided* |
+| **4** | 3 (fragments 10–12) | *to be decided* |
+
+- Each chapter expands the world, like Deltarune.
 
 ## 8. Build order
 
@@ -379,7 +387,7 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
-- When in the story does Elric meet the REVOLUTION Corps?
-- How many chapters are there, and how many fragments are in each (including Chapter 1)?
+- Which chapter does the route choice (meeting the REVOLUTION Corps) happen in?
+- Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
