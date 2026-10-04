@@ -15,6 +15,7 @@ static func create(id: String) -> BattleData:
 	data.player_first = false
 	data.survive_turns = SURVIVE_TURNS
 	data.aura = Color(0.95, 0.1, 0.18)
+	data.backdrop = Color(0.85, 0.12, 0.2)
 	data.intro = [
 		"* Hopkuna attacks!",
 		"* (Hop isn't here to fight beside you.\n*  You're on your own.)",

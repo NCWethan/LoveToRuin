@@ -6,6 +6,8 @@ extends RefCounted
 static func create(id: String) -> BattleData:
 	var data := BattleData.new()
 	data.id = id
+	# Teal for the school's twisted halls; Wally gets gold below.
+	data.backdrop = Color(0.15, 0.65, 0.6)
 	match id:
 		"pop_quiz":
 			data.enemies.append(_pop_quiz())
@@ -16,6 +18,7 @@ static func create(id: String) -> BattleData:
 		"wally":
 			data.enemies.append(_wally())
 			data.music = "boss"
+			data.backdrop = Color(0.9, 0.62, 0.2)
 			data.intro = [
 				"* Wally Wolverine rises from center court!",
 				"* (Something inside the costume is glowing red.)",

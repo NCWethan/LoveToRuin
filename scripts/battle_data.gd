@@ -27,6 +27,8 @@ var survive_lines: Array = []
 ## If not transparent: during the enemy's turns, the screen around the box pulses
 ## this color and the box glows (Hopkuna's red aura).
 var aura: Color = Color(0, 0, 0, 0)
+## The color of the drifting diamond pattern behind the fight.
+var backdrop: Color = Color(0.5, 0.3, 0.85)
 
 
 func flavor_text(turn: int) -> String:

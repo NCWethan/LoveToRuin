@@ -91,6 +91,7 @@ var _invincible_timer: float = 0.0
 var _popups: Array[Dictionary] = []
 
 var _overlay: Node2D
+var _backdrop: Node2D
 var _font: Font
 
 @onready var soul: Soul = $Soul
@@ -107,6 +108,12 @@ func _ready() -> void:
 	_overlay = Node2D.new()
 	add_child(_overlay)
 	_overlay.draw.connect(_draw_overlay)
+
+	# The drifting diamond pattern behind the fight (drawn first, behind everything).
+	_backdrop = Node2D.new()
+	add_child(_backdrop)
+	move_child(_backdrop, 0)
+	_backdrop.draw.connect(_draw_backdrop)
 
 	if Game.pending_battle != "":
 		# Started from the overworld: use the real party and inventory,
@@ -159,6 +166,7 @@ func _process(delta: float) -> void:
 			_process_game_over(delta)
 
 	_overlay.queue_redraw()
+	_backdrop.queue_redraw()
 
 
 var _last_beep: int = 0
@@ -1030,3 +1038,32 @@ func _draw_bar(rect: Rect2, fraction: float, color: Color) -> void:
 func _draw_centered(text: String, center: Vector2, font_size: int, color: Color) -> void:
 	var width := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	_overlay.draw_string(_font, Vector2(center.x - width / 2, center.y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
+
+
+# --- Background -----------------------------------------------------------
+
+const BACKDROP := Rect2(20, 20, 600, 215)
+const DIAMOND_SPACING := 36.0
+
+## A slowly drifting lattice of diamonds behind the fight, in the fight's color,
+## fading out toward the edges, with a few twinkling points.
+func _draw_backdrop() -> void:
+	if state == State.GAME_OVER or _data == null:
+		return
+	var color := _data.backdrop
+	var t := Time.get_ticks_msec() / 1000.0
+	var drift := Vector2(fmod(t * 8.0, DIAMOND_SPACING), fmod(t * 4.0, DIAMOND_SPACING))
+	var columns := int(BACKDROP.size.x / DIAMOND_SPACING) + 2
+	var rows := int(BACKDROP.size.y / (DIAMOND_SPACING * 0.5)) + 3
+	for gx in range(-1, columns):
+		for gy in range(-2, rows):
+			var center := BACKDROP.position + drift + Vector2(gx * DIAMOND_SPACING + (DIAMOND_SPACING / 2 if gy % 2 != 0 else 0.0), gy * DIAMOND_SPACING * 0.5)
+			var edge := minf(minf(center.x - BACKDROP.position.x, BACKDROP.end.x - center.x), minf(center.y - BACKDROP.position.y, BACKDROP.end.y - center.y))
+			if edge < 10.0:
+				continue
+			var alpha := clampf((edge - 10.0) / 40.0, 0.0, 1.0) * 0.45
+			var r := 9.0
+			_backdrop.draw_polyline(PackedVector2Array([center + Vector2(0, -r), center + Vector2(r, 0), center + Vector2(0, r), center + Vector2(-r, 0), center + Vector2(0, -r)]), Color(color, alpha), 1.5)
+			if posmod(gx * 7 + gy * 13, 11) == 0:
+				var twinkle := 0.5 + 0.5 * sin(t * 3.0 + gx + gy)
+				_backdrop.draw_circle(center, 2.0, Color(color.lightened(0.5), alpha * twinkle * 1.6))
