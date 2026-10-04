@@ -1,0 +1,189 @@
+class_name Room
+extends Node2D
+## A map made of 20 x 20 pixel tiles. Each tile type is drawn as simple pixel art,
+## and solid tiles (walls, trees, fences...) get collision so the player can't walk through.
+##
+## Build a map with set_tile() / fill(), then call build().
+
+const TILE := 20
+
+enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
+	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF }
+
+## Tiles the player can't walk through.
+const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF]
+
+var width: int = 0
+var height: int = 0
+var _tiles := PackedInt32Array()
+
+
+func setup(map_width: int, map_height: int, fill_tile: int) -> void:
+	width = map_width
+	height = map_height
+	_tiles.resize(width * height)
+	_tiles.fill(fill_tile)
+
+
+func set_tile(x: int, y: int, tile: int) -> void:
+	if x >= 0 and y >= 0 and x < width and y < height:
+		_tiles[y * width + x] = tile
+
+
+func get_tile(x: int, y: int) -> int:
+	if x < 0 or y < 0 or x >= width or y >= height:
+		return WALL
+	return _tiles[y * width + x]
+
+
+## Fills a rectangle of tiles: `w` wide and `h` tall, starting at tile (x, y).
+func fill(x: int, y: int, w: int, h: int, tile: int) -> void:
+	for ty in range(y, y + h):
+		for tx in range(x, x + w):
+			set_tile(tx, ty, tile)
+
+
+## The map's size in pixels.
+func pixel_size() -> Vector2:
+	return Vector2(width, height) * TILE
+
+
+## The center of tile (x, y) in pixels.
+static func tile_center(x: int, y: int) -> Vector2:
+	return Vector2(x * TILE + TILE / 2, y * TILE + TILE / 2)
+
+
+## Call after setting tiles: draws the map and creates the walls.
+func build() -> void:
+	queue_redraw()
+	_build_collision()
+
+
+func _build_collision() -> void:
+	var body := StaticBody2D.new()
+	add_child(body)
+
+	# One wide box per row of touching solid tiles keeps the number of shapes small.
+	for y in height:
+		var x := 0
+		while x < width:
+			if get_tile(x, y) in SOLID:
+				var start := x
+				while x < width and get_tile(x, y) in SOLID:
+					x += 1
+				_add_box(body, Rect2(start * TILE, y * TILE, (x - start) * TILE, TILE))
+			else:
+				x += 1
+
+	# Invisible walls around the edge of the map.
+	var size := pixel_size()
+	_add_box(body, Rect2(-TILE, -TILE, size.x + TILE * 2, TILE))
+	_add_box(body, Rect2(-TILE, size.y, size.x + TILE * 2, TILE))
+	_add_box(body, Rect2(-TILE, 0, TILE, size.y))
+	_add_box(body, Rect2(size.x, 0, TILE, size.y))
+
+
+func _add_box(body: StaticBody2D, rect: Rect2) -> void:
+	var shape := RectangleShape2D.new()
+	shape.size = rect.size
+	var collision := CollisionShape2D.new()
+	collision.shape = shape
+	collision.position = rect.get_center()
+	body.add_child(collision)
+
+
+# --- Drawing --------------------------------------------------------------
+
+func _draw() -> void:
+	for y in height:
+		for x in width:
+			_draw_tile(x, y, get_tile(x, y))
+
+
+## A repeatable "random" number for each tile, so details like grass specks
+## are scattered but stay in the same place every time.
+func _hash(x: int, y: int, salt: int = 0) -> int:
+	var h := (x * 73856093) ^ (y * 19349663) ^ (salt * 83492791)
+	return absi(h)
+
+
+func _draw_tile(x: int, y: int, tile: int) -> void:
+	var r := Rect2(x * TILE, y * TILE, TILE, TILE)
+	var p := r.position
+	match tile:
+		GRASS:
+			_grass(x, y, r)
+		SIDEWALK:
+			draw_rect(r, Color8(178, 178, 170))
+			draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(150, 150, 142))
+			draw_rect(Rect2(p, Vector2(1, TILE)), Color8(150, 150, 142))
+		ASPHALT, PARKING_LINE:
+			draw_rect(r, Color8(58, 58, 64))
+			_specks(x, y, r, Color8(72, 72, 78), 3)
+			if tile == PARKING_LINE:
+				draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(230, 230, 230))
+		WALL:
+			draw_rect(r, Color8(200, 172, 132))
+			# Bricks: a line every 5 pixels, staggered.
+			for row in 4:
+				draw_rect(Rect2(p + Vector2(0, row * 5), Vector2(TILE, 1)), Color8(172, 146, 110))
+				var offset := 5 if (row + y) % 2 == 0 else 15
+				draw_rect(Rect2(p + Vector2(offset, row * 5), Vector2(1, 5)), Color8(172, 146, 110))
+		ROOF:
+			draw_rect(r, Color8(120, 70, 60))
+			draw_rect(Rect2(p + Vector2(0, 14), Vector2(TILE, 2)), Color8(95, 55, 48))
+		WINDOW:
+			draw_rect(r, Color8(200, 172, 132))
+			draw_rect(Rect2(p + Vector2(3, 3), Vector2(14, 14)), Color8(90, 90, 100))
+			draw_rect(Rect2(p + Vector2(4, 4), Vector2(12, 12)), Color8(120, 170, 215))
+			draw_rect(Rect2(p + Vector2(9, 4), Vector2(2, 12)), Color8(90, 90, 100))
+			draw_rect(Rect2(p + Vector2(5, 5), Vector2(3, 3)), Color8(200, 230, 250))
+		DOOR:
+			draw_rect(r, Color8(120, 82, 52))
+			draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(90, 60, 38))
+			draw_rect(Rect2(p + Vector2(13, 10), Vector2(2, 2)), Color8(230, 200, 90))
+		TREE:
+			_grass(x, y, r)
+			draw_rect(Rect2(p + Vector2(8, 12), Vector2(4, 8)), Color8(100, 70, 40))
+			draw_circle(p + Vector2(10, 9), 9.0, Color8(36, 92, 44))
+			draw_circle(p + Vector2(7, 6), 3.0, Color8(60, 125, 62))
+		FENCE:
+			_grass(x, y, r)
+			draw_rect(Rect2(p + Vector2(0, 4), Vector2(TILE, 2)), Color8(160, 160, 168))
+			draw_rect(Rect2(p + Vector2(0, 12), Vector2(TILE, 2)), Color8(160, 160, 168))
+			draw_rect(Rect2(p + Vector2(2, 2), Vector2(2, 16)), Color8(130, 130, 138))
+			draw_rect(Rect2(p + Vector2(12, 2), Vector2(2, 16)), Color8(130, 130, 138))
+		FIELD, FIELD_LINE:
+			var stripe := Color8(84, 166, 74) if y % 2 == 0 else Color8(78, 156, 68)
+			draw_rect(r, stripe)
+			if tile == FIELD_LINE:
+				draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(235, 235, 235))
+		BLEACHERS:
+			draw_rect(r, Color8(150, 152, 162))
+			draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 2)), Color8(115, 117, 128))
+			draw_rect(Rect2(p + Vector2(0, 14), Vector2(TILE, 2)), Color8(115, 117, 128))
+		BENCH:
+			_grass(x, y, r)
+			draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 6)), Color8(140, 95, 55))
+			draw_rect(Rect2(p + Vector2(2, 12), Vector2(2, 5)), Color8(80, 80, 85))
+			draw_rect(Rect2(p + Vector2(16, 12), Vector2(2, 5)), Color8(80, 80, 85))
+		ROAD, ROAD_LINE:
+			draw_rect(r, Color8(48, 48, 54))
+			_specks(x, y, r, Color8(62, 62, 68), 2)
+			if tile == ROAD_LINE and x % 3 != 0:
+				draw_rect(Rect2(p + Vector2(0, 9), Vector2(TILE, 2)), Color8(230, 200, 60))
+		DIRT:
+			draw_rect(r, Color8(150, 120, 80))
+			_specks(x, y, r, Color8(130, 100, 65), 3)
+
+
+func _grass(x: int, y: int, r: Rect2) -> void:
+	draw_rect(r, Color8(72, 140, 62))
+	_specks(x, y, r, Color8(60, 122, 52), 4)
+
+
+## A few darker pixels scattered on a tile.
+func _specks(x: int, y: int, r: Rect2, color: Color, count: int) -> void:
+	for i in count:
+		var h := _hash(x, y, i + 1)
+		draw_rect(Rect2(r.position + Vector2(h % 18, (h / 18) % 18), Vector2(2, 2)), color)

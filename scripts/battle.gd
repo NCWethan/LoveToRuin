@@ -94,7 +94,6 @@ var _font: Font
 func _ready() -> void:
 	# Battles happen on a black background, like in Undertale and Deltarune.
 	RenderingServer.set_default_clear_color(Color.BLACK)
-	_add_input_actions()
 	_font = ThemeDB.fallback_font
 
 	# Everything except the box and the SOUL (text, menus, enemies, HP) is drawn
@@ -103,9 +102,16 @@ func _ready() -> void:
 	add_child(_overlay)
 	_overlay.draw.connect(_draw_overlay)
 
-	party = TutorialBattle.create_party()
+	if Game.pending_battle != "":
+		# Started from the overworld: use the real party and inventory,
+		# so HP and used items carry over.
+		party = Game.party
+		items = Game.items
+	else:
+		# Started on its own (F6 in the editor): use a fresh party for testing.
+		party = TutorialBattle.create_party()
+		items = TutorialBattle.create_items()
 	enemies = TutorialBattle.create_enemies()
-	items = TutorialBattle.create_items()
 
 	box.center = BOX_CENTER
 	box.size = TEXT_BOX_SIZE
@@ -117,6 +123,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_typed += delta * TYPE_SPEED
 	_update_effects(delta)
+	_text_beeps()
 
 	match state:
 		State.TEXT:
@@ -130,10 +137,21 @@ func _process(delta: float) -> void:
 		State.ENEMY_TURN:
 			_process_enemy_turn(delta)
 		State.GAME_OVER:
-			if _pressed("confirm"):
-				get_tree().reload_current_scene()
+			_process_game_over(delta)
 
 	_overlay.queue_redraw()
+
+
+var _last_beep: int = 0
+
+## A little beep every other letter while text types out.
+func _text_beeps() -> void:
+	var shown := clampi(int(_typed), 0, _text.length())
+	if shown < _last_beep:
+		_last_beep = 0
+	if shown > _last_beep and shown % 2 == 0 and _text[shown - 1] != " ":
+		Game.play_sfx("text")
+	_last_beep = shown
 
 
 # --- Text ------------------------------------------------------------------
@@ -216,9 +234,12 @@ func _place_soul_on_button() -> void:
 func _process_menu() -> void:
 	if _pressed("ui_left"):
 		_button = wrapi(_button - 1, 0, BUTTONS.size())
+		Game.play_sfx("move")
 	elif _pressed("ui_right"):
 		_button = wrapi(_button + 1, 0, BUTTONS.size())
+		Game.play_sfx("move")
 	elif _pressed("confirm"):
+		Game.play_sfx("select")
 		_pending = BUTTONS[_button]
 		match _pending:
 			"FIGHT", "ACT", "MERCY":
@@ -267,9 +288,12 @@ func _open_list(list_state: State, list: Array) -> void:
 func _process_list() -> void:
 	if _pressed("ui_up"):
 		_cursor = wrapi(_cursor - 1, 0, _list.size())
+		Game.play_sfx("move")
 	elif _pressed("ui_down"):
 		_cursor = wrapi(_cursor + 1, 0, _list.size())
+		Game.play_sfx("move")
 	elif _pressed("confirm"):
+		Game.play_sfx("select")
 		_confirm_list_choice()
 		return
 	elif _pressed("cancel"):
@@ -347,6 +371,7 @@ func _use_item(member: PartyMember, item: Dictionary, target: PartyMember) -> vo
 	var healed := mini(int(item["heal"]), target.max_hp - target.hp)
 	target.hp += healed
 	_add_popup("+%d" % healed, _panel_position(target), Color.GREEN)
+	Game.play_sfx("heal")
 
 	var lines: Array[String] = []
 	if target == member:
@@ -364,6 +389,7 @@ func _try_spare(member: PartyMember, target: Enemy) -> void:
 	elif target.can_spare():
 		target.state = "spared"
 		bond_gained += target.bond_reward
+		Game.play_sfx("spare")
 		_show_messages(["* %s spared %s!" % [member.name, target.name]], _run_next_action)
 	else:
 		_show_messages(["* %s tried to spare %s...\n* But %s isn't ready to stop fighting yet." % [member.name, target.name, target.name]], _run_next_action)
@@ -409,6 +435,7 @@ func _resolve_hit(accuracy: float) -> void:
 	var target := _bar_target
 	if accuracy < 0.0:
 		_add_popup("MISS", target.position + Vector2(0, -20), Color.LIGHT_GRAY)
+		Game.play_sfx("miss")
 		_show_messages(["* %s missed!" % member.name], _run_next_action)
 		return
 
@@ -416,6 +443,7 @@ func _resolve_hit(accuracy: float) -> void:
 	target.hp = maxi(target.hp - damage, 0)
 	target.shake = 0.4
 	_add_popup(str(damage), target.position + Vector2(0, -20), Color.RED)
+	Game.play_sfx("hit")
 
 	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, damage]]
 	if target.hp == 0:
@@ -515,6 +543,7 @@ func _hurt_party(amount: int) -> void:
 	member.hp = maxi(member.hp - damage, 0)
 	member.shake = 0.4
 	_add_popup(str(damage), _panel_position(member), Color.RED)
+	Game.play_sfx("hurt")
 	_invincible_timer = invincibility_time
 
 	if party.all(func(m: PartyMember) -> bool: return m.is_down()):
@@ -547,17 +576,103 @@ func _victory() -> void:
 		lines.append("* You earned %d BOND." % bond_gained)
 	if exp_gained > 0:
 		lines.append("* You earned %d EXP." % exp_gained)
-	lines.append("* (Press Z to fight again.)")
-	_show_messages(lines, get_tree().reload_current_scene)
+
+	if Game.pending_battle != "":
+		# Tell the overworld how it went, so the story can react.
+		var result := {"spared": [], "defeated": [], "bond": bond_gained, "exp": exp_gained}
+		for enemy in enemies:
+			if enemy.state == "spared":
+				result["spared"].append(enemy.name)
+			elif enemy.state == "defeated":
+				result["defeated"].append(enemy.name)
+		_show_messages(lines, func() -> void: Game.finish_battle(result))
+	else:
+		lines.append("* (Press Z to fight again.)")
+		_show_messages(lines, get_tree().reload_current_scene)
+
+
+# --- GAME OVER ------------------------------------------------------------
+# Like Undertale: the SOUL stops, cracks in half, shatters into pieces,
+# then "GAME OVER" fades in and "Stay determined..." types out.
+
+const CRACK_TIME := 0.8
+const SHATTER_TIME := 1.6
+const TITLE_TIME := 2.8
+const MESSAGE_TIME := 3.6
+
+var _game_over_time: float = 0.0
+var _heart_position: Vector2
+var _shards: Array[Dictionary] = []
+var _cracked: bool = false
+var _shattered: bool = false
 
 
 func _game_over() -> void:
 	state = State.GAME_OVER
 	_clear_bullets()
+	_heart_position = soul.global_position
 	soul.can_move = false
 	soul.visible = false
 	box.visible = false
 	_text = ""
+	_game_over_time = 0.0
+	_cracked = false
+	_shattered = false
+	_shards.clear()
+
+
+func _process_game_over(delta: float) -> void:
+	_game_over_time += delta
+
+	if not _cracked and _game_over_time >= CRACK_TIME:
+		_cracked = true
+		Game.play_sfx("crack")
+	if not _shattered and _game_over_time >= SHATTER_TIME:
+		_shattered = true
+		Game.play_sfx("shatter")
+		for i in 6:
+			var angle := randf_range(-PI, 0.0)
+			_shards.append({
+				"position": _heart_position,
+				"velocity": Vector2(cos(angle), sin(angle)) * randf_range(60, 160),
+			})
+	for shard in _shards:
+		shard["velocity"] += Vector2(0, 300) * delta
+		shard["position"] += shard["velocity"] * delta
+
+	if _game_over_time >= MESSAGE_TIME and _text == "":
+		_set_text("Stay determined...")
+
+	if _game_over_time >= MESSAGE_TIME and _text_finished() and _pressed("confirm"):
+		set_process(false)
+		if Game.pending_battle != "":
+			Game.continue_after_game_over()
+		else:
+			get_tree().reload_current_scene()
+
+
+func _draw_game_over() -> void:
+	var heart: Texture2D = soul.texture
+	var half := heart.get_size() / Vector2(2, 1)
+	var corner := _heart_position - heart.get_size() / 2
+
+	if not _shattered:
+		if _cracked:
+			# Two halves, pulled slightly apart.
+			_overlay.draw_texture_rect_region(heart, Rect2(corner + Vector2(-2, 0), half), Rect2(Vector2.ZERO, half))
+			_overlay.draw_texture_rect_region(heart, Rect2(corner + Vector2(half.x + 2, 0), half), Rect2(Vector2(half.x, 0), half))
+		else:
+			_overlay.draw_texture(heart, corner)
+	for shard in _shards:
+		_overlay.draw_rect(Rect2(shard["position"] - Vector2(2, 2), Vector2(4, 4)), Color.RED)
+
+	if _game_over_time >= TITLE_TIME:
+		var alpha := clampf((_game_over_time - TITLE_TIME) / 0.8, 0.0, 1.0)
+		_draw_centered("GAME OVER", Vector2(320, 160), 56, Color(1, 1, 1, alpha))
+	if _text != "":
+		_draw_centered(_text.substr(0, clampi(int(_typed), 0, _text.length())), Vector2(320, 320), 20, Color.WHITE)
+		if _text_finished():
+			_draw_centered("(press Z)", Vector2(320, 360), 14, Color.GRAY)
 
 
 # --- Helpers --------------------------------------------------------------
@@ -588,22 +703,6 @@ func _available_items() -> Array[Dictionary]:
 	return result
 
 
-## Z / Enter confirms, X / Shift goes back, like in Undertale.
-func _add_input_actions() -> void:
-	_add_keys("confirm", [KEY_Z, KEY_ENTER, KEY_KP_ENTER])
-	_add_keys("cancel", [KEY_X, KEY_SHIFT])
-
-
-func _add_keys(action: String, keys: Array) -> void:
-	if InputMap.has_action(action):
-		return
-	InputMap.add_action(action)
-	for key in keys:
-		var event := InputEventKey.new()
-		event.physical_keycode = key
-		InputMap.action_add_event(action, event)
-
-
 func _add_popup(text: String, at: Vector2, color: Color) -> void:
 	_popups.append({"text": text, "position": at, "color": color, "time": 0.8})
 
@@ -631,8 +730,7 @@ func _panel_position(member: PartyMember) -> Vector2:
 
 func _draw_overlay() -> void:
 	if state == State.GAME_OVER:
-		_draw_centered("GAME OVER", Vector2(320, 200), 48, Color.WHITE)
-		_draw_centered("Stay determined...  (press Z)", Vector2(320, 280), FONT_SIZE, Color.WHITE)
+		_draw_game_over()
 		return
 
 	_draw_party_sprites()

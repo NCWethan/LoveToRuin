@@ -45,9 +45,112 @@ $palette['s'] = @(72, 72, 80)      # dark gray shirt
 $palette['l'] = @(180, 180, 186)   # light gray arms
 $palette['B'] = @(120, 140, 165)   # blue-gray pants
 $palette['n'] = @(95, 112, 135)    # line between the legs
+# Fragment
+$palette['F'] = @(150, 20, 45)     # dark red
+$palette['f'] = @(235, 70, 95)     # bright red shine
+$palette['c'] = @(45, 0, 12)       # black-red core
+# SAVE star
+$palette['*'] = @(255, 240, 120)   # pale yellow
 $outline = @(125, 125, 140)
 
 $sprites = @{
+    'elric_back' = @(
+        "........................",
+        "........................",
+        ".........h.hh.h.........",
+        "........hhhhhhhh........",
+        ".......hhhhhhhhhh.......",
+        "........hhhhhhhh........",
+        "........hhhhhhhh........",
+        "........hhhhhhhh........",
+        "........hhhhhhhh........",
+        "........hhhhhhhh........",
+        "........LhhhhhhL........",
+        ".........LLLLLL.........",
+        "...TTTTTTTTTTTTTTTTTT...",
+        "...TTTTTTTTTTTTTTTTTT...",
+        "...TTTTTTTTTTTtTTTTTT...",
+        "...TTTTdTTTTTTttTTTTT...",
+        "...TTTTTTTTTTTTTTTTTT...",
+        "...TTTTTTTTTTTTTTTTTT...",
+        "...TTTTrrrrrrrrrrTTTT...",
+        "...TTTTTTTTTTTTTTTTTT...",
+        "...LLLLTTTTTTTTTTLLLL...",
+        "...LLLLTTTTTTTTTTLLLL...",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOtO.......",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOOO.......",
+        ".......OOOOOoOOOO.......",
+        ".......DDDDD.DDDD.......",
+        ".......DDDDD.DDDD......."
+    )
+    'hop_back' = @(
+        "........................",
+        "........KKKKKKKK........",
+        "........KKKKKKKK........",
+        "........DDDDDDDD........",
+        "......KKKKKKKKKKKK......",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "........NNNNNNNN........",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        "...llllssssssssssllll...",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......BBBBBnBBBB.......",
+        ".......DDDDD.DDDD.......",
+        ".......DDDDD.DDDD......."
+    )
+    'fragment' = @(
+        ".....F......",
+        "....FFf.....",
+        "....FfF.....",
+        "...FFFFf....",
+        "...FfFFF....",
+        "..FFFFFfF...",
+        "..FFcFFFF...",
+        "..FFFcFFf...",
+        "...FFFcFF...",
+        "...FFFFF....",
+        "....FfFF....",
+        "....FFF.....",
+        ".....FF.....",
+        ".....F......"
+    )
+    'save_star' = @(
+        ".....*.....",
+        ".....*.....",
+        "....***....",
+        "***********",
+        ".*********.",
+        "..*******..",
+        "...*****...",
+        "..***.***..",
+        "..**...**..",
+        ".**.....**.",
+        "..........."
+    )
     'elric' = @(
         "........................",
         "........................",

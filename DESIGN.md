@@ -428,27 +428,32 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Party turns (Elric + Hop)
 - [x] The full tutorial fight, scripted turn by turn
 - [x] Pixel-art battle sprites for Eggo, BigJoe6, Elric and Hop (`art/sprites/`, drawn by `tools/make_sprites.ps1`)
-- [ ] Pixel font, sound effects and battle music
-- [ ] A proper GAME OVER screen (the SOUL shattering)
+- [x] Sound effects (generated in code by `scripts/sfx.gd`)
+- [ ] Pixel font *(needs a download — waiting for approval)*
+- [ ] Battle music
+- [x] A proper GAME OVER screen (the SOUL cracks and shatters, "Stay determined...")
 
 ### Milestone 2 — Talking
-- [ ] Dialogue box with letter-by-letter text and voice beeps
+- [x] Dialogue box with letter-by-letter text and voice beeps (each speaker has their own pitch and name tag)
 - [ ] Character portraits
-- [ ] Dialogue choices
+- [x] Dialogue choices (Yes / No, Save / Return)
 
 ### Milestone 3 — Walking around
-- [ ] Elric's overworld movement and animation
-- [ ] Walls / collision and the camera
-- [ ] Talking to characters and inspecting objects
+- [x] Elric's overworld movement and animation (front/back sprites, walking bounce)
+- [x] Walls / collision and the camera
+- [x] Talking to characters and inspecting objects
+- [x] Followers (Hop walks behind Elric)
 - [ ] Moving between rooms/areas
 
 ### Milestone 4 — The opening (first playable demo)
-- [ ] Title screen: **LOVE TO RUIN**
-- [ ] Mt. Carmel High School area
-- [ ] Meeting Hop
-- [ ] Finding fragment 1
-- [ ] Tutorial fight outside Mt. Carmel
-- [ ] **SAVE points** and save/load
+- [x] Title screen: **REVOLUTION** rearranges into **LOVE TO RUIN**
+- [x] Opening narration
+- [x] Mt. Carmel High School area (school, parking lot, courtyard, field, road)
+- [x] Meeting Hop
+- [x] Finding fragment 1
+- [x] Tutorial fight outside Mt. Carmel, with different reactions for sparing / fighting
+- [x] **SAVE points** and save/load (Continue on the title screen)
+- [x] "To be continued" screen when leaving toward the PQ Mall
 
 ### Milestone 5 — The PQ Mall hub
 - [ ] Shops and items

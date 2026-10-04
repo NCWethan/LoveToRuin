@@ -6,7 +6,7 @@ A Deltarune/Undertale-style RPG made with [Godot](https://godotengine.org/).
 
 ## Status
 
-Chapter 1 in progress. The battle system and the tutorial fight (Elric & Hop vs. Eggo & BigJoe6) are playable.
+Chapter 1 in progress. The opening is playable from the title screen: arrive at Mt. Carmel High School, meet Hop, find the first fragment, and survive the tutorial fight against Eggo and BigJoe6.
 
 See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 
@@ -20,4 +20,5 @@ See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 
 ## Running it
 
-Open the project in [Godot 4](https://godotengine.org/), open `battle.tscn`, and press **F6**.
+Open the project in [Godot 4](https://godotengine.org/) and press **F5** to play from the title screen.
+To test just the battle, open `battle.tscn` and press **F6**.
