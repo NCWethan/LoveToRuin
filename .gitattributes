@@ -1,4 +1,4 @@
-# Normalize line endings for text files
+# Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
 
 # Pixel art, audio and fonts are binary
