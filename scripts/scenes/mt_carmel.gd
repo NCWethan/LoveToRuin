@@ -117,6 +117,7 @@ func _place_characters() -> void:
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
+	add_storage_box(Vector2(515, 372))
 	world.add_child(star)
 
 
@@ -266,6 +267,8 @@ func _ambush() -> void:
 	bigjoe = _make_enemy_npc("BigJoe6", Vector2(ahead.x - 350, ahead.y + 10))
 
 	# BigJoe6 is still off-screen, so no portrait yet.
+	# Revolution's theme kicks in as BigJoe6 shouts.
+	Game.play_music("revolution", 0.3)
 	await Game.dialogue.say([{"who": "BigJoe6", "tag": "???", "text": "HOLD IT!", "face": false}])
 	# Both walk at once: start Eggo without waiting, then wait for BigJoe6.
 	eggo.walk_to(ahead + Vector2(-70, -24), 140.0)
@@ -291,6 +294,8 @@ func _ambush() -> void:
 func _after_tutorial_battle() -> void:
 	_cutscene_running = true
 	Game.busy = true
+	# Revolution's theme while Eggo and BigJoe6 are still here.
+	Game.play_music("revolution", 0.5)
 
 	var result := Game.battle_result
 	var spared: Array = result.get("spared", [])
@@ -333,6 +338,7 @@ func _after_tutorial_battle() -> void:
 	await bigjoe.walk_to(Vector2(bigjoe.position.x - 40, 560), 120.0)
 	await get_tree().create_timer(0.4).timeout
 	eggo.queue_free()
+	Game.play_music("mt_carmel", 1.5)
 	bigjoe.queue_free()
 
 	match Game.flags["tutorial_path"]:

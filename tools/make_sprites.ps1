@@ -791,6 +791,20 @@ $sprites['hopkuna'] = @(
     ".......DDDDD.DDDD......."
 )
 
+# A storage box: a wooden chest with a silver band and a gold lock.
+$sprites['storage_box'] = @(
+    "..KKKKKKKKKKKK..",
+    ".KeeeeeeeeeeeeK.",
+    "KeeeeeeeeeeeeeeK",
+    "KGGGGGGGGGGGGGGK",
+    "KeeeeeeAAeeeeeeK",
+    "KeeeeeeAAeeeeeeK",
+    "KeeeeeeeeeeeeeeK",
+    "KeeeeeeeeeeeeeeK",
+    "KGGGGGGGGGGGGGGK",
+    "KKKKKKKKKKKKKKKK"
+)
+
 # --- Side views (walking right; the game flips them for walking left) -------
 # Each character gets two frames: legs together and mid-step.
 

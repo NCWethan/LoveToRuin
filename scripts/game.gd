@@ -22,6 +22,9 @@ var money: int = 0
 
 ## How many items Elric can carry.
 const MAX_ITEMS := 8
+## Items kept in storage boxes (every box shares the same storage).
+var box_items: Array[Dictionary] = []
+const MAX_BOX_ITEMS := 12
 ## Story progress, e.g. flags["met_hop"] = true.
 var flags: Dictionary = {}
 
@@ -40,9 +43,13 @@ var spawn_position = null
 var pending_battle: String = ""
 var battle_result: Dictionary = {}
 var return_scene: String = ""
+## True if the current battle is a random encounter (not a wandering enemy you bumped into).
+var battle_random: bool = false
 
 var dialogue: DialogueBox
 var shop: ShopMenu
+var bag: BagMenu
+var storage: StorageMenu
 
 var _fade: ColorRect
 var _sfx_players: Array[AudioStreamPlayer] = []
@@ -86,6 +93,10 @@ func _ready() -> void:
 	dialogue = DialogueBox.new()
 	add_child(dialogue)
 	shop = ShopMenu.new()
+	bag = BagMenu.new()
+	add_child(bag)
+	storage = StorageMenu.new()
+	add_child(storage)
 	add_child(shop)
 
 	new_game()
@@ -98,6 +109,7 @@ func new_game() -> void:
 	bond = 0
 	exp_points = 0
 	money = 20
+	box_items.clear()
 	flags = {}
 	busy = false
 	spawn_position = null
@@ -206,10 +218,11 @@ func change_scene(path: String, spawn = null) -> void:
 # --- Battles --------------------------------------------------------------
 
 ## Leaves the overworld for a battle. Afterwards the player comes back to `at` in `from_scene`.
-func start_battle(battle_id: String, from_scene: String, at: Vector2) -> void:
+func start_battle(battle_id: String, from_scene: String, at: Vector2, random: bool = false) -> void:
 	busy = true
 	play_sfx("encounter")
 	pending_battle = battle_id
+	battle_random = random
 	return_scene = from_scene
 	battle_result = {}
 	await change_scene(BATTLE_SCENE, at)
@@ -218,6 +231,12 @@ func start_battle(battle_id: String, from_scene: String, at: Vector2) -> void:
 ## Called by the battle when it's won. Adds the rewards and goes back to the overworld.
 func finish_battle(result: Dictionary) -> void:
 	battle_result = result
+	battle_result["random"] = battle_random
+	# A wandering enemy (or boss) you fought is gone for good. Marking it now,
+	# before the area reloads, keeps it from popping back up.
+	if not battle_random:
+		flags["beat_" + str(result.get("id", ""))] = true
+	battle_random = false
 	bond += int(result.get("bond", 0))
 	exp_points += int(result.get("exp", 0))
 	money += int(result.get("money", 0))
@@ -257,6 +276,7 @@ func save_game(scene_path: String, at: Vector2) -> void:
 		"exp": exp_points,
 		"money": money,
 		"items": items,
+		"box_items": box_items,
 		"party": party.map(func(m: PartyMember) -> Dictionary: return {"name": m.name, "hp": m.hp}),
 	}
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
@@ -287,6 +307,9 @@ func load_game() -> void:
 	items.clear()
 	for item in data.get("items", []):
 		items.append({"name": item["name"], "heal": int(item["heal"])})
+	box_items.clear()
+	for item in data.get("box_items", []):
+		box_items.append({"name": item["name"], "heal": int(item["heal"])})
 	for saved in data.get("party", []):
 		for member in party:
 			if member.name == saved["name"]:
@@ -307,6 +330,7 @@ func _read_save() -> Dictionary:
 func _add_input_actions() -> void:
 	_add_keys("confirm", [KEY_Z, KEY_ENTER, KEY_KP_ENTER])
 	_add_keys("cancel", [KEY_X, KEY_SHIFT])
+	_add_keys("menu", [KEY_C, KEY_CTRL])
 
 
 func _add_keys(action: String, keys: Array) -> void:

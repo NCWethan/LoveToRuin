@@ -11,6 +11,8 @@ extends SceneTree
 ##   harm   harmony / arpeggios (a softer square wave)
 ##   bass   the bass line (a smooth triangle wave)
 ##   drums  K = kick, S = snare, H = hi-hat
+## A song can also change a part's sound with e.g. "lead_wave": "saw" (a harsh,
+## buzzing sound, good for villains). Waves: "square", "triangle", "saw".
 ## Each part is a list of bars. A bar is 16 steps (four steps per beat), separated by spaces:
 ##   C4, D#5, A#3 ...  start a note (letter, optional #, octave)
 ##   .                 keep holding the previous note
@@ -316,48 +318,143 @@ const SONGS := {
 		],
 	},
 
-	# Hopkuna. Dark, heavy and fast.
-	"hopkuna": {
-		"bpm": 140,
+	# Hopkuna takes over. Slow and menacing: a low, buzzing line creeping downward,
+	# clashing notes ringing above it, and a heartbeat.
+	"hopkuna_reveal": {
+		"bpm": 64,
+		"lead_wave": "saw",
 		"lead": [
-			"C5 . . . D#5 . . . G5 . . . F#5 . G5 .",
-			"G#5 . . . G5 . . . D#5 . . . C5 . . .",
-			"F5 . . . G#5 . . . C6 . . . A#5 . G#5 .",
-			"G5 . . . . . . . B4 . . . D5 . F5 .",
-			"C5 . C5 . D#5 . C5 . G5 . . . F#5 . G5 .",
-			"G#5 . . . A#5 . G#5 . G5 . . . D#5 . . .",
-			"F5 . G5 . G#5 . . . A#5 . C6 . D6 . . .",
-			"B5 . . . . . . . G5 . . . B4 . . .",
+			"C4 . . . . . . . . . . . B3 . . .",
+			"A#3 . . . . . . . . . . . A3 . . .",
+			"G#3 . . . . . . . . . . . G3 . . .",
+			"F#3 . . . . . . . . . . . - - - -",
+			"C4 . . . . . . . C#4 . . . . . . .",
+			"C4 . . . . . . . B3 . . . . . . .",
+			"F#3 . . . . . . . G3 . . . G#3 . . .",
+			"G3 . . . . . . . . . . . - - - -",
 		],
 		"harm": [
-			"C4 . - - C4 . - - D#4 . - - D#4 . - -",
-			"G#3 . - - G#3 . - - C4 . - - C4 . - -",
-			"F3 . - - F3 . - - G#3 . - - G#3 . - -",
-			"G3 . - - B3 . - - D4 . - - B3 . - -",
-			"C4 . - - C4 . - - D#4 . - - D#4 . - -",
-			"G#3 . - - G#3 . - - C4 . - - C4 . - -",
-			"F3 . - - F3 . - - G#3 . - - A#3 . - -",
-			"G3 . - - B3 . - - D4 . - - F4 . - -",
+			"- - - - - - - - F#5 . . . - - - -",
+			"- - - - - - - - - - - - - - - -",
+			"- - - - - - - - D5 . . . - - - -",
+			"- - - - - - - - - - - - C#5 . . .",
+			"- - - - - - - - F#5 . . . - - - -",
+			"- - - - - - - - - - - - G5 . . .",
+			"- - - - C5 . . . - - - - C#5 . . .",
+			"- - - - - - - - - - - - - - - -",
 		],
 		"bass": [
-			"C2 . C3 . C2 . C3 . C2 . C3 . C2 . C3 .",
-			"G#1 . G#2 . G#1 . G#2 . G#1 . G#2 . G#1 . G#2 .",
-			"F1 . F2 . F1 . F2 . F1 . F2 . F1 . F2 .",
-			"G1 . G2 . G1 . G2 . G1 . G2 . G1 . G2 .",
-			"C2 . C3 . C2 . C3 . C2 . C3 . C2 . C3 .",
-			"G#1 . G#2 . G#1 . G#2 . G#1 . G#2 . G#1 . G#2 .",
-			"F1 . F2 . F1 . F2 . F1 . F2 . F1 . F2 .",
-			"G1 . G2 . G1 . G2 . G1 . G2 . G1 . G2 .",
+			"C2 . . . . . . . . . . . . . . .",
+			"C2 . . . . . . . . . . . . . . .",
+			"C2 . . . . . . . . . . . . . . .",
+			"F#1 . . . . . . . . . . . . . . .",
+			"C2 . . . . . . . . . . . . . . .",
+			"C2 . . . . . . . . . . . . . . .",
+			"F#1 . . . . . . . . . . . . . . .",
+			"G1 . . . . . . . . . . . . . . .",
 		],
 		"drums": [
-			"K - - K S - - K K - K - S - H -",
-			"K - - K S - - K K - K - S - S S",
-			"K - - K S - - K K - K - S - H -",
-			"K - - K S - S - K K - - S S S S",
-			"K - - K S - - K K - K - S - H -",
-			"K - - K S - - K K - K - S - S S",
-			"K - - K S - - K K - K - S - H -",
-			"K K S - K K S - K K S - S S S S",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - - - - - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - K K K K",
+		],
+	},
+
+	# Fighting Hopkuna. Fast and urgent: a relentless chugging bass, sharp stabs,
+	# and a frantic melody that ends in a falling chromatic run.
+	"hopkuna": {
+		"bpm": 184,
+		"lead_wave": "saw",
+		"harm_wave": "saw",
+		"lead": [
+			"C5 . D#5 . F#5 . G5 . . . F#5 . D#5 . C5 .",
+			"B4 . C5 . D#5 . . . C5 . B4 . G4 . . .",
+			"C5 . D#5 . F#5 . G5 . . . A#5 . G5 . F#5 .",
+			"G5 . . . F#5 . . . D#5 . . . B4 . . .",
+			"C6 . . . B5 . . . G#5 . . . G5 . . .",
+			"F#5 . G5 . G#5 . G5 . F#5 . D#5 . C5 . . .",
+			"C5 . C5 . D#5 . C5 . F#5 . . . G5 . . .",
+			"G5 . F#5 . F5 . E5 . D#5 . D5 . C#5 . B4 .",
+		],
+		"harm": [
+			"- C4 - C4 - D#4 - D#4 - C4 - C4 - F#4 - F#4",
+			"- B3 - B3 - D4 - D4 - B3 - B3 - G3 - G3",
+			"- C4 - C4 - D#4 - D#4 - C4 - C4 - F#4 - F#4",
+			"- B3 - B3 - D4 - D4 - B3 - B3 - G3 - G3",
+			"- G#3 - G#3 - C4 - C4 - G#3 - G#3 - D#4 - D#4",
+			"- F#3 - F#3 - A3 - A3 - C4 - C4 - D#4 - D#4",
+			"- C4 - C4 - D#4 - D#4 - C4 - C4 - F#4 - F#4",
+			"- G3 - G3 - B3 - B3 - D4 - D4 - F4 - F4",
+		],
+		"bass": [
+			"C2 C2 C3 C2 C2 C2 C3 C2 C2 C2 C3 C2 C2 C3 C2 C3",
+			"G1 G1 G2 G1 G1 G1 G2 G1 G1 G1 G2 G1 G1 G2 G1 G2",
+			"C2 C2 C3 C2 C2 C2 C3 C2 C2 C2 C3 C2 C2 C3 C2 C3",
+			"G1 G1 G2 G1 G1 G1 G2 G1 G1 G1 G2 G1 G1 G2 G1 G2",
+			"G#1 G#1 G#2 G#1 G#1 G#1 G#2 G#1 G#1 G#1 G#2 G#1 G#1 G#2 G#1 G#2",
+			"F#1 F#1 F#2 F#1 F#1 F#1 F#2 F#1 F#1 F#1 F#2 F#1 F#1 F#2 F#1 F#2",
+			"C2 C2 C3 C2 C2 C2 C3 C2 C2 C2 C3 C2 C2 C3 C2 C3",
+			"G1 G1 G2 G1 G1 G1 G2 G1 G1 G1 G2 G1 G1 G2 G1 G2",
+		],
+		"drums": [
+			"K - H K S - H K K - H K S K S S",
+			"K - H K S - H K K - H K S - H H",
+			"K - H K S - H K K - H K S K S S",
+			"K - H K S - H K K K H K S S S S",
+			"K - H K S - H K K - H K S K S S",
+			"K - H K S - H K K - H K S - H H",
+			"K - H K S - H K K - H K S K S S",
+			"S S S S S S S S K K K K S S S S",
+		],
+	},
+
+	# Eggo and BigJoe6 show up. A bold, determined march: Revolution's theme.
+	"revolution": {
+		"bpm": 132,
+		"lead": [
+			"E5 . . E5 G5 . . . B5 . . . A5 . G5 .",
+			"E5 . . . . . . . C5 . D5 . E5 . . .",
+			"D5 . . D5 G5 . . . B5 . . . A5 . G5 .",
+			"F#5 . . . . . . . D5 . E5 . F#5 . . .",
+			"E5 . . E5 G5 . . . B5 . . . D6 . B5 .",
+			"C6 . . . B5 . A5 . G5 . . . E5 . . .",
+			"A5 . . . G5 . F#5 . E5 . . . C5 . . .",
+			"B4 . . . D#5 . . . F#5 . . . B5 . . .",
+		],
+		"harm": [
+			"- - B4 . - - B4 . - - B4 . - - B4 .",
+			"- - G4 . - - G4 . - - G4 . - - G4 .",
+			"- - D5 . - - D5 . - - D5 . - - D5 .",
+			"- - A4 . - - A4 . - - A4 . - - A4 .",
+			"- - B4 . - - B4 . - - B4 . - - B4 .",
+			"- - G4 . - - G4 . - - G4 . - - G4 .",
+			"- - E4 . - - E4 . - - E4 . - - E4 .",
+			"- - D#5 . - - D#5 . - - F#4 . - - F#4 .",
+		],
+		"bass": [
+			"E2 . . . B2 . . . E2 . . . B2 . . .",
+			"C2 . . . G2 . . . C2 . . . G2 . . .",
+			"G2 . . . D3 . . . G2 . . . D3 . . .",
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"E2 . . . B2 . . . E2 . . . B2 . . .",
+			"C2 . . . G2 . . . C2 . . . G2 . . .",
+			"A2 . . . E2 . . . A2 . . . E2 . . .",
+			"B1 . . . F#2 . . . B1 . . . F#2 . . .",
+		],
+		"drums": [
+			"K - S - K - S - K K S - K - S S",
+			"K - S - K - S - K K S - K - S -",
+			"K - S - K - S - K K S - K - S S",
+			"K - S - K - S - K K S - S S S S",
+			"K - S - K - S - K K S - K - S S",
+			"K - S - K - S - K K S - K - S -",
+			"K - S - K - S - K K S - K - S S",
+			"K - S - K K S - K K S - S S S S",
 		],
 	},
 
@@ -416,7 +513,13 @@ func render(song: Dictionary) -> AudioStreamWAV:
 
 	for part in PARTS:
 		if song.has(part):
-			_render_part(mix, _parse(song[part], part), step_seconds, PARTS[part])
+			var sound: Dictionary = PARTS[part].duplicate()
+			if song.has(part + "_wave"):
+				sound["wave"] = song[part + "_wave"]
+				# Saw waves are much brighter, so play them a bit quieter.
+				if sound["wave"] == "saw":
+					sound["volume"] *= 0.75
+			_render_part(mix, _parse(song[part], part), step_seconds, sound)
 	if song.has("drums"):
 		_render_drums(mix, song["drums"], step_seconds)
 
@@ -468,7 +571,7 @@ func _frequency(note: String) -> float:
 func _render_part(mix: PackedFloat32Array, notes: Array, step_seconds: float, sound: Dictionary) -> void:
 	var volume: float = sound["volume"]
 	var duty: float = sound["duty"]
-	var triangle: bool = sound["wave"] == "triangle"
+	var shape: String = sound["wave"]
 	for note in notes:
 		var start := int(note[0] * step_seconds * RATE)
 		var length := int(note[1] * step_seconds * RATE)
@@ -479,7 +582,11 @@ func _render_part(mix: PackedFloat32Array, notes: Array, step_seconds: float, so
 			if i >= mix.size():
 				break
 			phase = fmod(phase + freq / RATE, 1.0)
-			var wave := (4.0 * absf(phase - 0.5) - 1.0) if triangle else (1.0 if phase < duty else -1.0)
+			var wave: float
+			match shape:
+				"triangle": wave = 4.0 * absf(phase - 0.5) - 1.0
+				"saw": wave = 2.0 * phase - 1.0
+				_: wave = 1.0 if phase < duty else -1.0
 			# Envelope: quick attack, settle to 70%, short fade at the end so notes don't click.
 			var t := float(s) / RATE
 			var env := minf(1.0, t / 0.005)

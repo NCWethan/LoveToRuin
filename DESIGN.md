@@ -481,6 +481,12 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Nat's lore and Nassan pointing the way to Westview
 - [ ] Party selection (Elric + 2 of the cast) — *needs decisions: see Open questions*
 
+### Overworld features (from feedback)
+- [x] **Bag** (C / Ctrl): party HP, LV, money, BOND, fragments; items can be USED, CHECKED (description) or DROPPED
+- [x] **Storage boxes** next to each SAVE point; every box shares the same storage (12 slots), saved with the game
+- [x] **Random encounters** in hostile areas (Westview's hallway and classroom), with a "!" over Elric
+- [x] Wandering enemies you walk into are gone for good after the fight
+
 ### Battle polish (from feedback)
 - [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
 - [x] "Ready?" check after choosing, with X to go back and change anything

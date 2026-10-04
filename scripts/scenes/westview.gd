@@ -51,6 +51,11 @@ var _glow_time: float = 0.0
 
 func _ready() -> void:
 	rooms.assign([_px(OUTSIDE), _px(HALLWAY), _px(CLASSROOM), _px(GYM)])
+	# Random fights in the hallway and the classroom.
+	encounter_zones = [
+		[_px(HALLWAY), ["pop_quiz", "pop_quiz", "hall_pass"]],
+		[_px(CLASSROOM), ["hall_pass", "hall_pass", "pop_quiz"]],
+	]
 	setup_area(ENTRY)
 	Game.play_music("westview")
 	_font = ThemeDB.fallback_font
@@ -191,6 +196,8 @@ func _place_people() -> void:
 	add_roamer("pop_quiz", "pop_quiz", Vector2(88 * T, 12 * T), Vector2(102 * T, 12 * T))
 	add_roamer("hall_pass", "hall_pass", Vector2(50 * T, 47 * T), Vector2(63 * T, 47 * T))
 
+	add_storage_box(Vector2(9 * T + 36, 12 * T + 10))
+	add_storage_box(Vector2(86 * T + 36, 45 * T))
 	_add_save_point(Vector2(9 * T, 12 * T + 10), [
 		"* (The school looms in the dark.\n*  A streetlight hums nearby.)",
 		"* (It fills you with DETERMINATION.)",
@@ -258,6 +265,7 @@ func _physics_process(_delta: float) -> void:
 	if is_blocked():
 		return
 	check_roamers(SCENE)
+	check_random_encounter(SCENE)
 
 	# The endless hallway.
 	if not flag("loop_broken") and _px(HALLWAY).has_point(player.position) and player.position.x > LOOP_X:

@@ -157,6 +157,7 @@ func _place_people() -> void:
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
+	add_storage_box(Vector2(752, 178))
 	add_character(star, Vector2(710, 178))
 
 

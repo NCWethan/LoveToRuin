@@ -174,17 +174,48 @@ func check_roamers(scene_path: String) -> void:
 
 
 ## Call at the start of the area: if we just came back from a wandering enemy's
-## battle, mark it as beaten and say how it went. Returns true if that happened.
+## battle, say how it went (random fights stay quiet). Returns true if we did.
 func handle_battle_return(goodbyes: Dictionary) -> bool:
 	var battle_id: String = Game.battle_result.get("id", "")
-	if battle_id == "" or flag("beat_" + battle_id):
+	if battle_id == "":
 		return false
-	Game.flags["beat_" + battle_id] = true
+	# (Game.finish_battle already marked a bumped-into enemy as beaten.)
+	var random: bool = Game.battle_result.get("random", false)
 	var spared: bool = not Game.battle_result.get("spared", []).is_empty()
 	Game.battle_result = {}
-	if goodbyes.has(battle_id):
+	if not random and goodbyes.has(battle_id):
 		await Game.dialogue.say([goodbyes[battle_id][0 if spared else 1]])
 	return true
+
+
+# --- Random encounters -------------------------------------------------------
+
+## Places where random fights can happen: each entry is [room Rect2, [battle names]].
+## Walking around inside one of these rooms eventually starts a random fight.
+var encounter_zones: Array = []
+## How far Elric walks between random fights, in pixels (a random amount in this range).
+const ENCOUNTER_DISTANCE := Vector2(450, 850)
+var _next_encounter: float = -1.0
+
+
+## Call from _physics_process: starts a random fight once Elric has walked far enough.
+func check_random_encounter(scene_path: String) -> void:
+	if encounter_zones.is_empty():
+		return
+	if _next_encounter < 0.0:
+		_next_encounter = player.distance_walked + randf_range(ENCOUNTER_DISTANCE.x, ENCOUNTER_DISTANCE.y)
+	if player.distance_walked < _next_encounter:
+		return
+	for zone in encounter_zones:
+		if (zone[0] as Rect2).has_point(player.position):
+			_next_encounter = -1.0
+			var battle_id: String = (zone[1] as Array).pick_random()
+			run_cutscene(func() -> void:
+				# A "!" pops up over Elric, like in Undertale.
+				player.show_alert(true)
+				await get_tree().create_timer(0.45).timeout
+				await Game.start_battle(battle_id, scene_path, player.position, true))
+			return
 
 
 # --- Effects ------------------------------------------------------------------
@@ -197,3 +228,20 @@ func shake(strength: float = 6.0, duration: float = 0.4) -> void:
 		var fade := 1.0 - float(i) / steps
 		tween.tween_property(camera, "offset", Vector2(randf_range(-1, 1), randf_range(-1, 1)) * strength * fade, 0.04)
 	tween.tween_property(camera, "offset", Vector2.ZERO, 0.04)
+
+
+# --- Storage boxes ------------------------------------------------------------
+
+## A storage box. Every box opens the same storage, so items put in one
+## can be taken out of any other.
+func add_storage_box(at: Vector2) -> Character:
+	var box := Character.new().setup(load("res://art/sprites/storage_box.png"))
+	box.on_interact = func() -> void:
+		if not flag("seen_storage_box"):
+			Game.flags["seen_storage_box"] = true
+			await Game.dialogue.say([
+				"* (A storage box.)",
+				"* (Anything you put in here can be taken\n*  out of any other box, anywhere.)",
+			])
+		await Game.storage.open()
+	return add_character(box, at)

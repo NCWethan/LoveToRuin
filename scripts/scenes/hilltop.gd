@@ -156,6 +156,7 @@ func _place_people() -> void:
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
+	add_storage_box(Vector2(322, 500))
 	add_character(star, Vector2(360, 500))
 
 
@@ -189,7 +190,7 @@ func _arrival() -> void:
 		{"who": "Hop", "text": "...Nobody's home.", "mood": "sad"},
 		"* (In the middle of the field, something is glowing red.)",
 		{"who": "Hop", "text": "...", "mood": "sad"},
-		{"who": "Hop", "text": "Hey, Elric? Whatever happens out there...\njust. Stay behind me. Okay?", "mood": "sad"},
+		{"who": "Hop", "text": "Hey, Elric? Whatever happens out there...\nI'll stay right behind you. Okay?", "mood": "sad"},
 	])
 	Game.flags["hp_arrived"] = true
 
@@ -268,7 +269,7 @@ func _eruption() -> void:
 	hop.lie_down(false)
 	hop.face(player.position - hop.position)
 	await _tint_night(Color(0.75, 0.45, 0.5), 0.6)
-	Game.play_music("hopkuna", 1.5)
+	Game.play_music("hopkuna_reveal", 1.5)
 
 	await Game.dialogue.say([
 		"* (Hop stands up.)",
@@ -305,7 +306,7 @@ func _tint_night(color: Color, time: float) -> void:
 func _corps_arrives() -> void:
 	Game.battle_result = {}
 	_night.color = Color(0.75, 0.45, 0.5)
-	Game.play_music("hopkuna", 0.2)
+	Game.play_music("hopkuna_reveal", 0.2)
 
 	await Game.dialogue.say([
 		"* (You're still standing. Barely.)",

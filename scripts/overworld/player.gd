@@ -1,6 +1,7 @@
 class_name Player
 extends CharacterBody2D
-## Elric in the overworld. Arrow keys walk; Z talks to / inspects whatever is in front.
+## Elric in the overworld. Arrow keys walk; Z talks to / inspects whatever is in front;
+## C opens the bag.
 
 @export var speed: float = 110.0
 
@@ -8,6 +9,8 @@ extends CharacterBody2D
 var facing: Vector2 = Vector2.DOWN
 ## Recent positions, oldest first. Followers (like Hop) walk along this trail.
 var trail: Array[Vector2] = []
+## How far Elric has walked in this area, in pixels (used for random encounters).
+var distance_walked: float = 0.0
 
 var _front: Texture2D = load("res://art/sprites/elric.png")
 var _back: Texture2D = load("res://art/sprites/elric_back.png")
@@ -52,7 +55,9 @@ func _physics_process(delta: float) -> void:
 		else:
 			facing = Vector2(0, signf(direction.y))
 		velocity = direction * speed
+		var before := position
 		move_and_slide()
+		distance_walked += position.distance_to(before)
 		_moving = true
 		_walk_time += delta
 		_record_trail()
@@ -61,6 +66,8 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("confirm"):
 		_interact()
+	elif Input.is_action_just_pressed("menu"):
+		Game.bag.open()
 
 
 ## Picks the right picture for the direction Elric faces, and animates walking.
@@ -99,3 +106,21 @@ func _interact() -> void:
 		Game.busy = true
 		await best.interact()
 		Game.busy = false
+
+
+## Shows (or hides) a "!" above Elric's head, like when a random fight starts.
+func show_alert(on: bool) -> void:
+	var alert := get_node_or_null("Alert") as Label
+	if alert == null:
+		alert = Label.new()
+		alert.name = "Alert"
+		alert.text = "!"
+		alert.add_theme_font_size_override("font_size", 22)
+		alert.add_theme_color_override("font_color", Color.WHITE)
+		alert.add_theme_color_override("font_outline_color", Color.BLACK)
+		alert.add_theme_constant_override("outline_size", 4)
+		alert.position = Vector2(-5, -_front.get_height() - 30)
+		add_child(alert)
+	alert.visible = on
+	if on:
+		Game.play_sfx("encounter")
