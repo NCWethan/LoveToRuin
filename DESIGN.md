@@ -47,7 +47,6 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **NCWethan** | See [NCWethan](#ncwethan) below. |
 | **Sansworth** | See [Sansworth](#sansworth) below. |
 | **Ronin** | See [Ronin](#ronin) below. |
-| **Agent** | |
 | **Rooster** | |
 | **Crayola** | |
 | **Supreme** | |
