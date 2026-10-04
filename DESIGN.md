@@ -226,7 +226,7 @@ Pronouns: he/him
 
 Pronouns: he/him
 
-**Personality** *(proposed — open to changes)*
+**Personality**
 - **Deadpan and unbothered.** Nothing rattles him; he answers chaos with a dry one-liner.
 - **A bookworm who knows the past.** Where Nassan plans the future, Nat knows history — including old stories about **Hopkuna and the fragments**. He's the character who explains the lore to Elric.
 - **Running gag:** the open book on his head. Everyone assumes he's studying; half the time he's actually napping under it.
