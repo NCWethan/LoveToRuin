@@ -19,10 +19,22 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 ## 3. The main character
 
-**Elric** (original character)
+**Elric** (original character) — pronouns: **they/them**
 
 - A traveling adventurer.
 - Has no home, not because of money, but because Elric never stays anywhere for long.
+
+### Personality
+- **Soft-spoken but strong-willed.**
+- **Determined** in everything they do.
+- **Speaks, but rarely.** When Elric does say something, it should matter.
+
+### Appearance
+- Average size.
+- Gender-neutral.
+- Short hair.
+- Dirty, scruffy clothing (fits a life on the road).
+- Soft, almost pastel **purple skin**.
 
 ## 4. The cast
 
