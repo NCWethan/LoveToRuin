@@ -54,6 +54,12 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 ### Beginning
 Elric is a traveling adventurer with no fixed home.
 
+#### Chapter 1 opening — how Elric meets the cast
+1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
+2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
+3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **first battle**: it teaches the battle system, and the player can talk their way out (ACT/MERCY) or fight — the first hint that choices shape the route.
+4. **The reveal comes later.** Elric only learns that Hop is Hopkuna further into the story, so the friendship built in the opening makes the twist land harder.
+
 ### Middle
 Elric meets the cast and recognizes the villain, **Hopkuna**. Elric works and travels the lands in search of **Hopkuna's fragments**.
 
@@ -90,7 +96,6 @@ How it pays off on each route:
 
 ## Open questions
 
-- How does Elric first meet the cast?
 - How does pacifist EXP work exactly (which actions give EXP)?
 - Which characters can join the party, and when?
 - What are each character's personality and battle abilities?
