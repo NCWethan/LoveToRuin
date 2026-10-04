@@ -52,8 +52,24 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Crayola** | |
 | **Supreme** | |
 | **Nat** | |
-| **Hop** | A friend whose evil alter ego is Hopkuna. |
+| **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
+
+### Hop
+
+Pronouns: he/him
+
+**Personality**
+- Very athletic.
+- Sarcastic — a jokester.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/hop.png))
+- Black fedora.
+- Gray, blocky head with an angry, gritted-teeth grin.
+- Dark gray shirt with lighter gray arms.
+- Blue-gray pants.
+
+![Hop reference](art/reference/hop.png)
 
 ## 5. Battles
 
