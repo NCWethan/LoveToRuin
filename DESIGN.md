@@ -55,7 +55,19 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 Elric is a traveling adventurer with no fixed home.
 
 ### Middle
-Elric meets the cast and recognizes the villain, **Hopkuna**. Elric works and travels the lands in search of... *(to be decided)*.
+Elric meets the cast and recognizes the villain, **Hopkuna**. Elric works and travels the lands in search of **Hopkuna's fragments**.
+
+#### What Elric is searching for
+- **The surface goal — Hopkuna's fragments.** Pieces of Hopkuna's power are scattered across San Diego (similar in concept to Sukuna's fingers in *JJK*). Revolution wants them destroyed, Hopkuna wants them back, and Elric collects them. They give the player a clear goal and a reason to explore every corner of the map.
+- **The real goal — a home.** Elric has always wandered without knowing why. What Elric is truly looking for is a place to belong.
+
+How it pays off on each route:
+
+| Route | The fragments | A home |
+|---|---|---|
+| **Pacifist** | Destroyed with Revolution to free Hop. | The cast becomes Elric's home. |
+| **Neutral** | Kept, or ignored in favor of exploring. | Elric keeps wandering. |
+| **Genocide** | Given to Hopkuna, making him unstoppable. | Elric destroys any chance of having one. |
 
 ### Endings — decided by how the player plays
 
@@ -78,7 +90,6 @@ Elric meets the cast and recognizes the villain, **Hopkuna**. Elric works and tr
 
 ## Open questions
 
-- What is Elric searching for?
 - How does Elric first meet the cast?
 - How does pacifist EXP work exactly (which actions give EXP)?
 - Which characters can join the party, and when?
