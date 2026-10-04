@@ -48,7 +48,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Sansworth** | See [Sansworth](#sansworth) below. |
 | **Ronin** | See [Ronin](#ronin) below. |
 | **Rooster** | See [Rooster](#rooster) below. |
-| **Crayola** | |
+| **Crayola** | See [Crayola](#crayola) below. |
 | **Supreme** | |
 | **Nat** | |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
@@ -184,6 +184,25 @@ Pronouns: he/him
 - A suit split down the middle: **half white, half black**, with a black tie.
 
 ![Rooster reference](art/reference/rooster.png)
+
+### Crayola
+
+Pronouns: he/him
+
+**Personality**
+- **Shy.**
+- Likes to play **card games**.
+- **Swims with NCWethan** for fun.
+
+**Battle role**
+- **Support** character.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/crayola.png))
+- White head with a happy, open-mouthed smile.
+- His whole torso and arms are a giant **employment / job application form**, with a small blue badge on it.
+- Gray, worn pants.
+
+![Crayola reference](art/reference/crayola.png)
 
 ### Hop
 
