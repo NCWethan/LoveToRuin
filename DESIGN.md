@@ -71,6 +71,27 @@ Pronouns: he/him
 
 ![Hop reference](art/reference/hop.png)
 
+### Hopkuna
+
+Pronouns: he/him
+
+**Who he is**
+- An entity of **pure evil** who wants to **watch the entire world burn**.
+- That includes **Elric** — but Elric doesn't know that. *(Even on the genocide route, Hopkuna plans to turn on Elric eventually.)*
+
+**What he wants**
+- Hopkuna needs **the fragments**: without their power, he can't continue his plan.
+
+**How Hop and Hopkuna are connected**
+- **Hop knows Hopkuna exists.**
+- Hop treats Hopkuna as a **last resort**, and only lets him out when Hop is **genuinely in danger**.
+- **Once Hopkuna has 12 fragments, he takes over** (for good).
+
+**Appearance**
+- Same body as Hop.
+- **Very specific tattoos all over his body** (designs to be decided).
+- A **light red tint** over his whole body.
+
 ## 5. Battles
 
 - **Team battles like Deltarune:** up to **3** party members fight at once.
@@ -159,4 +180,6 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
 - When in the story does Elric meet the REVOLUTION Corps?
+- How many fragments are there in total, and how many are in Chapter 1?
+- What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
