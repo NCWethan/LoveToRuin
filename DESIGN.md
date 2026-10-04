@@ -21,7 +21,14 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 | Location | Role | Notes |
 |---|---|---|
-| **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. |
+| **Mt. Carmel High School** | **Starting area** · **Fragment 1** | Where Elric's journey begins and where Elric first meets Hop. Elric finds the **1st fragment** here — and picking it up is exactly what gets Eggo and BigJoe6's attention. The **tutorial fight** happens just **outside the school**. |
+| **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. Shops for healing items, NPCs, and cast members hanging out between adventures. A safe place — **no fragment here**. |
+| **Westview High School** | **The "dungeon"** · **Fragment 2** | Chapter 1's big exploration area — the school after hours, twisted by the fragment's power into a maze of puzzles, locked rooms and enemies (like Deltarune's Dark World). The **2nd fragment** is hidden deep inside. |
+| **Hilltop Park** | **REVOLUTION Corps base** · **Fragment 3** · **Climax** | The Corps' base. The **3rd fragment** is buried under the **big field**, and its power twists something there into the **corrupted boss** — the climax where Hop takes the hit and Hopkuna erupts. The Corps returns to find Elric there, and the **route choice** happens. |
+
+**Chapter 1 path:** Mt. Carmel HS → PQ Mall → Westview HS → Hilltop Park
+
+**SAVE points** can appear anywhere as the player progresses.
 
 ## 3. The main character
 
