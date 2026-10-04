@@ -52,7 +52,7 @@ var bag: BagMenu
 var storage: StorageMenu
 
 var _fade: ColorRect
-var _objective_banner: ObjectiveBanner
+var _objective_banner: CanvasLayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
 
@@ -99,7 +99,7 @@ func _ready() -> void:
 	storage = StorageMenu.new()
 	add_child(storage)
 	add_child(shop)
-	_objective_banner = ObjectiveBanner.new()
+	_objective_banner = preload("res://scripts/ui/objective_banner.gd").new()
 	add_child(_objective_banner)
 
 	new_game()

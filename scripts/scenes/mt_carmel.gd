@@ -11,6 +11,7 @@ extends Area
 
 const SCENE := "res://scenes/mt_carmel.tscn"
 const MALL_SCENE := "res://scenes/pq_mall.tscn"
+const CAR_SCRIPT := preload("res://scripts/overworld/car.gd")
 
 const START := Vector2(130, 470)            # on the bottom sidewalk, just off the road
 ## Where Elric appears when walking back from the PQ Mall.
@@ -433,7 +434,7 @@ func _ride_home() -> void:
 	await Game.dialogue.say([{"who": "Eggo", "text": "oh. that's our ride."}])
 
 	var stop_x := bigjoe.position.x + 10.0
-	var car := Car.new()
+	var car := CAR_SCRIPT.new()
 	car.scale = Vector2(1.5, 1.5)
 	car.color = Color8(214, 168, 60)
 	car.position = Vector2(stop_x - 640.0, CAR_LANE_Y)
