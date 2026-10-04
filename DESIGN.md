@@ -86,7 +86,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Crayola** | See [Crayola](#crayola) below. |
 | **Supreme** | See [Supreme](#supreme) below. |
 | **Nat** | See [Nat](#nat) below. |
-| **Agent** | Back in the cast! See [Agent](#agent) below. |
+| **Agent** | REVOLUTION Corps. See [Agent](#agent) below. |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
 
@@ -293,7 +293,13 @@ Pronouns: he/him
 Pronouns: he/him
 
 **Personality**
-- *To be decided.* (Agent was scrapped early on and is now back. His role, personality and where he first shows up are still open.)
+- **Member of the REVOLUTION Corps.**
+- **Arrogant and smart.** He knows he's the smart one, and says so ("Because it's true for everyone").
+- **Quick and to the point.** Short sentences, no wasted words, always clear. ("Four. Next.")
+
+**Where he shows up**
+- **PQ Mall:** leaning by the FOR LEASE store (he wrote "REVOLUTION HQ" in the dust; the question marks were Eggo). He stays through the afternoon and evening, giving blunt advice about Westview.
+- **Hilltop Park:** arrives with the Corps against Hopkuna ("Eleven of us. One of you. Do the math."), and reacts to Elric's route choice.
 
 **Appearance** (based on his Roblox avatar)
 - Yellow skin and a friendly smile.
@@ -301,7 +307,7 @@ Pronouns: he/him
 - An open **black jacket** over a **teal** T-shirt with a dark graphic on it.
 - Dark patterned pants and **white** shoes.
 
-The sprite and dialogue portraits exist (`art/sprites/agent.png`), but he doesn't appear in the game yet.
+
 
 ### Hop
 
@@ -563,7 +569,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - **Hilltop Park at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Hilltop at Night."
 - **The eruption** — walking toward the glow, the fragment fires at Elric. Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
 - **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks (all aimed at the SOUL, with warnings, 6 damage, faster every turn): **Cleave** (glowing slashes through your position), **Slash Grid** (three slashes crossing where you stand, one after another), **Red Arrows** (volleys of three that curve toward you), **Closing Ring** (shards circle you and collapse inward; one gap), **Flaming Arrow** (a big burning arrow that chases you). A red aura pulses around the box during his turns. ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
-- **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola and Rooster surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
+- **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola, Rooster and Agent surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
 - **The route choice** (with an "Are you sure?" confirm):
 
 | Choice | What happens | Locks |

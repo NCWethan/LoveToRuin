@@ -33,6 +33,7 @@ const CORPS := {
 	"Supreme": Vector2(-30, -70),
 	"Crayola": Vector2(30, -70),
 	"Rooster": Vector2(0, 75),
+	"Agent": Vector2(115, -35),
 }
 
 ## The field's sprinklers, one per corner (named like the compass). While a corner's
@@ -453,6 +454,9 @@ func _corps_arrives() -> void:
 		{"who": "Hopkuna", "text": "Oh, look. The little club showed up."},
 		{"who": "Rooster", "text": "Nice tattoos. Did you lose a fight with a Sharpie?", "mood": "smug"},
 		{"who": "Hopkuna", "text": "..."},
+		{"who": "Agent", "text": "Eleven of us. One of you. Do the math.", "mood": "smug"},
+		{"who": "Supreme", "text": "Ten. Elric can barely stand.", "mood": "shocked"},
+		{"who": "Agent", "text": "Eleven. Keep up."},
 		{"who": "NCWethan", "text": "LIGHTNING TIME!!!", "mood": "happy"},
 		{"who": "Ronin", "text": "FIRE TIME!!!", "mood": "angry"},
 	])
@@ -464,6 +468,7 @@ func _corps_arrives() -> void:
 		"* (A storm of sparks and flame slams into Hopkuna.)",
 		"* (He barely moves. But he isn't smiling anymore.)",
 		{"who": "Supreme", "text": "Statistically, we can't beat him.\nBut we can make him want to leave.", "mood": "shocked"},
+		{"who": "Agent", "text": "He's stalling. He wants the fragments, not a fight.\nElric. Whatever happens, don't let go of them."},
 		{"who": "Nat", "text": "Elric. Hop's still in there.\nTalk to him."},
 		{"who": "Elric", "text": "...Hop."},
 		{"who": "Elric", "text": "You jumped in front of that for me."},
@@ -559,6 +564,7 @@ func _ending_pacifist() -> void:
 		{"who": "Hop", "text": "...Okay. Okay.", "mood": "happy"},
 		"* (Hop laughs, and wipes his eyes,\n*  and doesn't say anything else for a while.)",
 		{"who": "Nat", "text": "If the fragments are destroyed, Hopkuna can never\nfully wake up. That's our job now."},
+		{"who": "Agent", "text": "Good. You're smarter than you look.\n...That's a compliment. Take it.", "mood": "smug"},
 		{"who": "Nassan", "text": "Nine fragments left. Let's find them before he does."},
 	])
 
@@ -581,6 +587,7 @@ func _ending_genocide() -> void:
 		{"who": "BigJoe6", "text": "...What?", "mood": "shocked"},
 		{"who": "Eggo", "text": "elric. no.", "mood": "sad"},
 		{"who": "Supreme", "text": "That's... that's the worst possible outcome.", "mood": "shocked"},
+		{"who": "Agent", "text": "Bad call. You'll figure that out. Probably too late.", "mood": "angry"},
 		{"who": "Hop", "text": "Elric, don't. You don't know what he'll-", "mood": "shocked"},
 		{"who": "BigJoe6", "text": "Then you're no friend of Revolution.\nGET OUT.", "mood": "angry"},
 		"* (The Corps forms a wall between you and the park.)",

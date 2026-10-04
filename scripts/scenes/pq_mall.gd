@@ -55,16 +55,19 @@ const SPOTS := {
 		"Supreme": Vector2(250, 178), "Crayola": Vector2(390, 178), "NCWethan": Vector2(510, 218),
 		"Ronin": Vector2(550, 218), "MuffinMage": Vector2(630, 218), "Rooster": Vector2(430, 298),
 		"Sansworth": Vector2(250, 398), "Nat": Vector2(910, 298), "Nassan": Vector2(1050, 538),
+		"Agent": Vector2(820, 178),
 	},
 	"afternoon": {
 		"Supreme": Vector2(960, 440), "Crayola": Vector2(560, 236), "NCWethan": Vector2(470, 300),
 		"Ronin": Vector2(510, 300), "MuffinMage": Vector2(640, 236), "Rooster": Vector2(300, 300),
 		"Sansworth": Vector2(200, 420), "Nat": Vector2(910, 298), "Nassan": Vector2(1050, 538),
+		"Agent": Vector2(820, 300),
 	},
 	"evening": {
 		"Crayola": Vector2(950, 298), "NCWethan": Vector2(700, 470), "Ronin": Vector2(740, 470),
 		"MuffinMage": Vector2(600, 236), "Rooster": Vector2(430, 528), "Sansworth": Vector2(330, 330),
 		"Nat": Vector2(910, 298), "Nassan": Vector2(640, 400),
+		"Agent": Vector2(690, 400),
 	},
 	"night": {
 		"NCWethan": Vector2(700, 470), "Ronin": Vector2(740, 470), "Nat": Vector2(910, 298),
@@ -200,6 +203,7 @@ func _place_people() -> void:
 		"Supreme": _talk_supreme, "Crayola": _talk_crayola, "NCWethan": _talk_ncwethan,
 		"Ronin": _talk_ronin, "MuffinMage": _talk_muffinmage, "Rooster": _talk_rooster,
 		"Sansworth": _talk_sansworth, "Nat": _talk_nat, "Nassan": _talk_nassan,
+		"Agent": _talk_agent,
 	}
 	var spots: Dictionary = SPOTS[time]
 	for who in spots:
@@ -522,6 +526,34 @@ func _talk_sansworth() -> void:
 		])
 
 
+func _talk_agent() -> void:
+	var first: Array = [
+		{"who": "Agent", "text": "Elric. The wanderer with the fragment. I know."},
+		{"who": "Agent", "text": "Agent. Revolution. And before you ask:\nyes, I'm the smart one.", "mood": "smug"},
+		{"who": "Hop", "text": "He says that to everyone.", "mood": "smug"},
+		{"who": "Agent", "text": "Because it's true for everyone."},
+	]
+	match Game.flags.get("tutorial_path", ""):
+		"spared":
+			first.append({"who": "Agent", "text": "You talked BigJoe6 down. Nobody does that.\nHe doesn't even listen to me. His mistake."})
+		"fought":
+			first.append({"who": "Agent", "text": "You beat BigJoe6 and Eggo. Fine. Don't let it go\nto your head. Being impressive is my job.", "mood": "smug"})
+	first.append({"who": "Agent", "text": "That fragment. Keep it in your bag, not your pocket.\nPockets get picked."})
+	await chat("agent", first, [
+		[{"who": "Agent", "text": "I don't repeat myself.", "mood": "smug"}, {"who": "Agent", "text": "...That didn't count."}],
+		[
+			"* (Someone wrote \"REVOLUTION HQ??\" in the dust on the window.)",
+			{"who": "Agent", "text": "I wrote \"REVOLUTION HQ.\"\nThe question marks were Eggo.", "mood": "angry"},
+		],
+		[
+			{"who": "Hop", "text": "Agent. Quick. What's two plus two?", "mood": "smug"},
+			{"who": "Agent", "text": "Four. Next."},
+			{"who": "Hop", "text": "...I had a trick question ready.", "mood": "sad"},
+			{"who": "Agent", "text": "I know. That's why I answered fast.", "mood": "smug"},
+		],
+	])
+
+
 func _talk_nat() -> void:
 	if flag("heard_lore"):
 		await chat("nat", [], [
@@ -775,6 +807,10 @@ const LATER_LINES := {
 			[{"who": "Nat", "text": "...Still reading.", "mood": "smug"}, "* (The book on his head has moved one page.)"],
 			[{"who": "Nat", "text": "Sunset's in about two hours.\nThe old stories always start at sunset."}],
 		],
+		"Agent": [
+			[{"who": "Agent", "text": "You waited instead of going in early. Smart.\nMost people would've gone in and lost."}, {"who": "Agent", "text": "...Not as smart as me. But smart.", "mood": "smug"}],
+			[{"who": "Agent", "text": "Sunset's at 7:42. I checked. Be ready."}],
+		],
 		"Nassan": [
 			[{"who": "Nassan", "text": "Not dark yet. I'll tell you when.\nGo enjoy the afternoon. That's an order.", "mood": "smug"}],
 			[{"who": "Nassan", "text": "Patience is part of the plan."}],
@@ -798,6 +834,9 @@ const LATER_LINES := {
 		],
 		"Sansworth": [
 			[{"who": "Sansworth", "text": "I found a car! It's not mine.\nBut it let me sit on it. That's basically ownership.", "mood": "happy"}],
+		],
+		"Agent": [
+			[{"who": "Agent", "text": "Westview. Three rooms you'll care about."}, {"who": "Agent", "text": "The hallway lies. Trust the chalkboard.\nDon't trust the mascot."},{"who": "Hop", "text": "How do you know all that?", "mood": "shocked"}, {"who": "Agent", "text": "I read. Go.", "mood": "smug"}],
 		],
 		"Nat": [
 			[{"who": "Nat", "text": "The sun's going down.", "mood": "sad"}, {"who": "Nat", "text": "In the old story, the fragments glowed brighter\nat night. Keep yours close."}],
