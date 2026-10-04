@@ -39,6 +39,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Rooster** | |
 | **Crayola** | |
 | **Supreme** | |
+| **Nat** | |
 | **Hop** | A friend whose evil alter ego is Hopkuna. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
 
@@ -46,6 +47,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 - **Team battles like Deltarune:** up to **3** party members fight at once.
 - **Elric chooses the team:** Elric plus 2 cast members of the player's choice.
+- **The whole cast is available** — every character can be a party member, so the player can mix and match for unique team-ups and dialogue.
 - **EXP without violence:** on the pacifist route, you gain EXP by doing other things, so you can grow strong without hurting anyone.
 
 ### Two ways to grow: LOVE and BOND
@@ -89,11 +91,21 @@ How it pays off on each route:
 | **Genocide** | Given to Hopkuna, making him unstoppable. | Elric destroys any chance of having one. |
 
 ### The route choice
-At one point in the game, Elric must **manually choose a route**:
+When Elric **meets the REVOLUTION Corps**, they ask what Elric wants to do, and Elric must **manually choose a route**:
 
 > **Go with Hop?** *(Genocide)*
 > **Chart your own path?** *(Neutral)*
 > **Join the REVOLUTION Corps?** *(Pacifist)*
+
+What each choice locks:
+
+| Choice | Result | Pacifist later? | Genocide later? | Neutral later? |
+|---|---|---|---|---|
+| **Go with Hop** | The Corps kicks Elric out. | 🔒 Locked | — | 🔒 Locked |
+| **Chart your own path** | The Corps offers Elric the chance to come back and join them later. | ✅ Still open | 🔒 Locked | — |
+| **Join the REVOLUTION Corps** | Elric joins the team. | — | 🔒 Locked | 🔒 Locked |
+
+So Neutral is the only choice that can still change, and only toward Pacifist.
 
 ### Endings — decided by the route choice and how the player plays
 
@@ -117,6 +129,6 @@ At one point in the game, Elric must **manually choose a route**:
 ## Open questions
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
-- Which characters can join the party, and when? (Chapter 1 should probably limit the choices.)
-- When does the route choice happen, and does it lock the route?
+- When does each character become available to join the party?
+- When in the story does Elric meet the REVOLUTION Corps?
 - What are each character's personality and battle abilities?
