@@ -50,7 +50,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Rooster** | See [Rooster](#rooster) below. |
 | **Crayola** | See [Crayola](#crayola) below. |
 | **Supreme** | See [Supreme](#supreme) below. |
-| **Nat** | |
+| **Nat** | See [Nat](#nat) below. |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
 
@@ -221,6 +221,26 @@ Pronouns: he/him
 - Green-and-white sneakers.
 
 ![Supreme reference](art/reference/supreme.png)
+
+### Nat
+
+Pronouns: he/him
+
+**Personality** *(proposed — open to changes)*
+- **Deadpan and unbothered.** Nothing rattles him; he answers chaos with a dry one-liner.
+- **A bookworm who knows the past.** Where Nassan plans the future, Nat knows history — including old stories about **Hopkuna and the fragments**. He's the character who explains the lore to Elric.
+- **Running gag:** the open book on his head. Everyone assumes he's studying; half the time he's actually napping under it.
+
+**Battle idea**
+- Abilities pulled from his books: "reading up" on an enemy mid-fight to unlock new ACT options or reveal how to spare them.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/nat.png))
+- Dark skin, calm half-lidded eyes.
+- An **open book resting on his head** like a little roof.
+- **Purple** shirt.
+- Black arms and pants.
+
+![Nat reference](art/reference/nat.png)
 
 ### Hop
 
