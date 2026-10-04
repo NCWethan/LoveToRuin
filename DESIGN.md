@@ -47,7 +47,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **NCWethan** | See [NCWethan](#ncwethan) below. |
 | **Sansworth** | See [Sansworth](#sansworth) below. |
 | **Ronin** | See [Ronin](#ronin) below. |
-| **Rooster** | |
+| **Rooster** | See [Rooster](#rooster) below. |
 | **Crayola** | |
 | **Supreme** | |
 | **Nat** | |
@@ -167,6 +167,23 @@ Pronouns: he/him
 
 **Appearance**
 - *Design coming soon.*
+
+### Rooster
+
+Pronouns: he/him
+
+**Personality**
+- A **goofball** who dogs on people for fun…
+- …but gets **mad when he gets dogged on**.
+- Thinks he's **better than everyone** — played as **satire**, not seriously.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/rooster.png))
+- Light skin, messy dark hair.
+- Black top hat.
+- Goofy face with his **tongue sticking out**.
+- A suit split down the middle: **half white, half black**, with a black tie.
+
+![Rooster reference](art/reference/rooster.png)
 
 ### Hop
 
