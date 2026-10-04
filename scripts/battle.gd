@@ -79,6 +79,8 @@ var _enemy_timer: float = 0.0
 var _spawn_timers: Dictionary = {}
 var _spawn_steps: Dictionary = {}
 var _turn_patterns: Dictionary = {}
+## The attack each enemy used last turn, so it doesn't repeat right away.
+var _last_patterns: Dictionary = {}
 var _attackers: Array[Enemy] = []
 var _speech: Dictionary = {}
 var _invincible_timer: float = 0.0
@@ -514,9 +516,7 @@ func _start_enemy_turn() -> void:
 	for enemy in _attackers:
 		_spawn_timers[enemy] = 0.0
 		_spawn_steps[enemy] = 0
-		# A different attack each turn, cycling through the enemy's list.
-		# (The very first turn always uses the first one, the easiest.)
-		_turn_patterns[enemy] = enemy.patterns[(enemy_turn - 1) % enemy.patterns.size()]
+		_turn_patterns[enemy] = _pick_pattern(enemy)
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
 
@@ -524,6 +524,20 @@ func _start_enemy_turn() -> void:
 	soul.global_position = BOX_CENTER
 	soul.visible = true
 	soul.can_move = true
+
+
+## Picks this turn's attack for an enemy at random, so fights don't feel repetitive.
+## The enemy's first attack is always its first (easiest) one, and it never uses
+## the same attack two turns in a row.
+func _pick_pattern(enemy: Enemy) -> String:
+	var pattern: String
+	if not _last_patterns.has(enemy):
+		pattern = enemy.patterns[0]
+	else:
+		var choices := enemy.patterns.filter(func(p: String) -> bool: return p != _last_patterns[enemy])
+		pattern = choices.pick_random() if not choices.is_empty() else enemy.patterns[0]
+	_last_patterns[enemy] = pattern
+	return pattern
 
 
 func _process_enemy_turn(delta: float) -> void:
