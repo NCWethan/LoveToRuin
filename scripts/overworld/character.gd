@@ -9,6 +9,8 @@ extends Node2D
 
 var front: Texture2D
 var back: Texture2D
+## Two side-view walking frames (optional). Flipped when facing left.
+var side: Array[Texture2D] = []
 ## What happens when Elric presses Z next to it. Can use `await` inside.
 var on_interact: Callable
 ## If set, this character trails behind the player instead of standing still.
@@ -27,6 +29,7 @@ var _sprite: Sprite2D
 var _body: StaticBody2D
 var _time: float = 0.0
 var _walking: bool = false
+var _facing: Vector2 = Vector2.DOWN
 
 
 ## Sets the character up. Call before adding it to the scene.
@@ -34,6 +37,12 @@ func setup(front_texture: Texture2D, back_texture: Texture2D = null, is_solid: b
 	front = front_texture
 	back = back_texture if back_texture else front_texture
 	solid = is_solid
+	return self
+
+
+## Adds side-view walking frames. Call before adding it to the scene.
+func with_side(frame_1: Texture2D, frame_2: Texture2D) -> Character:
+	side = [frame_1, frame_2]
 	return self
 
 
@@ -81,9 +90,16 @@ func walk_to(target: Vector2, speed: float = 90.0) -> void:
 	_walking = false
 
 
+## Turns to look in a direction (up, down, left or right, whichever is closest).
 func face(direction: Vector2) -> void:
-	if _sprite:
-		_sprite.texture = back if direction.y < -absf(direction.x) else front
+	if direction.length() < 0.01:
+		return
+	if absf(direction.x) > absf(direction.y) and not side.is_empty():
+		_facing = Vector2(signf(direction.x), 0)
+	elif direction.y < 0:
+		_facing = Vector2.UP
+	else:
+		_facing = Vector2.DOWN
 
 
 func _process(delta: float) -> void:
@@ -101,7 +117,19 @@ func _process(delta: float) -> void:
 		else:
 			_walking = false
 
-	_sprite.position.y = -absf(sin(_time * 12.0)) * 1.5 if _walking else 0.0
+	_update_sprite()
 	if glow:
 		var pulse := 0.5 + 0.5 * sin(_time * 4.0)
 		_sprite.modulate = Color.WHITE.lerp(glow_color, pulse)
+
+
+func _update_sprite() -> void:
+	_sprite.flip_h = false
+	if _facing.x != 0 and not side.is_empty():
+		var frame := int(_time / 0.15) % 2 if _walking else 0
+		_sprite.texture = side[frame]
+		_sprite.flip_h = _facing.x < 0
+		_sprite.position.y = 0.0
+	else:
+		_sprite.texture = back if _facing == Vector2.UP else front
+		_sprite.position.y = -absf(sin(_time * 12.0)) * 1.5 if _walking else 0.0

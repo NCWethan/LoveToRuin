@@ -8,7 +8,7 @@ extends Node2D
 ## The fighters and their lines come from tutorial_battle.gd.
 ## Controls: arrow keys to move, Z / Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, FIGHT_BAR, ENEMY_TURN, GAME_OVER }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, ENEMY_TURN, GAME_OVER }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -77,6 +77,8 @@ var _bar_target: Enemy
 # Enemy turn
 var _enemy_timer: float = 0.0
 var _spawn_timers: Dictionary = {}
+var _spawn_steps: Dictionary = {}
+var _turn_patterns: Dictionary = {}
 var _attackers: Array[Enemy] = []
 var _speech: Dictionary = {}
 var _invincible_timer: float = 0.0
@@ -132,6 +134,8 @@ func _process(delta: float) -> void:
 			_process_menu()
 		State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY:
 			_process_list()
+		State.READY:
+			_process_ready()
 		State.FIGHT_BAR:
 			_process_fight_bar(delta)
 		State.ENEMY_TURN:
@@ -213,9 +217,50 @@ func _next_member() -> void:
 		current_member += 1
 
 	if current_member >= party.size():
-		_run_actions()
+		_open_ready()
 	else:
 		_open_menu()
+
+
+## After everyone has chosen: show the plan, and let the player go back and change it.
+func _open_ready() -> void:
+	state = State.READY
+	soul.visible = false
+	var lines: Array[String] = []
+	for action in actions:
+		if action["type"] == "NONE":
+			continue
+		lines.append("* " + _describe(action))
+	lines.append("* (Z: go!     X: change something)")
+	_text = "\n".join(lines)
+	_typed = _text.length()
+
+
+## A short description of a chosen action, like "Elric: ACT (Pun) on Eggo".
+func _describe(action: Dictionary) -> String:
+	var who: String = action["member"].name
+	match action["type"]:
+		"FIGHT":
+			return "%s: FIGHT %s" % [who, action["target"].name]
+		"ACT":
+			var target: Enemy = action["target"]
+			return "%s: ACT (%s) on %s" % [who, target.act_names()[action["act"]], target.name]
+		"ITEM":
+			return "%s: give %s the %s" % [who, action["target"].name, action["item"]["name"]]
+		"MERCY":
+			return "%s: SPARE %s" % [who, action["target"].name]
+		"DEFEND":
+			return "%s: DEFEND" % who
+	return who
+
+
+func _process_ready() -> void:
+	if _pressed("confirm"):
+		Game.play_sfx("select")
+		_run_actions()
+	elif _pressed("cancel"):
+		Game.play_sfx("move")
+		_go_back()
 
 
 func _open_menu() -> void:
@@ -463,9 +508,15 @@ func _start_enemy_turn() -> void:
 	enemy_turn += 1
 
 	_spawn_timers.clear()
+	_spawn_steps.clear()
+	_turn_patterns.clear()
 	_speech.clear()
 	for enemy in _attackers:
 		_spawn_timers[enemy] = 0.0
+		_spawn_steps[enemy] = 0
+		# A different attack each turn, cycling through the enemy's list.
+		# (The very first turn always uses the first one, the easiest.)
+		_turn_patterns[enemy] = enemy.patterns[(enemy_turn - 1) % enemy.patterns.size()]
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
 
@@ -479,12 +530,16 @@ func _process_enemy_turn(delta: float) -> void:
 	_enemy_timer -= delta
 
 	# Give the box a moment to shrink before the bullets start.
-	if _enemy_timer < ENEMY_TURN_TIME - 0.4:
+	# Stop spawning a moment before the turn ends, so the last bullets can clear out.
+	if _enemy_timer < ENEMY_TURN_TIME - 0.4 and _enemy_timer > 0.6:
+		# When two enemies attack together, each one attacks a bit less often.
+		var crowding := 1.0 if _attackers.size() == 1 else 1.5
 		for enemy in _attackers:
 			_spawn_timers[enemy] -= delta
 			if _spawn_timers[enemy] <= 0.0:
-				_spawn_timers[enemy] = enemy.spawn_interval
-				_spawn_bullet(enemy)
+				var wait := Attacks.spawn(_turn_patterns[enemy], enemy, self, box.get_inner_rect(), soul.global_position, _spawn_steps[enemy])
+				_spawn_timers[enemy] = wait * crowding
+				_spawn_steps[enemy] += 1
 
 	if _invincible_timer > 0.0:
 		# Just got hit: make the SOUL blink until the invincibility wears off.
@@ -495,30 +550,6 @@ func _process_enemy_turn(delta: float) -> void:
 
 	if state == State.ENEMY_TURN and _enemy_timer <= 0.0:
 		_end_enemy_turn()
-
-
-func _spawn_bullet(enemy: Enemy) -> void:
-	var area := box.get_inner_rect()
-	var bullet := Bullet.new()
-	bullet.damage = enemy.attack
-	bullet.bounds = area
-
-	match enemy.pattern:
-		"rain":
-			# Falls from the top of the box.
-			bullet.position = Vector2(randf_range(area.position.x + 4, area.end.x - 4), area.position.y + 3)
-			bullet.velocity = Vector2(0, enemy.bullet_speed)
-		"lance":
-			# Flies in from the left or right side.
-			var y := randf_range(area.position.y + 4, area.end.y - 4)
-			if randf() < 0.5:
-				bullet.position = Vector2(area.position.x + 3, y)
-				bullet.velocity = Vector2(enemy.bullet_speed, 0)
-			else:
-				bullet.position = Vector2(area.end.x - 3, y)
-				bullet.velocity = Vector2(-enemy.bullet_speed, 0)
-
-	add_child(bullet)
 
 
 ## Checks whether any bullet is touching the SOUL.
@@ -576,10 +607,15 @@ func _victory() -> void:
 		lines.append("* You earned %d BOND." % bond_gained)
 	if exp_gained > 0:
 		lines.append("* You earned %d EXP." % exp_gained)
+	# Every enemy leaves a little money behind, spared or not.
+	var money := 0
+	for enemy in enemies:
+		money += enemy.money_reward
+	lines.append("* You found $%d." % money)
 
 	if Game.pending_battle != "":
 		# Tell the overworld how it went, so the story can react.
-		var result := {"spared": [], "defeated": [], "bond": bond_gained, "exp": exp_gained}
+		var result := {"spared": [], "defeated": [], "bond": bond_gained, "exp": exp_gained, "money": money}
 		for enemy in enemies:
 			if enemy.state == "spared":
 				result["spared"].append(enemy.name)
@@ -838,7 +874,7 @@ func _draw_buttons() -> void:
 func _draw_box_contents() -> void:
 	var area := box.get_inner_rect()
 	match state:
-		State.TEXT, State.MENU:
+		State.TEXT, State.MENU, State.READY:
 			var visible_text := _text.substr(0, int(maxf(_typed, 0.0)))
 			var lines := visible_text.split("\n")
 			for i in lines.size():
@@ -862,6 +898,24 @@ func _draw_box_contents() -> void:
 				_draw_row(i, "%s   HP %d / %d" % [member.name, member.hp, member.max_hp], member.color)
 		State.FIGHT_BAR:
 			_draw_fight_bar(area)
+
+	# A reminder of the controls in the corner of the box.
+	var hint := ""
+	if state == State.MENU:
+		hint = "Z: choose   X: back" if _can_go_back() else "Z: choose"
+	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY]:
+		hint = "Z: choose   X: back"
+	if hint != "":
+		var width := _font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		_overlay.draw_string(_font, Vector2(area.end.x - width - 8, area.end.y - 8), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
+
+
+## True if there's an earlier party member whose choice can be undone.
+func _can_go_back() -> bool:
+	for i in range(current_member - 1, -1, -1):
+		if not party[i].is_down():
+			return true
+	return false
 
 
 ## Draws one option in a list. The SOUL sits to its left as the cursor.

@@ -21,7 +21,8 @@ func _draw() -> void:
 	var alpha := clampf(_time / 1.0, 0.0, 1.0)
 	_centered("LOVE TO RUIN", 140, 44, Color(1, 1, 1, alpha))
 	_centered("Chapter 1  -  to be continued", 190, 18, Color(0.8, 0.8, 0.8, alpha))
-	_centered("Next stop: the PQ Mall.", 250, 18, Color(1, 1, 0.6, alpha))
+	var next := "Next stop: Westview High School... after dark." if Game.flags.get("mall_done", false) else "Next stop: the PQ Mall."
+	_centered(next, 250, 18, Color(1, 1, 0.6, alpha))
 
 	var path: String = Game.flags.get("tutorial_path", "")
 	var note := ""
@@ -30,7 +31,7 @@ func _draw() -> void:
 		"fought": note = "You fought your way out. Revolution will remember that."
 		"mixed": note = "Revolution isn't sure what to make of you."
 	_centered(note, 300, 14, Color(0.7, 0.7, 0.7, alpha))
-	_centered("LV %d     BOND %d     EXP %d" % [Game.lv(), Game.bond, Game.exp_points], 340, 16, Color(1, 1, 1, alpha))
+	_centered("LV %d     BOND %d     EXP %d     $%d" % [Game.lv(), Game.bond, Game.exp_points, Game.money], 340, 16, Color(1, 1, 1, alpha))
 	if _time > 1.5:
 		_centered("(press Z to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 

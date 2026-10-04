@@ -1,4 +1,4 @@
-extends Node2D
+extends Area
 ## Chapter 1's starting area: outside Mt. Carmel High School.
 ##
 ## Story beats here, in order (each one sets a flag in Game.flags):
@@ -7,67 +7,39 @@ extends Node2D
 ##   has_fragment_1     Find the glowing fragment by the bleachers.
 ##   tutorial_started   Leaving the field, Eggo and BigJoe6 confront Elric -> battle.
 ##   tutorial_done      After the battle, they react to how it went.
-## Then the road at the bottom leads on toward the PQ Mall (end of the demo for now).
+## Then the road at the bottom leads on to the PQ Mall.
 
 const SCENE := "res://scenes/mt_carmel.tscn"
-const DEMO_END_SCENE := "res://scenes/demo_end.tscn"
+const MALL_SCENE := "res://scenes/pq_mall.tscn"
 
 const START := Vector2(130, 470)            # on the bottom sidewalk, just off the road
+## Where Elric appears when walking back from the PQ Mall.
+const FROM_MALL := Vector2(900, 470)
 const HOP_SPOT := Vector2(350, 238)         # in front of the school doors
 const FRAGMENT_SPOT := Vector2(870, 360)    # in the field, by the bleachers
 const SAVE_SPOT := Vector2(470, 370)        # in the courtyard
 const ROAD_Y := 500.0                       # walking below this means "leaving"
 const FIELD_EDGE_X := 570.0                 # walking left of this after the fragment triggers the ambush
 
-var room: Room
-var world: Node2D
-var player: Player
 var hop: Character
 var fragment: Character
 var eggo: Character
 var bigjoe: Character
 
-var _cutscene_running: bool = false
-
 
 func _ready() -> void:
-	RenderingServer.set_default_clear_color(Color.BLACK)
-
-	room = Room.new()
-	add_child(room)
-	_build_map()
-	room.build()
-
-	# Everyone who walks around goes in here, sorted by height on screen
-	# so people further down are drawn in front.
-	world = Node2D.new()
-	world.y_sort_enabled = true
-	add_child(world)
-
-	player = Player.new()
-	player.position = Game.spawn_position if Game.spawn_position != null else START
-	Game.spawn_position = null
-	world.add_child(player)
-
-	var camera := Camera2D.new()
-	camera.limit_left = 0
-	camera.limit_top = 0
-	camera.limit_right = int(room.pixel_size().x)
-	camera.limit_bottom = int(room.pixel_size().y)
-	camera.position_smoothing_enabled = true
-	player.add_child(camera)
-
+	setup_area(START)
 	_place_characters()
 	_start_story.call_deferred()
 
 
 func _flag(name: String) -> bool:
-	return Game.flags.get(name, false)
+	return flag(name)
 
 
 # --- The map --------------------------------------------------------------
 
-func _build_map() -> void:
+func build_map() -> void:
 	room.setup(48, 30, Room.GRASS)
 
 	# Trees around the edges.
@@ -121,7 +93,7 @@ func _build_map() -> void:
 
 func _place_characters() -> void:
 	# Hop: by the doors until you meet him, then following Elric.
-	hop = Character.new().setup(preload("res://art/sprites/hop.png"), preload("res://art/sprites/hop_back.png"))
+	hop = Cast.make("Hop")
 	if _flag("met_hop"):
 		hop.position = player.position + Vector2(0, -20)
 		hop.follow = player
@@ -147,8 +119,8 @@ func _place_characters() -> void:
 	world.add_child(star)
 
 
-func _make_enemy_npc(texture: Texture2D, at: Vector2) -> Character:
-	var npc := Character.new().setup(texture)
+func _make_enemy_npc(who: String, at: Vector2) -> Character:
+	var npc := Cast.make(who)
 	npc.position = at
 	world.add_child(npc)
 	return npc
@@ -179,13 +151,8 @@ func _physics_process(_delta: float) -> void:
 		_run(_try_to_leave)
 
 
-## Runs a cutscene, keeping the player still until it's done.
 func _run(cutscene: Callable) -> void:
-	_cutscene_running = true
-	Game.busy = true
-	await cutscene.call()
-	Game.busy = false
-	_cutscene_running = false
+	await run_cutscene(cutscene)
 
 
 func _arrival() -> void:
@@ -277,10 +244,11 @@ func _try_to_leave() -> void:
 		await tween.finished
 		return
 
-	await Game.dialogue.say([
-		{"who": "Hop", "text": "PQ Mall's this way. Keep up, mysterious traveler."},
-	])
-	await Game.change_scene(DEMO_END_SCENE)
+	if not _flag("mall_arrived"):
+		await Game.dialogue.say([
+			{"who": "Hop", "text": "PQ Mall's this way. Keep up, mysterious traveler."},
+		])
+	await Game.change_scene(MALL_SCENE)
 
 
 # --- The tutorial fight ---------------------------------------------------
@@ -291,8 +259,8 @@ func _ambush() -> void:
 	# Eggo and BigJoe6 come over from the parking lot.
 	# They start just off the left edge of the screen.
 	var ahead := player.position
-	eggo = _make_enemy_npc(preload("res://art/sprites/eggo.png"), Vector2(ahead.x - 330, ahead.y - 30))
-	bigjoe = _make_enemy_npc(preload("res://art/sprites/bigjoe6.png"), Vector2(ahead.x - 350, ahead.y + 10))
+	eggo = _make_enemy_npc("Eggo", Vector2(ahead.x - 330, ahead.y - 30))
+	bigjoe = _make_enemy_npc("BigJoe6", Vector2(ahead.x - 350, ahead.y + 10))
 
 	await Game.dialogue.say([{"who": "BigJoe6", "text": "HOLD IT!"}])
 	# Both walk at once: start Eggo without waiting, then wait for BigJoe6.
@@ -324,8 +292,8 @@ func _after_tutorial_battle() -> void:
 	var spared: Array = result.get("spared", [])
 	var defeated: Array = result.get("defeated", [])
 
-	eggo = _make_enemy_npc(preload("res://art/sprites/eggo.png"), player.position + Vector2(-70, -24))
-	bigjoe = _make_enemy_npc(preload("res://art/sprites/bigjoe6.png"), player.position + Vector2(-60, 16))
+	eggo = _make_enemy_npc("Eggo", player.position + Vector2(-70, -24))
+	bigjoe = _make_enemy_npc("BigJoe6", player.position + Vector2(-60, 16))
 	if not hop.follow:
 		hop.position = player.position + Vector2(24, -10)
 

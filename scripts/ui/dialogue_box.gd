@@ -14,12 +14,13 @@ signal _advanced
 const BOTTOM_BOX := Rect2(30, 330, 580, 130)
 const TOP_BOX := Rect2(30, 40, 580, 130)
 
-## Where the box is drawn. It moves to the top when Elric is in the
-## bottom half of the screen, so it never covers them (like Undertale).
-var _box := BOTTOM_BOX
 const TYPE_SPEED := 40.0
 const FONT_SIZE := 16
 const LINE_HEIGHT := 22
+## Portraits are the speaker's head and shoulders, drawn this many times bigger.
+const PORTRAIT_SCALE := 4.0
+## How far the text moves right to make room for a portrait.
+const PORTRAIT_SPACE := 112.0
 
 ## Name tag color and voice pitch for each speaker. Anyone not listed uses white / normal.
 const SPEAKERS := {
@@ -27,7 +28,20 @@ const SPEAKERS := {
 	"Hop": {"color": Color(0.75, 0.75, 0.75), "pitch": 1.0},
 	"Eggo": {"color": Color(1.0, 0.85, 0.2), "pitch": 0.8},
 	"BigJoe6": {"color": Color(0.9, 0.3, 0.3), "pitch": 0.65},
+	"MuffinMage": {"color": Color(0.95, 0.5, 0.2), "pitch": 0.9},
+	"Supreme": {"color": Color(0.75, 0.45, 1.0), "pitch": 1.15},
+	"Crayola": {"color": Color(0.85, 0.85, 0.9), "pitch": 1.4},
+	"NCWethan": {"color": Color(0.4, 0.75, 1.0), "pitch": 0.75},
+	"Ronin": {"color": Color(0.95, 0.25, 0.2), "pitch": 0.7},
+	"Rooster": {"color": Color(0.95, 0.95, 0.95), "pitch": 1.1},
+	"Nat": {"color": Color(0.6, 0.4, 0.8), "pitch": 0.6},
+	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "pitch": 1.3},
+	"Nassan": {"color": Color(0.55, 0.55, 0.6), "pitch": 0.85},
 }
+
+## Where the box is drawn. It moves to the top when Elric is in the
+## bottom half of the screen, so it never covers them (like Undertale).
+var _box := BOTTOM_BOX
 
 var _panel: Control
 var _font: Font
@@ -147,10 +161,19 @@ func _draw_box() -> void:
 		_panel.draw_rect(tag, Color.BLACK)
 		_panel.draw_string(_font, tag.position + Vector2(8, 17), _who, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 
+	# The speaker's face on the left, like Deltarune.
+	var text_left := 16.0
+	var face := Cast.portrait(_who)
+	if face:
+		var size := Cast.PORTRAIT_REGION.size * PORTRAIT_SCALE
+		var at := _box.position + Vector2(12, (_box.size.y - size.y) / 2)
+		_panel.draw_texture_rect_region(face, Rect2(at, size), Cast.PORTRAIT_REGION)
+		text_left = PORTRAIT_SPACE
+
 	var visible_text := _text.substr(0, mini(int(_typed), _text.length()))
 	var lines := visible_text.split("\n")
 	for i in lines.size():
-		_panel.draw_string(_font, _box.position + Vector2(16, 28 + i * LINE_HEIGHT), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+		_panel.draw_string(_font, _box.position + Vector2(text_left, 28 + i * LINE_HEIGHT), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 
 	if _finished() and not _choices.is_empty():
 		var y := _box.end.y - 20

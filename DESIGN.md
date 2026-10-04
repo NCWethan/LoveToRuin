@@ -30,6 +30,23 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 **SAVE points** can appear anywhere as the player progresses.
 
+### The PQ Mall (as built)
+
+**Stores:** Vons (groceries), Games & Cards (permanently "back in 5 minutes"), Knotty Barrel (patio + salmon burgers), an empty store FOR LEASE (someone wrote "REVOLUTION HQ??" in the dust), and Jack in the Box. Vons, Jack in the Box and Knotty Barrel sell healing items for money ($).
+
+**Who hangs out there, and what they're up to:**
+
+| Who | Where | What happens |
+|---|---|---|
+| **Supreme** | Outside Vons | Rattles off stats from his seven spreadsheets; knows how the tutorial fight went. |
+| **Crayola** | Outside Games & Cards | Shy; offers a card trick (Seven of Hearts). Swims with NCWethan. |
+| **NCWethan** & **Ronin** | Knotty Barrel patio | The checkers running gag ("KING ME!!!" / "THAT'S CHESS."). NCWethan sparks when excited; Ronin has lost 14 in a row and got his guitar banned after "the fire alarm thing." |
+| **MuffinMage** | Knotty Barrel patio | Eating a salmon burger in a fish mask. Neutral, but warns Elric about the fragment. |
+| **Rooster** | Parking lot | Roasts Elric; the player can roast back ("Couldn't pick a color?" → "It's called DUALITY."). |
+| **Sansworth** | Parking lot | Looking for a car he doesn't have; gives Elric a Trail Mix. |
+| **Nat** | By the bench near Jack in the Box | **Lore:** the old story of twelve fragments and Hopkuna, with the last page torn out. Hop goes still. |
+| **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. |
+
 ## 3. The main character
 
 **Elric** (original character) — pronouns: **they/them**
@@ -435,7 +452,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 
 ### Milestone 2 — Talking
 - [x] Dialogue box with letter-by-letter text and voice beeps (each speaker has their own pitch and name tag)
-- [ ] Character portraits
+- [x] Character portraits (head-and-shoulders from each sprite)
 - [x] Dialogue choices (Yes / No, Save / Return)
 
 ### Milestone 3 — Walking around
@@ -443,7 +460,8 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Walls / collision and the camera
 - [x] Talking to characters and inspecting objects
 - [x] Followers (Hop walks behind Elric)
-- [ ] Moving between rooms/areas
+- [x] Side-view walking sprites with a 2-frame walk (Elric, Hop, Eggo, BigJoe6)
+- [x] Moving between areas (Mt. Carmel ↔ PQ Mall)
 
 ### Milestone 4 — The opening (first playable demo)
 - [x] Title screen: **REVOLUTION** rearranges into **LOVE TO RUIN**
@@ -456,9 +474,15 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] "To be continued" screen when leaving toward the PQ Mall
 
 ### Milestone 5 — The PQ Mall hub
-- [ ] Shops and items
-- [ ] NPCs and cast members to talk to
-- [ ] Party selection (Elric + 2 of the cast)
+- [x] Shops and items (money, 8-item bag)
+- [x] NPCs and cast members to talk to (9 cast members with sprites, portraits and dialogue)
+- [x] Nat's lore and Nassan pointing the way to Westview
+- [ ] Party selection (Elric + 2 of the cast) — *needs decisions: see Open questions*
+
+### Battle polish (from feedback)
+- [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
+- [x] "Ready?" check after choosing, with X to go back and change anything
+- [x] On-screen control hints in menus
 
 ### Milestone 6 — Westview High School
 - [ ] The twisted school dungeon: rooms, puzzles, enemies
@@ -480,7 +504,8 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 ## Open questions
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
-- When does each character become available to join the party?
+- When does each character become available to join the party? Hop is with Elric for all of Chapter 1 (the story needs him there for the climax) — so does party selection start in Chapter 1 with Hop locked in, or after the route choice?
+- Each cast member's battle abilities (ideas so far: Supreme = super CHECK, Crayola = support cards, NCWethan = lightning, Ronin = fire/guitar magic, Nat = "reading up" to unlock ACTs, Nassan = strategy, Rooster = roasts).
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?

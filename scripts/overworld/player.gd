@@ -9,10 +9,13 @@ var facing: Vector2 = Vector2.DOWN
 ## Recent positions, oldest first. Followers (like Hop) walk along this trail.
 var trail: Array[Vector2] = []
 
-var _front: Texture2D = preload("res://art/sprites/elric.png")
-var _back: Texture2D = preload("res://art/sprites/elric_back.png")
+var _front: Texture2D = load("res://art/sprites/elric.png")
+var _back: Texture2D = load("res://art/sprites/elric_back.png")
+## Two side-view frames (legs together / mid-step). Flipped when walking left.
+var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png")]
 var _sprite: Sprite2D
 var _walk_time: float = 0.0
+var _moving: bool = false
 
 
 func _ready() -> void:
@@ -36,8 +39,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_moving = false
 	if Game.busy or Game.transitioning:
-		_sprite.position.y = 0
+		_update_sprite()
 		return
 
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
@@ -49,17 +53,29 @@ func _physics_process(delta: float) -> void:
 			facing = Vector2(0, signf(direction.y))
 		velocity = direction * speed
 		move_and_slide()
-		# A little bounce while walking.
+		_moving = true
 		_walk_time += delta
-		_sprite.position.y = -absf(sin(_walk_time * 12.0)) * 1.5
 		_record_trail()
-	else:
-		_sprite.position.y = 0
 
-	_sprite.texture = _back if facing == Vector2.UP else _front
+	_update_sprite()
 
 	if Input.is_action_just_pressed("confirm"):
 		_interact()
+
+
+## Picks the right picture for the direction Elric faces, and animates walking.
+func _update_sprite() -> void:
+	_sprite.flip_h = false
+	if facing.x != 0:
+		# Side view: swap between the two frames every 0.15 seconds while walking.
+		var frame := int(_walk_time / 0.15) % 2 if _moving else 0
+		_sprite.texture = _side[frame]
+		_sprite.flip_h = facing.x < 0
+		_sprite.position.y = 0
+	else:
+		_sprite.texture = _back if facing == Vector2.UP else _front
+		# Facing up or down: a little bounce while walking.
+		_sprite.position.y = -absf(sin(_walk_time * 12.0)) * 1.5 if _moving else 0.0
 
 
 func _record_trail() -> void:

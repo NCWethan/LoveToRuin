@@ -48,8 +48,7 @@ static func create_enemies() -> Array[Enemy]:
 			],
 		},
 	]
-	eggo.pattern = "rain"
-	eggo.spawn_interval = 0.45
+	eggo.patterns = ["rain", "egg_drop", "bunny_hop"]
 	eggo.bullet_speed = 90.0
 	eggo.taunts = ["...", "Yolk's on you.", "Eggs-actly."]
 	eggo.spare_taunts = ["heh. good one."]
@@ -83,8 +82,7 @@ static func create_enemies() -> Array[Enemy]:
 			],
 		},
 	]
-	bigjoe.pattern = "lance"
-	bigjoe.spawn_interval = 0.55
+	bigjoe.patterns = ["lance", "sweep", "aimed"]
 	bigjoe.bullet_speed = 140.0
 	bigjoe.taunts = ["Justice prevails!", "Hand it over!", "No mercy, lackey!"]
 	bigjoe.spare_taunts = ["...you're legit?"]

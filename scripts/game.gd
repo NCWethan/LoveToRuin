@@ -14,6 +14,11 @@ var party: Array[PartyMember] = []
 var items: Array[Dictionary] = []
 var bond: int = 0
 var exp_points: int = 0
+## Money, in dollars. Spent at shops.
+var money: int = 0
+
+## How many items Elric can carry.
+const MAX_ITEMS := 8
 ## Story progress, e.g. flags["met_hop"] = true.
 var flags: Dictionary = {}
 
@@ -31,6 +36,7 @@ var battle_result: Dictionary = {}
 var return_scene: String = ""
 
 var dialogue: DialogueBox
+var shop: ShopMenu
 
 var _fade: ColorRect
 var _sfx_players: Array[AudioStreamPlayer] = []
@@ -59,6 +65,8 @@ func _ready() -> void:
 
 	dialogue = DialogueBox.new()
 	add_child(dialogue)
+	shop = ShopMenu.new()
+	add_child(shop)
 
 	new_game()
 
@@ -69,6 +77,7 @@ func new_game() -> void:
 	items = TutorialBattle.create_items()
 	bond = 0
 	exp_points = 0
+	money = 20
 	flags = {}
 	busy = false
 	spawn_position = null
@@ -148,6 +157,7 @@ func finish_battle(result: Dictionary) -> void:
 	battle_result = result
 	bond += int(result.get("bond", 0))
 	exp_points += int(result.get("exp", 0))
+	money += int(result.get("money", 0))
 	pending_battle = ""
 	# Anyone knocked down gets back up with a little HP, like in Deltarune.
 	for member in party:
@@ -181,6 +191,7 @@ func save_game(scene_path: String, at: Vector2) -> void:
 		"flags": flags,
 		"bond": bond,
 		"exp": exp_points,
+		"money": money,
 		"items": items,
 		"party": party.map(func(m: PartyMember) -> Dictionary: return {"name": m.name, "hp": m.hp}),
 	}
@@ -208,6 +219,7 @@ func load_game() -> void:
 	flags = data.get("flags", {})
 	bond = int(data.get("bond", 0))
 	exp_points = int(data.get("exp", 0))
+	money = int(data.get("money", 0))
 	items.clear()
 	for item in data.get("items", []):
 		items.append({"name": item["name"], "heal": int(item["heal"])})

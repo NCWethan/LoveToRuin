@@ -8,10 +8,12 @@ extends Node2D
 const TILE := 20
 
 enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
-	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF }
+	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
+	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL }
 
 ## Tiles the player can't walk through.
-const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF]
+const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
+	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL]
 
 var width: int = 0
 var height: int = 0
@@ -175,6 +177,45 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 		DIRT:
 			draw_rect(r, Color8(150, 120, 80))
 			_specks(x, y, r, Color8(130, 100, 65), 3)
+		STUCCO:
+			# Cream shopping-center wall.
+			draw_rect(r, Color8(222, 208, 178))
+			_specks(x, y, r, Color8(206, 192, 162), 2)
+		WOOD_WALL:
+			# Dark wooden planks (Knotty Barrel).
+			draw_rect(r, Color8(110, 72, 44))
+			for row in 4:
+				draw_rect(Rect2(p + Vector2(0, row * 5), Vector2(TILE, 1)), Color8(80, 52, 32))
+			draw_rect(Rect2(p + Vector2((x * 7) % 16, 2), Vector2(2, 2)), Color8(70, 45, 28))
+		RED_WALL:
+			# White wall with a red stripe.
+			draw_rect(r, Color8(235, 235, 232))
+			draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 5)), Color8(205, 40, 45))
+		GLASS:
+			draw_rect(r, Color8(70, 90, 110))
+			draw_rect(Rect2(p + Vector2(1, 1), Vector2(18, 18)), Color8(95, 130, 160))
+			draw_line(p + Vector2(4, 16), p + Vector2(14, 4), Color8(160, 195, 220), 2.0)
+		PLANTER:
+			draw_rect(r, Color8(120, 90, 60))
+			draw_circle(p + Vector2(10, 9), 8.0, Color8(52, 120, 56))
+			draw_circle(p + Vector2(6, 7), 3.0, Color8(80, 150, 75))
+		PATIO:
+			# Terracotta tiles.
+			draw_rect(r, Color8(196, 120, 82))
+			draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(165, 98, 66))
+			draw_rect(Rect2(p, Vector2(1, TILE)), Color8(165, 98, 66))
+			draw_rect(Rect2(p + Vector2(10, 0), Vector2(1, TILE)), Color8(175, 106, 72))
+		TABLE:
+			# A round table under an umbrella.
+			draw_rect(r, Color8(196, 120, 82))
+			draw_circle(p + Vector2(10, 10), 9.0, Color8(40, 110, 70))
+			draw_circle(p + Vector2(10, 10), 2.0, Color8(230, 230, 220))
+		PALM:
+			_grass(x, y, r)
+			draw_rect(Rect2(p + Vector2(9, 8), Vector2(3, 12)), Color8(140, 105, 60))
+			for i in 5:
+				var dir := Vector2.from_angle(-PI / 2 + (i - 2) * 0.7) * 9.0
+				draw_line(p + Vector2(10, 7), p + Vector2(10, 7) + dir, Color8(50, 130, 60), 3.0)
 
 
 func _grass(x: int, y: int, r: Rect2) -> void:

@@ -28,12 +28,10 @@ var check_text: String
 ##            "{actor}" is replaced by whoever is acting.
 var acts: Array[Dictionary] = []
 
-## Attack style: "rain" (falls from the top) or "lance" (flies in from the sides).
-var pattern: String
-## Seconds between bullets.
-var spawn_interval: float
-## Bullet speed, in pixels per second.
-var bullet_speed: float
+## The attacks this enemy knows (see attacks.gd). It uses a different one each turn, in order.
+var patterns: Array[String] = []
+## Speed for its simple bullets, in pixels per second.
+var bullet_speed: float = 100.0
 
 ## Short lines shown in a speech bubble during the enemy's turn.
 var taunts: Array[String] = []
@@ -42,6 +40,7 @@ var spare_taunts: Array[String] = []
 
 var exp_reward: int = 10
 var bond_reward: int = 10
+var money_reward: int = 15
 
 ## "active", "spared" or "defeated".
 var state: String = "active"

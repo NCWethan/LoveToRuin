@@ -51,6 +51,31 @@ $palette['f'] = @(235, 70, 95)     # bright red shine
 $palette['c'] = @(45, 0, 12)       # black-red core
 # SAVE star
 $palette['*'] = @(255, 240, 120)   # pale yellow
+# Shared skin tone for the mall cast
+$palette['Q'] = @(228, 184, 145)   # light skin
+# MuffinMage
+$palette['M'] = @(225, 85, 40)     # fish mask
+$palette['m'] = @(245, 150, 70)    # fish fins
+$palette['E'] = @(240, 140, 40)    # orange shirt
+# Supreme
+$palette['v'] = @(185, 95, 255)    # glowing purple eye
+$palette['e'] = @(200, 140, 60)    # burger bun / bear face
+$palette['u'] = @(32, 42, 92)      # navy scarf
+$palette['1'] = @(80, 175, 70)     # green (lettuce, sneakers)
+# Crayola
+$palette['a'] = @(150, 150, 155)   # printed lines on the job application
+$palette['x'] = @(112, 112, 118)   # worn gray pants
+# NCWethan
+$palette['y'] = @(245, 215, 80)    # goggle lenses
+$palette['i'] = @(110, 200, 255)   # lightning sparks / cyan flame
+# Ronin
+$palette['2'] = @(228, 222, 215)   # pale skin
+$palette['3'] = @(150, 25, 25)     # dark red robe folds
+# Nat
+$palette['4'] = @(100, 64, 42)     # dark skin
+$palette['5'] = @(130, 70, 175)    # purple shirt
+# Sansworth / Nassan
+$palette['7'] = @(85, 85, 96)      # pinstripes / pattern
 $outline = @(125, 125, 140)
 
 $sprites = @{
@@ -287,6 +312,456 @@ $sprites = @{
         ".......DDDDD.DDDD.......",
         ".......DDDDD.DDDD......."
     )
+}
+
+# --- The mall cast (front views) ---------------------------------------------
+
+$sprites['muffinmage'] = @(
+    "........................",
+    "...........mm...........",
+    "..........mmmm..........",
+    "......MMMMMMMMMMMM......",
+    ".....MMMMMMMMMMMMMM.....",
+    ".....MMWKMMMMMMKWMM.....",
+    ".....MMWWMMMMMMWWMM.....",
+    ".....MMMMMMKKMMMMMM.....",
+    ".....MMMMMKKKKMMMMM.....",
+    ".....MMMMMKKKKMMMMM.....",
+    "......MMMMMKKMMMMM......",
+    "....mm.MMMMMMMMMM.mm....",
+    "...EEEEEEEEEEEEEEEEEE...",
+    "...EEEEEEEEEEEEEEEEEE...",
+    "...EEEEEEEEEEEEEEEEEE...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    "...QQQQEEEEEEEEEEQQQQ...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+$sprites['supreme'] = @(
+    "........................",
+    ".........K.K.K..........",
+    "........KKKKKKKK........",
+    ".......WYYYYYYYYW.......",
+    "........KKKKKKKK........",
+    "........QQQQQQQQ........",
+    "........QvQQQQKQ........",
+    "........KKKKKKKK........",
+    "........KKeKKeKK........",
+    "........KKKeeKKK........",
+    "........KKKKKKKK........",
+    ".......uuuuuuuuuu.......",
+    "...YYYYuuYYYYYYYuYYYY...",
+    "...KYYYuuYeeeeYYuYYYK...",
+    "...YKYYuYY1111YYYYYKY...",
+    "...KYYYYYYDDDDYYYYYYK...",
+    "...YKYYYYYeeeeYYYYYKY...",
+    "...KYYYYYYYYYYYYYYYYK...",
+    "...YKYYYYYYYYYYYYYYKY...",
+    "...KYYYYYYYYYYYYYYYYK...",
+    "...QQQQYYYYYYYYYYQQQQ...",
+    "...QQQQYYYYYYYYYYQQQQ...",
+    ".......PPPPPkPPPP.......",
+    ".......PPkPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPkP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PkPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......11W11.1W11.......",
+    ".......WWWWW.WWWW......."
+)
+
+$sprites['crayola'] = @(
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........WWWWWWWW........",
+    "........WWWWWWWW........",
+    "........WKWWWWKW........",
+    "........WKWWWWKW........",
+    "........WWWWWWWW........",
+    "........WWKKKKWW........",
+    "........WWKppKWW........",
+    "........WWWWWWWW........",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WaaaaaaaaaaSSaaaaW...",
+    "...WWWWWWWWWWWSSWWWWW...",
+    "...WaaaWaaaaaaaaaaaaW...",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WaaaaaaWaaaaaaaaaW...",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WaaaaaaaaaaaWaaaaW...",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WWWWWWWWWWWWWWWWWW...",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxkxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxkxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xkkxxkxxkx.......",
+    ".......xxxxxkxxxx.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+$sprites['ncwethan'] = @(
+    "........................",
+    "........KKKKKKKK........",
+    ".......KKKKKKKKKK.......",
+    ".......KyyyKKyyyK.......",
+    ".......KyyyKKyyyK.......",
+    "........YYYYYYYY........",
+    "........YKYYYYKY........",
+    "........YKYYYYKY........",
+    "........YYYYYYYY........",
+    ".....i..YKYYYYKY........",
+    "........YYKKKKYY........",
+    "........YYYYYYYY........",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WWWWWWWWRRWWWWWWWW...",
+    ".i.YYYYWWWRRRRWWWYYYY...",
+    "...YYYYWWRREERRWWYYYY...",
+    "...YYYYWWWRRRRWWWYYYY...",
+    "...YYYYWWWWRRWWWWYYYY...",
+    "...YYYYWWWWWWWWWWYYYY...",
+    "...YYYYWWWWWWWWWWYYYY.i.",
+    "...YYYYWWWWWWWWWWYYYY...",
+    "...YYYYWWWWWWWWWWYYYY...",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......SSSSSjSSSS.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+$sprites['ronin'] = @(
+    "......................i.",
+    "..........E.Y.E......ii.",
+    ".........EKYKEK......iK.",
+    ".........KKKKKK.......K.",
+    "........RRRRRRRR......K.",
+    "....RRRRRRRRRRRRRRRR..K.",
+    ".......K22222222K.....K.",
+    ".......K2K2222K2K.....K.",
+    ".......K22222222K.....K.",
+    ".......K222KK222K.....K.",
+    ".......K22K22K22K.....K.",
+    ".......K.222222.K.....K.",
+    "...2K2KRRR3RR3RRRRRRR..K",
+    "...K2K2RRR3RR3RRRRRRR..K",
+    "...2K2KRRR3RR3RRRRRRR..K",
+    "...K2K2RRR3RR3RRRRRRR..K",
+    "...2K2KRRR3RR3RRRRRRR..K",
+    "...K2K2RRR3RR3RRRRRRR..K",
+    "...2K2KRRR3RR3RRRRRRR..K",
+    "...K2K2RRR3RR3RRRRRRR..K",
+    "...2222RRR3RR3RRRQQQQQQK",
+    "...2222RRR3RR3RRRQQQQ..K",
+    ".......RRR3RR3RRR......K",
+    ".......RRR3RR3RRR......K",
+    ".......RRR3RR3RRR......K",
+    ".......RRR3RR3RRR......K",
+    ".......RRR3RR3RRR......K",
+    ".......RRR3RR3RRR......K",
+    ".......CCCCCkCCCC......K",
+    ".......CCCCCkCCCC......K",
+    ".......DDDDD.DDDD......K",
+    ".......DDDDD.DDDD......K"
+)
+
+$sprites['rooster'] = @(
+    "........................",
+    "........KKKKKKKK........",
+    "........KKKKKKKK........",
+    "........KKKKKKKK........",
+    "......KKKKKKKKKKKK......",
+    "......hhQQQQQQQQhh......",
+    "........QKQQQQKQ........",
+    "........QQQQQQQQ........",
+    "........QQKKKKQQ........",
+    "........QQQppQQQ........",
+    "........QQQppQQQ........",
+    "........QQQQQQQQ........",
+    "...WWWWWWWWKKCCCCCCCC...",
+    "...WWWWWWWWKKCCCCCCCC...",
+    "...WWWWWWWWKKCCCCCCCC...",
+    "...WWWWWWWWKKCCCCCCCC...",
+    "...WWWWWWWWWCCCCCCCCC...",
+    "...WWWWWWWWWCCCCCCCCC...",
+    "...WWWWWWWWWCCCCCCCCC...",
+    "...WWWWWWWWWCCCCCCCCC...",
+    "...QQQQWWWWWCCCCCQQQQ...",
+    "...QQQQWWWWWCCCCCQQQQ...",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......WWWWWCCCCC.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+$sprites['nat'] = @(
+    "........................",
+    "..........CCCC..........",
+    "........CCWWWWCC........",
+    "......CCWWWWWWWWCC......",
+    ".....CWWWWWWWWWWWWC.....",
+    "........44444444........",
+    "........44444444........",
+    "........4KK44KK4........",
+    "........4WK44WK4........",
+    "........44444444........",
+    "........444KK444........",
+    "........44444444........",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...CCCC5555555555CCCC...",
+    "...444455555555554444...",
+    "...444455555555554444...",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......CCCCCkCCCC.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+$sprites['sansworth'] = @(
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........WWWWWWWW........",
+    "........WWWWWWWW........",
+    "........WKKWWKKW........",
+    "........WKKWWKKW........",
+    "........WWWWWWWW........",
+    "........KWWWWWWK........",
+    "........WKKKKKKW........",
+    "........WWWWWWWW........",
+    "...7CC7CC7WKKW7CC7CC7...",
+    "...7CC7C7CWKKWC7C7CC7...",
+    "...7CC7C7CCKKCC7C7CC7...",
+    "...7CC7C7CCKKCC7C7CC7...",
+    "...7CC7C7CC7CCC7C7CC7...",
+    "...7CC7C7CC7CCC7C7CC7...",
+    "...7CC7C7CC7CCC7C7CC7...",
+    "...7CC7C7CC7CCC7C7CC7...",
+    "...WWWWC7CC7CCC7CWWWW...",
+    "...WWWWC7CC7CCC7CWWWW...",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......C7CCC7CC7C.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
+$sprites['nassan'] = @(
+    "........................",
+    "........KKKKKKKK........",
+    "........KKKKKKKK........",
+    "........WWWWWWWW........",
+    "......KKKKKKKKKKKK......",
+    "........CCCCCCCC........",
+    "........CCCCCCCC........",
+    "........CWCCCCWC........",
+    "........CCCCCCCC........",
+    "........CCCCCCCC........",
+    "........CCCKKCCC........",
+    "........CCCCCCCC........",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKWKWWKWKWKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    "...llllKKKKKKKKKKllll...",
+    ".......C7C7CC7C7C.......",
+    ".......C7C7CC7C7C.......",
+    ".......7C7CC7C7CC.......",
+    ".......C7C7CC7C7C.......",
+    ".......7C7CC7C7CC.......",
+    ".......C7C7CC7C7C.......",
+    ".......7C7CC7C7CC.......",
+    ".......C7C7CC7C7C.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# --- Side views (walking right; the game flips them for walking left) -------
+# Each character gets two frames: legs together and mid-step.
+
+function Get-Legs([string]$c, [string]$shoe, [bool]$step) {
+    if (-not $step) {
+        $rows = @()
+        for ($i = 0; $i -lt 8; $i++) { $rows += ".........." + ($c * 5) + "........." }
+        $rows += ".........." + ($shoe * 6) + "........"
+        $rows += ".........." + ($shoe * 6) + "........"
+        return $rows
+    }
+    $c3 = $c * 3
+    # (Each row is in parentheses so PowerShell joins the pieces before making the list.)
+    return @(
+        (".........." + ($c * 5) + "........."),
+        ("........." + $c3 + "." + $c3 + "........"),
+        ("........" + $c3 + "..." + $c3 + "......."),
+        ("........" + $c3 + "..." + $c3 + "......."),
+        ("......." + $c3 + "....." + $c3 + "......"),
+        ("......." + $c3 + "....." + $c3 + "......"),
+        ("......" + $c3 + "......." + $c3 + "....."),
+        ("......" + $c3 + "......." + $c3 + "....."),
+        ("....." + ($shoe * 4) + "......." + ($shoe * 4) + "...."),
+        ("....." + ($shoe * 4) + "......." + ($shoe * 4) + "....")
+    )
+}
+
+$sideUpper = @{
+    'elric' = @(
+        "........................",
+        "........................",
+        "..........h.hh..........",
+        ".........hhhhhh.........",
+        "........hhhhhhhh........",
+        "........hhhLLLLL........",
+        "........hhLLLLLL........",
+        "........hhLLLLKL........",
+        "........hhLLLLLL........",
+        "........hhLLLLKL........",
+        "........hLLLLLLL........",
+        ".........LLLLLL.........",
+        ".........TTTTTTT........",
+        ".........TTtttTT........",
+        ".........TTtttTT........",
+        ".........TTtttTd........",
+        ".........TTtttTT........",
+        ".........TTtttTT........",
+        ".........rrtttrr........",
+        ".........TTtttTT........",
+        ".........TTLLLTT........",
+        ".........TTLLLTT........"
+    )
+    'hop' = @(
+        "........................",
+        ".........KKKKKK.........",
+        ".........KKKKKK.........",
+        ".........DDDDDD.........",
+        ".......KKKKKKKKKK.......",
+        ".........NNNNNNN........",
+        ".........NNNNKKN........",
+        ".........NNNNNKN........",
+        ".........NNNNNNN........",
+        ".........NNNNKKK........",
+        ".........NNNNWKW........",
+        ".........NNNNKKK........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........",
+        ".........sslllss........"
+    )
+    'eggo' = @(
+        "........................",
+        "..........bbbbb.........",
+        ".........bbbbbbb........",
+        "........bbbbbbbbb.......",
+        ".......HHHHHHHHHH.......",
+        ".......HHHYYYYYYY.......",
+        ".......HHHYYYYKYY.......",
+        ".......HHHYYYYKYY.......",
+        ".......HHHYYYYYYY.......",
+        ".......HHHYYYYYKK.......",
+        ".......HHHYYYYYYY.......",
+        ".......HHH.YYYYY........",
+        ".......HHVVYYYVV........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVS........",
+        ".........VVYYYVV........",
+        ".........VVKKKVV........"
+    )
+    'bigjoe6' = @(
+        "...........K.R..........",
+        "..........RK.KR.........",
+        ".........KRKRKRK........",
+        ".........RKRKRKR........",
+        ".........GGGGGGG........",
+        ".........GGGGGGG........",
+        ".........GGGGggg........",
+        ".........GGGGGgG........",
+        ".........GGGGGGG........",
+        ".........GGGGgGg........",
+        ".........GGGGGGG........",
+        ".........GGGGGGG........",
+        ".........CCDDDCA........",
+        ".........CCDDDAC........",
+        ".........CCDDDCW........",
+        ".........CCDDDCC........",
+        ".........CCDDDCC........",
+        ".........CCDDDCC........",
+        ".........CCDDDCC........",
+        ".........CCDDDCC........",
+        ".........CCWWWCC........",
+        ".........DDCCCGD........"
+    )
+}
+$sideLegs = @{ 'elric' = @('O', 'D'); 'hop' = @('B', 'D'); 'eggo' = @('P', 'D'); 'bigjoe6' = @('J', 'D') }
+
+foreach ($who in $sideUpper.Keys) {
+    $legs = $sideLegs[$who]
+    $sprites["${who}_side"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $false)
+    $sprites["${who}_side2"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $true)
 }
 
 $outDir = Join-Path $PSScriptRoot "..\art\sprites"
