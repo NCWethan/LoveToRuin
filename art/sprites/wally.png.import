@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d1ra3l065b8ck"
-path="res://.godot/imported/mascot.png-360f86638abecdc730a998e1df97f72b.ctex"
+uid="uid://co4eh4ewwvyoa"
+path="res://.godot/imported/wally.png-575f7381e2587b531753fa5b158b6b49.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/sprites/mascot.png"
-dest_files=["res://.godot/imported/mascot.png-360f86638abecdc730a998e1df97f72b.ctex"]
+source_file="res://art/sprites/wally.png"
+dest_files=["res://.godot/imported/wally.png-575f7381e2587b531753fa5b158b6b49.ctex"]
 
 [params]
 

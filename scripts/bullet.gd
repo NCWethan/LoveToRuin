@@ -14,7 +14,7 @@ extends Node2D
 @export var damage: int = 3
 @export var color: Color = Color.WHITE
 ## How it's drawn: "square", "egg", "bunny", "star", "pencil", "bubble", "card",
-## "finger" or "ball".
+## "finger", "ball" or "claw".
 @export var shape: String = "square"
 
 ## Bounces up when it reaches the bottom of the box (for hopping things).
@@ -25,6 +25,11 @@ var splits_into: int = 0
 var delay: float = 0.0
 ## How far it drifts side to side while moving (for falling paper and confetti).
 var sway: float = 0.0
+## If above 0: how many seconds it stays dangerous once armed, then it vanishes
+## (for quick slashes that flash and disappear).
+var lifetime: float = 0.0
+## Each bounce is randomly this much higher or lower (0.15 = up to 15%).
+var bounce_variance: float = 0.0
 
 ## The area the bullet lives in. Once it flies out, it disappears.
 var bounds: Rect2
@@ -45,6 +50,9 @@ func _process(delta: float) -> void:
 		queue_redraw()
 		return
 	modulate.a = 1.0
+	if lifetime > 0.0 and _time > delay + lifetime:
+		queue_free()
+		return
 	velocity += acceleration * delta
 	position += velocity * delta
 	if sway != 0.0:
@@ -58,7 +66,7 @@ func _process(delta: float) -> void:
 				return
 			if bounce_speed > 0:
 				global_position.y = floor_y
-				velocity.y = -bounce_speed
+				velocity.y = -bounce_speed * randf_range(1.0 - bounce_variance, 1.0 + bounce_variance)
 		# Remove the bullet once it has left the box, so they don't pile up forever.
 		if not bounds.grow(size).has_point(global_position):
 			queue_free()
@@ -125,6 +133,11 @@ func _draw() -> void:
 			var point := 1.0 if velocity.x >= 0 else -1.0
 			draw_rect(Rect2(-half, -half * 0.5, size * 0.7, size * 0.6), color)
 			draw_rect(Rect2(Vector2(half * 0.2 if point > 0 else -half * 0.9, -half), Vector2(half * 0.7, half * 0.6)), color)
+		"claw":
+			# A claw streak: a thick line ending in a sharp point, along the way it moves.
+			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN
+			draw_line(-dir * size, dir * size * 0.5, color, 3.0)
+			draw_line(dir * size * 0.5, dir * size, color, 1.5)
 		"ball":
 			draw_circle(Vector2.ZERO, half, color)
 			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)

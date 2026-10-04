@@ -47,3 +47,12 @@ static func portrait(who: String, mood: String = "") -> Texture2D:
 			texture = load(normal_path)
 		_portraits[key] = texture
 	return _portraits[key]
+
+
+## The head-and-shoulders part of a sprite, used as the portrait. Wider sprites
+## (like Wally) get the same-size window, centered on their head.
+static func portrait_region(texture: Texture2D) -> Rect2:
+	var extra := texture.get_width() - (PORTRAIT_REGION.size.x + 2)
+	if extra <= 0:
+		return PORTRAIT_REGION
+	return Rect2(Vector2(floorf(extra / 2.0) + 1, PORTRAIT_REGION.position.y), PORTRAIT_REGION.size)

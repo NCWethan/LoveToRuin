@@ -6,7 +6,7 @@ extends Area
 ##   Outside      the front of the school at night (SAVE point, front doors)
 ##   Hallway      loops back on itself until Elric opens the humming locker
 ##   Classroom    ring the three bells in the order on the chalkboard to unlock the gym
-##   Gym          SAVE point, then the boss: The Mascot, with fragment 2 inside
+##   Gym          SAVE point, then the boss: Wally Wolverine, Westview's mascot, with fragment 2 inside
 ##
 ## Story flags (in Game.flags):
 ##   ww_arrived, ww_inside, ww_loops (a count), loop_broken, ww_classroom,
@@ -198,7 +198,7 @@ func _place_people() -> void:
 	])
 
 	if not flag("has_fragment_2"):
-		mascot = Cast.make("mascot")
+		mascot = Cast.make("wally")
 		add_character(mascot, Vector2(100 * T + 10, 42 * T))
 
 
@@ -259,13 +259,13 @@ func _physics_process(_delta: float) -> void:
 	# The endless hallway.
 	if not flag("loop_broken") and _px(HALLWAY).has_point(player.position) and player.position.x > LOOP_X:
 		run_cutscene(_loop_back)
-	# Approaching the Mascot.
+	# Approaching Wally.
 	elif mascot and not flag("mascot_started") and _px(GYM).has_point(player.position) and player.position.x > 93 * T:
 		run_cutscene(_wake_mascot)
 
 
 func _back_from_battle() -> bool:
-	if Game.battle_result.get("id", "") == "mascot":
+	if Game.battle_result.get("id", "") == "wally":
 		await run_cutscene(_after_mascot)
 		return true
 	var handled := false
@@ -437,8 +437,8 @@ func _gym_door() -> void:
 		var lines: Array = ["* (The gym. The lights buzz overhead.)"]
 		if mascot:
 			lines.append_array([
-				"* (Someone in a mascot costume is sitting\n*  at center court. Perfectly still.)",
-				{"who": "Hop", "text": "Is that... the school mascot?\nWhy is it just sitting there?", "mood": "shocked"},
+				"* (Westview's mascot, Wally Wolverine, is sitting\n*  at center court. Perfectly still.)",
+				{"who": "Hop", "text": "Is that... Wally Wolverine?\nWhy is he just sitting there? It's midnight.", "mood": "shocked"},
 			])
 		await Game.dialogue.say(lines)
 
@@ -449,14 +449,14 @@ func _back_to_classroom() -> void:
 
 func _wake_mascot() -> void:
 	Game.flags["mascot_started"] = true
-	await Game.dialogue.say(["* (The Mascot's head turns toward you.\n*  Slowly.)"])
+	await Game.dialogue.say(["* (Wally's head turns toward you.\n*  Slowly.)"])
 	await mascot.walk_to(mascot.position + Vector2(-30, 0), 40.0)
 	await Game.dialogue.say([
-		{"who": "The Mascot", "text": "GO... TEAM."},
+		{"who": "Wally", "text": "GO... WOLVERINES."},
 		{"who": "Hop", "text": "Nope. Nope nope nope.", "mood": "shocked"},
-		{"who": "The Mascot", "text": "GIMME AN F! GIMME AN R!\nGIMME A... FRAGMENT!"},
+		{"who": "Wally", "text": "GIMME A W! GIMME AN O!\nGIMME A... FRAGMENT!"},
 	])
-	await Game.start_battle("mascot", SCENE, player.position)
+	await Game.start_battle("wally", SCENE, player.position)
 
 
 func _after_mascot() -> void:
@@ -468,9 +468,9 @@ func _after_mascot() -> void:
 
 	var lines: Array = []
 	if spared:
-		lines.append("* (The Mascot gives one last tired cheer.\n*  Then it slumps to the floor. Just a costume now.)")
+		lines.append("* (Wally gives one last tired cheer.\n*  Then he slumps to the floor. Just a costume now.)")
 	else:
-		lines.append("* (The Mascot crumples. The costume tears open.)")
+		lines.append("* (Wally crumples. The costume tears open.)")
 	lines.append_array([
 		"* (Something red rolls out of it.)",
 		"* (You pick it up. It's warm, and it hums.)",

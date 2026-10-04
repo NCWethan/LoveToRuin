@@ -13,10 +13,10 @@ static func create(id: String) -> BattleData:
 		"hall_pass":
 			data.enemies.append(_hall_pass())
 			data.intro = ["* A Hall Pass sprints into you!", "* (It's late for something.)"]
-		"mascot":
-			data.enemies.append(_mascot())
+		"wally":
+			data.enemies.append(_wally())
 			data.intro = [
-				"* The Mascot rises from center court!",
+				"* Wally Wolverine rises from center court!",
 				"* (Something inside the costume is glowing red.)",
 			]
 	return data
@@ -100,24 +100,25 @@ static func _hall_pass() -> Enemy:
 	return e
 
 
-static func _mascot() -> Enemy:
+## Wally Wolverine, Westview's mascot. The costume is empty; fragment 2 is what's moving him.
+static func _wally() -> Enemy:
 	var e := Enemy.new()
-	e.name = "The Mascot"
+	e.name = "Wally Wolverine"
 	e.max_hp = 160
 	e.hp = 160
 	e.attack = 4
 	e.defense = 2
 	e.position = Vector2(470, 170)
-	e.sprite = load("res://art/sprites/mascot.png")
-	e.check_text = "* THE MASCOT - ATK 8 DEF 2\n* A costume with nobody inside.\n* Something red glows where its heart should be."
+	e.sprite = load("res://art/sprites/wally.png")
+	e.check_text = "* WALLY WOLVERINE - ATK 8 DEF 2\n* Westview's mascot. Nobody's inside.\n* Something red glows where his heart should be."
 	e.acts = [
 		{
 			"name": "Cheer",
 			"mercy": 30,
 			"lines": [
-				"* {actor} cheers for the Mascot.\n* It does a little dance. It looks confused.",
-				"* {actor} cheers louder!\n* The Mascot waves its foam finger happily.",
-				"* {actor} starts a chant.\n* The Mascot is having the time of its life.",
+				"* {actor} chants \"GO WOLVERINES!\"\n* Wally does a little dance. He looks confused.",
+				"* {actor} cheers louder!\n* Wally pumps a big furry fist in the air.",
+				"* {actor} starts a whole chant.\n* Wally is having the time of his life.",
 			],
 		},
 		{
@@ -125,26 +126,26 @@ static func _mascot() -> Enemy:
 			"mercy": 25,
 			"lines": [
 				"* {actor} peeks inside the costume.\n* It's empty. Except for a red glow.",
-				"* {actor} looks again.\n* The glow pulses. The Mascot seems... tired.",
+				"* {actor} looks again.\n* The glow pulses. Wally seems... tired.",
 			],
 		},
 		{
-			"name": "High Five",
+			"name": "Paw Five",
 			"mercy": 20,
 			"lines": [
-				"* {actor} offers a high five.\n* The Mascot's giant hand misses completely.",
-				"* {actor} tries again.\n* SMACK! A perfect high five.",
+				"* {actor} holds up a hand for a high five.\n* Wally's giant paw misses completely.",
+				"* {actor} tries again.\n* SMACK! A perfect paw five. (Claws and all.)",
 			],
 		},
 	]
-	e.patterns = ["confetti", "foam_finger", "tumble"]
-	e.taunts = ["GO TEAM!!", "GIMME AN F!", "DEFENSE! DEFENSE!", "..."]
-	e.spare_taunts = ["...go team."]
+	e.patterns = ["confetti", "claw_swipe", "dodgeballs", "claw_drop", "foam_finger"]
+	e.taunts = ["GO WOLVERINES!!", "GRRR... GO TEAM!", "DEFENSE! DEFENSE!", "GIMME A W!", "..."]
+	e.spare_taunts = ["...go wolverines."]
 	e.flavor_lines = [
-		"* The Mascot does a backflip. Badly.",
-		"* The gym lights flicker in rhythm.",
+		"* Wally does a backflip. Badly.",
+		"* Wally sharpens his claws on the bleachers.",
 		"* Something inside the costume hums.",
-		"* There's no crowd. It cheers anyway.",
+		"* There's no crowd. Wally cheers anyway.",
 	]
 	e.exp_reward = 30
 	e.bond_reward = 30

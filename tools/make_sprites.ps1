@@ -76,6 +76,11 @@ $palette['4'] = @(100, 64, 42)     # dark skin
 $palette['5'] = @(130, 70, 175)    # purple shirt
 # Sansworth / Nassan
 $palette['7'] = @(85, 85, 96)      # pinstripes / pattern
+# Wally Wolverine
+$palette['6'] = @(132, 86, 52)     # brown fur
+$palette['8'] = @(78, 48, 28)      # dark brown markings / paws
+$palette['9'] = @(196, 156, 110)   # tan snout and belly
+$palette['Z'] = @(205, 205, 85)    # yellow-green eyes
 $outline = @(125, 125, 140)
 
 $sprites = @{
@@ -703,45 +708,46 @@ $sprites['hall_pass'] = @(
     "........................"
 )
 
-$sprites['mascot'] = @(
+# Wally Wolverine, Westview's mascot: a brown furry wolverine costume.
+$sprites['wally'] = @(
     "................................",
-    "..........RRRRRRRRRRRR..........",
-    "........RRRRRRRRRRRRRRRR........",
-    ".......RRRRRRRRRRRRRRRRRR.......",
-    "......RRRRRRRRRRRRRRRRRRRR......",
-    ".....RRRWWWWRRRRRRRRWWWWRRR.....",
-    ".....RRWWWWWWRRRRRRWWWWWWRR.....",
-    ".....RRWWKKWWRRRRRRWWKKWWRR.....",
-    ".....RRWWKKWWRRRRRRWWKKWWRR.....",
-    ".....RRRWWWWRRRRRRRRWWWWRRR.....",
-    ".....RRRRRRRRRRRRRRRRRRRRRR.....",
-    ".....RRRRRRRYYYYYYYYRRRRRRR.....",
-    ".....RRRRRRYYKKKKKKYYRRRRRR.....",
-    "......RRRRRYYYKKKKYYYRRRRR......",
-    ".......RRRRRYYYYYYYYRRRRR.......",
-    "........RRRRRRRRRRRRRRRR........",
-    "..........RRRRRRRRRRRR..........",
-    "....RRRRWWWWWWWWWWWWWWWWRRRR....",
-    "...RRRRRWWWWWWWWWWWWWWWWRRRRR...",
-    "..RRRR.RWWWWWWWWWWWWWWWWR.RRRR..",
-    "..RRR..RWWWWWWWffWWWWWWWR..RRR..",
-    "..RRR..RWWWWWWfFFfWWWWWWR..RRR..",
-    "..RRR..RWWWWWWfFFfWWWWWWR..RRR..",
-    "..RRR..RWWWWWWWffWWWWWWWR..RRR..",
-    "..YYY..RWWWWWWWWWWWWWWWWR..YYY..",
-    ".YYYYY.RRRRRRRRRRRRRRRRRR.YYYYY.",
-    ".YYYYY.RWWWWWWWWWWWWWWWWR.YYYYY.",
-    "..YYY..RWWWWWWWWWWWWWWWWR..YYY..",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    ".......RRRRRRRR..RRRRRRRR.......",
-    "......YYYYYYYYY..YYYYYYYYY......",
-    "......YYYYYYYYY..YYYYYYYYY......"
+    "......666..............666......",
+    ".....66866............66866.....",
+    ".....6666666666666666666666.....",
+    ".....6668886666666666888666.....",
+    ".....6688886666666666888866.....",
+    ".....668ZZK8666666668KZZ866.....",
+    ".....6688886666666666888866.....",
+    ".....6666666999999996666666.....",
+    ".....666666999KKKK999666666.....",
+    ".....6666669999999999666666.....",
+    ".....666666999KKKK999666666.....",
+    ".....66666699WKKKKW99666666.....",
+    ".....66666669WWKWW966666666.....",
+    ".....6666666699999966666666.....",
+    ".......666666666666666666.......",
+    "..........666666666666..........",
+    "....666666666666666666666666....",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666999999999966666666...",
+    "...66666666699999999666666666...",
+    "...88888666666999966666688888...",
+    "...88888666666666666666688888...",
+    "...W.W.W6666666666666666W.W.W...",
+    "........6666666..6666666........",
+    "........6666666..6666666........",
+    "........6666666..6666666........",
+    "........6666666..6666666........",
+    "........6666666..6666666........",
+    "......888888888..888888888......",
+    "......888888888..888888888......"
 )
+
 
 # --- Side views (walking right; the game flips them for walking left) -------
 # Each character gets two frames: legs together and mid-step.

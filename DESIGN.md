@@ -494,9 +494,9 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - **Outside** — the school at night, SAVE point, front doors that creak open on their own.
 - **The endless hallway** — walking to the far end loops you back to the start; a poster gets more frantic each loop ("NO RUNNING" → "TURN BACK" → "TURN BACK!!" → "YOU'VE BEEN HERE"). Opening the **humming locker** breaks the loop.
 - **The classroom** — the chalkboard says to ring the bells **3rd, then 1st, then 2nd**; a wrong bell buzzes and resets. Solving it unlocks the gym.
-- **The gym** — SAVE point, then **The Mascot**: an empty mascot costume brought to life by fragment 2 (attacks: confetti, giant foam finger, tumbling head). ACTs: Cheer, Look Inside, High Five.
+- **The gym** — SAVE point, then **Wally Wolverine**, Westview's mascot (he/him): an empty costume brought to life by fragment 2. Look: brown furry wolverine, darker markings around yellow-green eyes, tan snout and belly, black nose, fangs, big clawed paws. Attacks: confetti, claw swipe (three diagonal claw marks flash, then slash), claw drop (sets of three claws plunge from the top), red dodgeballs (from the sides and the top, each bouncing to its own height), giant foam finger. ACTs: Cheer ("GO WOLVERINES!"), Look Inside, Paw Five.
 - **Wandering enemies** you bump into: **Pop Quiz** (hallway; pencils, answer bubbles; ACT: Answer, Study) and **Hall Pass** (classroom; fluttering passes, dashing zoom; ACT: Sign It, Ask Directions).
-- **Afterwards** — fragment 2 rolls out of the costume. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
+- **Afterwards** — fragment 2 rolls out of Wally's costume. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
 
 ### Milestone 7 — Hilltop Park and the climax
 - [ ] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)

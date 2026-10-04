@@ -39,6 +39,7 @@ const SPEAKERS := {
 	"Nat": {"color": Color(0.6, 0.4, 0.8), "pitch": 0.6},
 	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "pitch": 1.3},
 	"Nassan": {"color": Color(0.55, 0.55, 0.6), "pitch": 0.85},
+	"Wally": {"color": Color(0.75, 0.5, 0.3), "pitch": 0.55},
 }
 
 ## Where the box is drawn. It moves to the top when Elric is in the
@@ -179,9 +180,10 @@ func _draw_box() -> void:
 	var text_left := 16.0
 	var face := Cast.portrait(_who, _mood) if _show_face else null
 	if face:
-		var size := Cast.PORTRAIT_REGION.size * PORTRAIT_SCALE
+		var region := Cast.portrait_region(face)
+		var size := region.size * PORTRAIT_SCALE
 		var at := _box.position + Vector2(12, (_box.size.y - size.y) / 2)
-		_panel.draw_texture_rect_region(face, Rect2(at, size), Cast.PORTRAIT_REGION)
+		_panel.draw_texture_rect_region(face, Rect2(at, size), region)
 		text_left = PORTRAIT_SPACE
 
 	var visible_text := _text.substr(0, mini(int(_typed), _text.length()))

@@ -34,8 +34,12 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 			return _confetti(enemy, parent, area)
 		"foam_finger":
 			return _foam_finger(enemy, parent, area, step)
-		"tumble":
-			return _tumble(enemy, parent, area, step)
+		"dodgeballs":
+			return _dodgeballs(enemy, parent, area, step)
+		"claw_swipe":
+			return _claw_swipe(enemy, parent, area)
+		"claw_drop":
+			return _claw_drop(enemy, parent, area)
 	return 1.0
 
 
@@ -176,7 +180,7 @@ static func _zoom(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	return 0.75
 
 
-## The Mascot: a shower of colorful confetti.
+## Wally: a shower of colorful confetti.
 static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var colors := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
 	var x := randf_range(area.position.x + 4, area.end.x - 4)
@@ -188,7 +192,7 @@ static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	return 0.14
 
 
-## The Mascot: a giant foam finger swings across the box (after a warning).
+## Wally: a giant foam finger swings across the box (after a warning).
 static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	var from_left := step % 2 == 0
 	var y := randf_range(area.position.y + 12, area.end.y - 12)
@@ -202,15 +206,58 @@ static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 	return 0.9
 
 
-## The Mascot: its big round head comes bouncing across the box.
-static func _tumble(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
-	var from_left := step % 2 == 0
-	var x := area.position.x + 8 if from_left else area.end.x - 8
-	var ball := _bullet(enemy, parent, area, Vector2(x, area.end.y - 12))
+## Wally: red dodgeballs. Some roll in from the sides, some drop from the top,
+## and every ball bounces to its own height (and a little differently each bounce).
+static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var ball: Bullet
+	if randf() < 0.5:
+		# From the side, thrown in a random arc.
+		var from_left := step % 2 == 0
+		var x := area.position.x + 8 if from_left else area.end.x - 8
+		ball = _bullet(enemy, parent, area, Vector2(x, area.end.y - 12))
+		ball.velocity = Vector2(randf_range(50, 110) * (1 if from_left else -1), -randf_range(110, 250))
+	else:
+		# Dropped from the top, drifting a little sideways.
+		var x := randf_range(area.position.x + 15, area.end.x - 15)
+		ball = _bullet(enemy, parent, area, Vector2(x, area.position.y + 8))
+		ball.velocity = Vector2(randf_range(-45, 45), randf_range(10, 60))
 	ball.shape = "ball"
-	ball.size = 15.0
-	ball.color = Color(0.6, 0.12, 0.12)
-	ball.velocity = Vector2(70 if from_left else -70, -180)
+	ball.size = randf_range(12.0, 16.0)
+	ball.color = Color(0.85, 0.15, 0.15)
 	ball.acceleration = Vector2(0, 330)
-	ball.bounce_speed = randf_range(170, 210)
-	return 1.4
+	ball.bounce_speed = randf_range(110, 250)
+	ball.bounce_variance = 0.15
+	return 1.0
+
+
+## Wally: three claw marks flash as a warning across the box, then slash for a moment.
+static func _claw_swipe(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var down_right := randf() < 0.5
+	var base := randf_range(-area.size.y * 0.5, area.size.y * 0.5)
+	for line in 3:
+		var offset := base + (line - 1) * 16.0
+		var t := 0.0
+		while t <= area.size.x:
+			var x := area.position.x + t
+			var y := (area.position.y + offset + t * 0.75) if down_right else (area.end.y - offset - t * 0.75)
+			if y > area.position.y + 3 and y < area.end.y - 3:
+				var mark := _bullet(enemy, parent, area, Vector2(x, y))
+				mark.size = 5.0
+				mark.color = Color(1.0, 0.95, 0.85)
+				mark.delay = 0.6
+				mark.lifetime = 0.3
+			t += 7.0
+	return 1.2
+
+
+## Wally: sets of three claws plunge down from the top (they flash first).
+static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var x := randf_range(area.position.x + 14, area.end.x - 34)
+	for i in 3:
+		var claw := _bullet(enemy, parent, area, Vector2(x + i * 10, area.position.y + 8))
+		claw.shape = "claw"
+		claw.size = 9.0
+		claw.color = Color(1.0, 0.95, 0.85)
+		claw.delay = 0.45
+		claw.velocity = Vector2(0, 230)
+	return 0.75
