@@ -45,6 +45,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 ## 5. Battles
 
 - **Team battles like Deltarune:** up to **3** party members fight at once.
+- **Elric chooses the team:** Elric plus 2 cast members of the player's choice.
 - **EXP without violence:** on the pacifist route, you gain EXP by doing other things, so you can grow strong without hurting anyone.
 
 ### Two ways to grow: LOVE and BOND
@@ -87,7 +88,14 @@ How it pays off on each route:
 | **Neutral** | Kept, or ignored in favor of exploring. | Elric keeps wandering. |
 | **Genocide** | Given to Hopkuna, making him unstoppable. | Elric destroys any chance of having one. |
 
-### Endings — decided by how the player plays
+### The route choice
+At one point in the game, Elric must **manually choose a route**:
+
+> **Go with Hop?** *(Genocide)*
+> **Chart your own path?** *(Neutral)*
+> **Join the REVOLUTION Corps?** *(Pacifist)*
+
+### Endings — decided by the route choice and how the player plays
 
 | Route | Elric's choice | Notes |
 |---|---|---|
@@ -109,5 +117,6 @@ How it pays off on each route:
 ## Open questions
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
-- Which characters can join the party, and when?
+- Which characters can join the party, and when? (Chapter 1 should probably limit the choices.)
+- When does the route choice happen, and does it lock the route?
 - What are each character's personality and battle abilities?
