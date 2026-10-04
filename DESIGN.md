@@ -45,7 +45,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **MuffinMage** | See [MuffinMage](#muffinmage) below. |
 | **Nassan** | See [Nassan](#nassan) below. |
 | **NCWethan** | See [NCWethan](#ncwethan) below. |
-| **Sansworth** | |
+| **Sansworth** | See [Sansworth](#sansworth) below. |
 | **Ronin** | |
 | **Agent** | |
 | **Rooster** | |
@@ -140,6 +140,22 @@ Pronouns: he/him
 - Swirling **blue rune ribbons** circling around him (could become his lightning/power effect).
 
 ![NCWethan reference](art/reference/ncwethan.png)
+
+### Sansworth
+
+Pronouns: he/him
+
+**Personality**
+- A complete **idiot**.
+- The **comic relief** character.
+- Still makes himself **useful**.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/sansworth.png))
+- White head with dark eyes and a wide, slightly unsettling smile.
+- Sharp black pinstripe suit, white shirt, black tie.
+- Black pants.
+
+![Sansworth reference](art/reference/sansworth.png)
 
 ### Hop
 
