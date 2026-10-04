@@ -24,7 +24,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Mt. Carmel High School** | **Starting area** · **Fragment 1** | Where Elric's journey begins and where Elric first meets Hop. Elric finds the **1st fragment** here — and picking it up is exactly what gets Eggo and BigJoe6's attention. The **tutorial fight** happens just **outside the school**. |
 | **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. Shops for healing items, NPCs, and cast members hanging out between adventures. A safe place — **no fragment here**. |
 | **Westview High School** | **The "dungeon"** · **Fragment 2** | Chapter 1's big exploration area — the school after hours, twisted by the fragment's power into a maze of puzzles, locked rooms and enemies (like Deltarune's Dark World). The **2nd fragment** is hidden deep inside. |
-| **Hilltop Park** | **REVOLUTION Corps base** · **Fragment 3** · **Climax** | The Corps' base. The **3rd fragment** is buried under the **big field**, and its power twists something there into the **corrupted boss** — the climax where Hop takes the hit and Hopkuna erupts. The Corps returns to find Elric there, and the **route choice** happens. |
+| **Hilltop Park** | **REVOLUTION Corps base** · **Fragment 3** · **Chapter 1's final battle** | The Corps' base. The **3rd fragment** is buried under the **big field**. When it erupts, Hop takes the hit, Hopkuna comes out, and Chapter 1's final battle — **against Hopkuna himself** — happens on the field. The Corps returns, and the **route choice** happens. |
 
 **Chapter 1 path:** Mt. Carmel HS → PQ Mall → Westview HS → Hilltop Park
 
@@ -336,10 +336,11 @@ Elric is a traveling adventurer with no fixed home.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
 4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time** — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
-   - **The corrupted boss:** the **3rd fragment's** power has twisted something in the area into a monster. Elric and Hop fight it, but it **overpowers them** — this is a fight they can't win.
-   - **Hop takes the hit:** the next attack is aimed at Elric. **Hop jumps in front of it** and is badly hurt.
-   - **Hopkuna erupts:** tattoos spread, the red tint washes over Hop's body, and Hopkuna **wipes out the boss in seconds**. Terrifying — but Hopkuna technically **saved Elric's life**, which makes "Go with Hop" a genuinely tempting choice.
-   - Elric is still shaken when the Corps arrives.
+   - **The 3rd fragment erupts:** when Elric and Hop uncover it under the big field, its unstable power lashes out — straight at Elric.
+   - **Hop takes the hit:** **Hop jumps in front of it** and is badly hurt.
+   - **Hopkuna erupts:** tattoos spread and the red tint washes over Hop's body. Hopkuna came out to save Hop's body — and, technically, **Elric's life**.
+   - **The boss is Hopkuna himself:** then Hopkuna turns on Elric. **Chapter 1's final battle is against Hopkuna** on the big field — a fight Elric can't truly win, only survive.
+   - **The Corps arrives** and drives Hopkuna back; Hop returns to normal. Elric is still shaken when the Corps asks the big question.
 5. **The route choice ends Chapter 1.** Right after the reveal, the full **REVOLUTION Corps** finds Elric and asks what Elric wants to do (see [The route choice](#the-route-choice)). The player knows exactly what "Go with Hop" means. Chapters 2–4 play out differently depending on the answer.
 
 #### The tutorial fight: Eggo & BigJoe6 *(proposed — open to changes)*
@@ -412,7 +413,7 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Each chapter expands the world, like Deltarune.
 
-## 8. Build order — Chapter 1 *(proposed)*
+## 8. Build order — Chapter 1
 
 Build the game in **milestones**. Each one ends with something playable, so progress is always visible.
 
@@ -456,8 +457,8 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [ ] Fragment 2
 
 ### Milestone 7 — Hilltop Park and the climax
-- [ ] The corrupted boss fight on the big field
-- [ ] Hop takes the hit → Hopkuna erupts (cutscene)
+- [ ] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)
+- [ ] The final battle against **Hopkuna** on the big field
 - [ ] The REVOLUTION Corps arrives
 - [ ] **The route choice** — end of Chapter 1
 
@@ -472,7 +473,6 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
-- What is the corrupted boss at the Chapter 1 climax (what did the 3rd fragment twist into a monster)?
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
