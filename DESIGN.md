@@ -412,9 +412,59 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Each chapter expands the world, like Deltarune.
 
-## 8. Build order
+## 8. Build order — Chapter 1 *(proposed)*
 
-*(to be decided)*
+Build the game in **milestones**. Each one ends with something playable, so progress is always visible.
+
+### Milestone 1 — The tutorial fight (battle system)
+Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the battle system works.
+- [x] Battle box and SOUL movement
+- [ ] Enemy attacks (bullets) and taking damage / HP
+- [ ] Battle menu: **FIGHT · ACT · ITEM · MERCY** (+ DEFEND)
+- [ ] FIGHT timing bar
+- [ ] ACT options and CHECK
+- [ ] Sparing (names turn yellow) → **BOND**; defeating → **LOVE**
+- [ ] Party turns (Elric + Hop)
+- [ ] The full tutorial fight, scripted turn by turn
+
+### Milestone 2 — Talking
+- [ ] Dialogue box with letter-by-letter text and voice beeps
+- [ ] Character portraits
+- [ ] Dialogue choices
+
+### Milestone 3 — Walking around
+- [ ] Elric's overworld movement and animation
+- [ ] Walls / collision and the camera
+- [ ] Talking to characters and inspecting objects
+- [ ] Moving between rooms/areas
+
+### Milestone 4 — The opening (first playable demo)
+- [ ] Title screen: **LOVE TO RUIN**
+- [ ] Mt. Carmel High School area
+- [ ] Meeting Hop
+- [ ] Finding fragment 1
+- [ ] Tutorial fight outside Mt. Carmel
+- [ ] **SAVE points** and save/load
+
+### Milestone 5 — The PQ Mall hub
+- [ ] Shops and items
+- [ ] NPCs and cast members to talk to
+- [ ] Party selection (Elric + 2 of the cast)
+
+### Milestone 6 — Westview High School
+- [ ] The twisted school dungeon: rooms, puzzles, enemies
+- [ ] Fragment 2
+
+### Milestone 7 — Hilltop Park and the climax
+- [ ] The corrupted boss fight on the big field
+- [ ] Hop takes the hit → Hopkuna erupts (cutscene)
+- [ ] The REVOLUTION Corps arrives
+- [ ] **The route choice** — end of Chapter 1
+
+### Throughout
+- Pixel-art sprites for Elric and the cast (from the [reference images](art/reference/))
+- Music and sound effects
+- Saving progress to GitHub after every working step
 
 ---
 
