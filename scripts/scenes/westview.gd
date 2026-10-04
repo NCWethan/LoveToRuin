@@ -52,6 +52,7 @@ var _glow_time: float = 0.0
 func _ready() -> void:
 	rooms.assign([_px(OUTSIDE), _px(HALLWAY), _px(CLASSROOM), _px(GYM)])
 	setup_area(ENTRY)
+	Game.play_music("westview")
 	_font = ThemeDB.fallback_font
 
 	# Night: everything in the world is drawn darker and bluer. (The text box and

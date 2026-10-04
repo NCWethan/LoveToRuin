@@ -40,6 +40,7 @@ var hop: Character
 
 func _ready() -> void:
 	setup_area(ENTRY)
+	Game.play_music("mall")
 	_add_signs()
 	_place_people()
 	_place_hotspots()

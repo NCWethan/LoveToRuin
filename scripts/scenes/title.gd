@@ -31,6 +31,7 @@ var _played_chime: bool = false
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
 	_font = ThemeDB.fallback_font
+	Game.play_music("title")
 
 	var source_left := 320.0 - LETTER_SPACING * SOURCE.length() / 2.0
 	var target_left := 320.0 - LETTER_SPACING * TARGET.length() / 2.0

@@ -29,6 +29,7 @@ var bigjoe: Character
 
 func _ready() -> void:
 	setup_area(START)
+	Game.play_music("mt_carmel")
 	_place_characters()
 	_start_story.call_deferred()
 

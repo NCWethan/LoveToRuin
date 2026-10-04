@@ -119,6 +119,7 @@ func _ready() -> void:
 		items = TutorialBattle.create_items()
 	# Which fight this is (the tutorial when testing with F6).
 	_data = Battles.create(Game.pending_battle if Game.pending_battle != "" else "tutorial")
+	Game.play_music("boss" if _data.id == "wally" else "battle", 0.2)
 	enemies = _data.enemies
 
 	box.center = BOX_CENTER
@@ -676,6 +677,8 @@ var _shattered: bool = false
 
 func _game_over() -> void:
 	state = State.GAME_OVER
+	# Silence while the SOUL breaks; the GAME OVER theme starts with the title.
+	Game.stop_music(0.15)
 	_clear_bullets()
 	_heart_position = soul.global_position
 	soul.can_move = false
@@ -707,6 +710,9 @@ func _process_game_over(delta: float) -> void:
 		shard["velocity"] += Vector2(0, 300) * delta
 		shard["position"] += shard["velocity"] * delta
 
+	if _game_over_time >= TITLE_TIME and not has_meta("game_over_music"):
+		set_meta("game_over_music", true)
+		Game.play_music("game_over", 1.5)
 	if _game_over_time >= MESSAGE_TIME and _text == "":
 		_set_text("Stay determined...")
 

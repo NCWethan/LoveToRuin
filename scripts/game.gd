@@ -48,6 +48,13 @@ var _fade: ColorRect
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
 
+## Music: two players, so one song can fade out while the next fades in.
+const MUSIC_FOLDER := "res://audio/music/"
+const MUSIC_VOLUME_DB := -6.0
+var _music_players: Array[AudioStreamPlayer] = []
+var _music_current: int = 0
+var _music_name: String = ""
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -56,6 +63,11 @@ func _ready() -> void:
 	_add_input_actions()
 
 	_sounds = Sfx.make_all()
+	for i in 2:
+		var music_player := AudioStreamPlayer.new()
+		music_player.volume_db = -80.0
+		add_child(music_player)
+		_music_players.append(music_player)
 	for i in 8:
 		var player := AudioStreamPlayer.new()
 		add_child(player)
@@ -105,6 +117,46 @@ func lv() -> int:
 func heal_party() -> void:
 	for member in party:
 		member.hp = member.max_hp
+
+
+# --- Music ----------------------------------------------------------------
+
+## Plays a song from audio/music/ (by name, like "battle"), fading out whatever was
+## playing. Does nothing if that song is already playing. "" means silence.
+func play_music(song: String, fade_time: float = 0.6) -> void:
+	if song == _music_name:
+		return
+	_music_name = song
+	var old := _music_players[_music_current]
+	_fade_music(old, -80.0, fade_time, true)
+	if song == "":
+		return
+	var path := MUSIC_FOLDER + song + ".res"
+	if not ResourceLoader.exists(path):
+		push_warning("No music called " + song)
+		return
+	_music_current = 1 - _music_current
+	var new := _music_players[_music_current]
+	new.stream = load(path)
+	new.volume_db = -40.0
+	new.play()
+	_fade_music(new, MUSIC_VOLUME_DB, fade_time, false)
+
+
+func stop_music(fade_time: float = 0.6) -> void:
+	play_music("", fade_time)
+
+
+func _fade_music(player: AudioStreamPlayer, to_db: float, time: float, stop_after: bool) -> void:
+	# Cancel any fade already happening on this player, so an old fade-out
+	# can't stop a song that just started.
+	if player.has_meta("fade"):
+		(player.get_meta("fade") as Tween).kill()
+	var tween := create_tween()
+	player.set_meta("fade", tween)
+	tween.tween_property(player, "volume_db", to_db, time)
+	if stop_after:
+		tween.tween_callback(player.stop)
 
 
 # --- Sounds ---------------------------------------------------------------

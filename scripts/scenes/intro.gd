@@ -24,6 +24,7 @@ var _leaving: bool = false
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
 	_font = ThemeDB.fallback_font
+	Game.play_music("title")
 
 
 func _process(delta: float) -> void:

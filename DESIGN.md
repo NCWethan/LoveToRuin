@@ -448,7 +448,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Pixel-art battle sprites for Eggo, BigJoe6, Elric and Hop (`art/sprites/`, drawn by `tools/make_sprites.ps1`)
 - [x] Sound effects (generated in code by `scripts/sfx.gd`)
 - [ ] Pixel font *(needs a download — waiting for approval)*
-- [ ] Battle music
+- [x] Music: 7 original chiptune tracks (title, Mt. Carmel, PQ Mall, Westview, battle, boss, GAME OVER), composed as note lists in `tools/make_music.gd` and crossfaded between areas
 - [x] A proper GAME OVER screen (the SOUL cracks and shatters, "Stay determined...")
 
 ### Milestone 2 — Talking
