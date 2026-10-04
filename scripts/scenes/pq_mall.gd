@@ -301,7 +301,7 @@ func _use_save_point() -> void:
 	if choice == 0:
 		Game.save_game(SCENE, player.position)
 		Game.play_sfx("save")
-		await Game.dialogue.say(["* (File saved.)"])
+		await Game.dialogue.say(Game.saved_lines())
 
 
 # --- Shops ----------------------------------------------------------------

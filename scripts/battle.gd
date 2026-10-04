@@ -167,7 +167,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# The tent's red text crawls out slowly.
-	_typed += delta * TYPE_SPEED * (0.35 if _text_color != Color.WHITE else 1.0)
+	_typed += delta * TYPE_SPEED * Game.text_speed() * (0.35 if _text_color != Color.WHITE else 1.0)
 	_update_effects(delta)
 	_text_beeps()
 

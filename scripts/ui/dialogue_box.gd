@@ -142,7 +142,7 @@ func _process(delta: float) -> void:
 	if not _active or Engine.get_process_frames() == _shown_frame:
 		return
 
-	_typed += delta * TYPE_SPEED
+	_typed += delta * TYPE_SPEED * Game.text_speed()
 	var shown := mini(int(_typed), _text.length())
 	# A beep every other letter, in the speaker's voice.
 	if shown > _last_beep and shown % 2 == 0 and _text[shown - 1] != " ":

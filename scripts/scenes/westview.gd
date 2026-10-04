@@ -254,7 +254,7 @@ func _add_save_point(at: Vector2, lines: Array) -> void:
 		if choice == 0:
 			Game.save_game(SCENE, player.position)
 			Game.play_sfx("save")
-			await Game.dialogue.say(["* (File saved.)"])
+			await Game.dialogue.say(Game.saved_lines())
 	add_character(star, at)
 
 

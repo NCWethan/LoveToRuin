@@ -48,6 +48,7 @@ func _ready() -> void:
 	if Game.has_save():
 		_options.append("Continue")
 		_choice = 1
+	_options.append("Settings")
 
 
 func _process(delta: float) -> void:
@@ -63,10 +64,13 @@ func _process(delta: float) -> void:
 		_time = HOLD_TIME + MOVE_TIME + 0.4
 		_played_chime = true
 		_ready_for_input = true
-	elif _ready_for_input and not _done:
+	elif _ready_for_input and not _done and not Game.settings_menu.is_open() and Engine.get_process_frames() != Game.settings_menu.closed_frame:
 		if Input.is_action_just_pressed("ui_left") or Input.is_action_just_pressed("ui_right"):
-			_choice = wrapi(_choice + 1, 0, _options.size())
+			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed("ui_right") else -1), 0, _options.size())
 			Game.play_sfx("move")
+		elif Input.is_action_just_pressed("confirm") and _options[_choice] == "Settings":
+			Game.play_sfx("select")
+			Game.settings_menu.open()
 		elif Input.is_action_just_pressed("confirm"):
 			_done = true
 			Game.play_sfx("select")

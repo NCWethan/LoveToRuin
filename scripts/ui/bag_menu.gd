@@ -1,6 +1,6 @@
 class_name BagMenu
 extends CanvasLayer
-## Your bag, opened with C while walking around.
+## Your bag, opened with B while walking around. The last row opens the settings.
 ## The left side shows the party's HP and your money; the right side lists your items.
 ## Pick an item, then:
 ##   USE    eat it (pick who, if there's more than one of you)
@@ -70,18 +70,24 @@ func _process(_delta: float) -> void:
 	var confirm := Input.is_action_just_pressed("confirm")
 	var back := Input.is_action_just_pressed("cancel") or Input.is_action_just_pressed("menu")
 
+	# The settings screen is open on top of the bag: leave the keys to it.
+	if Game.settings_menu.is_open():
+		return
+
 	match _step:
 		Step.LIST:
-			if Game.items.is_empty():
-				if confirm or back:
-					_close()
-			elif up or down:
-				_cursor = wrapi(_cursor + (1 if down else -1), 0, Game.items.size())
+			# The last row is always "Settings", under the items.
+			var rows := Game.items.size() + 1
+			if up or down:
+				_cursor = wrapi(_cursor + (1 if down else -1), 0, rows)
 				Game.play_sfx("move")
 			elif confirm:
-				_step = Step.ACTIONS
-				_action = 0
 				Game.play_sfx("select")
+				if _on_settings():
+					await Game.settings_menu.open()
+				else:
+					_step = Step.ACTIONS
+					_action = 0
 			elif back:
 				_close()
 		Step.ACTIONS:
@@ -108,6 +114,11 @@ func _process(_delta: float) -> void:
 				_cursor = clampi(_cursor, 0, maxi(0, Game.items.size() - 1))
 
 	_panel.queue_redraw()
+
+
+## True when the cursor is on the "Settings" row (below the items).
+func _on_settings() -> bool:
+	return _cursor >= Game.items.size()
 
 
 func _do_action() -> void:
@@ -198,6 +209,16 @@ func _draw_panel() -> void:
 		_text(item["name"], Vector2(LIST.position.x + 40, row_y), Color.YELLOW if selected else Color.WHITE)
 		if selected and _step == Step.LIST:
 			_heart(Vector2(LIST.position.x + 22, row_y - 6))
+
+	# "Settings", along the bottom of the list (where USE / CHECK / DROP go when
+	# an item is picked).
+	if _step != Step.ACTIONS:
+		var settings_at := Vector2(LIST.position.x + 40, LIST.end.y - 16)
+		var on_it := _on_settings() and _step == Step.LIST
+		_panel.draw_line(Vector2(LIST.position.x + 14, LIST.end.y - 38), Vector2(LIST.end.x - 14, LIST.end.y - 38), Color(0.3, 0.3, 0.3), 1.0)
+		_text("Settings", settings_at, Color.YELLOW if on_it else Color(0.75, 0.75, 0.75))
+		if on_it:
+			_heart(settings_at + Vector2(-18, -6))
 
 	# USE / CHECK / DROP, or who to give the item to.
 	if _step == Step.ACTIONS:

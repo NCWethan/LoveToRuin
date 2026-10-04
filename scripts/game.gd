@@ -50,6 +50,7 @@ var dialogue: DialogueBox
 var shop: ShopMenu
 var bag: BagMenu
 var storage: StorageMenu
+var settings_menu: CanvasLayer
 
 var _fade: ColorRect
 var _objective_banner: CanvasLayer
@@ -68,16 +69,21 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if OS.get_cmdline_args().has("--script"):
 		save_path = TEST_SAVE_PATH
+		settings_path = TEST_SETTINGS_PATH
 	_add_input_actions()
+	get_window().title = "LOVE TO RUIN"
 
+	_make_audio_buses()
 	_sounds = Sfx.make_all()
 	for i in 2:
 		var music_player := AudioStreamPlayer.new()
 		music_player.volume_db = -80.0
+		music_player.bus = "Music"
 		add_child(music_player)
 		_music_players.append(music_player)
 	for i in 8:
 		var player := AudioStreamPlayer.new()
+		player.bus = "SFX"
 		add_child(player)
 		_sfx_players.append(player)
 
@@ -101,8 +107,65 @@ func _ready() -> void:
 	add_child(shop)
 	_objective_banner = preload("res://scripts/ui/objective_banner.gd").new()
 	add_child(_objective_banner)
+	settings_menu = preload("res://scripts/ui/settings_menu.gd").new()
+	add_child(settings_menu)
+	load_settings()
 
 	new_game()
+
+
+# --- Settings -------------------------------------------------------------
+# Kept in their own file, so starting a new game or loading a save never changes them.
+
+const SETTINGS_PATH := "user://settings.cfg"
+## Test runs keep their own settings, so they never change the player's.
+const TEST_SETTINGS_PATH := "user://test_settings.cfg"
+var settings_path: String = SETTINGS_PATH
+## music / sound: 0 to 1.  text_speed: 0 slow, 1 normal, 2 fast.
+var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "fullscreen": false}
+
+
+## Two audio buses, "Music" and "SFX", so each can have its own volume.
+func _make_audio_buses() -> void:
+	for bus_name in ["Music", "SFX"]:
+		if AudioServer.get_bus_index(bus_name) == -1:
+			AudioServer.add_bus()
+			var index := AudioServer.bus_count - 1
+			AudioServer.set_bus_name(index, bus_name)
+			AudioServer.set_bus_send(index, "Master")
+
+
+func load_settings() -> void:
+	var file := ConfigFile.new()
+	if file.load(settings_path) == OK:
+		for key in settings:
+			settings[key] = file.get_value("settings", key, settings[key])
+	apply_settings()
+
+
+func save_settings() -> void:
+	var file := ConfigFile.new()
+	for key in settings:
+		file.set_value("settings", key, settings[key])
+	file.save(settings_path)
+
+
+func apply_settings() -> void:
+	for bus_name in ["Music", "SFX"]:
+		var amount: float = settings["music" if bus_name == "Music" else "sound"]
+		var index := AudioServer.get_bus_index(bus_name)
+		AudioServer.set_bus_mute(index, amount <= 0.0)
+		AudioServer.set_bus_volume_db(index, linear_to_db(maxf(amount, 0.001)))
+	# (Tests run without a window, so leave the window alone there.)
+	if DisplayServer.get_name() != "headless":
+		var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if settings["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED
+		if DisplayServer.window_get_mode() != mode:
+			DisplayServer.window_set_mode(mode)
+
+
+## How fast text types out, compared to normal (slow, normal or fast).
+func text_speed() -> float:
+	return [0.55, 1.0, 1.8][clampi(int(settings["text_speed"]), 0, 2)]
 
 
 ## What Elric is trying to do right now (shown in the bag).
@@ -295,8 +358,16 @@ func save_game(scene_path: String, at: Vector2) -> void:
 		"box_items": box_items,
 		"party": party.map(func(m: PartyMember) -> Dictionary: return {"name": m.name, "hp": m.hp}),
 	}
-	var file := FileAccess.open(save_path, FileAccess.WRITE)
+	# Write to a temporary file first, then swap it in, so the old save is never
+	# left half-written if the game closes mid-save.
+	var temp_path := save_path + ".tmp"
+	var file := FileAccess.open(temp_path, FileAccess.WRITE)
+	if file == null:
+		push_warning("Could not save the game.")
+		return
 	file.store_string(JSON.stringify(data, "  "))
+	file.close()
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(temp_path), ProjectSettings.globalize_path(save_path))
 
 
 ## A short summary of the save file for the title screen, or "" if there's none.
@@ -308,7 +379,30 @@ func save_summary() -> String:
 	for i in LV_THRESHOLDS.size():
 		if int(data.get("exp", 0)) >= LV_THRESHOLDS[i]:
 			level = i + 1
-	return "Elric   LV %d   BOND %d" % [level, int(data.get("bond", 0))]
+	var place: String = AREA_NAMES.get(data.get("scene", ""), "")
+	return "Elric   LV %d   BOND %d   -   %s" % [level, int(data.get("bond", 0)), place]
+
+
+## The name of each area, for save messages and the title screen.
+const AREA_NAMES := {
+	"res://scenes/mt_carmel.tscn": "Mt. Carmel",
+	"res://scenes/pq_mall.tscn": "PQ Mall",
+	"res://scenes/westview.tscn": "Westview High",
+	"res://scenes/hilltop.tscn": "Hilltop Park",
+}
+
+
+## What a SAVE point says after saving. The very first time, it also explains
+## how saving works.
+func saved_lines() -> Array:
+	var data := _read_save()
+	var lines: Array = ["* (File saved.  %s)" % AREA_NAMES.get(data.get("scene", ""), "")]
+	if not flags.get("save_tip_seen", false):
+		flags["save_tip_seen"] = true
+		lines.append("* (Your game is only saved at SAVE points like this one.\n*  Choose Continue on the title screen to come back here.)")
+		# Save once more so the tip is remembered too.
+		save_game(data.get("scene", ""), Vector2(data.get("x", 0.0), data.get("y", 0.0)))
+	return lines
 
 
 func load_game() -> void:
@@ -330,7 +424,10 @@ func load_game() -> void:
 		for member in party:
 			if member.name == saved["name"]:
 				member.hp = int(saved["hp"])
-	await change_scene(data["scene"], Vector2(data["x"], data["y"]))
+	var scene: String = data.get("scene", "")
+	if not ResourceLoader.exists(scene):
+		scene = "res://scenes/mt_carmel.tscn"
+	await change_scene(scene, Vector2(float(data.get("x", 130.0)), float(data.get("y", 470.0))))
 
 
 func _read_save() -> Dictionary:
