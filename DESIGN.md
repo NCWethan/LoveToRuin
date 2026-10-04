@@ -46,6 +46,18 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 - **Team battles like Deltarune:** up to **3** party members fight at once.
 - **EXP without violence:** on the pacifist route, you gain EXP by doing other things, so you can grow strong without hurting anyone.
+
+### Two ways to grow: LOVE and BOND
+
+| Stat | Stands for | Grows from | Route |
+|---|---|---|---|
+| **LV (LOVE)** | **L**evel **O**f **V**iolenc**E** (as in Undertale) | Defeating and killing enemies | Genocide |
+| **BOND** | **B**ound by **O**ur **N**ew **D**etermination | **Sparing enemies** (ACT/MERCY — harder spares give more) and **bonding with the cast** (hanging out, talking, making choices with Revolution members) | Pacifist |
+
+- Both stats make Elric stronger, but in different ways.
+- The player can tell which path they're on just by looking at their stats.
+- Ties into the title: **LOVE** to ruin, **BOND** to save.
+- **The meaning of BOND is kept secret** (like LOVE in Undertale) and revealed near the end of the pacifist route: *"BOND. Bound by Our New Determination."*
 - **SAVE points and resets** work like in Undertale/Deltarune.
 - **DETERMINATION** exists in this world.
 
@@ -96,6 +108,6 @@ How it pays off on each route:
 
 ## Open questions
 
-- How does pacifist EXP work exactly (which actions give EXP)?
+- Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - Which characters can join the party, and when?
 - What are each character's personality and battle abilities?
