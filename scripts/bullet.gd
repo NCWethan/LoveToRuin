@@ -22,6 +22,8 @@ extends Node2D
 var bounce_speed: float = 0.0
 ## Cracks into this many small pieces when it reaches the bottom of the box.
 var splits_into: int = 0
+## The color of those pieces.
+var split_color: Color = Color(1.0, 0.85, 0.2)
 ## Seconds it waits as a faint, harmless warning before it starts moving.
 var delay: float = 0.0
 ## How far it drifts side to side while moving (for falling paper and confetti).
@@ -117,7 +119,7 @@ func _split() -> void:
 		piece.bounds = bounds
 		piece.damage = maxi(1, damage - 1)
 		piece.size = 4.0
-		piece.color = Color(1.0, 0.85, 0.2)
+		piece.color = split_color
 		var angle := lerpf(-PI + 0.4, -0.4, float(i) / maxi(1, splits_into - 1))
 		piece.velocity = Vector2(cos(angle), sin(angle)) * 110.0
 		piece.acceleration = Vector2(0, 220)

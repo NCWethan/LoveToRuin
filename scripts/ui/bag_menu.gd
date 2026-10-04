@@ -222,7 +222,7 @@ func _draw_panel() -> void:
 		for i in lines.size():
 			_text(lines[i], MESSAGE.position + Vector2(16, 28 + i * 22))
 
-	var hint := "ENTER: choose   X: back   C/B: close"
+	var hint := "ENTER: choose   X: back   B: close"
 	_text(hint, Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
 
 

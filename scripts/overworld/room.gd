@@ -10,16 +10,17 @@ const TILE := 20
 enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
-	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE }
+	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
-	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK]
+	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE]
 
 var width: int = 0
 var height: int = 0
 var _tiles := PackedInt32Array()
+var _walls: StaticBody2D
 
 
 func setup(map_width: int, map_height: int, fill_tile: int) -> void:
@@ -64,7 +65,11 @@ func build() -> void:
 
 
 func _build_collision() -> void:
+	# Rebuilding (after a gate opens, say) replaces the old walls.
+	if _walls:
+		_walls.queue_free()
 	var body := StaticBody2D.new()
+	_walls = body
 	add_child(body)
 
 	# One wide box per row of touching solid tiles keeps the number of shapes small.
@@ -157,6 +162,16 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			draw_rect(Rect2(p + Vector2(0, 12), Vector2(TILE, 2)), Color8(160, 160, 168))
 			draw_rect(Rect2(p + Vector2(2, 2), Vector2(2, 16)), Color8(130, 130, 138))
 			draw_rect(Rect2(p + Vector2(12, 2), Vector2(2, 16)), Color8(130, 130, 138))
+		GATE:
+			# A chain-link gate, wrapped in a chain with a padlock.
+			draw_rect(r, Color8(178, 178, 170))
+			draw_rect(Rect2(p + Vector2(2, 0), Vector2(16, TILE)), Color8(150, 150, 158))
+			for i in 4:
+				draw_line(p + Vector2(2 + i * 4, 0), p + Vector2(6 + i * 4, TILE), Color8(110, 110, 118), 1.0)
+			draw_line(p + Vector2(0, 8), p + Vector2(TILE, 12), Color8(90, 90, 96), 2.0)
+			if y % 2 == 1:
+				draw_rect(Rect2(p + Vector2(7, 6), Vector2(6, 6)), Color8(215, 180, 60))
+				draw_rect(Rect2(p + Vector2(9, 8), Vector2(2, 2)), Color8(80, 60, 20))
 		FIELD, FIELD_LINE:
 			var stripe := Color8(84, 166, 74) if y % 2 == 0 else Color8(78, 156, 68)
 			draw_rect(r, stripe)

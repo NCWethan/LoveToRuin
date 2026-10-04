@@ -21,7 +21,10 @@ const FRAGMENT_SPOT := Vector2(870, 360)    # in the field, by the bleachers
 const SAVE_SPOT := Vector2(470, 370)        # in the courtyard
 const ROAD_Y := 500.0                       # walking below this means "leaving"
 const FIELD_EDGE_X := 570.0                 # walking left of this after the fragment triggers the ambush
-const CURB_Y := 488.0                       # the bottom sidewalk, right at the curb
+## The field gate (two tiles tall) and the tree the gate key is stuck in.
+const GATE_CELL := Vector2i(29, 18)
+const KEY_TREE := Vector2i(16, 17)
+const CURB_Y := 488.0                      # the bottom sidewalk, right at the curb
 const CAR_LANE_Y := 538.0                   # where a car's wheels touch the road (the near lane)
 
 var hop: Character
@@ -85,7 +88,8 @@ func build_map() -> void:
 	room.fill(30, 14, 16, 8, Room.FIELD)
 	room.fill(30, 14, 16, 2, Room.BLEACHERS)
 	room.fill(37, 16, 1, 6, Room.FIELD_LINE)
-	room.fill(29, 18, 1, 2, Room.SIDEWALK)
+	# The way in: a gate, chained shut until Elric finds the key.
+	room.fill(GATE_CELL.x, GATE_CELL.y, 1, 2, Room.SIDEWALK if _flag("gate_open") else Room.GATE)
 
 	# Sidewalk and road at the bottom.
 	room.fill(1, 23, 46, 2, Room.SIDEWALK)
@@ -99,7 +103,7 @@ func _place_characters() -> void:
 	# Hop: by the doors until you meet him, then following Elric.
 	hop = Cast.make("Hop")
 	if _flag("met_hop"):
-		hop.position = player.position + Vector2(0, -20)
+		hop.position = player.position + Vector2(-22, -4)
 		hop.follow = player
 	else:
 		hop.position = HOP_SPOT
@@ -115,13 +119,92 @@ func _place_characters() -> void:
 		world.add_child(fragment)
 
 	# A SAVE point in the courtyard.
-	var star := Character.new().setup(preload("res://art/sprites/save_star.png"), null, false)
+	var star := make_save_star()
 	star.position = SAVE_SPOT
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
-	add_storage_box(Vector2(515, 372))
+	add_storage_box(Vector2(432, 372))
 	world.add_child(star)
+
+
+# --- Looking around -------------------------------------------------------
+
+func inspect_tile(cell: Vector2i) -> void:
+	var tile := room.get_tile(cell.x, cell.y)
+	if tile == Room.GATE:
+		await _field_gate()
+	elif cell == KEY_TREE and not _flag("has_gate_key") and not _flag("gate_open"):
+		await _key_tree()
+	elif tile == Room.DOOR:
+		await _school_doors()
+	else:
+		await super(cell)
+
+
+## The school's front doors lock themselves the moment Elric touches them.
+func _school_doors() -> void:
+	var tries := int(Game.flags.get("door_tries", 0))
+	Game.flags["door_tries"] = tries + 1
+	if tries == 0:
+		Game.play_sfx("door")
+		var lines: Array = [
+			"* (You reach for the door handle.)",
+			"* (Click.)",
+			"* (It locked. Right as you touched it.)",
+		]
+		if _flag("met_hop"):
+			lines.append({"who": "Hop", "text": "...That was open a second ago.\nI literally just came out of there.", "mood": "shocked"})
+		await Game.dialogue.say(lines)
+	else:
+		await Game.dialogue.say(["* (Locked. It doesn't want you inside.)"])
+
+
+## The field gate: chained shut until Elric has the key.
+func _field_gate() -> void:
+	if _flag("has_gate_key"):
+		Game.play_sfx("item")
+		await Game.dialogue.say([
+			"* (You try the key in the padlock.)",
+			"* (...It fits. The chain slides off.)",
+		])
+		Game.flags["gate_open"] = true
+		room.fill(GATE_CELL.x, GATE_CELL.y, 1, 2, Room.SIDEWALK)
+		room.build()
+		return
+	var lines: Array = [
+		"* (The gate to the field is chained shut.)",
+		"* (A heavy padlock hangs from the chain.)",
+	]
+	if _flag("met_hop") and not _flag("gate_hint"):
+		Game.flags["gate_hint"] = true
+		lines.append_array([
+			{"who": "Hop", "text": "Coach Ramirez locks this every day.\nThen he loses the key. Every day.", "mood": "smug"},
+			{"who": "Hop", "text": "Last week it was in the trophy case.\nThe week before, a tree. Don't ask me how."},
+		])
+	await Game.dialogue.say(lines)
+
+
+## One tree in the courtyard has something caught in its branches.
+func _key_tree() -> void:
+	await Game.dialogue.say([
+		"* (It's a tree.)",
+		"* (...Something glints between the leaves.)",
+	])
+	var choice := await Game.dialogue.ask("* (Shake the tree?)", ["Shake it", "Leave it"])
+	if choice == 1:
+		return
+	shake(3.0, 0.3)
+	Game.play_sfx("item")
+	var lines: Array = [
+		"* (You shake the tree. Leaves rain down.)",
+		"* (Jingle. A ring of keys drops into the grass.)",
+		"* (You got COACH'S KEYS.)",
+	]
+	if _flag("met_hop"):
+		lines.append({"who": "Hop", "text": "A TREE. Again. How does he even\nget them up there?", "mood": "shocked"})
+	await Game.dialogue.say(lines)
+	Game.flags["has_gate_key"] = true
 
 
 func _make_enemy_npc(who: String, at: Vector2) -> Character:
@@ -172,7 +255,7 @@ func _arrival() -> void:
 	await _the_voice()
 	await Game.dialogue.say([
 		"* (Use the ARROW KEYS to walk.\n*  Press ENTER to talk to people or look at things.)",
-		"* (Press B or C to open your BAG.)",
+		"* (Press B to open your BAG.)",
 	])
 	Game.flags["arrived"] = true
 	Game.busy = false

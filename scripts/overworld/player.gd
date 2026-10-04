@@ -1,7 +1,7 @@
 class_name Player
 extends CharacterBody2D
-## Elric in the overworld. Arrow keys walk; Z talks to / inspects whatever is in front;
-## C opens the bag.
+## Elric in the overworld. Arrow keys walk; ENTER talks to / inspects whatever is in front;
+## B opens the bag.
 
 @export var speed: float = 110.0
 
@@ -105,6 +105,14 @@ func _interact() -> void:
 	if best:
 		Game.busy = true
 		await best.interact()
+		Game.busy = false
+		return
+	# Nobody there: look at the scenery in front instead (trees, walls, doors...).
+	var area := get_tree().current_scene as Area
+	if area:
+		var spot := global_position + Vector2(0, -4) + facing * 14
+		Game.busy = true
+		await area.inspect_tile(Vector2i(floori(spot.x / Room.TILE), floori(spot.y / Room.TILE)))
 		Game.busy = false
 
 

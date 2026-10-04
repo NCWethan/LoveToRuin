@@ -50,6 +50,34 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 			return _burst(enemy, parent, area, soul_position)
 		"fire_arrow":
 			return _fire_arrow(enemy, parent, area)
+		"scantron":
+			return _scantron(enemy, parent, area)
+		"tardy_slips":
+			return _tardy_slips(enemy, parent, area, step)
+		"gravy":
+			return _gravy(enemy, parent, area)
+		"tray_toss":
+			return _tray_toss(enemy, parent, area, step)
+		"peas":
+			return _peas(enemy, parent, area, soul_position)
+		"ring":
+			return _ring(enemy, parent, area)
+		"sound_waves":
+			return _sound_waves(enemy, parent, area)
+		"alarm":
+			return _alarm(enemy, parent, area, step)
+		"pages":
+			return _pages(enemy, parent, area)
+		"bookmark":
+			return _bookmark(enemy, parent, area, soul_position)
+		"shelf":
+			return _shelf(enemy, parent, area, step)
+		"bleacher_wave":
+			return _bleacher_wave(enemy, parent, area)
+		"mascot_spin":
+			return _mascot_spin(enemy, parent, area, step)
+		"frenzy":
+			return _frenzy(enemy, parent, area, step)
 	return 1.0
 
 
@@ -190,6 +218,197 @@ static func _zoom(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	return 0.75
 
 
+## Pop Quiz: a column of answer bubbles fills in across the box (they flash first).
+## One bubble in the column is left blank: that's the way through.
+static func _scantron(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var x := randf_range(area.position.x + 10, area.end.x - 10)
+	var gap := randi_range(1, int(area.size.y / 14) - 2)
+	var row := 0
+	var y := area.position.y + 8
+	while y < area.end.y - 4:
+		if absi(row - gap) > 0:
+			var bubble := _bullet(enemy, parent, area, Vector2(x, y))
+			bubble.shape = "bubble"
+			bubble.size = 10.0
+			bubble.delay = 0.6
+			bubble.lifetime = 0.45
+		row += 1
+		y += 14
+	return 0.7
+
+
+## Hall Pass: tardy slips slide in diagonally from the top corners.
+static func _tardy_slips(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var from_left := step % 2 == 0
+	var x := area.position.x + 6 if from_left else area.end.x - 6
+	var slip := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
+	slip.shape = "card"
+	slip.size = 10.0
+	slip.color = Color(1.0, 0.75, 0.8)
+	slip.velocity = Vector2(95 if from_left else -95, 85)
+	return 0.38
+
+
+# --- Westview: the cafeteria, the bell, the library -------------------------
+
+## Mystery Meat: blobs of gravy drop, speed up, and splatter into brown drops.
+static func _gravy(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var x := randf_range(area.position.x + 10, area.end.x - 10)
+	var blob := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
+	blob.shape = "egg"
+	blob.size = 10.0
+	blob.color = Color(0.55, 0.35, 0.2)
+	blob.velocity = Vector2(0, 30)
+	blob.acceleration = Vector2(0, 160)
+	blob.splits_into = 3
+	blob.split_color = Color(0.7, 0.45, 0.25)
+	return 0.75
+
+
+## Mystery Meat: lunch trays spin across the box.
+static func _tray_toss(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var from_left := step % 2 == 0
+	var y := randf_range(area.position.y + 10, area.end.y - 10)
+	var x := area.position.x + 8 if from_left else area.end.x - 8
+	var tray := _bullet(enemy, parent, area, Vector2(x, y))
+	tray.shape = "card"
+	tray.size = 16.0
+	tray.color = Color(0.7, 0.72, 0.78)
+	tray.delay = 0.35
+	tray.velocity = Vector2(150 if from_left else -150, randf_range(-30, 30))
+	return 0.7
+
+
+## Mystery Meat: a spoonful of peas flicked at the SOUL, spreading out.
+static func _peas(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var start := Vector2(randf_range(area.position.x + 10, area.end.x - 10), area.position.y + 4)
+	var aim := (soul_position - start).normalized()
+	for spread in [-0.4, -0.2, 0.0, 0.2, 0.4]:
+		var pea := _bullet(enemy, parent, area, start)
+		pea.shape = "ball"
+		pea.size = 5.0
+		pea.color = Color(0.45, 0.8, 0.3)
+		pea.velocity = aim.rotated(spread) * 110.0
+	return 1.0
+
+
+## Tardy Bell: a ring of notes bursts out from a spot on the edge of the box.
+static func _ring(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var center := Vector2(randf_range(area.position.x + 20, area.end.x - 20), area.position.y + 6)
+	var offset := randf() * TAU
+	for i in 10:
+		var note := _bullet(enemy, parent, area, center)
+		note.shape = "star"
+		note.size = 7.0
+		note.color = Color(1.0, 0.9, 0.4)
+		note.velocity = Vector2.from_angle(offset + i * TAU / 10) * 80.0
+	return 1.0
+
+
+## Tardy Bell: rings of sound roll down the box, each with a quiet gap in it.
+static func _sound_waves(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var gap := randf_range(area.position.x + 20, area.end.x - 20)
+	var x := area.position.x + 4
+	while x < area.end.x - 2:
+		if absf(x - gap) > 16:
+			var wave := _bullet(enemy, parent, area, Vector2(x, area.position.y + 4))
+			wave.size = 5.0
+			wave.color = Color(1.0, 0.95, 0.6)
+			wave.velocity = Vector2(0, 70)
+		x += 9
+	return 1.25
+
+
+## Tardy Bell: the alarm goes off. A line flickers across the box, then blasts.
+static func _alarm(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var horizontal := step % 2 == 0
+	var at := Vector2(randf_range(area.position.x + 10, area.end.x - 10), randf_range(area.position.y + 10, area.end.y - 10))
+	_beam(enemy, parent, area, at, Vector2.RIGHT if horizontal else Vector2.DOWN, 0.7, Color(1.0, 0.85, 0.2))
+	return 0.85
+
+
+## Overdue Book: loose pages flutter down, drifting side to side.
+static func _pages(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var x := randf_range(area.position.x + 8, area.end.x - 8)
+	var page := _bullet(enemy, parent, area, Vector2(x, area.position.y + 4))
+	page.shape = "card"
+	page.size = 11.0
+	page.color = Color(0.95, 0.92, 0.82)
+	page.velocity = Vector2(0, 60)
+	page.sway = 60.0
+	return 0.3
+
+
+## Overdue Book: bookmarks shoot straight at the SOUL (after a quick flash).
+static func _bookmark(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var from_left := randf() < 0.5
+	var start := Vector2(area.position.x + 4 if from_left else area.end.x - 4, randf_range(area.position.y + 6, area.end.y - 6))
+	var mark := _bullet(enemy, parent, area, start)
+	mark.shape = "arrow"
+	mark.size = 9.0
+	mark.color = Color(0.85, 0.25, 0.3)
+	mark.delay = 0.4
+	mark.velocity = (soul_position - start).normalized() * 170.0
+	return 0.6
+
+
+## Overdue Book: a whole shelf of books slides across. Squeeze through the gap.
+static func _shelf(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var from_left := step % 2 == 0
+	var x := area.position.x + 4 if from_left else area.end.x - 4
+	var gap := randf_range(area.position.y + 20, area.end.y - 20)
+	var colors := [Color(0.7, 0.25, 0.25), Color(0.25, 0.45, 0.7), Color(0.3, 0.6, 0.35), Color(0.75, 0.6, 0.25)]
+	var y := area.position.y + 6
+	var i := 0
+	while y < area.end.y - 2:
+		if absf(y - gap) > 17:
+			var book := _bullet(enemy, parent, area, Vector2(x, y))
+			book.size = 9.0
+			book.color = colors[i % colors.size()]
+			book.velocity = Vector2(90 if from_left else -90, 0)
+		y += 11
+		i += 1
+	return 1.6
+
+
+## Wally (miniboss): the bleachers rise. A row comes up from the floor with a gap in it.
+static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2) -> float:
+	var gap := randf_range(area.position.x + 18, area.end.x - 18)
+	var x := area.position.x + 5
+	while x < area.end.x - 2:
+		if absf(x - gap) > 15:
+			var seat := _bullet(enemy, parent, area, Vector2(x, area.end.y - 5))
+			seat.size = 8.0
+			seat.color = Color(0.65, 0.66, 0.72)
+			seat.delay = 0.35
+			seat.velocity = Vector2(0, -95)
+		x += 10
+	return 1.15
+
+
+## Wally (miniboss): a spinning mascot twirl that flings claws out in a spiral.
+static func _mascot_spin(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	var center := Vector2(area.get_center().x, area.position.y + 8)
+	for arm in 2:
+		# Two arms sweeping back and forth, always flinging downward into the box.
+		var angle := PI / 2 + sin(step * 0.35 + arm * PI) * 1.2
+		var claw := _bullet(enemy, parent, area, center)
+		claw.shape = "claw"
+		claw.size = 8.0
+		claw.color = Color(1.0, 0.95, 0.85)
+		claw.velocity = Vector2.from_angle(angle) * 120.0
+	return 0.17
+
+
+## Wally (miniboss): FRENZY. Claws and dodgeballs at the same time, faster than usual.
+static func _frenzy(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+	if step % 2 == 0:
+		_claw_drop(enemy, parent, area)
+	else:
+		_dodgeballs(enemy, parent, area, step)
+	return 0.55
+
+
 ## Wally: a shower of colorful confetti.
 static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var colors := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
@@ -292,7 +511,7 @@ static func _soul(parent: Node) -> Node2D:
 
 ## A glowing slash across the whole box, along `direction`, through `through`.
 ## A thin flickering line shows where it will land, then it cuts for a moment.
-static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, direction: Vector2, delay: float) -> void:
+static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, direction: Vector2, delay: float, color: Color = HOPKUNA_RED) -> void:
 	# Find where the line through `through` enters and leaves the box, so the
 	# slash reaches exactly from one wall to the other.
 	var dir := direction.normalized()
@@ -312,7 +531,7 @@ static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, dir
 	var beam := _bullet(enemy, parent, area, (from + to) / 2)
 	beam.shape = "beam"
 	beam.size = 9.0
-	beam.color = HOPKUNA_RED
+	beam.color = color
 	beam.beam_vector = (to - from) / 2
 	beam.delay = delay
 	beam.lifetime = 0.22

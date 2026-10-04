@@ -59,10 +59,10 @@ func _draw_chapter_complete(alpha: float) -> void:
 	route_color.a = alpha
 	_centered("LOVE TO RUIN", 110, 44, Color(1, 1, 1, alpha))
 	_centered("CHAPTER 1 COMPLETE", 160, 20, Color(0.85, 0.85, 0.85, alpha))
-	_centered("ROUTE:  " + ending[0], 220, 26, route_color)
+	# (The route's name stays hidden; only its closing line shows.)
 	var lines: PackedStringArray = (ending[2] as String).split("\n")
 	for i in lines.size():
-		_centered(lines[i], 262 + i * 22, 16, Color(0.8, 0.8, 0.8, alpha))
+		_centered(lines[i], 230 + i * 24, 18, route_color)
 	_centered("3 of 12 fragments found.", 330, 14, Color(1, 0.6, 0.6, alpha))
 	_centered("LV %d     BOND %d     EXP %d     $%d" % [Game.lv(), Game.bond, Game.exp_points, Game.money], 362, 16, Color(1, 1, 1, alpha))
 	if _time > 2.5:

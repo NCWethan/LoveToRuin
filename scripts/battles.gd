@@ -7,7 +7,7 @@ static func create(id: String) -> BattleData:
 	match id:
 		"hopkuna":
 			return HilltopBattles.create(id)
-		"pop_quiz", "hall_pass", "wally":
+		"pop_quiz", "hall_pass", "mystery_meat", "tardy_bell", "overdue_book", "tent", "wally":
 			return WestviewBattles.create(id)
 		_:
 			return TutorialBattle.create_data()

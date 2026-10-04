@@ -51,6 +51,12 @@ var taunts: Array[String] = []
 ## Used instead of taunts once the enemy can be spared.
 var spare_taunts: Array[String] = []
 
+## If true, doing the same ACT twice in a row (even by different party members)
+## does nothing; the enemy wants variety. Makes sparing a challenge.
+var bores_easily: bool = false
+## What it says when that happens.
+var bored_line: String = "* {name} has seen that already.\n* (Try something different.)"
+
 var exp_reward: int = 10
 var bond_reward: int = 10
 var money_reward: int = 15
@@ -65,6 +71,7 @@ var flash: float = 0.0
 var shown_hp: float = -1.0
 
 var _act_counts: Dictionary = {}
+var _last_act: String = ""
 
 
 func is_active() -> bool:
@@ -89,6 +96,9 @@ func do_act(index: int, actor: String) -> Array[String]:
 		return [check_text]
 
 	var act: Dictionary = acts[index - 1]
+	if bores_easily and act["name"] == _last_act:
+		return [bored_line.format({"name": name, "actor": actor})]
+	_last_act = act["name"]
 	var times_used: int = _act_counts.get(act["name"], 0)
 	_act_counts[act["name"]] = times_used + 1
 

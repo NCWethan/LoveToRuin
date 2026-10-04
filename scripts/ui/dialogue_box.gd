@@ -206,21 +206,23 @@ func _draw_box() -> void:
 				at = _box.position + Vector2(text_left + 30, 28 + (lines.size() + i) * LINE_HEIGHT)
 			else:
 				# Side by side along the bottom.
-				at = Vector2(_box.position.x + 120 + i * 200, _box.end.y - 20)
+				var spacing := minf(200.0, (_box.size.x - 140.0) / _choices.size())
+				at = Vector2(_box.position.x + 120 + i * spacing, _box.end.y - 20)
 			var color := Color.YELLOW if i == _choice else Color.WHITE
 			_panel.draw_string(_font, at, str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 			if i == _choice:
 				_draw_heart(at + Vector2(-18, -6))
 
 
-## Long or many choices are listed one per line (Up/Down) instead of side by side (Left/Right).
+## Long or many choices are listed one per line (Up/Down) instead of side by side
+## (Left/Right). Lots of very short ones (like switch names) still fit side by side.
 func _choices_stacked() -> bool:
-	if _choices.size() > 2:
-		return true
+	var longest := 0
 	for choice in _choices:
-		if str(choice).length() > 14:
-			return true
-	return false
+		longest = maxi(longest, str(choice).length())
+	if longest <= 6:
+		return false
+	return _choices.size() > 2 or longest > 14
 
 
 ## A tiny red heart used as the choice cursor.

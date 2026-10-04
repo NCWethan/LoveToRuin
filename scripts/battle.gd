@@ -8,7 +8,7 @@ extends Node2D
 ## The fighters and their lines come from tutorial_battle.gd.
 ## Controls: arrow keys to move, Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, DONE }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, EVENT, DONE }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -156,11 +156,15 @@ func _ready() -> void:
 	box.size = TEXT_BOX_SIZE
 	soul.can_move = false
 
-	_show_messages(_data.intro, _start_player_turn if _data.player_first else _start_enemy_turn)
+	if _data.event == "tent":
+		_show_messages(_data.intro, _tent_silence)
+	else:
+		_show_messages(_data.intro, _start_player_turn if _data.player_first else _start_enemy_turn)
 
 
 func _process(delta: float) -> void:
-	_typed += delta * TYPE_SPEED
+	# The tent's red text crawls out slowly.
+	_typed += delta * TYPE_SPEED * (0.35 if _text_color != Color.WHITE else 1.0)
 	_update_effects(delta)
 	_text_beeps()
 
@@ -181,6 +185,8 @@ func _process(delta: float) -> void:
 			_process_enemy_turn(delta)
 		State.GAME_OVER:
 			_process_game_over(delta)
+		State.EVENT:
+			_process_tent(delta)
 
 	_overlay.queue_redraw()
 	_backdrop.queue_redraw()
@@ -194,7 +200,10 @@ func _text_beeps() -> void:
 	if shown < _last_beep:
 		_last_beep = 0
 	if shown > _last_beep and shown % 2 == 0 and _text[shown - 1] != " ":
-		Game.play_sfx("text")
+		if _text_color == Color.WHITE:
+			Game.play_sfx("text")
+		else:
+			Game.play_sfx("voice", 0.45)
 	_last_beep = shown
 
 
@@ -552,16 +561,24 @@ func _resolve_hit(accuracy: float) -> void:
 	_anim_accuracy = accuracy
 	_anim_time = 0.0
 	_anim_landed = false
-	Game.play_sfx("slash")
+	if member.name != "Hop":
+		Game.play_sfx("slash")
 	state = State.FIGHT_ANIM
 
 
 ## The slash plays across the enemy; when it lands, the damage pops out and the
 ## HP bar drains. Then the result is shown in the text box.
 func _process_fight_anim(delta: float) -> void:
+	var before := _anim_time
 	_anim_time += delta
 	var member := _bar_member
 	var target := _bar_target
+	if member.name == "Hop":
+		# Hop's punches each land with their own thump.
+		for at in HOP_PUNCHES:
+			if before < at and _anim_time >= at:
+				Game.play_sfx("punch", randf_range(0.9, 1.15))
+				target.shake = 0.15
 	if not _anim_landed and _anim_time >= ATTACK_SLASH_TIME:
 		_anim_landed = true
 		target.hp = maxi(target.hp - _anim_damage, 0)
@@ -847,6 +864,97 @@ func _draw_game_over() -> void:
 			_draw_centered("(press ENTER)", Vector2(320, 360), 14, Color.GRAY)
 
 
+# --- The tent -------------------------------------------------------------
+# A very rare "encounter" in Westview. It's just a tent. Then the music stops.
+
+const TENT_LINES := [
+	"* ...",
+	"* We were here, too.",
+	"* Three of us.",
+	"* We remember.",
+]
+const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
+## How long each part lasts: silence, the scream, black, and the laugh.
+const TENT_SILENCE := 1.6
+const TENT_SCREAM_TIME := 3.0
+const TENT_BLACK_TIME := 0.5
+const TENT_LAUGH_TIME := 3.8
+
+## "silence", "scream", "black" or "laugh".
+var _tent_phase: String = ""
+var _tent_time: float = 0.0
+## The color of the text in the box (red for the tent).
+var _text_color: Color = Color.WHITE
+## When the tent froze the background (so it stops right where it was).
+var _frozen_at: float = 0.0
+
+
+## The music cuts off. Nothing happens for a moment.
+func _tent_silence() -> void:
+	Game.stop_music(0.0)
+	_frozen_at = Time.get_ticks_msec() / 1000.0
+	_text = ""
+	state = State.EVENT
+	_tent_phase = "silence"
+	_tent_time = 0.0
+
+
+func _process_tent(delta: float) -> void:
+	_tent_time += delta
+	match _tent_phase:
+		"silence":
+			if _tent_time >= TENT_SILENCE:
+				_text_color = Color(0.85, 0.05, 0.08)
+				_show_messages(TENT_LINES, _tent_scream)
+		"scream":
+			if _tent_time >= TENT_SCREAM_TIME:
+				_tent_phase = "black"
+				_tent_time = 0.0
+				Game.play_sfx("shatter")
+		"black":
+			if _tent_time >= TENT_BLACK_TIME:
+				_tent_phase = "laugh"
+				_tent_time = 0.0
+				Game.play_sfx("laugh")
+		"laugh":
+			if _tent_time >= TENT_LAUGH_TIME:
+				_tent_phase = "done"
+				var result := {"id": _data.id, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
+				if Game.pending_battle != "":
+					_leave_battle(func() -> void: Game.finish_battle(result))
+				else:
+					_leave_battle(get_tree().reload_current_scene)
+
+
+func _tent_scream() -> void:
+	_text = ""
+	state = State.EVENT
+	_tent_phase = "scream"
+	_tent_time = 0.0
+	Game.play_sfx("hurt", 0.5)
+
+
+## Big shaking red letters, then black.
+func _draw_tent() -> void:
+	if _tent_phase == "scream":
+		# Everything darkens, and the words shake like they're trying to get out.
+		_overlay.draw_rect(Rect2(0, 0, 640, 480), Color(0, 0, 0, clampf(_tent_time * 0.6, 0.0, 0.85)))
+		var size := 28
+		var shown := mini(TENT_SCREAM.length(), int(_tent_time * 40.0))
+		# Each letter gets the same width, so they can shake on their own.
+		var step := 18.0
+		var x := 320.0 - step * TENT_SCREAM.length() / 2.0
+		for i in shown:
+			var letter := TENT_SCREAM[i]
+			var letter_width := _font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+			var at := Vector2(x + (step - letter_width) / 2, 190) + Vector2(randf_range(-2.5, 2.5), randf_range(-2.5, 2.5))
+			_overlay.draw_string(_font, at + Vector2(2, 2), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.3, 0, 0))
+			_overlay.draw_string(_font, at, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.95, 0.05, 0.1))
+			x += step
+	elif _tent_phase in ["black", "laugh", "done"]:
+		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
+
+
 # --- Helpers --------------------------------------------------------------
 
 func _pressed(action: String) -> bool:
@@ -919,6 +1027,7 @@ func _draw_overlay() -> void:
 	_draw_aura()
 	_draw_party_sprites()
 	_draw_enemies()
+	_draw_boss_bar()
 	_draw_slash()
 	_draw_party_panel()
 	_draw_buttons()
@@ -931,11 +1040,17 @@ func _draw_overlay() -> void:
 			_draw_centered(popup["text"], popup["position"] + offset, size, Color(0, 0, 0, 0.8))
 		_draw_centered(popup["text"], popup["position"], size, popup["color"])
 
+	if _data and _data.event == "tent":
+		_draw_tent()
+
 
 ## The attack animation: three glowing slashes sweep across the enemy, in the
 ## attacker's color (gold for a CRITICAL), then flare out.
 func _draw_slash() -> void:
 	if state != State.FIGHT_ANIM or _bar_target == null:
+		return
+	if _bar_member.name == "Hop":
+		_draw_hop_strike()
 		return
 	var progress := clampf(_anim_time / ATTACK_SLASH_TIME, 0.0, 1.0)
 	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.35, 0.0, 1.0)
@@ -957,6 +1072,51 @@ func _draw_slash() -> void:
 		for i in 10:
 			var dir := Vector2.from_angle(i * TAU / 10 + 0.3)
 			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(color, fade), 2.0)
+
+
+## When each of Hop's three punches lands, in seconds after the bar is stopped.
+const HOP_PUNCHES := [0.06, 0.18, 0.3]
+
+## Hop doesn't slash. He throws three fast punches, each one cracking the air with
+## a red shockwave, and finishes with a red X that lingers a little too long...
+func _draw_hop_strike() -> void:
+	var center := _bar_target.position + Vector2(0, -20)
+	var red := Color(1.0, 0.15, 0.2)
+	var dark := Color(0.35, 0.0, 0.05)
+	var critical := _anim_accuracy >= CRITICAL
+	var spots := [Vector2(-18, -14), Vector2(16, 6), Vector2(-4, -2)]
+	for i in HOP_PUNCHES.size():
+		var age: float = _anim_time - HOP_PUNCHES[i]
+		if age < 0.0 or age > 0.45:
+			continue
+		var at: Vector2 = center + spots[i]
+		var grow := age / 0.45
+		var fade := 1.0 - grow
+		# A fist-sized impact flash...
+		_overlay.draw_circle(at, 10.0 * (1.0 - grow * 0.5), Color(1, 0.9, 0.9, fade))
+		# ...a shockwave ring...
+		_overlay.draw_arc(at, 8.0 + grow * 34.0, 0, TAU, 20, Color(red, fade), 3.0)
+		_overlay.draw_arc(at, 4.0 + grow * 22.0, 0, TAU, 16, Color(dark, fade), 2.0)
+		# ...and jagged cracks shooting out from the hit.
+		for c in 5:
+			var dir := Vector2.from_angle(c * TAU / 5 + i)
+			var mid := at + dir * (10 + grow * 14) + dir.orthogonal() * 4.0
+			var end := at + dir * (16 + grow * 26)
+			_overlay.draw_polyline(PackedVector2Array([at + dir * 6, mid, end]), Color(red, fade), 2.0)
+	# The finisher: a red X burned across the target, with a dark smoky edge.
+	var x_age := _anim_time - ATTACK_SLASH_TIME
+	if x_age >= 0.0:
+		var fade := clampf(1.0 - (x_age - 0.35) / 0.5, 0.0, 1.0)
+		var size := 30.0 + minf(x_age, 0.1) * 120.0 + (8.0 if critical else 0.0)
+		for diagonal in [Vector2(1, 1), Vector2(1, -1)]:
+			var arm: Vector2 = diagonal.normalized() * size
+			_overlay.draw_line(center - arm, center + arm, Color(dark, 0.6 * fade), 12.0)
+			_overlay.draw_line(center - arm, center + arm, Color(YELLOW if critical else red, fade), 5.0)
+			_overlay.draw_line(center - arm, center + arm, Color(1, 0.85, 0.85, fade), 1.5)
+		# Embers drifting up off the hit.
+		for e in 8:
+			var drift := Vector2(sin(e * 2.3) * 22.0, -x_age * (40.0 + e * 8.0))
+			_overlay.draw_rect(Rect2(center + drift + Vector2(e * 3 - 12, 10), Vector2(2, 2)), Color(red, fade))
 
 
 func _draw_enemies() -> void:
@@ -993,10 +1153,80 @@ func _draw_enemies() -> void:
 			"defeated":
 				_draw_centered("KO", pos + Vector2(0, 62), FONT_SIZE, Color.LIGHT_GRAY)
 			_:
-				_draw_bar(Rect2(pos + Vector2(-45, 47), Vector2(90, 10)), float(enemy.hp) / enemy.max_hp, Color.GREEN, enemy.shown_hp / enemy.max_hp)
+				# Bosses show their health in the big bar at the top instead,
+				# and the tent event has no health at all.
+				if _data.boss_style == "" and _data.event == "":
+					_draw_bar(Rect2(pos + Vector2(-45, 47), Vector2(90, 10)), float(enemy.hp) / enemy.max_hp, Color.GREEN, enemy.shown_hp / enemy.max_hp)
 
 		if _speech.has(enemy) and _speech[enemy] != "":
 			_draw_speech(_speech[enemy], Vector2(pos.x, top - 30))
+
+
+const BOSS_BAR := Rect2(200, 8, 412, 14)
+
+## A boss's health, in a big bar across the top of the screen that's always visible,
+## styled to match the boss.
+##   wally:   gold fur, a dark brown frame, and three claw marks torn into it.
+##   hopkuna: pulsing red, black tattoo zigzags, and "???" instead of numbers.
+func _draw_boss_bar() -> void:
+	if _data.boss_style == "" or enemies.is_empty():
+		return
+	var boss := enemies[0]
+	var fraction := float(boss.hp) / boss.max_hp
+	var trailing := boss.shown_hp / boss.max_hp
+	var rect := BOSS_BAR
+	var t := Time.get_ticks_msec() / 1000.0
+	match _data.boss_style:
+		"wally":
+			var fill := Color(0.95, 0.68, 0.18)
+			_draw_outlined(boss.name.to_upper(), Vector2(22, rect.end.y), 15, fill)
+			_overlay.draw_rect(rect.grow(3), Color(0.3, 0.18, 0.08))
+			_overlay.draw_rect(rect.grow(1), Color(0.55, 0.36, 0.16))
+			_overlay.draw_rect(rect, Color(0.2, 0.1, 0.05))
+			if trailing > fraction:
+				_overlay.draw_rect(Rect2(rect.position, Vector2(rect.size.x * clampf(trailing, 0, 1), rect.size.y)), Color(1, 0.95, 0.75))
+			var filled := Rect2(rect.position, Vector2(rect.size.x * clampf(fraction, 0, 1), rect.size.y))
+			_overlay.draw_rect(filled, fill)
+			# Fur: little darker tufts along the bar.
+			var x := rect.position.x + 4
+			while x < filled.end.x - 2:
+				_overlay.draw_line(Vector2(x, rect.end.y - 2), Vector2(x + 3, rect.position.y + 4), Color(0.75, 0.5, 0.12), 1.0)
+				x += 7
+			_overlay.draw_rect(Rect2(filled.position, Vector2(filled.size.x, 3)), Color(1, 1, 1, 0.3))
+			# Three claw marks ripped through the right end of the frame.
+			for i in 3:
+				var from := Vector2(rect.end.x - 34 + i * 8, rect.position.y - 4)
+				_overlay.draw_line(from, from + Vector2(-8, rect.size.y + 8), Color(0.15, 0.08, 0.03), 2.0)
+			_draw_outlined("HP %d / %d" % [boss.hp, boss.max_hp], Vector2(22, rect.end.y + 15), 12, Color(1, 0.9, 0.6))
+		"hopkuna":
+			var pulse := 0.5 + 0.5 * sin(t * 4.0)
+			var red := Color(1.0, 0.15, 0.22)
+			_draw_outlined(boss.name.to_upper(), Vector2(22, rect.end.y), 15, red)
+			# A glow that breathes around the frame.
+			for i in 3:
+				_overlay.draw_rect(rect.grow(3 + i * 2), Color(red, (0.3 - i * 0.09) * (0.5 + 0.5 * pulse)), false, 2.0)
+			_overlay.draw_rect(rect.grow(2), Color(0.1, 0.0, 0.02))
+			_overlay.draw_rect(rect, Color(0.25, 0.0, 0.05))
+			var filled := Rect2(rect.position, Vector2(rect.size.x * clampf(fraction, 0, 1), rect.size.y))
+			_overlay.draw_rect(filled, red.lerp(Color(1, 0.4, 0.4), pulse * 0.3))
+			# Tattoo markings: a black zigzag running along the bar.
+			var points := PackedVector2Array()
+			var x := rect.position.x
+			var up := true
+			while x <= filled.end.x:
+				points.append(Vector2(x, rect.position.y + (3.0 if up else rect.size.y - 3.0)))
+				x += 9
+				up = not up
+			if points.size() > 1:
+				_overlay.draw_polyline(points, Color(0.05, 0.0, 0.0, 0.85), 2.0)
+			_draw_outlined("HP ??? / ???", Vector2(22, rect.end.y + 15), 12, Color(1, 0.5, 0.5))
+
+
+## Text with a black outline, so it reads over anything.
+func _draw_outlined(text: String, at: Vector2, size: int, color: Color) -> void:
+	for offset in [Vector2(-1, 0), Vector2(1, 0), Vector2(0, -1), Vector2(0, 1)]:
+		_overlay.draw_string(_font, at + offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color.BLACK)
+	_overlay.draw_string(_font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 
 
 ## Some enemies (Hopkuna) fill the screen with a pulsing aura during their turns:
@@ -1135,7 +1365,7 @@ func _draw_box_contents() -> void:
 			var visible_text := _text.substr(0, int(maxf(_typed, 0.0)))
 			var lines := visible_text.split("\n")
 			for i in lines.size():
-				_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(i)), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+				_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(i)), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, _text_color)
 		State.TARGET_ENEMY:
 			for i in _list.size():
 				var enemy: Enemy = _list[i]
@@ -1250,7 +1480,11 @@ func _draw_backdrop() -> void:
 	if state == State.GAME_OVER or _data == null:
 		return
 	var color := _data.backdrop
-	var t := Time.get_ticks_msec() / 1000.0
+	# Once the tent's music cuts out, the background goes dim and stops moving.
+	var frozen := _tent_phase != ""
+	if frozen:
+		color = color.darkened(0.6)
+	var t := Time.get_ticks_msec() / 1000.0 if not frozen else _frozen_at
 	var drift := Vector2(fmod(t * 8.0, DIAMOND_SPACING), fmod(t * 4.0, DIAMOND_SPACING))
 	var columns := int(BACKDROP.size.x / DIAMOND_SPACING) + 2
 	var rows := int(BACKDROP.size.y / (DIAMOND_SPACING * 0.5)) + 3

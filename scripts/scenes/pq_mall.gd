@@ -4,8 +4,12 @@ extends Area
 ## Story beats (flags in Game.flags):
 ##   mall_arrived      First visit: Hop shows Elric around.
 ##   heard_lore        Nat tells the old story about the fragments (optional).
-##   heard_westview    Nassan points Elric toward Westview High School (needed to move on).
-##   mall_done         Elric heads east to Westview High School.
+##   heard_westview    Nassan points Elric toward Westview High School... after dark.
+##   played_games      NCWethan and Ronin rope Elric into Rock Paper Scissors. Hours pass.
+##   mall_time         "day" -> "afternoon" -> "evening" -> "night". People move around
+##                     and say new things as the day goes on. Talking to a few people in
+##                     the afternoon makes it evening; Nassan sends everyone off at nightfall.
+##   mall_done         Elric heads east to Westview High School (only once it's night).
 
 const SCENE := "res://scenes/pq_mall.tscn"
 const MT_CARMEL_SCENE := "res://scenes/mt_carmel.tscn"
@@ -35,16 +39,64 @@ const KNOTTY_STOCK := [
 	{"name": "Salmon Burger", "heal": 40, "price": 22},
 ]
 
+# --- Time of day ---
+
+## The color the world is tinted at each time of day.
+const TINTS := {
+	"day": Color(1, 1, 1),
+	"afternoon": Color(1.0, 0.9, 0.76),
+	"evening": Color(0.92, 0.66, 0.62),
+	"night": Color(0.5, 0.52, 0.76),
+}
+
+## Where everyone stands at each time of day. Anyone missing has gone home.
+const SPOTS := {
+	"day": {
+		"Supreme": Vector2(250, 178), "Crayola": Vector2(390, 178), "NCWethan": Vector2(510, 218),
+		"Ronin": Vector2(550, 218), "MuffinMage": Vector2(630, 218), "Rooster": Vector2(430, 298),
+		"Sansworth": Vector2(250, 398), "Nat": Vector2(910, 298), "Nassan": Vector2(1050, 538),
+	},
+	"afternoon": {
+		"Supreme": Vector2(960, 440), "Crayola": Vector2(560, 236), "NCWethan": Vector2(470, 300),
+		"Ronin": Vector2(510, 300), "MuffinMage": Vector2(640, 236), "Rooster": Vector2(300, 300),
+		"Sansworth": Vector2(200, 420), "Nat": Vector2(910, 298), "Nassan": Vector2(1050, 538),
+	},
+	"evening": {
+		"Crayola": Vector2(950, 298), "NCWethan": Vector2(700, 470), "Ronin": Vector2(740, 470),
+		"MuffinMage": Vector2(600, 236), "Rooster": Vector2(430, 528), "Sansworth": Vector2(330, 330),
+		"Nat": Vector2(910, 298), "Nassan": Vector2(640, 400),
+	},
+	"night": {
+		"NCWethan": Vector2(700, 470), "Ronin": Vector2(740, 470), "Nat": Vector2(910, 298),
+		"Nassan": Vector2(1050, 538),
+	},
+}
+
+## People who wander back and forth at a time of day: [from, to].
+const WANDERERS := {
+	"afternoon": {"Rooster": [Vector2(300, 300), Vector2(760, 300)], "Sansworth": [Vector2(200, 420), Vector2(820, 420)]},
+}
+
+## How many people to talk to in the afternoon before the sun starts going down.
+const AFTERNOON_TALKS := 3
+
 var hop: Character
 
 
 func _ready() -> void:
 	setup_area(ENTRY)
 	Game.play_music("mall")
+	var tint := CanvasModulate.new()
+	tint.color = TINTS[_time_of_day()]
+	add_child(tint)
 	_add_signs()
 	_place_people()
 	_place_hotspots()
 	_start.call_deferred()
+
+
+func _time_of_day() -> String:
+	return Game.flags.get("mall_time", "day")
 
 
 # --- The map --------------------------------------------------------------
@@ -143,17 +195,21 @@ func _place_people() -> void:
 	add_character(hop, player.position + Vector2(-20, 0))
 	hop.follow = player
 
-	add_npc("Supreme", Vector2(250, 178), _talk_supreme)
-	add_npc("Crayola", Vector2(390, 178), _talk_crayola)
-	add_npc("NCWethan", Vector2(510, 218), _talk_ncwethan)
-	add_npc("Ronin", Vector2(550, 218), _talk_ronin)
-	add_npc("MuffinMage", Vector2(630, 218), _talk_muffinmage)
-	add_npc("Rooster", Vector2(430, 298), _talk_rooster)
-	add_npc("Sansworth", Vector2(250, 398), _talk_sansworth)
-	add_npc("Nat", Vector2(910, 298), _talk_nat)
-	add_npc("Nassan", Vector2(1050, 538), _talk_nassan)
+	var time := _time_of_day()
+	var day_talks := {
+		"Supreme": _talk_supreme, "Crayola": _talk_crayola, "NCWethan": _talk_ncwethan,
+		"Ronin": _talk_ronin, "MuffinMage": _talk_muffinmage, "Rooster": _talk_rooster,
+		"Sansworth": _talk_sansworth, "Nat": _talk_nat, "Nassan": _talk_nassan,
+	}
+	var spots: Dictionary = SPOTS[time]
+	for who in spots:
+		var talk: Callable = day_talks[who] if time == "day" else _talk_later.bind(who)
+		var npc := add_npc(who, spots[who], talk)
+		var wander: Dictionary = WANDERERS.get(time, {})
+		if wander.has(who):
+			npc.patrol(wander[who][0], wander[who][1], 45.0)
 
-	var star := Character.new().setup(preload("res://art/sprites/save_star.png"), null, false)
+	var star := make_save_star()
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
@@ -175,6 +231,8 @@ func _start() -> void:
 	await wait_for_fade()
 	if not flag("mall_arrived"):
 		await run_cutscene(_arrival)
+	elif not flag("seen_" + _time_of_day()):
+		await run_cutscene(_new_time_of_day)
 
 
 func _physics_process(_delta: float) -> void:
@@ -202,6 +260,13 @@ func _head_east() -> void:
 	if not flag("heard_westview"):
 		await Game.dialogue.say([
 			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first. Somebody here has to know something.", "mood": "shocked"},
+		])
+		await push_player(Vector2(-30, 0))
+		return
+	if _time_of_day() != "night":
+		await Game.dialogue.say([
+			{"who": "Hop", "text": "It's still light out. Nassan said Westview\nonly gets weird after DARK.", "mood": "sad"},
+			{"who": "Hop", "text": "...Not that I'm in a hurry to go.", "mood": "smug"},
 		])
 		await push_player(Vector2(-30, 0))
 		return
@@ -320,6 +385,9 @@ func _talk_crayola() -> void:
 
 
 func _talk_ncwethan() -> void:
+	if flag("heard_westview") and not flag("played_games"):
+		await _play_games()
+		return
 	await chat("ncwethan", [
 		{"who": "NCWethan", "text": "KING ME!!!", "mood": "happy"},
 		{"who": "Ronin", "text": "THAT'S NOT EVEN A REAL MOVE!\nYOU JUMPED THREE PIECES SIDEWAYS!", "mood": "angry"},
@@ -342,6 +410,9 @@ func _talk_ncwethan() -> void:
 
 
 func _talk_ronin() -> void:
+	if flag("heard_westview") and not flag("played_games"):
+		await _play_games()
+		return
 	await chat("ronin", [
 		{"who": "Ronin", "text": "Don't let him fool you.\nI am a MASTER strategist.", "mood": "smug"},
 		"* (Ronin has lost 14 games of checkers in a row.)",
@@ -502,7 +573,248 @@ func _talk_nassan() -> void:
 		{"who": "Nassan", "text": "If I had to bet? The next fragment is there."},
 		{"who": "Hop", "text": "Westview? At night?\n...Sounds fun. Totally not terrifying.", "mood": "shocked"},
 		{"who": "Nassan", "text": "Here's the plan: stock up on food, save your progress,\nthen head east down the road."},
+		{"who": "Nassan", "text": "After dark. Not before. Whatever's in there\nonly wakes up at night."},
+		{"who": "Hop", "text": "It's like... two in the afternoon.", "mood": "shocked"},
+		{"who": "Nassan", "text": "Then you've got time to kill.", "mood": "smug"},
 		{"who": "Nassan", "text": "And Elric... whatever you're carrying,\nit's heavier than it looks. Don't carry it alone.", "mood": "sad"},
 	])
 	Game.flags["heard_westview"] = true
-	Game.set_objective("Stock up, then head east to Westview High.")
+	Game.set_objective("Kill some time until it gets dark.")
+	await get_tree().create_timer(0.3).timeout
+	await Game.dialogue.say([
+		{"who": "NCWethan", "tag": "???", "face": false, "text": "HEYYY!! NEW PERSON!! OVER HERE!!"},
+		{"who": "NCWethan", "tag": "???", "face": false, "text": "WE NEED A THIRD PLAYER!! IT'S AN EMERGENCY!!"},
+		{"who": "Hop", "text": "...That's NCWethan. It's never an emergency.", "mood": "smug"},
+		{"who": "Hop", "text": "We should probably go anyway.\nHe'll just keep yelling.", "mood": "happy"},
+	])
+	Game.set_objective("See what NCWethan and Ronin are yelling about.")
+
+
+# --- Killing time: Rock Paper Scissors --------------------------------------
+# NCWethan and Ronin need a tiebreaker. Neither of them can hide what they're
+# about to throw, if you look closely.
+
+const THROWS := ["Rock", "Paper", "Scissors"]
+
+## What each opponent throws each round, and the tell that gives it away.
+const ROUNDS := [
+	["NCWethan", 0, "* (NCWethan's fist is crackling with lightning.\n*  He is NOT good at hiding it.)"],
+	["NCWethan", 2, "* (NCWethan wiggles two sparking fingers at you.\n*  Snip snip.)"],
+	["NCWethan", 1, "* (NCWethan is holding his hand out flat,\n*  like he's about to high-five the air.)"],
+	["Ronin", 2, "* (Ronin hides his hand behind his back.)\n* (...But his shadow on the ground is making a V.)"],
+]
+
+
+func _play_games() -> void:
+	await Game.dialogue.say([
+		{"who": "NCWethan", "text": "NEW PERSON!! You came!!", "mood": "happy"},
+		{"who": "Ronin", "text": "We need a tiebreaker. He says he won checkers.\nHe did NOT win checkers.", "mood": "angry"},
+		{"who": "NCWethan", "text": "So we're settling it with the most scientific\ngame ever invented!!", "mood": "happy"},
+		{"who": "NCWethan", "text": "ROCK!! PAPER!! SCISSORS!!", "mood": "happy"},
+		{"who": "Ronin", "text": "Three rounds against him, then one against me.\nBeat us both and you're the champion.", "mood": "smug"},
+		{"who": "Hop", "text": "I'll hold your stuff. And judge. Mostly judge.", "mood": "happy"},
+	])
+	var wins := 0
+	for i in ROUNDS.size():
+		var opponent: String = ROUNDS[i][0]
+		var their_throw: int = ROUNDS[i][1]
+		await Game.dialogue.say([
+			"* (Round %d. You face %s.)" % [i + 1, opponent],
+			ROUNDS[i][2],
+		])
+		var mine := await Game.dialogue.ask({"who": opponent, "text": "ROCK... PAPER... SCISSORS... SHOOT!!"}, THROWS)
+		var result := _rps(mine, their_throw)
+		var line := "* (You throw %s. %s throws %s.)" % [THROWS[mine].to_upper(), opponent, THROWS[their_throw].to_upper()]
+		if result > 0:
+			wins += 1
+			Game.play_sfx("select")
+			await Game.dialogue.say([line, "* (You win the round!)"])
+		elif result == 0:
+			await Game.dialogue.say([line, "* (A tie.)"])
+		else:
+			Game.play_sfx("miss")
+			await Game.dialogue.say([line, "* (You lose the round.)"])
+
+	Game.flags["played_games"] = true
+	Game.flags["rps_wins"] = wins
+	if wins == ROUNDS.size():
+		Game.flags["rps_champion"] = true
+		await Game.dialogue.say([
+			{"who": "NCWethan", "text": "FOUR FOR FOUR?! Are you PSYCHIC?!", "mood": "shocked"},
+			{"who": "Ronin", "text": "...How did you know? I hid my hand.\nI hid it PERFECTLY.", "mood": "shocked"},
+			{"who": "Hop", "text": "Elric's the champion! Bow before the champion!", "mood": "happy"},
+			{"who": "Ronin", "text": "Fine. Loser buys the curly fries. Here.", "mood": "sad"},
+		])
+		if Game.items.size() < Game.MAX_ITEMS:
+			Game.items.append({"name": "Curly Fries", "heal": 20})
+			Game.play_sfx("item")
+			await Game.dialogue.say(["* (You got the Curly Fries.)"])
+	else:
+		await Game.dialogue.say([
+			{"who": "NCWethan", "text": "%d out of 4! Not bad, new person!" % wins, "mood": "happy"},
+			{"who": "Ronin", "text": "Rematch. We need a rematch.\nBest of... a hundred.", "mood": "angry"},
+		])
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "Oh no. They're doing best of a hundred.", "mood": "shocked"},
+		{"who": "Hop", "text": "...Well. We DID have time to kill.", "mood": "smug"},
+		"* (You play. And play. And play.)",
+		"* (Hop loses eleven games of checkers in a row\n*  and blames the board.)",
+		"* (The shadows in the parking lot get longer.)",
+	])
+	await _pass_time("afternoon")
+
+
+## +1 if `mine` beats `theirs`, 0 for a tie, -1 if it loses.
+func _rps(mine: int, theirs: int) -> int:
+	if mine == theirs:
+		return 0
+	return 1 if (mine - theirs + 3) % 3 == 1 else -1
+
+
+# --- The day goes on ---------------------------------------------------------
+
+## Fades out, moves the clock forward, and reloads the mall: everyone moves to
+## where they'd be at that time, and the light changes.
+func _pass_time(to: String) -> void:
+	Game.flags["mall_time"] = to
+	await Game.change_scene(SCENE, player.position)
+
+
+## The first moment of a new time of day.
+func _new_time_of_day() -> void:
+	var time := _time_of_day()
+	Game.flags["seen_" + time] = true
+	match time:
+		"afternoon":
+			await Game.dialogue.say([
+				"* (A few hours pass.)",
+				"* (The afternoon sun turns the parking lot gold.\n*  People drift around the mall.)",
+				{"who": "Hop", "text": "Still not dark. Let's go bug people\nuntil the sun gets the hint.", "mood": "smug"},
+			])
+			Game.set_objective("Hang around the mall until it gets dark.")
+		"evening":
+			await Game.dialogue.say([
+				"* (The sky turns orange, then pink.)",
+				"* (Shops start flipping their signs to CLOSED.)",
+				{"who": "Hop", "text": "Hey. Nassan's waving at us.", "mood": "sad"},
+			])
+			Game.set_objective("Talk to Nassan.")
+		"night":
+			await Game.dialogue.say([
+				"* (Night falls over the PQ Mall.)",
+				"* (The parking lot lights buzz on, one by one.)",
+				{"who": "Hop", "text": "...Okay. It's dark.", "mood": "sad"},
+				{"who": "Hop", "text": "Westview's down the road, to the east.\nI'm right behind you. ...Way behind you.", "mood": "sad"},
+			])
+			Game.set_objective("Head east to Westview High.")
+
+
+## Talking to people in the afternoon, evening and at night.
+func _talk_later(who: String) -> void:
+	var time := _time_of_day()
+	if time == "evening" and who == "Nassan":
+		await _nightfall()
+		return
+	var lines: Array = LATER_LINES[time].get(who, [["* (%s waves.)" % who]])
+	var id := who.to_lower() + "_" + time
+	var first_time := int(Game.flags.get("talks_" + id, 0)) == 0
+	await chat(id, lines[0], lines.slice(1))
+	# A few conversations in, the sun starts going down.
+	if time == "afternoon" and first_time:
+		var talks := int(Game.flags.get("afternoon_talks", 0)) + 1
+		Game.flags["afternoon_talks"] = talks
+		if talks >= AFTERNOON_TALKS:
+			await Game.dialogue.say([{"who": "Hop", "text": "Is it just me, or is the sky getting... orange-er?", "mood": "shocked"}])
+			await _pass_time("evening")
+
+
+func _nightfall() -> void:
+	await Game.dialogue.say([
+		{"who": "Nassan", "text": "There you are. The sun's almost down."},
+		{"who": "Nassan", "text": "Everyone's heading home. You two are heading to Westview."},
+		{"who": "Nassan", "text": "Remember: the fragment's somewhere inside. If something\nfeels wrong in there... it probably is."},
+		{"who": "Hop", "text": "Great pep talk. Really. Ten out of ten.", "mood": "sad"},
+		{"who": "Nassan", "text": "I'll be at the road. Go when you're ready.", "mood": "smug"},
+		"* (The last bit of sunlight slips away.)",
+	])
+	await _pass_time("night")
+
+
+## What everyone says later in the day: [first conversation, then repeats...].
+const LATER_LINES := {
+	"afternoon": {
+		"Supreme": [
+			[{"who": "Supreme", "text": "Field research. Jack in the Box sells 40% more\ncurly fries after 3 PM. I'm here to find out why."}, {"who": "Supreme", "text": "...It's because they're good. Research complete.", "mood": "happy"}],
+			[{"who": "Supreme", "text": "Fun fact: you've been at this mall for four hours.\nThat's above average. Congratulations."}],
+		],
+		"Crayola": [
+			[{"who": "Crayola", "text": "MuffinMage is teaching me a card game.\nI think he's making up the rules.", "mood": "happy"}, {"who": "MuffinMage", "text": "I am absolutely making up the rules."}, {"who": "Crayola", "text": "...I'm still winning.", "mood": "smug"}],
+			[{"who": "Crayola", "text": "Are you going somewhere tonight?\n...Be careful. Okay?", "mood": "sad"}],
+		],
+		"MuffinMage": [
+			[{"who": "MuffinMage", "text": "Second salmon burger of the day."}, {"who": "Hop", "text": "Is that... healthy?", "mood": "shocked"}, {"who": "MuffinMage", "text": "It's fish. Fish is brain food. I'm a genius now."}],
+			[{"who": "MuffinMage", "text": "Crayola beat me at my own made-up game.\nI've never been prouder or more upset."}],
+		],
+		"NCWethan": [
+			[{"who": "NCWethan", "text": "Ronin's on game 58 of best-of-a-hundred!!\nI'm winning by... uh... a lot? Maybe?", "mood": "happy"}, {"who": "Ronin", "text": "You're LOSING by six.", "mood": "angry"}, {"who": "NCWethan", "text": "That's a lot!!", "mood": "happy"}],
+			[{"who": "NCWethan", "text": "If you see Hop doing push-ups, tell him I'm\nstill the champion! Of push-ups! I did eleven!"}],
+		],
+		"Ronin": [
+			[{"who": "Ronin", "text": "Game 58. I've studied his every move.\nHe has no strategy. That's his strategy.", "mood": "angry"}, {"who": "Ronin", "text": "It's working, and I hate it."}],
+			[{"who": "Ronin", "text": "I'd play my guitar to pass the time, but\nmall security knows my face now.", "mood": "sad"}],
+		],
+		"Rooster": [
+			[{"who": "Rooster", "text": "Power walking. Look at this form.\nOlympic. Absolutely Olympic.", "mood": "smug"}, {"who": "Hop", "text": "You're walking in circles around a parking lot.", "mood": "smug"}, {"who": "Rooster", "text": "AROUND IT. Like a CHAMPION.", "mood": "angry"}],
+			[{"who": "Rooster", "text": "Can't talk. Lap 40.", "mood": "smug"}],
+		],
+		"Sansworth": [
+			[{"who": "Sansworth", "text": "I'm checking every car. One of them\nhas to be mine.", "mood": "happy"}, {"who": "Hop", "text": "Sansworth. You don't have a car.", "mood": "smug"}, {"who": "Sansworth", "text": "Not with THAT attitude."}],
+			[{"who": "Sansworth", "text": "This one's close. It's a car. My car is also a car."}],
+		],
+		"Nat": [
+			[{"who": "Nat", "text": "...Still reading.", "mood": "smug"}, "* (The book on his head has moved one page.)"],
+			[{"who": "Nat", "text": "Sunset's in about two hours.\nThe old stories always start at sunset."}],
+		],
+		"Nassan": [
+			[{"who": "Nassan", "text": "Not dark yet. I'll tell you when.\nGo enjoy the afternoon. That's an order.", "mood": "smug"}],
+			[{"who": "Nassan", "text": "Patience is part of the plan."}],
+		],
+	},
+	"evening": {
+		"Crayola": [
+			[{"who": "Crayola", "text": "Nat said I could sit here if I was quiet.", "mood": "happy"}, {"who": "Nat", "text": "You're doing great.", "mood": "smug"}, {"who": "Crayola", "text": "...Thanks.", "mood": "happy"}],
+		],
+		"NCWethan": [
+			[{"who": "NCWethan", "text": "Final score: Ronin 51, me 49!\nBut I had more FUN, so I win!!", "mood": "happy"}, {"who": "Ronin", "text": "That's not how winning works!!", "mood": "angry"}],
+		],
+		"Ronin": [
+			[{"who": "Ronin", "text": "Fifty-one to forty-nine. I WON.\nNobody is going to remember this, are they.", "mood": "sad"}],
+		],
+		"MuffinMage": [
+			[{"who": "MuffinMage", "text": "Knotty Barrel's closing. Last salmon burger of the day."}, {"who": "MuffinMage", "text": "Be careful tonight, fragment kid.\n...Kidding. Mostly."}],
+		],
+		"Rooster": [
+			[{"who": "Rooster", "text": "...Lap 112. My legs don't work anymore.", "mood": "sad"}, {"who": "Rooster", "text": "Don't tell anyone. I'm still the best person here.", "mood": "smug"}],
+		],
+		"Sansworth": [
+			[{"who": "Sansworth", "text": "I found a car! It's not mine.\nBut it let me sit on it. That's basically ownership.", "mood": "happy"}],
+		],
+		"Nat": [
+			[{"who": "Nat", "text": "The sun's going down.", "mood": "sad"}, {"who": "Nat", "text": "In the old story, the fragments glowed brighter\nat night. Keep yours close."}],
+		],
+	},
+	"night": {
+		"NCWethan": [
+			[{"who": "NCWethan", "text": "We're staying to look at the stars!!\nRonin says that one's a planet. It's a plane.", "mood": "happy"}, {"who": "NCWethan", "text": "Good luck at Westview, new person!!\nIf anything's scary, just ZAP IT!!", "mood": "happy"}],
+		],
+		"Ronin": [
+			[{"who": "Ronin", "text": "It's a planet.", "mood": "smug"}, "* (It's blinking.)", {"who": "Ronin", "text": "...Planets can blink."}],
+		],
+		"Nat": [
+			[{"who": "Nat", "text": "Goodnight.", "mood": "smug"}, "* (He's not going anywhere. He's just saying it.)"],
+		],
+		"Nassan": [
+			[{"who": "Nassan", "text": "Westview's east, down the road.\nGo. Before I change the plan."}],
+		],
+	},
+}

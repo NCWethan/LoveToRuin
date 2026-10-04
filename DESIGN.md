@@ -47,6 +47,11 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Nat** | By the bench near Jack in the Box | **Lore:** the old story of twelve fragments and Hopkuna, with the last page torn out. Hop goes still. |
 | **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. |
 
+**The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. NCWethan yells for a third player, and he and Ronin rope Elric into **Rock Paper Scissors** (3 rounds vs. NCWethan, 1 vs. Ronin). Neither can hide their throw: NCWethan's fist crackles, his fingers go "snip snip", and Ronin's *shadow* gives his away. Win all four and Ronin pays up with Curly Fries. Then hours pass:
+- **Afternoon** (golden light): everyone has moved. Supreme does "field research" at Jack in the Box, Crayola and MuffinMage play a made-up card game, Rooster power-walks laps, Sansworth checks every car. Talking to three people makes the sky go orange.
+- **Evening** (pink): shops close, people say goodbye, and Nassan waves Elric over. Talking to him brings nightfall.
+- **Night** (blue): only NCWethan, Ronin (stargazing), Nat and Nassan are left. The road east finally opens. Trying to leave before dark, Hop stops you.
+
 ## 3. The main character
 
 **Elric** (original character) — pronouns: **they/them**
@@ -413,9 +418,11 @@ How it pays off on each route:
 ### The route choice
 When Elric **meets the REVOLUTION Corps**, they ask what Elric wants to do, and Elric must **manually choose a route**:
 
-> **Go with Hop?** *(Genocide)*
-> **Chart your own path?** *(Neutral)*
-> **Join the REVOLUTION Corps?** *(Pacifist)*
+> **Go with Hop.**
+> **Go my own way.**
+> **Join the REVOLUTION Corps.**
+
+The route names (Genocide, Neutral, Pacifist) are **never shown** in the game, not in the choice and not on the ending screen. The player should choose what Elric wants, not what they know will happen. (Behind the scenes: Go with Hop = Genocide, Go my own way = Neutral, Join the Corps = Pacifist.)
 
 What each choice locks:
 
@@ -499,12 +506,21 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [ ] Party selection (Elric + 2 of the cast) — *needs decisions: see Open questions*
 
 ### Overworld features (from feedback)
-- [x] **Bag** (B, C or Ctrl, anywhere outside battle): party HP, LV, money, BOND, fragments; items can be USED, CHECKED (description) or DROPPED
+- [x] **Bag** (B only, anywhere outside battle): party HP, LV, money, BOND, fragments; items can be USED, CHECKED (description) or DROPPED
 - [x] **Storage boxes** next to each SAVE point; every box shares the same storage (12 slots), saved with the game
 - [x] **Random encounters** in hostile areas (Westview's hallway and classroom), with a "!" over Elric
 - [x] Wandering enemies you walk into are gone for good after the fight
 - [x] **Objectives**: a "NEW OBJECTIVE" banner at each story beat; the current one is shown in the bag
 - [x] Eggo and BigJoe6 get picked up by a car after the tutorial fight
+- [x] SAVE stars twinkle between two frames, like in Undertale
+- [x] A compass (N, E, S, W) in the top-right corner
+- [x] Looking at scenery: trees ("It's a tree."), benches, walls, windows, lockers, desks, chalkboards...
+- [x] Mt. Carmel's front doors lock the moment Elric touches them
+- [x] **Hidden-in-plain-sight puzzles:** nothing says "PUZZLE", but something clearly blocks the way
+  - Mt. Carmel: the field gate is chained shut. Hop mentions the coach loses his keys ("...the week before, a tree"). One courtyard tree glints: shake it for the keys.
+  - PQ Mall: Rock Paper Scissors, where you read each opponent's tell.
+  - Westview: the endless hallway (humming locker) and the bell order (chalkboard).
+  - Hilltop Park: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE (use the compass): turn off the corner you want to walk through.
 
 ### Battle polish (from feedback)
 - [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
@@ -515,6 +531,8 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Clear turn indicator: an arrow, "NAME'S TURN", a glow under whoever is choosing; teammates dim
 - [x] FIGHT: a "READY..." wind-up before the timing bar moves, colored zones (green = CRITICAL), a slash animation, white hit flash, bouncing damage numbers and draining HP bars
 - [x] Bigger HP bars
+- [x] Hop attacks differently from Elric: three fast punches with red shockwaves and a red X (a hint of Hopkuna)
+- [x] Boss health bars across the top of the screen, styled per boss (Wally: gold fur and claw marks; Hopkuna: pulsing red with tattoo zigzags and "??? / ???")
 
 ### Milestone 6 — Westview High School
 - [x] The twisted school dungeon: rooms, puzzles, enemies
@@ -525,8 +543,15 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - **The endless hallway** — walking to the far end loops you back to the start; a poster gets more frantic each loop ("NO RUNNING" → "TURN BACK" → "TURN BACK!!" → "YOU'VE BEEN HERE"). Opening the **humming locker** breaks the loop.
 - **The classroom** — the chalkboard says to ring the bells **3rd, then 1st, then 2nd**; a wrong bell buzzes and resets. Solving it unlocks the gym.
 - **The gym** — SAVE point, then **Wally Wolverine**, Westview's mascot (he/him): an empty costume brought to life by fragment 2. Look: brown furry wolverine, darker markings around yellow-green eyes, tan snout and belly, black nose, fangs, big clawed paws. Attacks: confetti, claw swipe (three diagonal claw marks flash, then slash), claw drop (sets of three claws plunge from the top), red dodgeballs (from the sides and the top, each bouncing to its own height), giant foam finger. ACTs: Cheer ("GO WOLVERINES!"), Look Inside, Paw Five.
-- **Wandering enemies** you bump into: **Pop Quiz** (hallway; pencils, answer bubbles; ACT: Answer, Study) and **Hall Pass** (classroom; fluttering passes, dashing zoom; ACT: Sign It, Ask Directions).
-- **Afterwards** — fragment 2 rolls out of Wally's costume. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
+- **Random encounters only** (no enemies wandering around), each with its own odds per room (see `westview_battles.gd`). Every enemy has 3+ attacks:
+  - **Pop Quiz**: pencils, answer bubbles, scantron columns (one blank bubble is the way through). ACT: Answer, Study.
+  - **Hall Pass**: fluttering passes, dashing zoom, tardy slips from the corners. ACT: Sign It, Ask Directions.
+  - **Mystery Meat** (cafeteria): gravy blobs that splatter, spinning lunch trays, a spread of peas. ACT: Compliment, Add Salt, Take a Bite (don't).
+  - **Tardy Bell**: rolling sound waves with a gap, a ring of notes, the alarm (a flickering line that blasts). ACT: Cover Ears, Be On Time.
+  - **Overdue Book** (47 years late): fluttering pages, bookmarks aimed at you, a sliding bookshelf with a gap. ACT: Read It, Return It, Shush.
+  - **The tent** (very rare, ~1%): a three-person tent. The music cuts off. Red text crawls into the box ("We were here, too." "Three of us." "We remember."), then **DID YOU THINK WE WOULD FORGET?** shakes across the screen, everything goes black, a distorted laugh plays, and you're put back where you were.
+- **Wally is a miniboss**: a gold boss health bar with claw marks, 200 HP, and three extra attacks (rising bleachers, a mascot spin that flings claws in a spiral, and FRENZY: claws and dodgeballs at once). Sparing him is a challenge: four ACTs (Cheer, Look Inside, Paw Five, The Wave) worth a little each, and he gets bored if the same ACT is used twice in a row, even by different party members.
+- **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
 
 ### Milestone 7 — Hilltop Park and the climax
 - [x] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)

@@ -35,8 +35,17 @@ const CORPS := {
 	"Rooster": Vector2(0, 75),
 }
 
+## The field's sprinklers, one per corner (named like the compass). While a corner's
+## sprinkler is on, the water pushes Elric back out of it. The control box by the
+## benches turns them off.
+const SPRINKLERS := ["NW", "NE", "SW", "SE"]
+const FIELD_RECT := Rect2(160, 120, 480, 320)
+const CONTROL_BOX := Vector2(630, 474)
+
 var hop: Character
 var corps: Dictionary = {}
+## Where Elric last stood that wasn't soaking wet (to push them back to).
+var _dry_spot: Vector2
 var _decor: Node2D
 var _night: CanvasModulate
 var _font: Font
@@ -65,6 +74,8 @@ func _ready() -> void:
 
 	_place_people()
 	world.add_child(Hotspot.create(Vector2(110, 96), _read_map))
+	world.add_child(Hotspot.create(CONTROL_BOX, _control_box))
+	_dry_spot = player.position
 	fit_camera_to_room()
 	_start.call_deferred()
 
@@ -107,6 +118,18 @@ func _draw_decor() -> void:
 	_decor.draw_rect(banner, Color8(235, 225, 200))
 	_decor.draw_string(_font, banner.position + Vector2(4, 12), "REVOLUTION", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(170, 30, 30))
 
+	# The sprinkler control box by the benches.
+	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-8, -18), Vector2(16, 16)), Color8(60, 105, 70))
+	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-8, -18), Vector2(16, 16)), Color8(35, 60, 40), false, 1.0)
+	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-5, -15), Vector2(10, 4)), Color8(200, 200, 190))
+	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-2, -2), Vector2(4, 4)), Color8(80, 80, 80))
+
+	# Sprinklers spraying in each corner of the field that's still switched on.
+	if not flag("hp_erupted"):
+		for corner in SPRINKLERS:
+			if _sprinkler_on(corner):
+				_draw_sprinkler(_quadrant(corner))
+
 	# The glow from the buried fragment, then the crater it leaves behind.
 	if not flag("hp_erupted"):
 		var pulse := 0.35 + 0.25 * sin(_time * 2.5)
@@ -132,6 +155,89 @@ func _draw_decor() -> void:
 			_decor.draw_line(from, from + dir * randf_range(6, 14), color, 2.0)
 
 
+## A sprinkler head in the middle of a corner of the field, sweeping a fan of
+## water back and forth, with a faint mist over the whole corner.
+func _draw_sprinkler(area: Rect2) -> void:
+	_decor.draw_rect(area, Color(0.55, 0.75, 1.0, 0.12))
+	var head := area.get_center()
+	_decor.draw_circle(head, 3, Color8(90, 90, 96))
+	var sweep := sin(_time * 1.6) * 1.4
+	for i in 7:
+		var angle := -PI / 2 + sweep + (i - 3) * 0.12
+		for d in 6:
+			var reach := fmod(_time * 90.0 + d * 22.0 + i * 7.0, 130.0)
+			var drop := head + Vector2.from_angle(angle) * reach + Vector2(0, reach * reach * 0.004)
+			if area.has_point(drop):
+				_decor.draw_rect(Rect2(drop, Vector2(2, 2)), Color(0.75, 0.9, 1.0, 0.85 - reach / 160.0))
+
+
+func _quadrant(corner: String) -> Rect2:
+	var west := corner.ends_with("W")
+	var north := corner.begins_with("N")
+	var left := FIELD_RECT.position.x if west else CRATER.x
+	var right := CRATER.x if west else FIELD_RECT.end.x
+	var top := FIELD_RECT.position.y if north else CRATER.y
+	var bottom := CRATER.y if north else FIELD_RECT.end.y
+	return Rect2(left, top, right - left, bottom - top)
+
+
+func _sprinkler_on(corner: String) -> bool:
+	return not flag("sprinkler_off_" + corner)
+
+
+## True if Elric is standing in a corner of the field that's being sprayed.
+func _in_spray() -> bool:
+	if flag("hp_erupted"):
+		return false
+	for corner in SPRINKLERS:
+		if _sprinkler_on(corner) and _quadrant(corner).has_point(player.position):
+			return true
+	return false
+
+
+## Walked into the water: get pushed back out.
+func _soaked() -> void:
+	Game.play_sfx("miss")
+	var back := _dry_spot - player.position
+	await push_player((back.normalized() if back.length() > 0.1 else Vector2.DOWN) * 26.0)
+	# Only the first couple of soakings get any comment.
+	var times := int(Game.flags.get("hp_soaked", 0))
+	Game.flags["hp_soaked"] = times + 1
+	if times == 0:
+		await Game.dialogue.say([
+			"* (Sprinkler water blasts you in the face.)",
+			{"who": "Hop", "text": "BLEGH. Who runs sprinklers at night?!", "mood": "angry"},
+			{"who": "Hop", "text": "...Revolution practically lives out here.\nThey've gotta have a way to shut these off.", "mood": "sad"},
+		])
+	elif times == 1:
+		await Game.dialogue.say(["* (Still wet. Still sprinkling.)"])
+
+
+## The control box: four switches, one for each corner of the field.
+func _control_box() -> void:
+	if flag("hp_erupted"):
+		await Game.dialogue.say(["* (The sprinkler control box. Nobody needs it now.)"])
+		return
+	if not flag("hp_box_seen"):
+		Game.flags["hp_box_seen"] = true
+		await Game.dialogue.say([
+			"* (A sprinkler control box. The lid is unlocked.)",
+			"* (Four switches inside, each with a faded label.)",
+		])
+	while true:
+		var states: Array[String] = []
+		for corner in SPRINKLERS:
+			states.append("%s %s" % [corner, "ON" if _sprinkler_on(corner) else "off"])
+		var choice := await Game.dialogue.ask("* (" + "    ".join(states) + ")\n* (Flip which switch?)", SPRINKLERS + ["Leave"])
+		if choice >= SPRINKLERS.size():
+			return
+		var corner: String = SPRINKLERS[choice]
+		var turning_off := _sprinkler_on(corner)
+		Game.flags["sprinkler_off_" + corner] = turning_off
+		Game.play_sfx("select")
+		await Game.dialogue.say(["* (Click. Out on the field, a sprinkler %s.)" % ("hisses and stops" if turning_off else "sputters back on")])
+
+
 # --- People -----------------------------------------------------------------
 
 func _place_people() -> void:
@@ -152,7 +258,7 @@ func _place_people() -> void:
 	else:
 		hop.follow = player
 
-	var star := Character.new().setup(preload("res://art/sprites/save_star.png"), null, false)
+	var star := make_save_star()
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
@@ -177,6 +283,10 @@ func _physics_process(_delta: float) -> void:
 		if flag("chapter1_done") and not is_blocked() and player.position.y > 555:
 			run_cutscene(_leave_after_chapter)
 		return
+	if _in_spray():
+		run_cutscene(_soaked)
+		return
+	_dry_spot = player.position
 	if not flag("hp_erupted") and player.position.distance_to(CRATER) < ERUPT_DISTANCE:
 		run_cutscene(_eruption)
 	elif player.position.y > 555:
@@ -404,7 +514,9 @@ func _corps_arrives() -> void:
 # --- The route choice --------------------------------------------------------
 
 func _route_choice() -> void:
-	var options := ["Go with Hop? (Genocide)", "Chart your own path? (Neutral)", "Join the REVOLUTION Corps? (Pacifist)"]
+	# No route names here: the player should pick what Elric would want,
+	# not what they know will happen.
+	var options := ["Go with Hop.", "Go my own way.", "Join the REVOLUTION Corps."]
 	var routes := ["genocide", "neutral", "pacifist"]
 	var picked := -1
 	while picked < 0:

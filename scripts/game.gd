@@ -342,11 +342,11 @@ func _read_save() -> Dictionary:
 
 # --- Controls -------------------------------------------------------------
 
-## Enter confirms, X / Shift goes back, and C / Ctrl / B opens the bag.
+## Enter confirms, X / Shift goes back, and B opens the bag.
 func _add_input_actions() -> void:
 	_add_keys("confirm", [KEY_ENTER, KEY_KP_ENTER])
 	_add_keys("cancel", [KEY_X, KEY_SHIFT])
-	_add_keys("menu", [KEY_C, KEY_CTRL, KEY_B])
+	_add_keys("menu", [KEY_B])
 
 
 func _add_keys(action: String, keys: Array) -> void:

@@ -22,6 +22,10 @@ var follow: Player:
 var solid: bool = true
 ## Makes the sprite gently pulse (for glowing things).
 var glow: bool = false
+## If set, the picture flips through these frames (like the SAVE star twinkling).
+var frames: Array[Texture2D] = []
+## Seconds each of those frames shows for.
+var frame_time: float = 0.25
 ## The color it pulses toward while glowing.
 var glow_color: Color = Color(1.0, 0.5, 0.5)
 
@@ -110,7 +114,9 @@ func _process(delta: float) -> void:
 		var index := maxi(0, follow.trail.size() - 14)
 		var target := follow.trail[index]
 		var step := target - global_position
-		if step.length() > 0.5:
+		# Never walk right on top of the player (that would hide them): when the
+		# trail is too short to stay behind, just wait where we are.
+		if step.length() > 0.5 and target.distance_to(follow.global_position) > 16.0:
 			face(step)
 			global_position = global_position.move_toward(target, 160.0 * delta)
 			_walking = true
@@ -124,6 +130,9 @@ func _process(delta: float) -> void:
 
 
 func _update_sprite() -> void:
+	if not frames.is_empty():
+		_sprite.texture = frames[int(_time / frame_time) % frames.size()]
+		return
 	_sprite.flip_h = false
 	if _facing.x != 0 and not side.is_empty():
 		var frame := int(_time / 0.15) % 2 if _walking else 0

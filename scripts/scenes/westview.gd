@@ -38,6 +38,9 @@ const CLASSROOM_GYM_DOOR := Vector2(65 * T, 42 * T)
 const LOOP_X := 108 * T
 const LOOP_LENGTH := (108 - 47) * T
 
+## Where Wally sits at center court.
+const MASCOT_SPOT := Vector2(100 * T + 10, 42 * T)
+
 ## The order the bells must be rung in (1st, 2nd, 3rd period).
 const BELL_ORDER := [3, 1, 2]
 
@@ -51,10 +54,11 @@ var _glow_time: float = 0.0
 
 func _ready() -> void:
 	rooms.assign([_px(OUTSIDE), _px(HALLWAY), _px(CLASSROOM), _px(GYM)])
-	# Random fights in the hallway and the classroom.
+	# Random fights in the hallway and the classroom (see westview_battles.gd for how
+	# often each one shows up). There are no enemies wandering around: just these.
 	encounter_zones = [
-		[_px(HALLWAY), ["pop_quiz", "pop_quiz", "hall_pass"]],
-		[_px(CLASSROOM), ["hall_pass", "hall_pass", "pop_quiz"]],
+		[_px(HALLWAY), WestviewBattles.HALLWAY_ENCOUNTERS],
+		[_px(CLASSROOM), WestviewBattles.CLASSROOM_ENCOUNTERS],
 	]
 	setup_area(ENTRY)
 	Game.play_music("westview")
@@ -193,8 +197,6 @@ func _place_people() -> void:
 	add_character(hop, player.position + Vector2(-20, -4))
 	hop.follow = player
 
-	add_roamer("pop_quiz", "pop_quiz", Vector2(88 * T, 12 * T), Vector2(102 * T, 12 * T))
-	add_roamer("hall_pass", "hall_pass", Vector2(50 * T, 47 * T), Vector2(63 * T, 47 * T))
 
 	add_storage_box(Vector2(9 * T + 36, 12 * T + 10))
 	add_storage_box(Vector2(86 * T + 36, 45 * T))
@@ -209,11 +211,21 @@ func _place_people() -> void:
 
 	if not flag("has_fragment_2"):
 		mascot = Cast.make("wally")
-		add_character(mascot, Vector2(100 * T + 10, 42 * T))
+		add_character(mascot, MASCOT_SPOT if not flag("mascot_started") else MASCOT_SPOT + Vector2(-30, 0))
+	else:
+		_add_empty_costume()
+
+
+## Wally's empty costume, slumped on the gym floor after the fight.
+func _add_empty_costume() -> Character:
+	var costume := Character.new().setup(load("res://art/sprites/wally_slump.png"), null, false)
+	costume.on_interact = func() -> void:
+		await Game.dialogue.say(["* (Wally's costume. Empty and limp.)", "* (It smells like a gym bag.)"])
+	return add_character(costume, MASCOT_SPOT + Vector2(-30, 0))
 
 
 func _add_save_point(at: Vector2, lines: Array) -> void:
-	var star := Character.new().setup(preload("res://art/sprites/save_star.png"), null, false)
+	var star := make_save_star()
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = func() -> void:
@@ -285,6 +297,9 @@ func _back_from_battle() -> bool:
 	handled = await handle_battle_return({
 		"pop_quiz": ["* (Pop Quiz floats away, satisfied with its grade.)", "* (Pop Quiz crumples up and blows away.)"],
 		"hall_pass": ["* (Hall Pass finally gets where it was going.)", "* (Hall Pass snaps in half. ...Oops.)"],
+		"mystery_meat": ["* (Mystery Meat slides back onto its tray, content.)", "* (Mystery Meat splats. Nobody will miss it.)"],
+		"tardy_bell": ["* (Tardy Bell dings softly and goes back on the wall.)", "* (Tardy Bell cracks. It'll never ring again.)"],
+		"overdue_book": ["* (Overdue Book flaps off toward the library. Finally.)", "* (Overdue Book's pages scatter down the hall.)"],
 	})
 	Game.busy = false
 	_cutscene_running = false
@@ -474,18 +489,37 @@ func _wake_mascot() -> void:
 func _after_mascot() -> void:
 	var spared: bool = not Game.battle_result.get("spared", []).is_empty()
 	Game.battle_result = {}
+
+	if spared:
+		await Game.dialogue.say(["* (Wally gives one last tired cheer.)"])
+	else:
+		await Game.dialogue.say(["* (Wally staggers.)"])
+	# The costume collapses into an empty pile of fur...
+	var at := mascot.position if mascot else MASCOT_SPOT + Vector2(-30, 0)
 	if mascot:
 		mascot.queue_free()
 		mascot = null
+	Game.play_sfx("thud")
+	shake(4.0, 0.3)
+	_add_empty_costume()
+	await get_tree().create_timer(0.6).timeout
+	await Game.dialogue.say(["* (Then he slumps to the floor.\n*  Just a costume now.)" if spared else "* (The costume crumples to the floor.)"])
+
+	# ...and the fragment rises out of it, glowing.
+	var shard := Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
+	shard.glow = true
+	add_character(shard, at + Vector2(0, -4))
+	Game.play_sfx("fragment")
+	var rise := create_tween()
+	rise.tween_property(shard, "position:y", at.y - 26, 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await rise.finished
+	await Game.dialogue.say(["* (Something red floats up out of the costume.)"])
+	await get_tree().create_timer(0.2).timeout
+	shard.queue_free()
 
 	var lines: Array = []
-	if spared:
-		lines.append("* (Wally gives one last tired cheer.\n*  Then he slumps to the floor. Just a costume now.)")
-	else:
-		lines.append("* (Wally crumples. The costume tears open.)")
 	lines.append_array([
-		"* (Something red rolls out of it.)",
-		"* (You pick it up. It's warm, and it hums.)",
+		"* (You take it. It's warm, and it hums.)",
 		"* (You got the second FRAGMENT.)",
 		"* (Hop reaches toward it.)",
 		"* (For a second, his shadow looks... wrong.)",

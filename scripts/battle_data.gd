@@ -29,6 +29,11 @@ var survive_lines: Array = []
 var aura: Color = Color(0, 0, 0, 0)
 ## The color of the drifting diamond pattern behind the fight.
 var backdrop: Color = Color(0.5, 0.3, 0.85)
+## Bosses get a big health bar across the top of the screen. "" = no boss bar.
+## "wally" (gold, with claw marks) or "hopkuna" (red, with tattoo markings).
+var boss_style: String = ""
+## Not a real fight: a scripted scare instead ("tent").
+var event: String = ""
 
 
 func flavor_text(turn: int) -> String:

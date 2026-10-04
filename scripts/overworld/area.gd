@@ -46,6 +46,92 @@ func setup_area(default_spawn: Vector2) -> void:
 	camera.position_smoothing_enabled = true
 	player.add_child(camera)
 
+	# A compass in the top-right corner (it never turns; north is always up).
+	var compass_layer := CanvasLayer.new()
+	compass_layer.layer = 5
+	add_child(compass_layer)
+	var compass := Control.new()
+	compass.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	compass.position = Vector2(598, 42)
+	compass_layer.add_child(compass)
+	compass.draw.connect(_draw_compass.bind(compass))
+	compass.queue_redraw()
+
+
+## N, E, S and W around a little dial.
+func _draw_compass(compass: Control) -> void:
+	var font := ThemeDB.fallback_font
+	compass.draw_circle(Vector2.ZERO, 27, Color(0, 0, 0, 0.55))
+	compass.draw_arc(Vector2.ZERO, 27, 0, TAU, 32, Color(1, 1, 1, 0.85), 2.0)
+	compass.draw_arc(Vector2.ZERO, 22, 0, TAU, 32, Color(1, 1, 1, 0.25), 1.0)
+	# A small four-pointed star in the middle.
+	var star := PackedVector2Array([Vector2(0, -9), Vector2(2, -2), Vector2(9, 0), Vector2(2, 2),
+		Vector2(0, 9), Vector2(-2, 2), Vector2(-9, 0), Vector2(-2, -2)])
+	compass.draw_colored_polygon(star, Color(1, 1, 1, 0.5))
+	var letters := {"N": Vector2(0, -16), "E": Vector2(16, 0), "S": Vector2(0, 16), "W": Vector2(-16, 0)}
+	for letter in letters:
+		var size := font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+		var color := Color(1.0, 0.35, 0.35) if letter == "N" else Color.WHITE
+		compass.draw_string(font, letters[letter] + Vector2(-size.x / 2, 4), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
+
+
+## A SAVE point: a star that twinkles between two frames, like in Undertale.
+func make_save_star() -> Character:
+	var star := Character.new().setup(load("res://art/sprites/save_star.png"), null, false)
+	star.frames.assign([load("res://art/sprites/save_star.png"), load("res://art/sprites/save_star2.png")])
+	star.frame_time = 0.22
+	return star
+
+
+# --- Looking at things ---------------------------------------------------------
+
+## Called when Elric presses ENTER facing plain scenery (a tree, a wall, a desk...).
+## Areas can override this to give a particular spot its own text or puzzle;
+## call super(cell) for everything else.
+func inspect_tile(cell: Vector2i) -> void:
+	var lines := describe_tile(cell, room.get_tile(cell.x, cell.y))
+	if not lines.is_empty():
+		await Game.dialogue.say(lines)
+
+
+## What Elric notices about each kind of tile. Areas can override this to change
+## the text for a whole kind of tile (like the doors at Mt. Carmel).
+func describe_tile(cell: Vector2i, tile: int) -> Array:
+	# Pick one of the options based on the spot, so the same tree always says
+	# the same thing but neighboring trees can differ.
+	var pick := func(options: Array) -> Array:
+		return [options[absi(cell.x * 7 + cell.y * 13) % options.size()]]
+	match tile:
+		Room.TREE:
+			return pick.call(["* (It's a tree.)", "* (It's a tree. It's doing its best.)", "* (A tree. The leaves rustle a little.)", "* (It's a tree.\n*  You feel like it's judging you.)"])
+		Room.PALM:
+			return pick.call(["* (A palm tree. Very San Diego.)", "* (A palm tree. No coconuts. Disappointing.)"])
+		Room.BENCH:
+			return pick.call(["* (A bench. It's a little wobbly.)", "* (A bench. Someone carved a tiny heart into it.)"])
+		Room.FENCE:
+			return ["* (A chain-link fence.)"]
+		Room.WINDOW:
+			return ["* (You peek through the window.\n*  Rows of empty desks.)"]
+		Room.DOOR:
+			return ["* (A door. It's locked.)"]
+		Room.WALL, Room.STUCCO, Room.WOOD_WALL, Room.RED_WALL, Room.INTERIOR_WALL:
+			return pick.call(["* (A wall. Very solid.)", "* (It's a wall. It's not going anywhere.)"])
+		Room.BLEACHERS:
+			return ["* (The bleachers. Someone left a half-eaten\n*  sandwich up there.)"]
+		Room.GLASS:
+			return ["* (Your reflection looks back at you.)"]
+		Room.PLANTER:
+			return ["* (A planter full of little succulents.)"]
+		Room.TABLE:
+			return ["* (A table under a big green umbrella.)"]
+		Room.LOCKER:
+			return pick.call(["* (A locker. It won't open.)", "* (A locker. Something rattles inside.\n*  It won't open.)", "* (A locker covered in stickers.)"])
+		Room.CHALKBOARD:
+			return ["* (A chalkboard. Someone drew a wolverine on it.)"]
+		Room.DESK:
+			return pick.call(["* (A desk. There's gum stuck underneath.)", "* (A desk. Someone wrote \"HELP\" on it.\n*  ...In math class, that's fair.)"])
+	return []
+
 
 ## Override this to lay out the area's tiles on `room`.
 func build_map() -> void:
@@ -190,7 +276,8 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 
 # --- Random encounters -------------------------------------------------------
 
-## Places where random fights can happen: each entry is [room Rect2, [battle names]].
+## Places where random fights can happen: each entry is [room Rect2, [battle names]]
+## or [room Rect2, {battle name: weight}].
 ## Walking around inside one of these rooms eventually starts a random fight.
 var encounter_zones: Array = []
 ## How far Elric walks between random fights, in pixels (a random amount in this range).
@@ -209,13 +296,29 @@ func check_random_encounter(scene_path: String) -> void:
 	for zone in encounter_zones:
 		if (zone[0] as Rect2).has_point(player.position):
 			_next_encounter = -1.0
-			var battle_id: String = (zone[1] as Array).pick_random()
+			var battle_id := _pick_encounter(zone[1])
 			run_cutscene(func() -> void:
 				# A "!" pops up over Elric, like in Undertale.
 				player.show_alert(true)
 				await get_tree().create_timer(0.45).timeout
 				await Game.start_battle(battle_id, scene_path, player.position, true))
 			return
+
+
+## Picks a fight from a zone's list. A list is "all equally likely"; a Dictionary
+## gives each fight a weight (bigger = more common), like {"pop_quiz": 3, "tent": 1}.
+func _pick_encounter(options) -> String:
+	if options is Array:
+		return options.pick_random()
+	var total := 0
+	for id in options:
+		total += int(options[id])
+	var roll := randi() % total
+	for id in options:
+		roll -= int(options[id])
+		if roll < 0:
+			return id
+	return options.keys()[0]
 
 
 # --- Effects ------------------------------------------------------------------
