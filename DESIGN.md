@@ -322,8 +322,8 @@ Elric is a traveling adventurer with no fixed home.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
-4. **The reveal comes later.** Elric only learns that Hop is Hopkuna further into the story, so the friendship built in the opening makes the twist land harder.
-5. **The route choice ends Chapter 1.** Elric meets the full **REVOLUTION Corps**, and they ask what Elric wants to do (see [The route choice](#the-route-choice)). Chapters 2–4 play out differently depending on the answer.
+4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time** — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
+5. **The route choice ends Chapter 1.** Right after the reveal, the full **REVOLUTION Corps** finds Elric and asks what Elric wants to do (see [The route choice](#the-route-choice)). The player knows exactly what "Go with Hop" means. Chapters 2–4 play out differently depending on the answer.
 
 #### The tutorial fight: Eggo & BigJoe6 *(proposed — open to changes)*
 
@@ -405,7 +405,7 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
-- The route choice happens at the end of Chapter 1, and one option is "Go with Hop?" — does Elric know Hop is Hopkuna by then?
+- What puts Hop in genuine danger at the Chapter 1 climax?
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
