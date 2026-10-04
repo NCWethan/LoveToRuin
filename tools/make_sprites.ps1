@@ -32,7 +32,7 @@ $palette['J'] = @(70, 100, 160)    # blue jeans
 $palette['j'] = @(50, 75, 125)     # line between the legs
 # Elric
 $palette['L'] = @(200, 170, 235)   # pastel purple skin
-$palette['h'] = @(70, 50, 40)      # dark brown hair
+$palette['h'] = @(110, 72, 42)     # brown hair
 $palette['T'] = @(125, 95, 62)     # scruffy brown tunic
 $palette['t'] = @(95, 72, 48)      # patches
 $palette['d'] = @(80, 68, 50)      # dirt

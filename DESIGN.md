@@ -45,7 +45,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 ### Appearance
 - Average size.
 - Gender-neutral.
-- Short hair *(dark brown in the current sprite — not decided yet)*.
+- Short **brown** hair.
 - Dirty, scruffy clothing (fits a life on the road) — a patched brown tunic with a rope belt and olive pants in the current sprite.
 - Soft, almost pastel **purple skin**.
 
