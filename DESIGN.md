@@ -421,12 +421,15 @@ Build the game in **milestones**. Each one ends with something playable, so prog
 Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the battle system works.
 - [x] Battle box and SOUL movement
 - [x] Enemy attacks (bullets) and taking damage / HP
-- [ ] Battle menu: **FIGHT · ACT · ITEM · MERCY** (+ DEFEND)
-- [ ] FIGHT timing bar
-- [ ] ACT options and CHECK
-- [ ] Sparing (names turn yellow) → **BOND**; defeating → **LOVE**
-- [ ] Party turns (Elric + Hop)
-- [ ] The full tutorial fight, scripted turn by turn
+- [x] Battle menu: **FIGHT · ACT · ITEM · MERCY** (+ DEFEND)
+- [x] FIGHT timing bar
+- [x] ACT options and CHECK
+- [x] Sparing (names turn yellow) → **BOND**; defeating → **LOVE** (EXP)
+- [x] Party turns (Elric + Hop)
+- [x] The full tutorial fight, scripted turn by turn
+- [ ] Real sprites for Eggo, BigJoe6, Elric and Hop (currently placeholder blocks)
+- [ ] Pixel font, sound effects and battle music
+- [ ] A proper GAME OVER screen (the SOUL shattering)
 
 ### Milestone 2 — Talking
 - [ ] Dialogue box with letter-by-letter text and voice beeps

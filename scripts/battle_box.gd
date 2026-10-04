@@ -1,13 +1,23 @@
 class_name BattleBox
 extends Node2D
-## The white-bordered box the SOUL has to stay inside during battles.
+## The white-bordered box. During the player's turn it's a wide text box;
+## during the enemy's turn it shrinks and the SOUL has to stay inside it.
 
 ## Where the middle of the box is on the screen (the screen is 640 x 480).
-@export var center: Vector2 = Vector2(320, 320)
+@export var center: Vector2 = Vector2(320, 320):
+	set(value):
+		center = value
+		queue_redraw()
 ## How big the black area inside the border is, in pixels.
-@export var size: Vector2 = Vector2(160, 140)
+@export var size: Vector2 = Vector2(160, 140):
+	set(value):
+		size = value
+		queue_redraw()
 ## How thick the white border is, in pixels.
-@export var border: float = 5.0
+@export var border: float = 5.0:
+	set(value):
+		border = value
+		queue_redraw()
 
 
 ## Returns the black area inside the border, in screen coordinates.

@@ -1,8 +1,13 @@
+class_name Soul
 extends Sprite2D
 ## The player's SOUL: a red heart you move with the arrow keys.
+## Outside of dodging, the battle also uses it as the menu cursor.
 
 ## How fast the heart moves, in pixels per second.
 @export var speed: float = 120.0
+
+## When false, the arrow keys don't move the heart (it's being used as a cursor).
+var can_move: bool = true
 
 ## The battle box the heart has to stay inside (a sibling node named BattleBox).
 @onready var box: BattleBox = get_node_or_null("../BattleBox")
@@ -17,6 +22,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if not can_move:
+		return
+
 	# Read the arrow keys. This gives a direction like (1, 0) for right
 	# or (-1, -1) for up-left.
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
