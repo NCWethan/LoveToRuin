@@ -17,6 +17,12 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 - **Setting:** Earth — San Diego, California.
 - **Chapter 1 area:** the area around Westview High School and Mt. Carmel High School, and everything in between.
 
+### Chapter 1 locations
+
+| Location | Role | Notes |
+|---|---|---|
+| **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. |
+
 ## 3. The main character
 
 **Elric** (original character) — pronouns: **they/them**
