@@ -15,9 +15,9 @@ See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 | Key | Action |
 |---|---|
 | Arrow keys | Move the SOUL / move through menus |
-| Z or Enter | Confirm |
+| Enter | Confirm |
 | X or Shift | Go back |
-| C or Ctrl | Open your bag (use, check or drop items) |
+| C, Ctrl or B | Open your bag (use, check or drop items) |
 
 ## Running it
 

@@ -59,4 +59,4 @@ func _draw() -> void:
 		var width := _font.get_string_size(lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
 		draw_string(_font, Vector2(320 - width / 2, 220 + i * 30), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
 	if _typed >= text.length():
-		draw_string(_font, Vector2(296, 440), "(Z)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.5, 0.5, 0.5))
+		draw_string(_font, Vector2(296, 440), "(ENTER)", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.5, 0.5, 0.5))

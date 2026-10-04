@@ -300,6 +300,7 @@ func _arrival() -> void:
 		{"who": "Hop", "text": "Let's find the fragment and get OUT.\nFast. Like, speedrun it.", "mood": "sad"},
 	])
 	Game.flags["ww_arrived"] = true
+	Game.set_objective("Find the fragment inside Westview High.")
 
 
 func _front_doors() -> void:
@@ -500,6 +501,7 @@ func _after_mascot() -> void:
 		lines.insert(lines.size() - 1, {"who": "Hop", "text": "...Also, remind me never to be a mascot.", "mood": "shocked"})
 	await Game.dialogue.say(lines)
 	Game.flags["has_fragment_2"] = true
+	Game.set_objective("Get out through the gym's emergency exit.")
 	Game.flags["fragments"] = 2
 
 

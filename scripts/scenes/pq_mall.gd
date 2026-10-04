@@ -195,6 +195,7 @@ func _arrival() -> void:
 		"* (You have $%d.)" % Game.money,
 	])
 	Game.flags["mall_arrived"] = true
+	Game.set_objective("Ask around the mall about the fragments.")
 
 
 func _head_east() -> void:
@@ -504,3 +505,4 @@ func _talk_nassan() -> void:
 		{"who": "Nassan", "text": "And Elric... whatever you're carrying,\nit's heavier than it looks. Don't carry it alone.", "mood": "sad"},
 	])
 	Game.flags["heard_westview"] = true
+	Game.set_objective("Stock up, then head east to Westview High.")

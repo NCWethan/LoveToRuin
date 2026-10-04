@@ -6,7 +6,7 @@ extends CanvasLayer
 ##   await Game.shop.open("Vons", "* (Fluorescent lights. A cart with one bad wheel.)", [
 ##       {"name": "Trail Mix", "heal": 15, "price": 8},
 ##   ])
-## Up/Down to pick, Z to buy, X to leave.
+## Up/Down to pick, Enter to buy, X to leave.
 
 signal _closed
 
@@ -17,6 +17,7 @@ const ROW_HEIGHT := 26
 var _panel: Control
 var _font: Font
 var _open: bool = false
+var _opened_frame: int = -1
 var _title: String = ""
 var _greeting: String = ""
 var _stock: Array = []
@@ -44,6 +45,7 @@ func open(title: String, greeting: String, stock: Array) -> void:
 	_stock = stock
 	_cursor = 0
 	_message = ""
+	_opened_frame = Engine.get_process_frames()
 	_open = true
 	_panel.visible = true
 	await _closed
@@ -53,7 +55,9 @@ func open(title: String, greeting: String, stock: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-	if not _open:
+	# Ignore the key press that opened this menu (it would otherwise buy / move / pick
+	# something immediately).
+	if not _open or Engine.get_process_frames() == _opened_frame:
 		return
 	# The extra row at the bottom is "Leave".
 	var rows := _stock.size() + 1
@@ -127,7 +131,7 @@ func _draw_panel() -> void:
 
 	if _message != "":
 		_panel.draw_string(_font, Vector2(left, PANEL.end.y - 46), _message, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
-	_panel.draw_string(_font, Vector2(left, PANEL.end.y - 16), "Z: buy     X: leave", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
+	_panel.draw_string(_font, Vector2(left, PANEL.end.y - 16), "ENTER: buy     X: leave", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
 
 
 func _draw_heart(center: Vector2) -> void:

@@ -127,7 +127,7 @@ static func flavor_text(turn: int, enemies: Array[Enemy]) -> String:
 
 	match turn:
 		1:
-			return "* Hop: \"Don't just stand there - hit 'em!\"\n* (Pick FIGHT. Press Z when the bar is\n*  in the middle.)"
+			return "* Hop: \"Don't just stand there - hit 'em!\"\n* (Pick FIGHT. Press ENTER when the bar is\n*  in the middle.)"
 		2:
 			return "* Eggo: \"...you could also just talk to us.\"\n* (Try ACT. CHECK shows an enemy's stats.)"
 		3:

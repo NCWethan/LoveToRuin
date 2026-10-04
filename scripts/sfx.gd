@@ -25,6 +25,8 @@ static func make_all() -> Dictionary:
 		"shatter": noise(0.35, 0.3),
 		"fragment": slide(120, 60, 0.6, 0.3),
 		"slash": slide(1600, 250, 0.14, 0.22),
+		"honk": tone([392, 0, 392], 0.12, 0.25),
+		"door": noise(0.06, 0.25),
 	}
 
 

@@ -52,6 +52,7 @@ var bag: BagMenu
 var storage: StorageMenu
 
 var _fade: ColorRect
+var _objective_banner: ObjectiveBanner
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
 
@@ -98,8 +99,23 @@ func _ready() -> void:
 	storage = StorageMenu.new()
 	add_child(storage)
 	add_child(shop)
+	_objective_banner = ObjectiveBanner.new()
+	add_child(_objective_banner)
 
 	new_game()
+
+
+## What Elric is trying to do right now (shown in the bag).
+func objective() -> String:
+	return flags.get("objective", "")
+
+
+## Changes the objective and shows the "NEW OBJECTIVE" banner.
+func set_objective(text: String) -> void:
+	if objective() == text:
+		return
+	flags["objective"] = text
+	_objective_banner.show_objective(text)
 
 
 ## Resets everything to the very start of the game.
@@ -326,11 +342,11 @@ func _read_save() -> Dictionary:
 
 # --- Controls -------------------------------------------------------------
 
-## Z / Enter confirms, X / Shift goes back, like in Undertale.
+## Enter confirms, X / Shift goes back, and C / Ctrl / B opens the bag.
 func _add_input_actions() -> void:
-	_add_keys("confirm", [KEY_Z, KEY_ENTER, KEY_KP_ENTER])
+	_add_keys("confirm", [KEY_ENTER, KEY_KP_ENTER])
 	_add_keys("cancel", [KEY_X, KEY_SHIFT])
-	_add_keys("menu", [KEY_C, KEY_CTRL])
+	_add_keys("menu", [KEY_C, KEY_CTRL, KEY_B])
 
 
 func _add_keys(action: String, keys: Array) -> void:

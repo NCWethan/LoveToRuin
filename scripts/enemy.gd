@@ -59,6 +59,10 @@ var money_reward: int = 15
 var state: String = "active"
 ## Counts down after getting hit; the enemy shakes while it's above 0.
 var shake: float = 0.0
+## Counts down after getting hit; the enemy flashes white while it's above 0.
+var flash: float = 0.0
+## The HP the health bar shows. It drains toward `hp` smoothly after a hit.
+var shown_hp: float = -1.0
 
 var _act_counts: Dictionary = {}
 

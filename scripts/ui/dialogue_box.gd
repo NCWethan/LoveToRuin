@@ -9,7 +9,7 @@ extends CanvasLayer
 ## Each line is either a String (narration) or a Dictionary with "who" (the speaker)
 ## and "text". Optional extras: "mood" (happy, angry, sad, shocked, smug) for a
 ## facial expression, "face": false to hide the portrait, "tag" to change the name shown.
-## Press Z to finish a line or go to the next one.
+## Press Enter to finish a line or go to the next one.
 
 signal _advanced
 
@@ -39,6 +39,7 @@ const SPEAKERS := {
 	"Nat": {"color": Color(0.6, 0.4, 0.8), "pitch": 0.6},
 	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "pitch": 1.3},
 	"Nassan": {"color": Color(0.55, 0.55, 0.6), "pitch": 0.85},
+	"Agent": {"color": Color(0.2, 0.75, 0.72), "pitch": 1.05},
 	"Wally": {"color": Color(0.75, 0.5, 0.3), "pitch": 0.55},
 	"Hopkuna": {"color": Color(1.0, 0.25, 0.3), "pitch": 0.5},
 }
@@ -50,6 +51,7 @@ var _box := BOTTOM_BOX
 var _panel: Control
 var _font: Font
 var _active: bool = false
+var _shown_frame: int = -1
 var _who: String = ""
 var _show_face: bool = true
 var _mood: String = ""
@@ -123,6 +125,7 @@ func _show(line) -> void:
 	_typed = 0.0
 	_last_beep = 0
 	_active = true
+	_shown_frame = Engine.get_process_frames()
 
 	_box = BOTTOM_BOX
 	var player := get_tree().get_first_node_in_group("player") as Node2D
@@ -135,7 +138,8 @@ func _finished() -> bool:
 
 
 func _process(delta: float) -> void:
-	if not _active:
+	# Ignore the key press that opened this box (so the first line doesn't skip ahead).
+	if not _active or Engine.get_process_frames() == _shown_frame:
 		return
 
 	_typed += delta * TYPE_SPEED

@@ -193,6 +193,7 @@ func _arrival() -> void:
 		{"who": "Hop", "text": "Hey, Elric? Whatever happens out there...\nI'll stay right behind you. Okay?", "mood": "sad"},
 	])
 	Game.flags["hp_arrived"] = true
+	Game.set_objective("Find out what's glowing in the field.")
 
 
 func _read_map() -> void:
@@ -271,11 +272,18 @@ func _eruption() -> void:
 	await _tint_night(Color(0.75, 0.45, 0.5), 0.6)
 	Game.play_music("hopkuna_reveal", 1.5)
 
+	# He was the voice at the very start. He remembers what Elric told him.
+	var callback: String = {
+		"talk": "\"Talk it out,\" you told me. Remember?\nHow's that going?",
+		"fight": "\"Fight my way,\" you told me. Remember?\nI was hoping you meant it.",
+	}.get(Game.flags.get("first_answer", ""), "You didn't know how you'd do it.\nRemember? I told you the city would decide.")
 	await Game.dialogue.say([
 		"* (Hop stands up.)",
 		"* (It isn't Hop.)",
 		{"who": "Hopkuna", "text": "...Finally."},
 		{"who": "Hopkuna", "text": "Do you know how long I've waited,\nlittle wanderer?"},
+		"* (That voice. You've heard it before.)",
+		{"who": "Hopkuna", "text": callback},
 		{"who": "Hopkuna", "text": "He was always so careful.\nOnly let me out when he had no other choice."},
 		{"who": "Hopkuna", "text": "Tonight, he had no other choice. Thanks to you."},
 		{"who": "Hopkuna", "text": "And look. You've been carrying two of my\nfragments for me. How thoughtful."},

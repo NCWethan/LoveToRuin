@@ -22,6 +22,7 @@ signal _closed
 var _panel: Control
 var _font: Font
 var _open: bool = false
+var _opened_frame: int = -1
 var _step: Step = Step.LIST
 var _cursor: int = 0
 var _action: int = 0
@@ -44,6 +45,7 @@ func _ready() -> void:
 func open() -> void:
 	var was_busy := Game.busy
 	Game.busy = true
+	_opened_frame = Engine.get_process_frames()
 	_open = true
 	_step = Step.LIST
 	_cursor = 0
@@ -57,7 +59,9 @@ func open() -> void:
 
 
 func _process(_delta: float) -> void:
-	if not _open:
+	# Ignore the key press that opened this menu (it would otherwise buy / move / pick
+	# something immediately).
+	if not _open or Engine.get_process_frames() == _opened_frame:
 		return
 	var up := Input.is_action_just_pressed("ui_up")
 	var down := Input.is_action_just_pressed("ui_down")
@@ -175,6 +179,13 @@ func _draw_panel() -> void:
 	_text("BOND  %d" % Game.bond, Vector2(STATS.position.x + 14, y + 22), Color(0.7, 0.85, 1.0))
 	_text("Fragments: %d / 12" % int(Game.flags.get("fragments", 0)), Vector2(STATS.position.x + 14, y + 44), Color(1, 0.5, 0.55), 14)
 
+	# What you're doing right now.
+	if Game.objective() != "":
+		var goal := Rect2(STATS.position.x, STATS.end.y + 16, STATS.size.x, 68)
+		_box(goal)
+		_text("OBJECTIVE", goal.position + Vector2(14, 20), Color.YELLOW, 12)
+		_panel.draw_multiline_string(_font, goal.position + Vector2(14, 38), Game.objective(), HORIZONTAL_ALIGNMENT_LEFT, goal.size.x - 24, 13)
+
 	# Your items.
 	_box(LIST)
 	_text("BAG   (%d / %d)" % [Game.items.size(), Game.MAX_ITEMS], Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
@@ -211,7 +222,7 @@ func _draw_panel() -> void:
 		for i in lines.size():
 			_text(lines[i], MESSAGE.position + Vector2(16, 28 + i * 22))
 
-	var hint := "Z: choose   X: back   C: close"
+	var hint := "ENTER: choose   X: back   C/B: close"
 	_text(hint, Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
 
 

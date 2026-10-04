@@ -87,6 +87,10 @@ $palette['X'] = @(96, 54, 62)      # red-tinted shirt
 $palette['q'] = @(206, 150, 152)   # red-tinted arms
 $palette['z'] = @(146, 104, 122)   # red-tinted pants
 $palette['I'] = @(255, 40, 50)     # glowing red eyes
+# Agent
+$palette['w'] = @(140, 82, 44)     # wavy brown "bacon" hair
+$palette['0'] = @(190, 128, 76)    # lighter hair streaks
+$palette['#'] = @(45, 175, 170)    # teal shirt
 $outline = @(125, 125, 140)
 
 $sprites = @{
@@ -642,6 +646,43 @@ $sprites['nassan'] = @(
     ".......DDDDD.DDDD......."
 )
 
+# Agent: wavy brown hair, a black jacket over a teal graphic tee.
+
+$sprites['agent'] = @(
+    "........................",
+    "........ww0ww0ww........",
+    "......ww0www0www0w......",
+    ".....w0www0www0www0.....",
+    ".....ww0www0www0www.....",
+    ".....w0wYYYYYYYYw0w.....",
+    ".....wwwYKYYYYKYwww.....",
+    "......w0YKYYYYKY0w......",
+    "......wwYYYYYYYYww......",
+    "......w0YKYYYYKY0w......",
+    ".......wYYKKKKYYw.......",
+    "........YYYYYYYY........",
+    "...CCCCCC######CCCCCC...",
+    "...CCCCCC######CCCCCC...",
+    "...CCCCC#KK##KK#CCCCC...",
+    "...CCCCC#KKKKKK#CCCCC...",
+    "...CCCCC##KKKK##CCCCC...",
+    "...CCCCC###KK###CCCCC...",
+    "...CCCCC########CCCCC...",
+    "...CCCCC########CCCCC...",
+    "...YYYYC########CYYYY...",
+    "...YYYYC########CYYYY...",
+    ".......PP7PPkPP7P.......",
+    ".......P7PPPkP7PP.......",
+    ".......PPP7PkPPP7.......",
+    ".......P7PPPk7PPP.......",
+    ".......PP7PPkPP7P.......",
+    ".......P7PPPkP7PP.......",
+    ".......PPP7PkPPP7.......",
+    ".......P7PPPk7PPP.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
 # --- Westview High School enemies -------------------------------------------
 
 $sprites['pop_quiz'] = @(
@@ -1000,6 +1041,7 @@ $faces = [ordered]@{
     'nat'       = @('4', 'K')
     'sansworth' = @('W', 'K')
     'nassan'    = @('C', 'W')
+    'agent'     = @('Y', 'K')
 }
 # Hop keeps his gritted-teeth grin for these moods (only his eyes change).
 $keepMouth = @{ 'hop' = @('happy', 'angry', 'smug') }

@@ -103,7 +103,7 @@ func _draw() -> void:
 		var summary := Game.save_summary()
 		if summary != "" and _options[_choice] == "Continue":
 			_draw_centered(summary, Vector2(320, 380), 14, Color(0.7, 0.7, 0.7, fade))
-		_draw_centered("Arrow keys to choose  -  Z to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
+		_draw_centered("Arrow keys to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
 
 
 func _draw_letter(letter: String, center: Vector2, color: Color) -> void:

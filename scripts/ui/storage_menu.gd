@@ -3,7 +3,7 @@ extends CanvasLayer
 ## A storage box: move items between your bag and the box.
 ## Every box in the game opens the same storage, so you can put something in at
 ## Mt. Carmel and take it out at Hilltop Park.
-## Left/Right to switch sides, Up/Down to pick, Z to move the item across, X to close.
+## Left/Right to switch sides, Up/Down to pick, Enter to move the item across, X to close.
 
 signal _closed
 
@@ -15,6 +15,7 @@ const ROW := 24
 var _panel: Control
 var _font: Font
 var _open: bool = false
+var _opened_frame: int = -1
 var _side: int = 0          # 0 = bag, 1 = box
 var _cursor: int = 0
 var _message: String = ""
@@ -34,6 +35,7 @@ func _ready() -> void:
 func open() -> void:
 	var was_busy := Game.busy
 	Game.busy = true
+	_opened_frame = Engine.get_process_frames()
 	_open = true
 	_side = 0
 	_cursor = 0
@@ -50,7 +52,9 @@ func _list(side: int) -> Array[Dictionary]:
 
 
 func _process(_delta: float) -> void:
-	if not _open:
+	# Ignore the key press that opened this menu (it would otherwise buy / move / pick
+	# something immediately).
+	if not _open or Engine.get_process_frames() == _opened_frame:
 		return
 	var list := _list(_side)
 	if Input.is_action_just_pressed("ui_left") or Input.is_action_just_pressed("ui_right"):
@@ -110,7 +114,7 @@ func _draw_panel() -> void:
 	if _message != "":
 		_panel.draw_string(_font, Vector2(30, 400), _message, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 	_panel.draw_string(_font, Vector2(30, 40), "STORAGE BOX", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
-	_panel.draw_string(_font, Vector2(30, 460), "Left/Right: switch side   Z: move item   X: close", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
+	_panel.draw_string(_font, Vector2(30, 460), "Left/Right: switch side   ENTER: move item   X: close", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
 
 
 func _heart(center: Vector2) -> void:

@@ -50,7 +50,7 @@ func _draw() -> void:
 	_centered(note, 300, 14, Color(0.7, 0.7, 0.7, alpha))
 	_centered("LV %d     BOND %d     EXP %d     $%d" % [Game.lv(), Game.bond, Game.exp_points, Game.money], 340, 16, Color(1, 1, 1, alpha))
 	if _time > 1.5:
-		_centered("(press Z to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
+		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 
 func _draw_chapter_complete(alpha: float) -> void:
@@ -67,7 +67,7 @@ func _draw_chapter_complete(alpha: float) -> void:
 	_centered("LV %d     BOND %d     EXP %d     $%d" % [Game.lv(), Game.bond, Game.exp_points, Game.money], 362, 16, Color(1, 1, 1, alpha))
 	if _time > 2.5:
 		_centered("Thank you for playing!", 410, 16, Color(1, 1, 0.6))
-		_centered("(press Z to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
+		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 
 func _centered(text: String, y: float, size: int, color: Color) -> void:

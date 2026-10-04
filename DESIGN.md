@@ -81,6 +81,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Crayola** | See [Crayola](#crayola) below. |
 | **Supreme** | See [Supreme](#supreme) below. |
 | **Nat** | See [Nat](#nat) below. |
+| **Agent** | Back in the cast! See [Agent](#agent) below. |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
 
@@ -282,6 +283,21 @@ Pronouns: he/him
 
 ![Nat reference](art/reference/nat.png)
 
+### Agent
+
+Pronouns: he/him
+
+**Personality**
+- *To be decided.* (Agent was scrapped early on and is now back. His role, personality and where he first shows up are still open.)
+
+**Appearance** (based on his Roblox avatar)
+- Yellow skin and a friendly smile.
+- Wavy brown "bacon" hair.
+- An open **black jacket** over a **teal** T-shirt with a dark graphic on it.
+- Dark patterned pants and **white** shoes.
+
+The sprite and dialogue portraits exist (`art/sprites/agent.png`), but he doesn't appear in the game yet.
+
 ### Hop
 
 Pronouns: he/him
@@ -350,6 +366,7 @@ Pronouns: he/him
 Elric is a traveling adventurer with no fixed home.
 
 #### Chapter 1 opening — how Elric meets the cast
+0. **The voice.** Before anything else, a voice with no face (secretly Hopkuna) explains the objective — find the 12 fragments — and the ways to get there: TALK and SPARE for BOND, or FIGHT for LOVE. Then it asks: *"Here is your objective. How will you do it?"* Elric's answer comes back to haunt them when Hopkuna is revealed at Hilltop Park.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
@@ -482,15 +499,22 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [ ] Party selection (Elric + 2 of the cast) — *needs decisions: see Open questions*
 
 ### Overworld features (from feedback)
-- [x] **Bag** (C / Ctrl): party HP, LV, money, BOND, fragments; items can be USED, CHECKED (description) or DROPPED
+- [x] **Bag** (B, C or Ctrl, anywhere outside battle): party HP, LV, money, BOND, fragments; items can be USED, CHECKED (description) or DROPPED
 - [x] **Storage boxes** next to each SAVE point; every box shares the same storage (12 slots), saved with the game
 - [x] **Random encounters** in hostile areas (Westview's hallway and classroom), with a "!" over Elric
 - [x] Wandering enemies you walk into are gone for good after the fight
+- [x] **Objectives**: a "NEW OBJECTIVE" banner at each story beat; the current one is shown in the bag
+- [x] Eggo and BigJoe6 get picked up by a car after the tutorial fight
 
 ### Battle polish (from feedback)
 - [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
 - [x] "Ready?" check after choosing, with X to go back and change anything
 - [x] On-screen control hints in menus
+- [x] ENTER is the only confirm key (Z removed)
+- [x] Button icons: FIGHT (sword), ACT (megaphone), ITEM (bag), MERCY (white flag), DEFEND (shield)
+- [x] Clear turn indicator: an arrow, "NAME'S TURN", a glow under whoever is choosing; teammates dim
+- [x] FIGHT: a "READY..." wind-up before the timing bar moves, colored zones (green = CRITICAL), a slash animation, white hit flash, bouncing damage numbers and draining HP bars
+- [x] Bigger HP bars
 
 ### Milestone 6 — Westview High School
 - [x] The twisted school dungeon: rooms, puzzles, enemies

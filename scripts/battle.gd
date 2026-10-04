@@ -6,9 +6,9 @@ extends Node2D
 ##   4. Repeat until every enemy is spared or knocked out.
 ##
 ## The fighters and their lines come from tutorial_battle.gd.
-## Controls: arrow keys to move, Z / Enter to confirm, X / Shift to go back.
+## Controls: arrow keys to move, Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, ENEMY_TURN, GAME_OVER, DONE }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, DONE }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -20,7 +20,13 @@ const ATTACK_BOX_SIZE := Vector2(160, 120)
 ## How long each enemy turn lasts, in seconds.
 const ENEMY_TURN_TIME := 5.0
 ## How long the FIGHT bar takes to cross the box, in seconds.
-const FIGHT_BAR_TIME := 1.2
+const FIGHT_BAR_TIME := 1.6
+## How long "READY..." shows before the FIGHT bar starts moving, in seconds.
+const FIGHT_WINDUP := 0.7
+## A hit this accurate (0 to 1) counts as a CRITICAL.
+const CRITICAL := 0.9
+## How long the slash takes to cross the enemy before the hit lands, in seconds.
+const ATTACK_SLASH_TIME := 0.35
 ## How fast text appears, in letters per second.
 const TYPE_SPEED := 45.0
 const FONT_SIZE := 16
@@ -75,6 +81,15 @@ var _action_index: int = -1
 var _bar_pos: float = 0.0
 var _bar_member: PartyMember
 var _bar_target: Enemy
+var _bar_wait: float = 0.0
+## Recent bar positions, drawn as a fading afterimage.
+var _bar_trail: Array[float] = []
+
+# The attack animation after the bar is stopped.
+var _anim_time: float = 0.0
+var _anim_damage: int = 0
+var _anim_accuracy: float = 0.0
+var _anim_landed: bool = false
 
 # Enemy turn
 var _enemy_timer: float = 0.0
@@ -160,6 +175,8 @@ func _process(delta: float) -> void:
 			_process_ready()
 		State.FIGHT_BAR:
 			_process_fight_bar(delta)
+		State.FIGHT_ANIM:
+			_process_fight_anim(delta)
 		State.ENEMY_TURN:
 			_process_enemy_turn(delta)
 		State.GAME_OVER:
@@ -183,7 +200,7 @@ func _text_beeps() -> void:
 
 # --- Text ------------------------------------------------------------------
 
-## Shows each line in the box, one at a time (press Z for the next), then calls `then`.
+## Shows each line in the box, one at a time (press Enter for the next), then calls `then`.
 func _show_messages(lines: Array, then: Callable) -> void:
 	_messages = lines.duplicate()
 	_on_messages_done = then
@@ -254,7 +271,7 @@ func _open_ready() -> void:
 		if action["type"] == "NONE":
 			continue
 		lines.append("* " + _describe(action))
-	lines.append("* (Z: go!     X: change something)")
+	lines.append("* (ENTER: go!     X: change something)")
 	_text = "\n".join(lines)
 	_typed = _text.length()
 
@@ -300,6 +317,10 @@ func _place_soul_on_button() -> void:
 
 
 func _process_menu() -> void:
+	# Moving to another button clears any "no items" message.
+	if (_pressed("ui_left") or _pressed("ui_right")) and _text != _flavor:
+		_text = _flavor
+		_typed = _flavor.length()
 	if _pressed("ui_left"):
 		_button = wrapi(_button - 1, 0, BUTTONS.size())
 		Game.play_sfx("move")
@@ -316,6 +337,11 @@ func _process_menu() -> void:
 				var available := _available_items()
 				if not available.is_empty():
 					_open_list(State.ITEM_LIST, available)
+				else:
+					# Say so, instead of silently doing nothing.
+					Game.play_sfx("miss")
+					_text = "* (You don't have any items.)" if items.is_empty() else "* (Your teammate already picked the last item.)"
+					_typed = _text.length()
 			"DEFEND":
 				party[current_member].defending = true
 				_choose({"type": "DEFEND"})
@@ -486,12 +512,21 @@ func _start_fight_bar(member: PartyMember, target: Enemy) -> void:
 	_bar_member = member
 	_bar_target = target
 	_bar_pos = 0.0
+	_bar_wait = FIGHT_WINDUP
+	_bar_trail.clear()
 	_text = ""
 	soul.visible = false
 	state = State.FIGHT_BAR
 
 
 func _process_fight_bar(delta: float) -> void:
+	# A short "READY..." first, so there's time to get set.
+	if _bar_wait > 0.0:
+		_bar_wait -= delta
+		return
+	_bar_trail.append(_bar_pos)
+	if _bar_trail.size() > 6:
+		_bar_trail.pop_front()
 	_bar_pos += delta / FIGHT_BAR_TIME
 	if _pressed("confirm"):
 		# 1.0 for a hit dead in the middle, 0.0 at the very edges.
@@ -500,22 +535,49 @@ func _process_fight_bar(delta: float) -> void:
 		_resolve_hit(-1.0)
 
 
+## The bar was stopped (or ran out). Work out the damage, then play the attack animation.
 func _resolve_hit(accuracy: float) -> void:
 	var member := _bar_member
 	var target := _bar_target
 	if accuracy < 0.0:
-		_add_popup("MISS", target.position + Vector2(0, -20), Color.LIGHT_GRAY)
+		_add_popup("MISS", target.position + Vector2(0, -30), Color.LIGHT_GRAY, 22)
 		Game.play_sfx("miss")
 		_show_messages(["* %s missed!" % member.name], _run_next_action)
 		return
 
 	var damage := maxi(1, roundi(member.attack * (0.8 + 2.2 * accuracy)) - target.defense)
-	target.hp = maxi(target.hp - damage, 0)
-	target.shake = 0.4
-	_add_popup(str(damage), target.position + Vector2(0, -20), Color.RED)
-	Game.play_sfx("hit")
+	if accuracy >= CRITICAL:
+		damage = roundi(damage * 1.25)
+	_anim_damage = damage
+	_anim_accuracy = accuracy
+	_anim_time = 0.0
+	_anim_landed = false
+	Game.play_sfx("slash")
+	state = State.FIGHT_ANIM
 
-	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, damage]]
+
+## The slash plays across the enemy; when it lands, the damage pops out and the
+## HP bar drains. Then the result is shown in the text box.
+func _process_fight_anim(delta: float) -> void:
+	_anim_time += delta
+	var member := _bar_member
+	var target := _bar_target
+	if not _anim_landed and _anim_time >= ATTACK_SLASH_TIME:
+		_anim_landed = true
+		target.hp = maxi(target.hp - _anim_damage, 0)
+		target.shake = 0.5
+		target.flash = 0.25
+		Game.play_sfx("hit")
+		var critical := _anim_accuracy >= CRITICAL
+		_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
+		if critical:
+			_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
+	if _anim_time < ATTACK_SLASH_TIME + 0.9:
+		return
+
+	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, _anim_damage]]
+	if _anim_accuracy >= CRITICAL:
+		lines[0] = "* CRITICAL HIT!\n" + lines[0]
 	if target.hit_line != "":
 		lines[0] += "\n" + target.hit_line
 	if target.hp == 0:
@@ -652,7 +714,7 @@ func _survived() -> void:
 	if Game.pending_battle != "":
 		_show_messages(_data.survive_lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
 	else:
-		_show_messages(_data.survive_lines + ["* (Press Z to fight again.)"], func() -> void: _leave_battle(get_tree().reload_current_scene))
+		_show_messages(_data.survive_lines + ["* (Press ENTER to fight again.)"], func() -> void: _leave_battle(get_tree().reload_current_scene))
 
 
 func _clear_bullets() -> void:
@@ -685,7 +747,7 @@ func _victory() -> void:
 				result["defeated"].append(enemy.name)
 		_show_messages(lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
 	else:
-		lines.append("* (Press Z to fight again.)")
+		lines.append("* (Press ENTER to fight again.)")
 		_show_messages(lines, func() -> void: _leave_battle(get_tree().reload_current_scene))
 
 
@@ -782,7 +844,7 @@ func _draw_game_over() -> void:
 	if _text != "":
 		_draw_centered(_text.substr(0, clampi(int(_typed), 0, _text.length())), Vector2(320, 320), 20, Color.WHITE)
 		if _text_finished():
-			_draw_centered("(press Z)", Vector2(320, 360), 14, Color.GRAY)
+			_draw_centered("(press ENTER)", Vector2(320, 360), 14, Color.GRAY)
 
 
 # --- Helpers --------------------------------------------------------------
@@ -813,17 +875,28 @@ func _available_items() -> Array[Dictionary]:
 	return result
 
 
-func _add_popup(text: String, at: Vector2, color: Color) -> void:
-	_popups.append({"text": text, "position": at, "color": color, "time": 0.8})
+## A number or word that pops up and fades (damage, healing, MISS...).
+## Bouncing ones jump up and fall back down, like a hit landing.
+func _add_popup(text: String, at: Vector2, color: Color, size: int = 20, bounce: bool = false) -> void:
+	_popups.append({
+		"text": text, "position": at, "color": color, "size": size, "time": 1.1 if bounce else 0.8,
+		"velocity": Vector2(0, -170) if bounce else Vector2(0, -30), "gravity": 520.0 if bounce else 0.0,
+	})
 
 
 func _update_effects(delta: float) -> void:
 	for popup in _popups:
 		popup["time"] -= delta
-		popup["position"] += Vector2(0, -30) * delta
+		popup["velocity"] += Vector2(0, popup["gravity"]) * delta
+		popup["position"] += popup["velocity"] * delta
 	_popups.assign(_popups.filter(func(p: Dictionary) -> bool: return p["time"] > 0.0))
 	for enemy in enemies:
 		enemy.shake = maxf(enemy.shake - delta, 0.0)
+		enemy.flash = maxf(enemy.flash - delta, 0.0)
+		# The health bar drains smoothly toward the real HP.
+		if enemy.shown_hp < 0.0:
+			enemy.shown_hp = enemy.hp
+		enemy.shown_hp = move_toward(enemy.shown_hp, enemy.hp, enemy.max_hp * 0.8 * delta)
 	for member in party:
 		member.shake = maxf(member.shake - delta, 0.0)
 
@@ -846,12 +919,44 @@ func _draw_overlay() -> void:
 	_draw_aura()
 	_draw_party_sprites()
 	_draw_enemies()
+	_draw_slash()
 	_draw_party_panel()
 	_draw_buttons()
 	_draw_box_contents()
 
 	for popup in _popups:
-		_draw_centered(popup["text"], popup["position"], 20, popup["color"])
+		# A dark outline behind the text keeps numbers readable over anything.
+		var size: int = popup["size"]
+		for offset in [Vector2(-2, 0), Vector2(2, 0), Vector2(0, -2), Vector2(0, 2)]:
+			_draw_centered(popup["text"], popup["position"] + offset, size, Color(0, 0, 0, 0.8))
+		_draw_centered(popup["text"], popup["position"], size, popup["color"])
+
+
+## The attack animation: three glowing slashes sweep across the enemy, in the
+## attacker's color (gold for a CRITICAL), then flare out.
+func _draw_slash() -> void:
+	if state != State.FIGHT_ANIM or _bar_target == null:
+		return
+	var progress := clampf(_anim_time / ATTACK_SLASH_TIME, 0.0, 1.0)
+	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.35, 0.0, 1.0)
+	if fade <= 0.0:
+		return
+	var color := YELLOW if _anim_accuracy >= CRITICAL else _bar_member.color
+	var center := _bar_target.position + Vector2(0, -20)
+	for i in 3:
+		var offset := Vector2(-16 + i * 16, -6 + i * 6)
+		var from := center + offset + Vector2(38, -42)
+		var to := center + offset + Vector2(-38, 42)
+		var tip := from.lerp(to, progress)
+		_overlay.draw_line(from, tip, Color(color, 0.35 * fade), 10.0)
+		_overlay.draw_line(from, tip, Color(color, fade), 4.0)
+		_overlay.draw_line(from, tip, Color(1, 1, 1, fade), 1.5)
+	# A burst of sparks where the hit lands.
+	if _anim_landed:
+		var burst := (_anim_time - ATTACK_SLASH_TIME) / 0.35
+		for i in 10:
+			var dir := Vector2.from_angle(i * TAU / 10 + 0.3)
+			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(color, fade), 2.0)
 
 
 func _draw_enemies() -> void:
@@ -870,6 +975,9 @@ func _draw_enemies() -> void:
 			var sprite_size := enemy.sprite.get_size() * enemy.battle_scale
 			top = pos.y + 40.0 - sprite_size.y
 			_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+			# Flash white for a moment when hit.
+			if enemy.flash > 0.0:
+				_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, Color(4, 4, 4, enemy.flash * 3.0))
 		else:
 			# Placeholder figure: a blocky head and body.
 			_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), enemy.body_color * tint)
@@ -885,7 +993,7 @@ func _draw_enemies() -> void:
 			"defeated":
 				_draw_centered("KO", pos + Vector2(0, 62), FONT_SIZE, Color.LIGHT_GRAY)
 			_:
-				_draw_bar(Rect2(pos + Vector2(-30, 48), Vector2(60, 6)), float(enemy.hp) / enemy.max_hp, Color.GREEN)
+				_draw_bar(Rect2(pos + Vector2(-45, 47), Vector2(90, 10)), float(enemy.hp) / enemy.max_hp, Color.GREEN, enemy.shown_hp / enemy.max_hp)
 
 		if _speech.has(enemy) and _speech[enemy] != "":
 			_draw_speech(_speech[enemy], Vector2(pos.x, top - 30))
@@ -921,12 +1029,31 @@ func _draw_party_sprites() -> void:
 			pos.x += sin(member.shake * 60.0) * 4.0
 		var sprite_size := member.sprite.get_size() * 3.0
 		var top := pos.y + 40.0 - sprite_size.y
-		var tint := Color(0.4, 0.4, 0.4) if member.is_down() else Color.WHITE
+		var choosing := _is_choosing(i)
+		var someone_choosing := _is_choosing(current_member)
+		var tint := Color.WHITE
+		if member.is_down():
+			tint = Color(0.4, 0.4, 0.4)
+		elif someone_choosing and not choosing:
+			# Teammates who aren't choosing dim a little, so it's clear whose turn it is.
+			tint = Color(0.55, 0.55, 0.55)
+
+		if choosing:
+			# A soft glow at their feet...
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)
+			_overlay.draw_set_transform(Vector2(pos.x, pos.y + 40), 0.0, Vector2(1.0, 0.3))
+			_overlay.draw_circle(Vector2.ZERO, 34, Color(member.color, 0.25 + 0.15 * pulse))
+			_overlay.draw_circle(Vector2.ZERO, 22, Color(member.color, 0.25 + 0.15 * pulse))
+			_overlay.draw_set_transform(Vector2.ZERO)
 		_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
 
-		# Show whose turn it is to choose.
-		if _is_choosing(i):
-			_draw_centered(member.name, Vector2(pos.x, top - 8), FONT_SIZE, member.color)
+		if choosing:
+			# ...and a bouncing arrow and their name above their head.
+			var bob := absf(sin(Time.get_ticks_msec() / 200.0)) * 6.0
+			var tip := Vector2(pos.x, top - 12 - bob)
+			_overlay.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-9, -12), tip + Vector2(9, -12)]), member.color)
+			_overlay.draw_polyline(PackedVector2Array([tip, tip + Vector2(-9, -12), tip + Vector2(9, -12), tip]), Color.WHITE, 1.5)
+			_draw_centered(member.name.to_upper() + "'S TURN", Vector2(pos.x, top - 32 - bob), 14, member.color)
 
 
 func _is_choosing(member_index: int) -> bool:
@@ -946,14 +1073,17 @@ func _draw_party_panel() -> void:
 		var member := party[i]
 		var x := 40.0 + i * 300.0
 		var choosing := _is_choosing(i)
+		if choosing:
+			# A highlighted box around whoever is choosing.
+			var panel := Rect2(x - 10, PANEL_Y - 18, 278, 24)
+			_overlay.draw_rect(panel, Color(member.color, 0.22))
+			_overlay.draw_rect(panel, member.color, false, 2.0)
 		var name_color := member.color if not member.is_down() else Color.DIM_GRAY
 		_overlay.draw_string(_font, Vector2(x, PANEL_Y), member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, name_color)
-		_draw_bar(Rect2(x + 70, PANEL_Y - 11, 80, 10), float(member.hp) / member.max_hp, YELLOW)
-		_overlay.draw_string(_font, Vector2(x + 160, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+		_draw_bar(Rect2(x + 64, PANEL_Y - 13, 110, 14), float(member.hp) / member.max_hp, YELLOW)
+		_overlay.draw_string(_font, Vector2(x + 182, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		if member.defending:
-			_overlay.draw_string(_font, Vector2(x + 225, PANEL_Y), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.SKY_BLUE)
-		if choosing:
-			_overlay.draw_line(Vector2(x, PANEL_Y + 4), Vector2(x + 250, PANEL_Y + 4), member.color, 2.0)
+			_overlay.draw_string(_font, Vector2(x + 242, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
 
 
 func _draw_buttons() -> void:
@@ -962,7 +1092,40 @@ func _draw_buttons() -> void:
 		var selected := state == State.MENU and i == _button
 		var color := YELLOW if selected else ORANGE
 		_overlay.draw_rect(rect, color, false, 2.0)
-		_overlay.draw_string(_font, rect.position + Vector2(30, 22), BUTTONS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+		_overlay.draw_string(_font, rect.position + Vector2(32, 22), BUTTONS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+		# The SOUL sits where the icon is on the selected button (like Undertale).
+		if not selected:
+			_draw_button_icon(BUTTONS[i], rect.position + Vector2(15, 16), color)
+
+
+## Little pictures on the battle buttons: a sword, a megaphone, a bag, a white flag
+## and a shield. `c` is the center of the icon.
+func _draw_button_icon(button: String, c: Vector2, color: Color) -> void:
+	match button:
+		"FIGHT":
+			# A sword, pointing up and to the right.
+			_overlay.draw_line(c + Vector2(-6, 6), c + Vector2(7, -7), color, 3.0)
+			_overlay.draw_line(c + Vector2(-7, 1), c + Vector2(-1, 7), color, 2.0)
+			_overlay.draw_line(c + Vector2(-6, 6), c + Vector2(-9, 9), color, 3.0)
+		"ACT":
+			# A megaphone with sound coming out of it.
+			_overlay.draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -2), c + Vector2(2, -7), c + Vector2(2, 7), c + Vector2(-8, 2)]), color)
+			_overlay.draw_line(c + Vector2(-6, 2), c + Vector2(-6, 7), color, 2.0)
+			_overlay.draw_arc(c + Vector2(3, 0), 5, -0.9, 0.9, 6, color, 1.5)
+			_overlay.draw_arc(c + Vector2(3, 0), 9, -0.8, 0.8, 6, color, 1.5)
+		"ITEM":
+			# A bag with a handle.
+			_overlay.draw_rect(Rect2(c + Vector2(-7, -3), Vector2(14, 11)), color)
+			_overlay.draw_arc(c + Vector2(0, -3), 4, PI, TAU, 8, color, 2.0)
+			_overlay.draw_line(c + Vector2(-3, 1), c + Vector2(3, 1), Color.BLACK, 1.5)
+		"MERCY":
+			# A white flag on a pole.
+			_overlay.draw_line(c + Vector2(-6, -8), c + Vector2(-6, 9), color, 2.0)
+			_overlay.draw_colored_polygon(PackedVector2Array([c + Vector2(-5, -8), c + Vector2(8, -6), c + Vector2(5, -2), c + Vector2(8, 2), c + Vector2(-5, 1)]), color)
+		"DEFEND":
+			# A shield.
+			_overlay.draw_colored_polygon(PackedVector2Array([c + Vector2(-7, -7), c + Vector2(7, -7), c + Vector2(7, 1), c + Vector2(0, 9), c + Vector2(-7, 1)]), color)
+			_overlay.draw_line(c + Vector2(0, -5), c + Vector2(0, 6), Color.BLACK, 1.5)
 
 
 func _draw_box_contents() -> void:
@@ -990,15 +1153,15 @@ func _draw_box_contents() -> void:
 			for i in _list.size():
 				var member: PartyMember = _list[i]
 				_draw_row(i, "%s   HP %d / %d" % [member.name, member.hp, member.max_hp], member.color)
-		State.FIGHT_BAR:
+		State.FIGHT_BAR, State.FIGHT_ANIM:
 			_draw_fight_bar(area)
 
 	# A reminder of the controls in the corner of the box.
 	var hint := ""
 	if state == State.MENU:
-		hint = "Z: choose   X: back" if _can_go_back() else "Z: choose"
+		hint = "ENTER: choose   X: back" if _can_go_back() else "ENTER: choose"
 	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY]:
-		hint = "Z: choose   X: back"
+		hint = "ENTER: choose   X: back"
 	if hint != "":
 		var width := _font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		_overlay.draw_string(_font, Vector2(area.end.x - width - 8, area.end.y - 8), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))
@@ -1018,21 +1181,57 @@ func _draw_row(row: int, text: String, color: Color) -> void:
 	_overlay.draw_string(_font, Vector2(area.position.x + 50, _row_y(row)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 
 
+## The FIGHT timing bar: a target with colored zones (red at the edges, green in the
+## middle), and a glowing bar in the attacker's color that sweeps across, leaving a
+## fading trail. "READY..." shows first, before the bar starts moving.
 func _draw_fight_bar(area: Rect2) -> void:
-	_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), "* %s attacks %s!  Press Z in the middle!" % [_bar_member.name, _bar_target.name], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
-	var target := Rect2(area.position + Vector2(20, 40), Vector2(area.size.x - 40, area.size.y - 55))
-	_overlay.draw_rect(target, Color(0.15, 0.15, 0.15))
-	_overlay.draw_rect(target, Color.WHITE, false, 1.0)
-	# The sweet spot in the middle.
-	_overlay.draw_rect(Rect2(target.get_center().x - 6, target.position.y, 12, target.size.y), Color(0.2, 0.7, 0.2))
-	# The moving bar.
+	var color := _bar_member.color
+	var title := "* %s attacks %s!" % [_bar_member.name, _bar_target.name]
+	_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), title, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+	var prompt := "READY..." if _bar_wait > 0.0 else "Press ENTER in the green!"
+	if state == State.FIGHT_ANIM:
+		prompt = "CRITICAL!" if _anim_accuracy >= CRITICAL else "HIT!"
+	var prompt_color := YELLOW if state == State.FIGHT_ANIM or _bar_wait <= 0.0 else Color.GRAY
+	var prompt_width := _font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+	_overlay.draw_string(_font, Vector2(area.end.x - prompt_width - 14, _row_y(0)), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, prompt_color)
+
+	var target := Rect2(area.position + Vector2(24, 40), Vector2(area.size.x - 48, area.size.y - 56))
+	var mid := target.get_center().x
+	_overlay.draw_rect(target, Color(0.08, 0.08, 0.1))
+	# The zones, from the outside in: red, orange, yellow, green. Hitting closer
+	# to the middle does more damage.
+	var zones := [[1.0, Color(0.55, 0.12, 0.12)], [0.62, Color(0.7, 0.38, 0.1)], [0.32, Color(0.75, 0.68, 0.15)], [0.1, Color(0.2, 0.75, 0.3)]]
+	for zone in zones:
+		var half: float = target.size.x * 0.5 * zone[0]
+		_overlay.draw_rect(Rect2(mid - half, target.position.y + 4, half * 2, target.size.y - 8), zone[1])
+	# Tick marks and the dead-center line.
+	for t in 11:
+		var x := target.position.x + target.size.x * t / 10.0
+		_overlay.draw_line(Vector2(x, target.end.y - 6), Vector2(x, target.end.y), Color(1, 1, 1, 0.4), 1.0)
+	_overlay.draw_line(Vector2(mid, target.position.y), Vector2(mid, target.end.y), Color(1, 1, 1, 0.8), 1.0)
+	_overlay.draw_rect(target, Color.WHITE, false, 2.0)
+
+	# The bar, with an afterimage trail.
+	for i in _bar_trail.size():
+		var tx := target.position.x + clampf(_bar_trail[i], 0.0, 1.0) * target.size.x
+		_overlay.draw_rect(Rect2(tx - 3, target.position.y - 2, 6, target.size.y + 4), Color(color, 0.08 * (i + 1)))
 	var x := target.position.x + clampf(_bar_pos, 0.0, 1.0) * target.size.x
-	_overlay.draw_rect(Rect2(x - 3, target.position.y - 4, 6, target.size.y + 8), Color.WHITE)
+	var glow := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 90.0) if _bar_wait > 0.0 else 1.0
+	_overlay.draw_rect(Rect2(x - 7, target.position.y - 6, 14, target.size.y + 12), Color(color, 0.3 * glow))
+	_overlay.draw_rect(Rect2(x - 3, target.position.y - 6, 6, target.size.y + 12), Color(color, glow))
+	_overlay.draw_rect(Rect2(x - 1, target.position.y - 6, 2, target.size.y + 12), Color(1, 1, 1, glow))
 
 
-func _draw_bar(rect: Rect2, fraction: float, color: Color) -> void:
-	_overlay.draw_rect(rect, Color(0.5, 0.0, 0.0))
+## A health bar with a thin border. `trailing` (if given) is the HP still draining
+## away, shown in yellow-white behind the real amount.
+func _draw_bar(rect: Rect2, fraction: float, color: Color, trailing: float = -1.0) -> void:
+	_overlay.draw_rect(rect.grow(1), Color(0.9, 0.9, 0.9))
+	_overlay.draw_rect(rect, Color(0.45, 0.0, 0.0))
+	if trailing > fraction:
+		_overlay.draw_rect(Rect2(rect.position, Vector2(rect.size.x * clampf(trailing, 0.0, 1.0), rect.size.y)), Color(1.0, 0.9, 0.6))
 	_overlay.draw_rect(Rect2(rect.position, Vector2(rect.size.x * clampf(fraction, 0.0, 1.0), rect.size.y)), color)
+	# A lighter strip along the top makes it look a bit shiny.
+	_overlay.draw_rect(Rect2(rect.position, Vector2(rect.size.x * clampf(fraction, 0.0, 1.0), rect.size.y * 0.3)), Color(1, 1, 1, 0.25))
 
 
 func _draw_centered(text: String, center: Vector2, font_size: int, color: Color) -> void:

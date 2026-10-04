@@ -20,6 +20,8 @@ const FRAGMENT_SPOT := Vector2(870, 360)    # in the field, by the bleachers
 const SAVE_SPOT := Vector2(470, 370)        # in the courtyard
 const ROAD_Y := 500.0                       # walking below this means "leaving"
 const FIELD_EDGE_X := 570.0                 # walking left of this after the fragment triggers the ambush
+const CURB_Y := 488.0                       # the bottom sidewalk, right at the curb
+const CAR_LANE_Y := 538.0                   # where a car's wheels touch the road (the near lane)
 
 var hop: Character
 var fragment: Character
@@ -165,11 +167,66 @@ func _arrival() -> void:
 	await Game.dialogue.say([
 		"* (Mt. Carmel High School.)",
 		"* (School let out a while ago.\n*  The campus is quiet.)",
-		"* (Use the ARROW KEYS to walk.\n*  Press Z to talk to people or look at things.)",
+	])
+	await _the_voice()
+	await Game.dialogue.say([
+		"* (Use the ARROW KEYS to walk.\n*  Press ENTER to talk to people or look at things.)",
+		"* (Press B or C to open your BAG.)",
 	])
 	Game.flags["arrived"] = true
 	Game.busy = false
 	_cutscene_running = false
+
+
+## A voice with no face explains what Elric is here to do, and how the game works,
+## then asks how they plan to do it. (It's Hopkuna. Nobody knows that yet.)
+func _the_voice() -> void:
+	var voice := func(text: String) -> Dictionary:
+		return {"who": "Hopkuna", "tag": "???", "face": false, "text": text}
+	Game.stop_music(1.0)
+	await get_tree().create_timer(0.8).timeout
+	await Game.dialogue.say([
+		"* (...)",
+		"* (Something speaks.\n*  You can't tell where it's coming from.)",
+		voice.call("...Oh? A wanderer.\nHaven't seen one of you in a while."),
+		voice.call("You feel it, don't you? Something pulling at you.\nThat's the FRAGMENTS."),
+		voice.call("Twelve of them. Scattered all over this city.\nLittle pieces of something very old."),
+		voice.call("Here is your OBJECTIVE, little wanderer:\nfind them. All twelve."),
+		voice.call("Easy to say. Not so easy to do.\nPeople will get in your way."),
+		voice.call("You could TALK to them. ACT. Listen.\nWin them over, and SPARE them."),
+		voice.call("Every friend you make like that gives you BOND.\nIt's slow. It's... sweet."),
+		voice.call("Or you could FIGHT.\nKnock them down and step over them."),
+		voice.call("That gives you LOVE.\nIt's much faster."),
+		voice.call("If you ever get tired, look for a glowing star.\nIt'll let you SAVE."),
+		voice.call("And keep your BAG close.\nSnacks fix a surprising number of problems."),
+		voice.call("So."),
+		voice.call("Here is your objective.\nHow will you do it?"),
+	])
+	var choice := await Game.dialogue.ask("* (How will you do it?)", ["Talk it out", "Fight my way", "...I don't know"])
+	Game.flags["first_answer"] = ["talk", "fight", "unsure"][choice]
+	match choice:
+		0:
+			await Game.dialogue.say([
+				voice.call("Talk it out. How noble."),
+				voice.call("Let's see how long that lasts."),
+			])
+		1:
+			await Game.dialogue.say([
+				voice.call("...Heh."),
+				voice.call("I think we're going to get along just fine."),
+			])
+		_:
+			await Game.dialogue.say([
+				voice.call("Honest. I like that."),
+				voice.call("Don't worry. The city will decide for you."),
+			])
+	await Game.dialogue.say([
+		voice.call("Go on, then. The first one's close.\nI'll be watching."),
+		"* (The voice is gone.)",
+	])
+	Game.play_music("mt_carmel", 1.0)
+	Game.set_objective("Find the 12 FRAGMENTS.")
+	await get_tree().create_timer(0.6).timeout
 
 
 func _talk_to_hop() -> void:
@@ -185,6 +242,7 @@ func _talk_to_hop() -> void:
 		"* (Hop is now following you.)",
 	])
 	Game.flags["met_hop"] = true
+	Game.set_objective("Check out the glow by the bleachers.")
 	hop.on_interact = Callable()
 	hop.remove_from_group("interactable")
 	hop.follow = player
@@ -221,6 +279,7 @@ func _inspect_fragment() -> void:
 		{"who": "Hop", "text": "Let's get out of here before somebody\nthinks we stole school property.", "mood": "happy"},
 	])
 	Game.flags["has_fragment_1"] = true
+	Game.set_objective("Leave Mt. Carmel with the fragment.")
 	Game.flags["fragments"] = 1
 	fragment.queue_free()
 
@@ -333,13 +392,7 @@ func _after_tutorial_battle() -> void:
 			{"who": "BigJoe6", "text": "We'll be watching. Revolution doesn't\nlet fragments just walk around."},
 		])
 
-	# They head off toward the road.
-	eggo.walk_to(Vector2(eggo.position.x - 40, 560), 120.0)
-	await bigjoe.walk_to(Vector2(bigjoe.position.x - 40, 560), 120.0)
-	await get_tree().create_timer(0.4).timeout
-	eggo.queue_free()
-	Game.play_music("mt_carmel", 1.5)
-	bigjoe.queue_free()
+	await _ride_home()
 
 	match Game.flags["tutorial_path"]:
 		"spared":
@@ -361,6 +414,45 @@ func _after_tutorial_battle() -> void:
 			])
 
 	Game.flags["tutorial_done"] = true
+	Game.set_objective("Head down the road to the PQ Mall.")
 	Game.battle_result = {}
 	Game.busy = false
 	_cutscene_running = false
+
+
+## Eggo and BigJoe6's ride shows up. They walk to the curb, the car pulls up,
+## they get in, and it drives off down the road.
+func _ride_home() -> void:
+	# The camera slides down so the road is on screen.
+	var look := create_tween()
+	look.tween_property(camera, "offset:y", maxf(0.0, CAR_LANE_Y - player.position.y - 150.0), 0.8)
+
+	eggo.walk_to(Vector2(eggo.position.x - 20, CURB_Y - 6), 120.0)
+	await bigjoe.walk_to(Vector2(bigjoe.position.x - 20, CURB_Y + 4), 120.0)
+	Game.play_sfx("honk")
+	await Game.dialogue.say([{"who": "Eggo", "text": "oh. that's our ride."}])
+
+	var stop_x := bigjoe.position.x + 10.0
+	var car := Car.new()
+	car.scale = Vector2(1.5, 1.5)
+	car.color = Color8(214, 168, 60)
+	car.position = Vector2(stop_x - 640.0, CAR_LANE_Y)
+	world.add_child(car)
+	await car.drive_to(stop_x, 260.0)
+
+	# In they go.
+	for who in [eggo, bigjoe]:
+		await who.walk_to(Vector2(stop_x - 10, CAR_LANE_Y - 12), 120.0)
+		Game.play_sfx("door")
+		who.queue_free()
+		await get_tree().create_timer(0.2).timeout
+	await get_tree().create_timer(0.4).timeout
+
+	Game.play_sfx("honk")
+	Game.play_music("mt_carmel", 1.5)
+	await car.drive_to(room.pixel_size().x + 160.0, 240.0)
+	car.queue_free()
+
+	look = create_tween()
+	look.tween_property(camera, "offset:y", 0.0, 0.6)
+	await look.finished
