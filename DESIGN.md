@@ -423,7 +423,6 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
 - What is the corrupted boss at the Chapter 1 climax (what did the 3rd fragment twist into a monster)?
-- Which real places between Westview and Mt. Carmel appear in Chapter 1?
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
