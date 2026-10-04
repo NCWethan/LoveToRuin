@@ -321,9 +321,27 @@ Elric is a traveling adventurer with no fixed home.
 #### Chapter 1 opening — how Elric meets the cast
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
-3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **first battle**: it teaches the battle system, and the player can talk their way out (ACT/MERCY) or fight — the first hint that choices shape the route.
+3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
 4. **The reveal comes later.** Elric only learns that Hop is Hopkuna further into the story, so the friendship built in the opening makes the twist land harder.
+5. **The route choice ends Chapter 1.** Elric meets the full **REVOLUTION Corps**, and they ask what Elric wants to do (see [The route choice](#the-route-choice)). Chapters 2–4 play out differently depending on the answer.
 
+#### The tutorial fight: Eggo & BigJoe6 *(proposed — open to changes)*
+
+This fight **teaches every core mechanic**, one at a time, through the characters' own dialogue instead of pop-up text boxes.
+
+| Turn | What happens | Mechanic taught |
+|---|---|---|
+| **Start** | BigJoe6 charges in: "Hand over the fragment, Hopkuna's lackey!" | The battle screen, party HP |
+| **1** | BigJoe6 attacks first. The SOUL appears in the box. | **Dodging** with the SOUL |
+| **2** | Hop: "Don't just stand there — hit 'em!" | **FIGHT** (the timing bar) |
+| **3** | Eggo, unbothered: "...you could also just talk to us." | **ACT** — starting with **CHECK** (enemy stats) |
+| **4** | Elric can ACT on each enemy: tell Eggo a pun (he can't resist), tell BigJoe6 the truth (he values justice and truth). | **Character-specific ACTs** |
+| **5** | Hop takes his own turn and acts alongside Elric. | **Team turns** (party members act too) |
+| **6** | Elric takes a big hit; Hop tosses over a snack. | **ITEM** and **DEFEND** |
+| **7** | Eggo and BigJoe6's names turn yellow. | **MERCY / SPARE** — sparing earns **BOND** |
+
+- **Two ways out:** the player can SPARE them (earns BOND) or FIGHT them down (earns LOVE). Either way, they're only **knocked out, not killed** — it's a tutorial, and both survive to become part of the cast.
+- **Hop fights alongside Elric** as a temporary party member — which makes his later reveal hurt more.
 ### Middle
 Elric meets the cast and recognizes the villain, **Hopkuna**. Elric works and travels the lands in search of **Hopkuna's fragments**.
 
@@ -387,7 +405,7 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party?
-- Which chapter does the route choice (meeting the REVOLUTION Corps) happen in?
+- The route choice happens at the end of Chapter 1, and one option is "Go with Hop?" — does Elric know Hop is Hopkuna by then?
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?
