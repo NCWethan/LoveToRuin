@@ -42,7 +42,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 |---|---|
 | **Eggo** | Co-founder of Revolution. See [Eggo](#eggo) below. |
 | **BigJoe6** | Co-founder of Revolution. See [BigJoe6](#bigjoe6) below. |
-| **MuffinMage** | |
+| **MuffinMage** | See [MuffinMage](#muffinmage) below. |
 | **Nassan** | |
 | **NCWethan** | |
 | **Sansworth** | |
@@ -88,6 +88,20 @@ Pronouns: he/him · Co-founder of Revolution
 - Belt and blue jeans.
 
 ![BigJoe6 reference](art/reference/bigjoe6.png)
+
+### MuffinMage
+
+Pronouns: he/him
+
+**Personality**
+- Neutral.
+- Loves **salmon burgers**.
+- Talks casually, but can be serious at times.
+
+**Appearance**
+- A big red-orange **fish mask** (goldfish-style, with a wide-open mouth) covering his whole head.
+- Orange shirt.
+- Blue jeans.
 
 ### Hop
 
