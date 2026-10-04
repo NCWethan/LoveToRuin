@@ -43,7 +43,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Eggo** | Co-founder of Revolution. See [Eggo](#eggo) below. |
 | **BigJoe6** | Co-founder of Revolution. See [BigJoe6](#bigjoe6) below. |
 | **MuffinMage** | See [MuffinMage](#muffinmage) below. |
-| **Nassan** | |
+| **Nassan** | See [Nassan](#nassan) below. |
 | **NCWethan** | |
 | **Sansworth** | |
 | **Ronin** | |
@@ -102,6 +102,23 @@ Pronouns: he/him
 - A big red-orange **fish mask** (goldfish-style, with a wide-open mouth) covering his whole head.
 - Orange shirt.
 - Blue jeans.
+
+### Nassan
+
+Pronouns: he/him
+
+**Personality**
+- Very wise, but youthful.
+- A **planner**.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/nassan.png))
+- Black head, face mostly in shadow.
+- Black hat with white trim.
+- Black shirt that says **"im batman"**.
+- Light gray arms.
+- Dark, patterned pants.
+
+![Nassan reference](art/reference/nassan.png)
 
 ### Hop
 
