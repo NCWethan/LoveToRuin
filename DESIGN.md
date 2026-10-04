@@ -46,7 +46,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Nassan** | See [Nassan](#nassan) below. |
 | **NCWethan** | See [NCWethan](#ncwethan) below. |
 | **Sansworth** | See [Sansworth](#sansworth) below. |
-| **Ronin** | |
+| **Ronin** | See [Ronin](#ronin) below. |
 | **Agent** | |
 | **Rooster** | |
 | **Crayola** | |
@@ -156,6 +156,18 @@ Pronouns: he/him
 - Black pants.
 
 ![Sansworth reference](art/reference/sansworth.png)
+
+### Ronin
+
+Pronouns: he/him
+
+**Personality**
+- **Loud** — on par with NCWethan.
+- Plays **guitar**.
+- Always seen **losing at checkers to NCWethan** (running gag).
+
+**Appearance**
+- *Design coming soon.*
 
 ### Hop
 
@@ -284,4 +296,5 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 - When in the story does Elric meet the REVOLUTION Corps?
 - How many fragments are there in total, and how many are in Chapter 1?
 - What do Hopkuna's tattoos look like?
+- Ronin's design (coming from the creator).
 - What are each character's personality and battle abilities?
