@@ -44,7 +44,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **BigJoe6** | Co-founder of Revolution. See [BigJoe6](#bigjoe6) below. |
 | **MuffinMage** | See [MuffinMage](#muffinmage) below. |
 | **Nassan** | See [Nassan](#nassan) below. |
-| **NCWethan** | |
+| **NCWethan** | See [NCWethan](#ncwethan) below. |
 | **Sansworth** | |
 | **Ronin** | |
 | **Agent** | |
@@ -119,6 +119,27 @@ Pronouns: he/him
 - Dark, patterned pants.
 
 ![Nassan reference](art/reference/nassan.png)
+
+### NCWethan
+
+Pronouns: he/him
+
+**Personality**
+- A meathead — a dunce, even — but **true to himself**, and that's all that matters.
+- **Very loud.**
+- A **powerhouse**.
+
+**Powers**
+- **Lightning.**
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/ncwethan.png))
+- Classic yellow Roblox skin with a simple smiling face.
+- Black helmet with yellow-tinted goggles.
+- White T-shirt with a red-and-orange star/flame emblem.
+- Blue pants.
+- Swirling **blue rune ribbons** circling around him (could become his lightning/power effect).
+
+![NCWethan reference](art/reference/ncwethan.png)
 
 ### Hop
 
