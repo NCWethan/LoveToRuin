@@ -15,7 +15,7 @@ extends Node2D
 @export var damage: int = 3
 @export var color: Color = Color.WHITE
 ## How it's drawn: "square", "egg", "bunny", "star", "pencil", "bubble", "card",
-## "finger", "ball", "claw", "arrow" or "beam".
+## "finger", "ball", "claw", "arrow", "beam", "claw_slash", "ring" or "clapper".
 @export var shape: String = "square"
 
 ## Bounces up when it reaches the bottom of the box (for hopping things).
@@ -76,12 +76,12 @@ func _process(delta: float) -> void:
 	_time += delta
 	if not is_armed():
 		# Still a warning: see-through and not moving yet. Beams flicker.
-		modulate.a = 0.35 + (0.35 * absf(sin(_time * 22.0)) if shape == "beam" else 0.0)
+		modulate.a = 0.35 + (0.35 * absf(sin(_time * 22.0)) if shape in ["beam", "claw_slash"] else 0.0)
 		queue_redraw()
 		return
 	if not _armed_before:
 		_armed_before = true
-		if shape == "beam":
+		if shape in ["beam", "claw_slash"]:
 			Game.play_sfx("slash")
 	modulate.a = 1.0
 	if lifetime > 0.0:
@@ -90,7 +90,7 @@ func _process(delta: float) -> void:
 			queue_free()
 			return
 		# Slashes fade out as they finish.
-		if shape == "beam":
+		if shape in ["beam", "claw_slash"]:
 			modulate.a = clampf(left / (lifetime * 0.5), 0.0, 1.0)
 
 	# Chasing the SOUL: turn a little toward it each frame.
@@ -174,7 +174,7 @@ func hits(rect: Rect2) -> bool:
 		var tip := _clapper_tip()
 		var closest := Geometry2D.get_closest_point_to_segment(center, global_position, tip)
 		return closest.distance_to(center) < 3.0 + rect.size.x * 0.5 or tip.distance_to(center) < size + rect.size.x * 0.5
-	if shape == "beam":
+	if shape in ["beam", "claw_slash"]:
 		var center := rect.get_center()
 		var closest := Geometry2D.get_closest_point_to_segment(center, global_position - beam_vector, global_position + beam_vector)
 		return closest.distance_to(center) < size * 0.5 + rect.size.x * 0.5
@@ -195,6 +195,28 @@ func _draw() -> void:
 		draw_circle(Vector2.ZERO, size * 0.7, Color(color, 0.25))
 
 	match shape:
+		"claw_slash":
+			var dir := beam_vector.normalized()
+			var side := dir.orthogonal()
+			if not is_armed():
+				# The warning: a faint scratch, broken into dashes.
+				var length := beam_vector.length()
+				var d := -length
+				while d < length:
+					draw_line(dir * d, dir * minf(d + 7.0, length), color, 1.0)
+					d += 12.0
+			else:
+				# A claw mark: thin at both ends, fat in the middle, with a hot white core
+				# and a little spray of torn bits along it.
+				var tip := beam_vector
+				var mid_width := size * 0.9
+				draw_colored_polygon(PackedVector2Array([-tip, side * mid_width * 1.9, tip, -side * mid_width * 1.9]), Color(color, 0.3))
+				draw_colored_polygon(PackedVector2Array([-tip, side * mid_width, tip, -side * mid_width]), color)
+				draw_colored_polygon(PackedVector2Array([-tip * 0.9, side * mid_width * 0.35, tip * 0.9, -side * mid_width * 0.35]), Color(1, 1, 1))
+				for k in 5:
+					var along := (k - 2) / 2.5
+					var bit := tip * along + side * (mid_width + 3.0) * (1.0 if k % 2 == 0 else -1.0)
+					draw_line(bit, bit + side * (4.0 if k % 2 == 0 else -4.0) + dir * 3.0, Color(color, 0.8), 1.5)
 		"ring":
 			# A ring of sound, drawn as an arc that skips the gap.
 			# Only the parts inside the box are drawn.

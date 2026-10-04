@@ -541,6 +541,8 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **Flee**: MERCY opens Spare / Flee. Fleeing turns Elric and Hop around and they walk off the left side of the screen, then you're back in the overworld where the fight started. (Not allowed in boss, story or scripted fights.)
 - [x] The title screen: centered, with a red glow, twelve red fragments circling the title, rising embers and a glowing crack under "LOVE TO RUIN"
 - [x] People walking around stop when you talk to them
+- [x] Battle animations: everyone breathes and bobs; FIGHT winds up then leaps at the enemy; ACT hops; ITEM squashes with sparkles; MERCY waves; DEFEND crouches behind a shimmering shield; getting hit flashes red and flinches; knocked-out members lie down. Enemies bob gently too.
+- [x] Wally's CLAW SWIPE: three glowing claw marks rake right through the SOUL (after dashed scratch warnings), then a second set crosses them from the other side
 - [x] Boss health bars across the top of the screen, styled per boss (Wally: gold fur and claw marks; Hopkuna: pulsing red with tattoo zigzags and "??? / ???")
 
 ### Milestone 6 — Westview High School

@@ -37,7 +37,7 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 		"dodgeballs":
 			return _dodgeballs(enemy, parent, area, step)
 		"claw_swipe":
-			return _claw_swipe(enemy, parent, area)
+			return _claw_swipe(enemy, parent, area, soul_position)
 		"claw_drop":
 			return _claw_drop(enemy, parent, area)
 		"cleave":
@@ -511,24 +511,23 @@ static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, step: int) -> f
 	return 0.8 * _pep(enemy)
 
 
-## Wally: three claw marks flash as a warning across the box, then slash for a moment.
-static func _claw_swipe(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var down_right := randf() < 0.5
-	var base := randf_range(-area.size.y * 0.5, area.size.y * 0.5)
-	for line in 3:
-		var offset := base + (line - 1) * 16.0
-		var t := 0.0
-		while t <= area.size.x:
-			var x := area.position.x + t
-			var y := (area.position.y + offset + t * 0.75) if down_right else (area.end.y - offset - t * 0.75)
-			if y > area.position.y + 3 and y < area.end.y - 3:
-				var mark := _bullet(enemy, parent, area, Vector2(x, y))
-				mark.size = 5.0
-				mark.color = Color(1.0, 0.95, 0.85)
-				mark.delay = 0.5
-				mark.lifetime = 0.3
-			t += 7.0
-	return 1.0 * _pep(enemy)
+## Wally: CLAW SWIPE. Three claw marks rake through right where the SOUL is (they
+## flash as scratches first), and a moment later a second set rakes back the other
+## way, crossing the first. Dodge one, then dodge again.
+static func _claw_swipe(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
+	var tilt := randf_range(0.45, 0.8) * (1.0 if randf() < 0.5 else -1.0)
+	var warn := 0.42 * _pep(enemy)
+	for pass_index in 2:
+		var direction := Vector2.RIGHT.rotated(tilt if pass_index == 0 else -tilt)
+		var aim := soul_position + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+		var across := direction.orthogonal()
+		for line in 3:
+			var through := aim + across * (line - 1) * 14.0
+			var slash := _beam(enemy, parent, area, through, direction, warn + pass_index * 0.4 + line * 0.04, Color(1.0, 0.92, 0.75))
+			slash.shape = "claw_slash"
+			slash.size = 7.0
+			slash.lifetime = 0.2
+	return 1.05 * _pep(enemy)
 
 
 ## Wally: sets of three claws plunge down from the top (they flash first).
@@ -563,7 +562,7 @@ static func _soul(parent: Node) -> Node2D:
 
 ## A glowing slash across the whole box, along `direction`, through `through`.
 ## A thin flickering line shows where it will land, then it cuts for a moment.
-static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, direction: Vector2, delay: float, color: Color = HOPKUNA_RED) -> void:
+static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, direction: Vector2, delay: float, color: Color = HOPKUNA_RED) -> Bullet:
 	# Find where the line through `through` enters and leaves the box, so the
 	# slash reaches exactly from one wall to the other.
 	var dir := direction.normalized()
@@ -589,6 +588,7 @@ static func _beam(enemy: Enemy, parent: Node, area: Rect2, through: Vector2, dir
 	beam.lifetime = 0.22
 	# Beams are as long as the box is wide; keep them from being removed for "leaving" it.
 	beam.bounds = Rect2()
+	return beam
 
 
 ## Hopkuna: CLEAVE. One slash right through the SOUL, and a second one close by.

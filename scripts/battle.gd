@@ -102,6 +102,9 @@ var _attackers: Array[Enemy] = []
 var _speech: Dictionary = {}
 var _invincible_timer: float = 0.0
 
+## The animation each party member is playing: {member: {"type": "ACT", "time": seconds}}.
+var _member_anim: Dictionary = {}
+
 # Floating damage numbers
 var _popups: Array[Dictionary] = []
 
@@ -456,6 +459,8 @@ func _run_next_action() -> void:
 
 	var action := actions[_action_index]
 	var member: PartyMember = action.get("member")
+	if member:
+		_member_anim[member] = {"type": action["type"], "time": 0.0}
 	match action["type"]:
 		"NONE":
 			_run_next_action()
@@ -693,7 +698,7 @@ func _check_hits() -> void:
 		if bullet and bullet.hits(soul_hitbox):
 			# Slashes stay to finish their flash (the SOUL is briefly invincible
 			# after a hit, so they can't hit twice). Everything else vanishes.
-			if bullet.shape != "beam":
+			if not bullet.shape in ["beam", "claw_slash", "ring", "clapper"]:
 				bullet.queue_free()
 			_hurt_party(bullet.damage)
 			return
@@ -1069,6 +1074,8 @@ func _update_effects(delta: float) -> void:
 		if enemy.shown_hp < 0.0:
 			enemy.shown_hp = enemy.hp
 		enemy.shown_hp = move_toward(enemy.shown_hp, enemy.hp, enemy.max_hp * 0.8 * delta)
+	for member in _member_anim:
+		_member_anim[member]["time"] += delta
 	for member in party:
 		member.shake = maxf(member.shake - delta, 0.0)
 
@@ -1221,10 +1228,13 @@ func _draw_enemies() -> void:
 					_overlay.draw_texture_rect(enemy.sprite, feet_rect, false, Color(4, 4, 4, enemy.flash * 3.0))
 				_overlay.draw_set_transform(Vector2.ZERO)
 			else:
-				_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+				# Everyone still fighting bobs gently, each at their own pace.
+				var idle := sin(Time.get_ticks_msec() / 1000.0 * 2.2 + pos.x * 0.05) * 2.5 if enemy.is_active() and _data.event == "" else 0.0
+				var rect := Rect2(Vector2(pos.x - sprite_size.x / 2, top + idle), sprite_size)
+				_overlay.draw_texture_rect(enemy.sprite, rect, false, tint)
 				# Flash white for a moment when hit.
 				if enemy.flash > 0.0:
-					_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, Color(4, 4, 4, enemy.flash * 3.0))
+					_overlay.draw_texture_rect(enemy.sprite, rect, false, Color(4, 4, 4, enemy.flash * 3.0))
 		else:
 			# Placeholder figure: a blocky head and body.
 			_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), enemy.body_color * tint)
@@ -1378,7 +1388,7 @@ func _draw_party_sprites() -> void:
 					var puff := fmod(_flee_time * 3.0 + d * 0.33, 1.0)
 					_overlay.draw_circle(feet + Vector2(14 + puff * 18, -3 - puff * 6), 3.0 * (1.0 - puff), Color(0.8, 0.8, 0.8, 0.5 * (1.0 - puff)))
 			continue
-		_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+		_draw_member(member, i, Vector2(pos.x, pos.y + 40.0), sprite_size, tint)
 
 		if choosing:
 			# ...and a bouncing arrow and their name above their head.
@@ -1387,6 +1397,84 @@ func _draw_party_sprites() -> void:
 			_overlay.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(-9, -12), tip + Vector2(9, -12)]), member.color)
 			_overlay.draw_polyline(PackedVector2Array([tip, tip + Vector2(-9, -12), tip + Vector2(9, -12), tip]), Color.WHITE, 1.5)
 			_draw_centered(member.name.to_upper() + "'S TURN", Vector2(pos.x, top - 32 - bob), 14, member.color)
+
+
+## Draws a party member in their current pose, standing on `feet`.
+##   idle      breathing (a gentle stretch and squash)
+##   choosing  a little bounce
+##   FIGHT     leaning back to wind up while the timing bar runs, then a lunge at the
+##             enemy (Hop's fists blur through his three punches)
+##   ACT       a hop      ITEM  a squash-and-stretch with sparkles
+##   MERCY     a wave     DEFEND  a crouch behind a shimmering shield
+##   hurt      a flinch backward, flashing red
+##   down      lying on the ground
+func _draw_member(member: PartyMember, index: int, feet: Vector2, sprite_size: Vector2, tint: Color) -> void:
+	var t := Time.get_ticks_msec() / 1000.0
+	var offset := Vector2.ZERO
+	var rot := 0.0
+	var scale := Vector2.ONE
+	var anim: Dictionary = _member_anim.get(member, {})
+	var anim_time: float = anim.get("time", 99.0)
+
+	if member.is_down():
+		rot = -PI / 2
+		offset = Vector2(-sprite_size.y * 0.25, 0)
+	else:
+		var breath := sin(t * 2.4 + index * 1.3)
+		scale = Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
+		if _is_choosing(index):
+			offset.y -= absf(sin(t * 5.0)) * 3.0
+		if member.defending:
+			scale *= Vector2(1.08, 0.86)
+		# FIGHT: wind up, then lunge.
+		if _bar_member == member and state == State.FIGHT_BAR:
+			rot = -0.1 + sin(t * 14.0) * 0.015
+			offset.x = -6.0
+		elif _bar_member == member and state == State.FIGHT_ANIM:
+			var out := clampf(_anim_time / 0.1, 0.0, 1.0)
+			var back := clampf((_anim_time - 0.65) / 0.3, 0.0, 1.0)
+			var lunge := out * (1.0 - back)
+			offset.x = 60.0 * lunge
+			offset.y = -sin(clampf(_anim_time / 0.2, 0.0, 1.0) * PI) * 22.0 * (1.0 - back)
+			rot = 0.16 * lunge
+			if member.name == "Hop" and _anim_time < 0.36:
+				offset.x += sin(_anim_time * 90.0) * 6.0
+		# The other actions play once, right as they happen.
+		match anim.get("type", ""):
+			"ACT":
+				if anim_time < 0.5:
+					offset.y -= sin(anim_time / 0.5 * PI) * 22.0
+			"ITEM":
+				if anim_time < 0.6:
+					var squash := sin(anim_time / 0.6 * PI * 2.0)
+					scale *= Vector2(1.0 + 0.12 * squash, 1.0 - 0.12 * squash)
+					for s in 6:
+						var spark := feet + Vector2(cos(s * 1.1) * 24.0, -20.0 - anim_time * 80.0 - s * 6.0)
+						_overlay.draw_rect(Rect2(spark, Vector2(3, 3)), Color(0.4, 1.0, 0.5, 1.0 - anim_time / 0.6))
+			"MERCY":
+				if anim_time < 0.8:
+					rot = sin(anim_time * 20.0) * 0.12 * (1.0 - anim_time / 0.8)
+					offset.y -= absf(sin(anim_time * 10.0)) * 6.0
+			"DEFEND":
+				if anim_time < 0.25:
+					offset.y -= sin(anim_time / 0.25 * PI) * 8.0
+		# Hit: knocked back a little, flashing red.
+		if member.shake > 0.0:
+			var hurt := member.shake / 0.4
+			rot -= 0.18 * hurt
+			offset.x -= 8.0 * hurt
+			tint = tint.lerp(Color(1.0, 0.3, 0.3), hurt)
+
+	_overlay.draw_set_transform(feet + offset, rot, scale)
+	_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size), false, tint)
+	_overlay.draw_set_transform(Vector2.ZERO)
+
+	# A shimmering shield in front of anyone defending.
+	if member.defending and not member.is_down():
+		var shimmer := 0.5 + 0.5 * sin(t * 6.0)
+		var center := feet + Vector2(34, -sprite_size.y * 0.45)
+		_overlay.draw_arc(center, 30.0, -1.1, 1.1, 16, Color(0.5, 0.8, 1.0, 0.35 + 0.3 * shimmer), 4.0)
+		_overlay.draw_arc(center, 24.0, -0.9, 0.9, 12, Color(0.8, 0.95, 1.0, 0.25 + 0.2 * shimmer), 2.0)
 
 
 func _is_choosing(member_index: int) -> bool:
