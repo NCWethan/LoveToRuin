@@ -69,7 +69,7 @@ Pronouns: he/him · Co-founder of Revolution
 - Long, messy yellow hair under a yellow beanie.
 - **Face:** the classic black-eyed Roblox face with a grin *(the reference picture is old and shows a different face — use the black-eyed grin instead)*.
 - Black vest over a blue shirt, black pants.
-- Holding a purple crystal in the reference picture.
+- A **little bunny friend** sitting on his shoulder.
 
 ![Eggo reference](art/reference/eggo.png)
 
