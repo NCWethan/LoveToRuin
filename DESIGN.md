@@ -40,8 +40,8 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 | Character | Notes |
 |---|---|
-| **Eggo** | Co-founder of Revolution. |
-| **BigJoe6** | Co-founder of Revolution. |
+| **Eggo** | Co-founder of Revolution. See [Eggo](#eggo) below. |
+| **BigJoe6** | Co-founder of Revolution. See [BigJoe6](#bigjoe6) below. |
 | **MuffinMage** | |
 | **Nassan** | |
 | **NCWethan** | |
@@ -54,6 +54,40 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Nat** | |
 | **Hop** | A friend whose evil alter ego is Hopkuna. See [Hop](#hop) below. |
 | **Hopkuna** | **The villain.** Hop's evil alter ego. Inspired by the *concept* of Sukuna from *Jujutsu Kaisen* (a malevolent being sharing someone's body), but an original character. |
+
+### Eggo
+
+Pronouns: he/him · Co-founder of Revolution
+
+**Personality**
+- Chill.
+- Talks briefly.
+- Cracks puns whenever he finds a good moment.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/eggo.png))
+- Yellow skin.
+- Long, messy yellow hair under a yellow beanie.
+- **Face:** the classic black-eyed Roblox face with a grin *(the reference picture is old and shows a different face — use the black-eyed grin instead)*.
+- Black vest over a blue shirt, black pants.
+- Holding a purple crystal in the reference picture.
+
+![Eggo reference](art/reference/eggo.png)
+
+### BigJoe6
+
+Pronouns: he/him · Co-founder of Revolution
+
+**Personality**
+- Very spirited.
+- Strives for **justice and truth**.
+- Also a jokester, like Eggo.
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/bigjoe6.png))
+- Silver knight's helmet with a spiky black-and-red crest.
+- Black shirt with a "777" chain necklace, white cuffs.
+- Belt and blue jeans.
+
+![BigJoe6 reference](art/reference/bigjoe6.png)
 
 ### Hop
 
