@@ -187,9 +187,9 @@ func _physics_process(_delta: float) -> void:
 func _arrival() -> void:
 	await Game.dialogue.say([
 		"* (The PQ Mall.)",
-		{"who": "Hop", "text": "Welcome to the PQ Mall! Groceries, burgers, tacos,\nand the most confusing parking lot in San Diego."},
+		{"who": "Hop", "text": "Welcome to the PQ Mall! Groceries, burgers, tacos,\nand the most confusing parking lot in San Diego.", "mood": "happy"},
 		{"who": "Hop", "text": "Everybody ends up here eventually.\nSeriously. Look around."},
-		{"who": "Hop", "text": "If you need snacks, Vons and Jack in the Box\ntake actual money. Which I don't have. So, uh. You."},
+		{"who": "Hop", "text": "If you need snacks, Vons and Jack in the Box\ntake actual money. Which I don't have. So, uh. You.", "mood": "smug"},
 		"* (You have $%d.)" % Game.money,
 	])
 	Game.flags["mall_arrived"] = true
@@ -198,13 +198,13 @@ func _arrival() -> void:
 func _head_east() -> void:
 	if not flag("heard_westview"):
 		await Game.dialogue.say([
-			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first. Somebody here has to know something."},
+			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first. Somebody here has to know something.", "mood": "shocked"},
 		])
 		await push_player(Vector2(-30, 0))
 		return
 	await Game.dialogue.say([
-		{"who": "Hop", "text": "Westview it is. At night. Totally normal plan."},
-		{"who": "Hop", "text": "...You're going first, by the way."},
+		{"who": "Hop", "text": "Westview it is. At night. Totally normal plan.", "mood": "smug"},
+		{"who": "Hop", "text": "...You're going first, by the way.", "mood": "smug"},
 	])
 	Game.flags["mall_done"] = true
 	await Game.change_scene(DEMO_END_SCENE)
@@ -260,22 +260,22 @@ func _talk_supreme() -> void:
 	var first: Array = [
 		{"who": "Supreme", "text": "Oh. New face. Statistically, 73% of people\nat this mall are here for Vons."},
 		{"who": "Supreme", "text": "The other 27% are here for Jack in the Box\nat 2 AM. I've done the research."},
-		{"who": "Hop", "text": "He has. He has a spreadsheet."},
-		{"who": "Supreme", "text": "Seven spreadsheets. ...Name's Supreme."},
+		{"who": "Hop", "text": "He has. He has a spreadsheet.", "mood": "smug"},
+		{"who": "Supreme", "text": "Seven spreadsheets. ...Name's Supreme.", "mood": "smug"},
 	]
 	match Game.flags.get("tutorial_path", ""):
 		"spared":
-			first.append({"who": "Supreme", "text": "Word travels fast. You talked down two Revolution guys\nwithout throwing a punch. The odds of that? Basically zero."})
+			first.append({"who": "Supreme", "text": "Word travels fast. You talked down two Revolution guys\nwithout throwing a punch. The odds of that? Basically zero.", "mood": "shocked"})
 		"fought":
-			first.append({"who": "Supreme", "text": "Word travels fast. You beat two Revolution guys.\nI'm updating my threat assessment spreadsheet."})
+			first.append({"who": "Supreme", "text": "Word travels fast. You beat two Revolution guys.\nI'm updating my threat assessment spreadsheet.", "mood": "shocked"})
 	first.append({"who": "Supreme", "text": "Fun fact: Trail Mix heals 15 HP for $8.\nThat's 1.875 HP per dollar. Best value in the mall."})
 
 	await chat("supreme", first, [
 		[{"who": "Supreme", "text": "Fun fact: the average cart here has\na 41% chance of having one bad wheel."}],
 		[
 			{"who": "Supreme", "text": "Fun fact: Hop has said \"I'll win, obviously\"\n112 times this month. He has won 9 times."},
-			{"who": "Hop", "text": "...That's a lie."},
-			{"who": "Supreme", "text": "It's a spreadsheet."},
+			{"who": "Hop", "text": "...That's a lie.", "mood": "angry"},
+			{"who": "Supreme", "text": "It's a spreadsheet.", "mood": "smug"},
 		],
 		[{"who": "Supreme", "text": "Fun fact: Knotty Barrel's Salmon Burger heals 40 HP.\nMuffinMage would like you to know that. Constantly."}],
 	])
@@ -284,7 +284,7 @@ func _talk_supreme() -> void:
 func _talk_crayola() -> void:
 	if int(Game.flags.get("talks_crayola", 0)) > 0:
 		await chat("crayola", [], [
-			[{"who": "Crayola", "text": "...Thanks for talking to me. People usually\njust ask about my shirt."}],
+			[{"who": "Crayola", "text": "...Thanks for talking to me. People usually\njust ask about my shirt.", "mood": "happy"}],
 			[{"who": "Crayola", "text": "It's a job application. I keep meaning to fill it out."}],
 			[{"who": "Crayola", "text": "NCWethan keeps asking me to go swimming.\nHe cannonballs. Every time. Even in the shallow end."}],
 		])
@@ -292,11 +292,11 @@ func _talk_crayola() -> void:
 
 	Game.flags["talks_crayola"] = 1
 	await Game.dialogue.say([
-		{"who": "Crayola", "text": "Oh! Um. Hi."},
+		{"who": "Crayola", "text": "Oh! Um. Hi.", "mood": "shocked"},
 		"* (Crayola is holding a deck of cards very tightly.)",
-		{"who": "Crayola", "text": "Sorry. I don't... talk to new people much."},
+		{"who": "Crayola", "text": "Sorry. I don't... talk to new people much.", "mood": "sad"},
 		{"who": "Hop", "text": "He's shy. But he's the best card player in,\nlike, the whole zip code."},
-		{"who": "Crayola", "text": "...It's not that impressive."},
+		{"who": "Crayola", "text": "...It's not that impressive.", "mood": "happy"},
 	])
 	var choice := await Game.dialogue.ask({"who": "Crayola", "text": "Do you, um... want to see a card trick?"}, ["Yes", "No"])
 	if choice == 0:
@@ -305,49 +305,49 @@ func _talk_crayola() -> void:
 			"* (You pick a card. It's the Seven of Hearts.)",
 			{"who": "Crayola", "text": "Was it... the Seven of Hearts?"},
 			"* (It was.)",
-			{"who": "Hop", "text": "HOW."},
-			{"who": "Crayola", "text": "...Practice."},
+			{"who": "Hop", "text": "HOW.", "mood": "shocked"},
+			{"who": "Crayola", "text": "...Practice.", "mood": "happy"},
 			"* (Crayola smiles a little.)",
 		])
 	else:
 		await Game.dialogue.say([
-			{"who": "Crayola", "text": "Oh. Okay. That's fine. Totally fine."},
+			{"who": "Crayola", "text": "Oh. Okay. That's fine. Totally fine.", "mood": "sad"},
 			"* (Crayola shuffles the deck, a little embarrassed.)",
 		])
 
 
 func _talk_ncwethan() -> void:
 	await chat("ncwethan", [
-		{"who": "NCWethan", "text": "KING ME!!!"},
-		{"who": "Ronin", "text": "THAT'S NOT EVEN A REAL MOVE!\nYOU JUMPED THREE PIECES SIDEWAYS!"},
-		{"who": "NCWethan", "text": "AND IT WORKED!!"},
+		{"who": "NCWethan", "text": "KING ME!!!", "mood": "happy"},
+		{"who": "Ronin", "text": "THAT'S NOT EVEN A REAL MOVE!\nYOU JUMPED THREE PIECES SIDEWAYS!", "mood": "angry"},
+		{"who": "NCWethan", "text": "AND IT WORKED!!", "mood": "happy"},
 		{"who": "NCWethan", "text": "Oh! Hey! New person! I'm NCWethan! I'm winning!!"},
-		{"who": "Ronin", "text": "HE'S CHEATING."},
-		{"who": "NCWethan", "text": "Can't cheat if you don't know the rules!! Checkmate!!"},
-		{"who": "Ronin", "text": "THAT'S CHESS."},
+		{"who": "Ronin", "text": "HE'S CHEATING.", "mood": "angry"},
+		{"who": "NCWethan", "text": "Can't cheat if you don't know the rules!! Checkmate!!", "mood": "smug"},
+		{"who": "Ronin", "text": "THAT'S CHESS.", "mood": "angry"},
 		"* (A spark of lightning jumps off NCWethan's goggles.)",
-		{"who": "NCWethan", "text": "Sorry! That happens when I get excited!\nWhich is always!!"},
+		{"who": "NCWethan", "text": "Sorry! That happens when I get excited!\nWhich is always!!", "mood": "happy"},
 	], [
 		[{"who": "NCWethan", "text": "Wanna arm wrestle? I've never lost!\nI've also never won! I mostly just zap people!"}],
 		[{"who": "NCWethan", "text": "Me and Crayola go swimming sometimes!\nLightning and water is TOTALLY fine! Probably!"}],
 		[
 			{"who": "NCWethan", "text": "Hop! Rematch on the push-up contest! Right now!"},
-			{"who": "Hop", "text": "You did eleven and then fell asleep on the floor."},
-			{"who": "NCWethan", "text": "STRATEGICALLY."},
+			{"who": "Hop", "text": "You did eleven and then fell asleep on the floor.", "mood": "smug"},
+			{"who": "NCWethan", "text": "STRATEGICALLY.", "mood": "smug"},
 		],
 	])
 
 
 func _talk_ronin() -> void:
 	await chat("ronin", [
-		{"who": "Ronin", "text": "Don't let him fool you.\nI am a MASTER strategist."},
+		{"who": "Ronin", "text": "Don't let him fool you.\nI am a MASTER strategist.", "mood": "smug"},
 		"* (Ronin has lost 14 games of checkers in a row.)",
-		{"who": "Ronin", "text": "That's 14 games of LEARNING."},
+		{"who": "Ronin", "text": "That's 14 games of LEARNING.", "mood": "angry"},
 		{"who": "Ronin", "text": "Also, I'm a mage. And I play guitar.\nSometimes at the same time. Mostly, fire happens."},
 		{"who": "Hop", "text": "The mall banned his guitar after the fire alarm thing."},
-		{"who": "Ronin", "text": "ONE TIME!!"},
+		{"who": "Ronin", "text": "ONE TIME!!", "mood": "angry"},
 	], [
-		[{"who": "Ronin", "text": "Rematch. Rematch. REMATCH."}],
+		[{"who": "Ronin", "text": "Rematch. Rematch. REMATCH.", "mood": "angry"}],
 		[{"who": "Ronin", "text": "My staff is NOT a guitar stand.\n...It is sometimes."}],
 		[{"who": "Ronin", "text": "Want to hear my new song? It's called\n\"I Was Robbed (At Checkers).\""}],
 	])
@@ -359,9 +359,9 @@ func _talk_muffinmage() -> void:
 		"* (Someone in a huge fish mask is eating a salmon burger.)",
 		"* (You decide not to think about it too hard.)",
 		{"who": "MuffinMage", "text": "Knotty Barrel's salmon burger.\nBest thing in San Diego. Not up for debate."},
-		{"who": "Hop", "text": "...You know you're wearing a fish head, right?"},
+		{"who": "Hop", "text": "...You know you're wearing a fish head, right?", "mood": "shocked"},
 		{"who": "MuffinMage", "text": "And?"},
-		{"who": "Hop", "text": "...Nothing. Never mind."},
+		{"who": "Hop", "text": "...Nothing. Never mind.", "mood": "sad"},
 		{"who": "MuffinMage", "text": "Hey. You're the one with the fragment, right?"},
 		{"who": "MuffinMage", "text": "Be careful with that. Stuff like that\ndoesn't just show up for no reason."},
 		{"who": "MuffinMage", "text": "...Anyway. Get the salmon burger.\nHeals 40 HP. Changes lives."},
@@ -376,38 +376,38 @@ func _talk_rooster() -> void:
 		var lines: Array = [{"who": "Rooster", "text": "Still here? Bold. Bold choice."}]
 		if flag("roasted_rooster"):
 			lines = [
-				{"who": "Rooster", "text": "...I'm still thinking about the suit thing."},
+				{"who": "Rooster", "text": "...I'm still thinking about the suit thing.", "mood": "sad"},
 				{"who": "Rooster", "text": "It's called DUALITY."},
 			]
 		await chat("rooster", [], [
 			lines,
 			[
-				{"who": "Rooster", "text": "Hop! Nice hat. Did a 1940s detective lose a bet?"},
-				{"who": "Hop", "text": "...I will put you in a shopping cart."},
+				{"who": "Rooster", "text": "Hop! Nice hat. Did a 1940s detective lose a bet?", "mood": "smug"},
+				{"who": "Hop", "text": "...I will put you in a shopping cart.", "mood": "angry"},
 			],
 		])
 		return
 
 	Game.flags["talks_rooster"] = 1
 	await Game.dialogue.say([
-		{"who": "Rooster", "text": "Well, well, well. Look who it is.\nScruffy McNowhere."},
-		{"who": "Rooster", "text": "Nice clothes. Did you get them from a dumpster,\nor did the dumpster get them from you?"},
+		{"who": "Rooster", "text": "Well, well, well. Look who it is.\nScruffy McNowhere.", "mood": "smug"},
+		{"who": "Rooster", "text": "Nice clothes. Did you get them from a dumpster,\nor did the dumpster get them from you?", "mood": "smug"},
 	])
 	var choice := await Game.dialogue.ask("* (Roast him back?)", ["Yes", "No"])
 	if choice == 0:
 		Game.flags["roasted_rooster"] = true
 		await Game.dialogue.say([
-			{"who": "Elric", "text": "...Nice suit. Couldn't pick a color?"},
-			{"who": "Rooster", "text": "..."},
-			{"who": "Rooster", "text": "HEY. That's- that's a FASHION choice.\nIt's called DUALITY."},
+			{"who": "Elric", "text": "...Nice suit. Couldn't pick a color?", "mood": "smug"},
+			{"who": "Rooster", "text": "...", "mood": "shocked"},
+			{"who": "Rooster", "text": "HEY. That's- that's a FASHION choice.\nIt's called DUALITY.", "mood": "angry"},
 			"* (Rooster is visibly upset.)",
-			{"who": "Hop", "text": "Oh, they GOT you."},
-			{"who": "Rooster", "text": "Nobody got me! I'm unbeatable!\nI'm the best person in this parking lot!"},
+			{"who": "Hop", "text": "Oh, they GOT you.", "mood": "happy"},
+			{"who": "Rooster", "text": "Nobody got me! I'm unbeatable!\nI'm the best person in this parking lot!", "mood": "angry"},
 			"* (Rooster storms off three steps. Then comes back.)",
 		])
 	else:
 		await Game.dialogue.say([
-			{"who": "Rooster", "text": "Ha! Speechless. Typical.\nBeing this amazing is a burden, honestly."},
+			{"who": "Rooster", "text": "Ha! Speechless. Typical.\nBeing this amazing is a burden, honestly.", "mood": "smug"},
 			{"who": "Hop", "text": "He's like this with everyone. Don't take it personally."},
 		])
 
@@ -418,7 +418,7 @@ func _talk_sansworth() -> void:
 			[{"who": "Sansworth", "text": "I'm going to keep looking.\nFor the car I don't have."}],
 			[
 				{"who": "Sansworth", "text": "Do you think birds know they're birds?"},
-				{"who": "Hop", "text": "Please stop talking to him.\nYou'll lose brain cells."},
+				{"who": "Hop", "text": "Please stop talking to him.\nYou'll lose brain cells.", "mood": "angry"},
 			],
 			[{"who": "Sansworth", "text": "I tried to return a shopping cart once.\nIt returned me instead. Long story."}],
 		])
@@ -426,12 +426,12 @@ func _talk_sansworth() -> void:
 
 	Game.flags["talks_sansworth"] = 1
 	await Game.dialogue.say([
-		{"who": "Sansworth", "text": "Excuse me. Have you seen my car?"},
+		{"who": "Sansworth", "text": "Excuse me. Have you seen my car?", "mood": "happy"},
 		"* (Sansworth is standing in the middle of the parking lot.)",
 		{"who": "Sansworth", "text": "It's blue. Or red. It has four wheels.\nPossibly five."},
-		{"who": "Hop", "text": "Sansworth, you don't have a car."},
-		{"who": "Sansworth", "text": "...That would explain a lot."},
-		{"who": "Sansworth", "text": "Oh! But I found this!"},
+		{"who": "Hop", "text": "Sansworth, you don't have a car.", "mood": "smug"},
+		{"who": "Sansworth", "text": "...That would explain a lot.", "mood": "shocked"},
+		{"who": "Sansworth", "text": "Oh! But I found this!", "mood": "happy"},
 	])
 	if Game.items.size() < Game.MAX_ITEMS:
 		Game.items.append({"name": "Trail Mix", "heal": 15})
@@ -460,9 +460,9 @@ func _talk_nat() -> void:
 	await Game.dialogue.say([
 		"* (Someone is sitting by the bench\n*  with an open book on their head.)",
 		"* (They appear to be asleep.)",
-		{"who": "Nat", "text": "...I'm not asleep. I'm reading."},
+		{"who": "Nat", "text": "...I'm not asleep. I'm reading.", "mood": "smug"},
 		{"who": "Hop", "text": "Your eyes were closed."},
-		{"who": "Nat", "text": "I'm reading with my eyes closed.\nIt's advanced."},
+		{"who": "Nat", "text": "I'm reading with my eyes closed.\nIt's advanced.", "mood": "smug"},
 		{"who": "Nat", "text": "...That shard you're carrying. It's a fragment."},
 		{"who": "Nat", "text": "There's an old story. Twelve pieces of something\nthat shouldn't exist, scattered so it could never wake up."},
 		{"who": "Nat", "text": "The story calls it Hopkuna."},
@@ -470,8 +470,8 @@ func _talk_nat() -> void:
 		{"who": "Nat", "text": "Whoever gathers all twelve... well.\nThe book doesn't say. The last page is torn out."},
 		{"who": "Nat", "text": "Convenient. Anyway. Goodnight."},
 		"* (Nat puts the book back on his head and doesn't move again.)",
-		{"who": "Hop", "text": "...Ha. Spooky story. Right? Super fake."},
-		{"who": "Hop", "text": "Let's go."},
+		{"who": "Hop", "text": "...Ha. Spooky story. Right? Super fake.", "mood": "happy"},
+		{"who": "Hop", "text": "Let's go.", "mood": "sad"},
 	])
 	Game.flags["heard_lore"] = true
 
@@ -482,8 +482,8 @@ func _talk_nassan() -> void:
 			[{"who": "Nassan", "text": "The plan: food, save, Westview. In that order."}],
 			[{"who": "Nassan", "text": "I'd come with you, but someone has to\nplan what happens after the plan."}],
 			[
-				{"who": "Hop", "text": "...Why does your shirt say \"im batman\"?"},
-				{"who": "Nassan", "text": "Because I am."},
+				{"who": "Hop", "text": "...Why does your shirt say \"im batman\"?", "mood": "shocked"},
+				{"who": "Nassan", "text": "Because I am.", "mood": "smug"},
 				{"who": "Hop", "text": "..."},
 				{"who": "Nassan", "text": "Next question."},
 			],
@@ -497,8 +497,8 @@ func _talk_nassan() -> void:
 		{"who": "Nassan", "text": "Lights in Westview High School after dark.\nDoors that lock on their own."},
 		{"who": "Nassan", "text": "Hallways that are longer than they should be."},
 		{"who": "Nassan", "text": "If I had to bet? The next fragment is there."},
-		{"who": "Hop", "text": "Westview? At night?\n...Sounds fun. Totally not terrifying."},
+		{"who": "Hop", "text": "Westview? At night?\n...Sounds fun. Totally not terrifying.", "mood": "shocked"},
 		{"who": "Nassan", "text": "Here's the plan: stock up on food, save your progress,\nthen head east down the road."},
-		{"who": "Nassan", "text": "And Elric... whatever you're carrying,\nit's heavier than it looks. Don't carry it alone."},
+		{"who": "Nassan", "text": "And Elric... whatever you're carrying,\nit's heavier than it looks. Don't carry it alone.", "mood": "sad"},
 	])
 	Game.flags["heard_westview"] = true

@@ -173,13 +173,13 @@ func _arrival() -> void:
 func _talk_to_hop() -> void:
 	hop.face(player.position - hop.position)
 	await Game.dialogue.say([
-		{"who": "Hop", "text": "Hey. You lost?\nYou've got the whole \"nowhere to be\" look going on."},
-		{"who": "Hop", "text": "Name's Hop. I'd shake your hand, but I just did\nforty push-ups and I can't feel my arms."},
+		{"who": "Hop", "text": "Hey. You lost?\nYou've got the whole \"nowhere to be\" look going on.", "mood": "smug"},
+		{"who": "Hop", "text": "Name's Hop. I'd shake your hand, but I just did\nforty push-ups and I can't feel my arms.", "mood": "happy"},
 		"* (You tell Hop your name.)",
-		{"who": "Hop", "text": "Elric, huh? Very \"mysterious traveler.\"\nIs that the vibe? That's totally the vibe."},
+		{"who": "Hop", "text": "Elric, huh? Very \"mysterious traveler.\"\nIs that the vibe? That's totally the vibe.", "mood": "smug"},
 		{"who": "Hop", "text": "Well, mysterious traveler, you picked the most\nboring place in San Diego to be mysterious."},
 		{"who": "Hop", "text": "...Unless you count that weird glow\nover by the bleachers. It's been there all day."},
-		{"who": "Hop", "text": "Wanna go poke it? I'll race you.\nI'll win, obviously. But you can try."},
+		{"who": "Hop", "text": "Wanna go poke it? I'll race you.\nI'll win, obviously. But you can try.", "mood": "happy"},
 		"* (Hop is now following you.)",
 	])
 	Game.flags["met_hop"] = true
@@ -199,13 +199,13 @@ func _inspect_fragment() -> void:
 	Game.play_sfx("fragment")
 	await Game.dialogue.say([
 		"* (A jagged shard, dark red and faintly warm.\n*  It hums, like it's breathing.)",
-		{"who": "Hop", "text": "...Huh."},
-		{"who": "Hop", "text": "Okay. That's definitely not a rock."},
+		{"who": "Hop", "text": "...Huh.", "mood": "shocked"},
+		{"who": "Hop", "text": "Okay. That's definitely not a rock.", "mood": "shocked"},
 	])
 	var choice := await Game.dialogue.ask("* (Pick it up?)", ["Yes", "No"])
 	if choice == 1:
 		await Game.dialogue.say([
-			{"who": "Hop", "text": "Smart. It's probably radioactive.\n...Probably."},
+			{"who": "Hop", "text": "Smart. It's probably radioactive.\n...Probably.", "mood": "smug"},
 		])
 		return
 
@@ -215,8 +215,8 @@ func _inspect_fragment() -> void:
 		"* (For a moment, the hum gets louder.\n*  Then it goes quiet.)",
 		"* (You got the FRAGMENT.)",
 		"* (Hop stares at it a little too long.)",
-		{"who": "Hop", "text": "...Anyway! Cool rock. Very sparkly."},
-		{"who": "Hop", "text": "Let's get out of here before somebody\nthinks we stole school property."},
+		{"who": "Hop", "text": "...Anyway! Cool rock. Very sparkly.", "mood": "happy"},
+		{"who": "Hop", "text": "Let's get out of here before somebody\nthinks we stole school property.", "mood": "happy"},
 	])
 	Game.flags["has_fragment_1"] = true
 	Game.flags["fragments"] = 1
@@ -248,7 +248,7 @@ func _try_to_leave() -> void:
 
 	if not _flag("mall_arrived"):
 		await Game.dialogue.say([
-			{"who": "Hop", "text": "PQ Mall's this way. Keep up, mysterious traveler."},
+			{"who": "Hop", "text": "PQ Mall's this way. Keep up, mysterious traveler.", "mood": "happy"},
 		])
 	await Game.change_scene(MALL_SCENE)
 
@@ -272,17 +272,17 @@ func _ambush() -> void:
 	await get_tree().create_timer(0.3).timeout
 
 	await Game.dialogue.say([
-		{"who": "BigJoe6", "text": "That fragment. Hand it over. Now."},
+		{"who": "BigJoe6", "text": "That fragment. Hand it over. Now.", "mood": "angry"},
 		{"who": "Eggo", "text": "...hey."},
-		{"who": "Hop", "text": "Whoa, whoa. Who are you guys? Hall monitors?"},
-		{"who": "BigJoe6", "text": "We're the ones who've been tracking that thing\nfor a week. And you just walked off with it."},
-		{"who": "BigJoe6", "text": "Nobody picks up a fragment by accident.\nYou're working for Hopkuna, aren't you?"},
+		{"who": "Hop", "text": "Whoa, whoa. Who are you guys? Hall monitors?", "mood": "shocked"},
+		{"who": "BigJoe6", "text": "We're the ones who've been tracking that thing\nfor a week. And you just walked off with it.", "mood": "angry"},
+		{"who": "BigJoe6", "text": "Nobody picks up a fragment by accident.\nYou're working for Hopkuna, aren't you?", "mood": "angry"},
 		"* (Hop goes very quiet.)",
 		{"who": "Elric", "text": "...I'm not."},
-		{"who": "BigJoe6", "text": "That's EXACTLY what a lackey would say!"},
-		{"who": "Eggo", "text": "he's not wrong. that is what a lackey would say."},
-		{"who": "Eggo", "text": "...it's also what a not-lackey would say.\njust saying."},
-		{"who": "BigJoe6", "text": "Enough talk!"},
+		{"who": "BigJoe6", "text": "That's EXACTLY what a lackey would say!", "mood": "angry"},
+		{"who": "Eggo", "text": "he's not wrong. that is what a lackey would say.", "mood": "smug"},
+		{"who": "Eggo", "text": "...it's also what a not-lackey would say.\njust saying.", "mood": "smug"},
+		{"who": "BigJoe6", "text": "Enough talk!", "mood": "angry"},
 	])
 	await Game.start_battle("tutorial", SCENE, player.position)
 
@@ -303,27 +303,27 @@ func _after_tutorial_battle() -> void:
 	if spared.size() == 2:
 		Game.flags["tutorial_path"] = "spared"
 		await Game.dialogue.say([
-			{"who": "BigJoe6", "text": "...Okay. Okay. I believe you."},
+			{"who": "BigJoe6", "text": "...Okay. Okay. I believe you.", "mood": "happy"},
 			{"who": "BigJoe6", "text": "Nobody working for Hopkuna would've\nheld back like that."},
-			{"who": "Eggo", "text": "told you. fragment-ally a good egg."},
-			{"who": "Eggo", "text": "...fragment-ally. like \"fundamentally.\"\nno? ok. the egg part was good though."},
+			{"who": "Eggo", "text": "told you. fragment-ally a good egg.", "mood": "happy"},
+			{"who": "Eggo", "text": "...fragment-ally. like \"fundamentally.\"\nno? ok. the egg part was good though.", "mood": "smug"},
 			{"who": "BigJoe6", "text": "Listen. That fragment is dangerous. There are more\nout there, and Hopkuna wants every single one."},
 			{"who": "BigJoe6", "text": "We're Revolution. Eggo and I started it\nto stop him."},
-			{"who": "Eggo", "text": "membership: two. we're very exclusive.\nnot on purpose."},
+			{"who": "Eggo", "text": "membership: two. we're very exclusive.\nnot on purpose.", "mood": "happy"},
 			{"who": "BigJoe6", "text": "If you're sticking around, head toward the PQ Mall.\nAnd keep that fragment safe."},
 		])
 	elif defeated.size() == 2:
 		Game.flags["tutorial_path"] = "fought"
 		await Game.dialogue.say([
-			{"who": "BigJoe6", "text": "Ugh... you're stronger than you look..."},
-			{"who": "Eggo", "text": "ow. ...ow."},
-			{"who": "BigJoe6", "text": "This isn't over. If you're with Hopkuna,\nRevolution WILL stop you."},
+			{"who": "BigJoe6", "text": "Ugh... you're stronger than you look...", "mood": "sad"},
+			{"who": "Eggo", "text": "ow. ...ow.", "mood": "sad"},
+			{"who": "BigJoe6", "text": "This isn't over. If you're with Hopkuna,\nRevolution WILL stop you.", "mood": "angry"},
 		])
 	else:
 		Game.flags["tutorial_path"] = "mixed"
 		await Game.dialogue.say([
 			{"who": "BigJoe6", "text": "...I still don't know what to make of you."},
-			{"who": "Eggo", "text": "same. but in a chill way."},
+			{"who": "Eggo", "text": "same. but in a chill way.", "mood": "happy"},
 			{"who": "BigJoe6", "text": "We'll be watching. Revolution doesn't\nlet fragments just walk around."},
 		])
 
@@ -337,19 +337,19 @@ func _after_tutorial_battle() -> void:
 	match Game.flags["tutorial_path"]:
 		"spared":
 			await Game.dialogue.say([
-				{"who": "Hop", "text": "...Revolution, huh."},
-				{"who": "Hop", "text": "Well! That's the most exciting thing to happen here\nsince the vending machine caught fire."},
+				{"who": "Hop", "text": "...Revolution, huh.", "mood": "sad"},
+				{"who": "Hop", "text": "Well! That's the most exciting thing to happen here\nsince the vending machine caught fire.", "mood": "happy"},
 				{"who": "Hop", "text": "Mall's down the road. C'mon, mysterious traveler."},
 			])
 		"fought":
 			await Game.dialogue.say([
-				{"who": "Hop", "text": "...Remind me to never make you mad."},
-				{"who": "Hop", "text": "Maybe go easier next time?\nThey didn't seem THAT evil."},
+				{"who": "Hop", "text": "...Remind me to never make you mad.", "mood": "shocked"},
+				{"who": "Hop", "text": "Maybe go easier next time?\nThey didn't seem THAT evil.", "mood": "sad"},
 				{"who": "Hop", "text": "Anyway. Mall's down the road. C'mon."},
 			])
 		_:
 			await Game.dialogue.say([
-				{"who": "Hop", "text": "Okay, that got intense."},
+				{"who": "Hop", "text": "Okay, that got intense.", "mood": "shocked"},
 				{"who": "Hop", "text": "Mall's down the road. Let's go before they come back."},
 			])
 

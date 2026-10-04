@@ -257,10 +257,10 @@ $sprites = @{
         "..WWWWHHYKYYYYKYHH......",
         ".pWKWWHHYYKKKKYYHH......",
         "..WWWWHHYYYYYYYYHH......",
-        "...YYYYVVVSSSSVVVYYYY...",
-        "...YYYHVVVSSSSVVVHYYY...",
-        "...YYYYVVVVSSVVVVYYYY...",
-        "...YYYYVVVVSSVVVVYYYY...",
+        "...YYYHHVVSSSSVVHHYYY...",
+        "...YYYHHVVSSSSVVHHYYY...",
+        "...YYYHHVVVSSVVVHHYYY...",
+        "...YYYYHVVVSSVVVHYYYY...",
         "...YYYYVVVVVVVVVVYYYY...",
         "...YYYYVVVVVVVVVVYYYY...",
         "...YYYYVVVVVVVVVVYYYY...",
@@ -720,10 +720,10 @@ $sideUpper = @{
         ".......HHHYYYYYKK.......",
         ".......HHHYYYYYYY.......",
         ".......HHH.YYYYY........",
-        ".......HHVVYYYVV........",
-        ".........VVYYYVS........",
-        ".........VVYYYVS........",
-        ".........VVYYYVS........",
+        ".......HHHVYYYVV........",
+        ".......HHVVYYYVS........",
+        ".......HHVVYYYVS........",
+        "........HVVYYYVS........",
         ".........VVYYYVS........",
         ".........VVYYYVS........",
         ".........VVYYYVS........",
@@ -764,11 +764,111 @@ foreach ($who in $sideUpper.Keys) {
     $sprites["${who}_side2"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $true)
 }
 
-$outDir = Join-Path $PSScriptRoot "..\art\sprites"
-New-Item -ItemType Directory -Force $outDir | Out-Null
+# --- Facial expressions (dialogue portraits only) -----------------------------
+# Each mood is a little 8 x 6 stamp drawn over the face (columns 8-15, rows 6-11
+# of the front view). In a stamp:
+#   .  keep the original pixel     s  skin     K  eyes / mouth
+#   W  white                       i  a tear
+# The finished portraits go in art/portraits/ as name_mood.png.
 
-foreach ($name in $sprites.Keys) {
-    $rows = $sprites[$name]
+$moods = [ordered]@{
+    'happy' = @(
+        ".KssssK.",
+        "KsKssKsK",
+        ".ssssss.",
+        ".KssssK.",
+        ".sKKKKs.",
+        ".ssssss."
+    )
+    'angry' = @(
+        ".KssssK.",
+        ".sKssKs.",
+        ".KKssKK.",
+        ".ssssss.",
+        ".sKKKKs.",
+        ".KssssK."
+    )
+    'sad' = @(
+        ".sKssKs.",
+        ".KssssK.",
+        ".KssssK.",
+        ".isssss.",
+        ".ssKKss.",
+        ".sKssKs."
+    )
+    'shocked' = @(
+        ".ssssss.",
+        ".KKssKK.",
+        ".KKssKK.",
+        ".ssssss.",
+        ".ssKKss.",
+        ".ssKKss."
+    )
+    'smug' = @(
+        ".ssssss.",
+        ".KKssKK.",
+        ".ssssss.",
+        ".sssssK.",
+        ".ssKKKs.",
+        ".ssssss."
+    )
+}
+
+# Who gets expressions: skin letter, and the letter used for eyes / mouth.
+$faces = [ordered]@{
+    'elric'     = @('L', 'K')
+    'hop'       = @('N', 'K')
+    'eggo'      = @('Y', 'K')
+    'crayola'   = @('W', 'K')
+    'ncwethan'  = @('Y', 'K')
+    'ronin'     = @('2', 'K')
+    'rooster'   = @('Q', 'K')
+    'nat'       = @('4', 'K')
+    'sansworth' = @('W', 'K')
+    'nassan'    = @('C', 'W')
+}
+# Hop keeps his gritted-teeth grin for these moods (only his eyes change).
+$keepMouth = @{ 'hop' = @('happy', 'angry', 'smug') }
+
+$portraits = [ordered]@{}
+foreach ($who in $faces.Keys) {
+    $skin = $faces[$who][0]
+    $feature = $faces[$who][1]
+    foreach ($mood in $moods.Keys) {
+        $rows = [string[]]($sprites[$who].Clone())
+        $stamp = $moods[$mood]
+        $stampRows = $stamp.Count
+        if ($keepMouth.ContainsKey($who) -and $keepMouth[$who] -contains $mood) { $stampRows = 3 }
+        for ($r = 0; $r -lt $stampRows; $r++) {
+            $chars = $rows[6 + $r].ToCharArray()
+            for ($c = 0; $c -lt 8; $c++) {
+                $s = $stamp[$r][$c]
+                if ($s -eq '.') { continue }
+                $chars[8 + $c] = switch ($s) { 's' { $skin } 'K' { $feature } default { $s } }
+            }
+            $rows[6 + $r] = -join $chars
+        }
+        $portraits["${who}_$mood"] = $rows
+    }
+}
+
+# BigJoe6's helmet hides his face, so his eyes glow through the visor slit instead.
+$visor = @{
+    'happy'   = "........gWggggWg........"
+    'angry'   = "........gRRggRRg........"
+    'sad'     = "........giiggiig........"
+    'shocked' = "........gWWggWWg........"
+    'smug'    = "........ggggyyyg........"
+}
+foreach ($mood in $visor.Keys) {
+    $rows = [string[]]($sprites['bigjoe6'].Clone())
+    $rows[6] = $visor[$mood]
+    $portraits["bigjoe6_$mood"] = $rows
+}
+
+# --- Saving -------------------------------------------------------------------
+
+function Save-Sprite([string]$name, [string[]]$rows, [string]$dir) {
     $w = $rows[0].Length
     $h = $rows.Count
     foreach ($row in $rows) {
@@ -801,8 +901,16 @@ foreach ($name in $sprites.Keys) {
         }
     }
 
-    $path = Join-Path $outDir "$name.png"
+    $path = Join-Path $dir "$name.png"
     $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
     Write-Output "Saved $path"
 }
+
+$spriteDir = Join-Path $PSScriptRoot "..\art\sprites"
+$portraitDir = Join-Path $PSScriptRoot "..\art\portraits"
+New-Item -ItemType Directory -Force $spriteDir | Out-Null
+New-Item -ItemType Directory -Force $portraitDir | Out-Null
+
+foreach ($name in $sprites.Keys) { Save-Sprite $name $sprites[$name] $spriteDir }
+foreach ($name in $portraits.Keys) { Save-Sprite $name $portraits[$name] $portraitDir }

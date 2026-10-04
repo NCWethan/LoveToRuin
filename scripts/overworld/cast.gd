@@ -1,14 +1,19 @@
 class_name Cast
 extends RefCounted
 ## Makes overworld characters and dialogue portraits by name, using whatever
-## pictures exist in art/sprites/ for them:
-##   name.png         front view (required)
-##   name_back.png    back view, for walking up (optional)
-##   name_side.png    side view, legs together (optional)
-##   name_side2.png   side view, mid-step (optional)
+## pictures exist for them:
+##   art/sprites/name.png          front view (required)
+##   art/sprites/name_back.png     back view, for walking up (optional)
+##   art/sprites/name_side.png     side view, legs together (optional)
+##   art/sprites/name_side2.png    side view, mid-step (optional)
+##   art/portraits/name_mood.png   facial expressions for dialogue (optional)
 ## "Hop" -> art/sprites/hop.png, "BigJoe6" -> art/sprites/bigjoe6.png, and so on.
 
 const FOLDER := "res://art/sprites/"
+const PORTRAIT_FOLDER := "res://art/portraits/"
+
+## The moods that have portraits (made by tools/make_sprites.ps1).
+const MOODS := ["happy", "angry", "sad", "shocked", "smug"]
 
 ## The part of a front-view sprite used as a portrait (the head and shoulders).
 const PORTRAIT_REGION := Rect2(1, 0, 24, 15)
@@ -25,11 +30,20 @@ static func make(who: String, is_solid: bool = true) -> Character:
 	return character
 
 
-## The front-view picture used for someone's dialogue portrait, or null if there isn't one.
-static func portrait(who: String) -> Texture2D:
+## The picture used for someone's dialogue portrait, or null if there isn't one.
+## `mood` picks a facial expression ("happy", "angry", ...); "" is their normal face.
+## If a character doesn't have that expression, their normal face is used.
+static func portrait(who: String, mood: String = "") -> Texture2D:
 	if who == "":
 		return null
-	if not _portraits.has(who):
-		var path := FOLDER + who.to_lower() + ".png"
-		_portraits[who] = load(path) if ResourceLoader.exists(path) else null
-	return _portraits[who]
+	var key := who + "/" + mood
+	if not _portraits.has(key):
+		var texture: Texture2D = null
+		var mood_path := PORTRAIT_FOLDER + who.to_lower() + "_" + mood + ".png"
+		var normal_path := FOLDER + who.to_lower() + ".png"
+		if mood != "" and ResourceLoader.exists(mood_path):
+			texture = load(mood_path)
+		elif ResourceLoader.exists(normal_path):
+			texture = load(normal_path)
+		_portraits[key] = texture
+	return _portraits[key]

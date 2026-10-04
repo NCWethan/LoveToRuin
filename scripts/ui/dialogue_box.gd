@@ -7,7 +7,8 @@ extends CanvasLayer
 ##   var answer := await Game.dialogue.ask("* (Pick it up?)", ["Yes", "No"])   # 0 = Yes, 1 = No
 ##
 ## Each line is either a String (narration) or a Dictionary with "who" (the speaker)
-## and "text". Add "face": false to hide the speaker's portrait for that line.
+## and "text". Optional extras: "mood" (happy, angry, sad, shocked, smug) for a
+## facial expression, "face": false to hide the portrait, "tag" to change the name shown.
 ## Press Z to finish a line or go to the next one.
 
 signal _advanced
@@ -49,6 +50,7 @@ var _font: Font
 var _active: bool = false
 var _who: String = ""
 var _show_face: bool = true
+var _mood: String = ""
 var _tag: String = ""
 var _text: String = ""
 var _typed: float = 0.0
@@ -108,11 +110,14 @@ func _show(line) -> void:
 		_show_face = line.get("face", true)
 		# "tag" changes the name shown, e.g. "???" for someone not met yet.
 		_tag = line.get("tag", _who)
+		# "mood" picks a facial expression: happy, angry, sad, shocked or smug.
+		_mood = line.get("mood", "")
 	else:
 		_who = ""
 		_text = str(line)
 		_show_face = true
 		_tag = ""
+		_mood = ""
 	_typed = 0.0
 	_last_beep = 0
 	_active = true
@@ -172,7 +177,7 @@ func _draw_box() -> void:
 
 	# The speaker's face on the left, like Deltarune.
 	var text_left := 16.0
-	var face := Cast.portrait(_who) if _show_face else null
+	var face := Cast.portrait(_who, _mood) if _show_face else null
 	if face:
 		var size := Cast.PORTRAIT_REGION.size * PORTRAIT_SCALE
 		var at := _box.position + Vector2(12, (_box.size.y - size.y) / 2)

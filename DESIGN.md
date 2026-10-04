@@ -95,7 +95,8 @@ Pronouns: any/all · Co-founder of Revolution
 
 **Appearance** (based on his Roblox avatar — [reference image](art/reference/eggo.png))
 - Yellow skin.
-- Long, messy yellow hair under a yellow beanie.
+- Long, messy yellow hair that falls past the shoulders to the upper chest.
+- A yellow beanie with **cat ears**.
 - **Face:** the classic black-eyed Roblox face with a grin *(the reference picture is old and shows a different face — use the black-eyed grin instead)*.
 - Black vest over a blue shirt, black pants.
 - A **little bunny friend** sitting on his shoulder.
@@ -453,6 +454,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 ### Milestone 2 — Talking
 - [x] Dialogue box with letter-by-letter text and voice beeps (each speaker has their own pitch and name tag)
 - [x] Character portraits (head-and-shoulders from each sprite)
+- [x] Facial expressions in portraits: happy, angry, sad, shocked, smug (`art/portraits/`, made by `tools/make_sprites.ps1`). MuffinMage and Supreme use their normal face (their masks cover it).
 - [x] Dialogue choices (Yes / No, Save / Return)
 
 ### Milestone 3 — Walking around
