@@ -7,7 +7,8 @@ extends CanvasLayer
 ##   var answer := await Game.dialogue.ask("* (Pick it up?)", ["Yes", "No"])   # 0 = Yes, 1 = No
 ##
 ## Each line is either a String (narration) or a Dictionary with "who" (the speaker)
-## and "text". Press Z to finish a line or go to the next one.
+## and "text". Add "face": false to hide the speaker's portrait for that line.
+## Press Z to finish a line or go to the next one.
 
 signal _advanced
 
@@ -47,6 +48,8 @@ var _panel: Control
 var _font: Font
 var _active: bool = false
 var _who: String = ""
+var _show_face: bool = true
+var _tag: String = ""
 var _text: String = ""
 var _typed: float = 0.0
 var _last_beep: int = 0
@@ -101,9 +104,15 @@ func _show(line) -> void:
 	if line is Dictionary:
 		_who = line.get("who", "")
 		_text = line.get("text", "")
+		# "face": false hides the portrait (e.g. someone shouting from off-screen).
+		_show_face = line.get("face", true)
+		# "tag" changes the name shown, e.g. "???" for someone not met yet.
+		_tag = line.get("tag", _who)
 	else:
 		_who = ""
 		_text = str(line)
+		_show_face = true
+		_tag = ""
 	_typed = 0.0
 	_last_beep = 0
 	_active = true
@@ -155,15 +164,15 @@ func _draw_box() -> void:
 
 	if _who != "":
 		var color: Color = SPEAKERS.get(_who, {}).get("color", Color.WHITE)
-		var tag_width := _font.get_string_size(_who, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 16
+		var tag_width := _font.get_string_size(_tag, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x + 16
 		var tag := Rect2(_box.position + Vector2(10, -30), Vector2(tag_width, 24))
 		_panel.draw_rect(tag.grow(2), Color.WHITE)
 		_panel.draw_rect(tag, Color.BLACK)
-		_panel.draw_string(_font, tag.position + Vector2(8, 17), _who, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+		_panel.draw_string(_font, tag.position + Vector2(8, 17), _tag, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 
 	# The speaker's face on the left, like Deltarune.
 	var text_left := 16.0
-	var face := Cast.portrait(_who)
+	var face := Cast.portrait(_who) if _show_face else null
 	if face:
 		var size := Cast.PORTRAIT_REGION.size * PORTRAIT_SCALE
 		var at := _box.position + Vector2(12, (_box.size.y - size.y) / 2)

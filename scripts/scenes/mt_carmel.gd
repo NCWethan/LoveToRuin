@@ -131,6 +131,8 @@ func _make_enemy_npc(who: String, at: Vector2) -> Character:
 func _start_story() -> void:
 	# Wait for the fade-in to finish before any cutscene starts.
 	while Game.transitioning:
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 
 	if _flag("tutorial_started") and not _flag("tutorial_done"):
@@ -262,7 +264,8 @@ func _ambush() -> void:
 	eggo = _make_enemy_npc("Eggo", Vector2(ahead.x - 330, ahead.y - 30))
 	bigjoe = _make_enemy_npc("BigJoe6", Vector2(ahead.x - 350, ahead.y + 10))
 
-	await Game.dialogue.say([{"who": "BigJoe6", "text": "HOLD IT!"}])
+	# BigJoe6 is still off-screen, so no portrait yet.
+	await Game.dialogue.say([{"who": "BigJoe6", "tag": "???", "text": "HOLD IT!", "face": false}])
 	# Both walk at once: start Eggo without waiting, then wait for BigJoe6.
 	eggo.walk_to(ahead + Vector2(-70, -24), 140.0)
 	await bigjoe.walk_to(ahead + Vector2(-60, 16), 160.0)

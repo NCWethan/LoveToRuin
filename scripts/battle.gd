@@ -8,7 +8,7 @@ extends Node2D
 ## The fighters and their lines come from tutorial_battle.gd.
 ## Controls: arrow keys to move, Z / Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, ENEMY_TURN, GAME_OVER }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, READY, FIGHT_BAR, ENEMY_TURN, GAME_OVER, DONE }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -566,10 +566,16 @@ func _check_hits() -> void:
 			return
 
 
-## A bullet hit: a random party member who's still standing takes the damage.
+## A bullet hit. The SOUL is Elric's, so Elric (the first party member) takes the damage.
+## If Elric is knocked down, the next member still standing takes it instead.
 func _hurt_party(amount: int) -> void:
-	var standing := party.filter(func(m: PartyMember) -> bool: return not m.is_down())
-	var member: PartyMember = standing.pick_random()
+	var member: PartyMember = null
+	for candidate in party:
+		if not candidate.is_down():
+			member = candidate
+			break
+	if member == null:
+		return
 	var damage := ceili(amount / 2.0) if member.defending else amount
 	member.hp = maxi(member.hp - damage, 0)
 	member.shake = 0.4
@@ -621,10 +627,17 @@ func _victory() -> void:
 				result["spared"].append(enemy.name)
 			elif enemy.state == "defeated":
 				result["defeated"].append(enemy.name)
-		_show_messages(lines, func() -> void: Game.finish_battle(result))
+		_show_messages(lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
 	else:
 		lines.append("* (Press Z to fight again.)")
-		_show_messages(lines, get_tree().reload_current_scene)
+		_show_messages(lines, func() -> void: _leave_battle(get_tree().reload_current_scene))
+
+
+## The battle is over: stop reacting to keys (so pressing Z during the fade-out
+## can't end the battle a second time), then run `then`.
+func _leave_battle(then: Callable) -> void:
+	state = State.DONE
+	then.call()
 
 
 # --- GAME OVER ------------------------------------------------------------

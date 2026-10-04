@@ -60,6 +60,8 @@ func is_blocked() -> bool:
 ## Waits until the fade-in after a scene change has finished.
 func wait_for_fade() -> void:
 	while Game.transitioning:
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 
 

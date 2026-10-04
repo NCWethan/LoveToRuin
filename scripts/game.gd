@@ -129,6 +129,9 @@ func fade_in(time: float = 0.4) -> void:
 ## Fades to black, switches scenes, and fades back in.
 ## `spawn` is where the player appears in the new scene (or null for its default).
 func change_scene(path: String, spawn = null) -> void:
+	# Already changing scenes? Ignore the extra request (e.g. Z pressed twice).
+	if transitioning:
+		return
 	transitioning = true
 	await fade_out()
 	spawn_position = spawn
