@@ -165,8 +165,17 @@ Pronouns: he/him
 - Plays **guitar**.
 - Always seen **losing at checkers to NCWethan** (running gag).
 
-**Appearance**
-- *Design coming soon.*
+**Battle role**
+- **Mage.**
+
+**Appearance** (based on his Roblox avatar — [reference image](art/reference/ronin.png))
+- Wide-brimmed **red mage hat** topped with a jagged black crown that's **on fire**.
+- Pale face with a frown, long dark hair.
+- Red, rough-textured robe.
+- One arm wrapped in **barbed wire**.
+- Carries a tall, spiky black **staff with a cyan flame** at the top.
+
+![Ronin reference](art/reference/ronin.png)
 
 ### Rooster
 
@@ -369,5 +378,4 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 - When in the story does Elric meet the REVOLUTION Corps?
 - How many fragments are there in total, and how many are in Chapter 1?
 - What do Hopkuna's tattoos look like?
-- Ronin's design (coming from the creator).
 - What are each character's personality and battle abilities?
