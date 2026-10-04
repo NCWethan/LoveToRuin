@@ -11,7 +11,9 @@ var attack: int
 var defense: int
 ## Where the enemy stands on the battle screen.
 var position: Vector2
-## Placeholder colors until real sprites exist.
+## The enemy's picture. Drawn at 3x size, standing on `position`.
+var sprite: Texture2D
+## Placeholder colors, only used if there's no sprite.
 var head_color: Color
 var body_color: Color
 

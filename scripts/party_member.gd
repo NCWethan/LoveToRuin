@@ -11,14 +11,19 @@ var attack: int
 var color: Color
 ## True while this member is defending this turn (takes half damage).
 var defending: bool = false
+## The member's picture on the left side of the battle screen.
+var sprite: Texture2D
+## Counts down after getting hit; the member shakes while it's above 0.
+var shake: float = 0.0
 
 
-func _init(p_name: String, p_max_hp: int, p_attack: int, p_color: Color) -> void:
+func _init(p_name: String, p_max_hp: int, p_attack: int, p_color: Color, p_sprite: Texture2D = null) -> void:
 	name = p_name
 	max_hp = p_max_hp
 	hp = p_max_hp
 	attack = p_attack
 	color = p_color
+	sprite = p_sprite
 
 
 ## A member at 0 HP is "down" and skips their turns until healed.

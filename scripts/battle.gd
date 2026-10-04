@@ -282,7 +282,7 @@ func _process_list() -> void:
 		return
 
 	var area := box.get_inner_rect()
-	soul.global_position = Vector2(area.position.x + 24, _row_y(_cursor) - 5)
+	soul.global_position = Vector2(area.position.x + 26, _row_y(_cursor) - 5)
 
 
 func _confirm_list_choice() -> void:
@@ -513,6 +513,7 @@ func _hurt_party(amount: int) -> void:
 	var member: PartyMember = standing.pick_random()
 	var damage := ceili(amount / 2.0) if member.defending else amount
 	member.hp = maxi(member.hp - damage, 0)
+	member.shake = 0.4
 	_add_popup(str(damage), _panel_position(member), Color.RED)
 	_invincible_timer = invincibility_time
 
@@ -614,6 +615,8 @@ func _update_effects(delta: float) -> void:
 	_popups.assign(_popups.filter(func(p: Dictionary) -> bool: return p["time"] > 0.0))
 	for enemy in enemies:
 		enemy.shake = maxf(enemy.shake - delta, 0.0)
+	for member in party:
+		member.shake = maxf(member.shake - delta, 0.0)
 
 
 func _row_y(row: int) -> float:
@@ -632,6 +635,7 @@ func _draw_overlay() -> void:
 		_draw_centered("Stay determined...  (press Z)", Vector2(320, 280), FONT_SIZE, Color.WHITE)
 		return
 
+	_draw_party_sprites()
 	_draw_enemies()
 	_draw_party_panel()
 	_draw_buttons()
@@ -648,18 +652,23 @@ func _draw_enemies() -> void:
 			pos.x += sin(enemy.shake * 60.0) * 4.0
 
 		var alpha := 1.0 if enemy.is_active() else 0.35
-		var head := enemy.head_color if enemy.state != "defeated" else Color.DIM_GRAY
-		var body := enemy.body_color if enemy.state != "defeated" else Color.DIM_GRAY
-		head.a = alpha
-		body.a = alpha
+		# Knocked-out enemies turn gray; spared ones fade out.
+		var tint := Color(0.4, 0.4, 0.4) if enemy.state == "defeated" else Color(1, 1, 1, alpha)
+		var top := pos.y - 40.0
 
-		# Placeholder figure until real sprites exist: a blocky head and body.
-		_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), body)
-		_overlay.draw_rect(Rect2(pos + Vector2(-16, -40), Vector2(32, 30)), head)
+		if enemy.sprite:
+			# Pixel art is drawn at 3x so each pixel shows up as a crisp 3x3 block.
+			var sprite_size := enemy.sprite.get_size() * 3.0
+			top = pos.y + 40.0 - sprite_size.y
+			_overlay.draw_texture_rect(enemy.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+		else:
+			# Placeholder figure: a blocky head and body.
+			_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), enemy.body_color * tint)
+			_overlay.draw_rect(Rect2(pos + Vector2(-16, -40), Vector2(32, 30)), enemy.head_color * tint)
 
 		var name_color := YELLOW if enemy.is_active() and enemy.can_spare() else Color.WHITE
 		name_color.a = alpha
-		_draw_centered(enemy.name, pos + Vector2(0, -50), FONT_SIZE, name_color)
+		_draw_centered(enemy.name, Vector2(pos.x, top - 8), FONT_SIZE, name_color)
 
 		match enemy.state:
 			"spared":
@@ -670,7 +679,31 @@ func _draw_enemies() -> void:
 				_draw_bar(Rect2(pos + Vector2(-30, 48), Vector2(60, 6)), float(enemy.hp) / enemy.max_hp, Color.GREEN)
 
 		if _speech.has(enemy) and _speech[enemy] != "":
-			_draw_speech(_speech[enemy], pos + Vector2(0, -80))
+			_draw_speech(_speech[enemy], Vector2(pos.x, top - 30))
+
+
+## Draws Elric's party on the left side of the screen, facing the enemies.
+func _draw_party_sprites() -> void:
+	for i in party.size():
+		var member := party[i]
+		if member.sprite == null:
+			continue
+		var pos := Vector2(80 + i * 100, 140)
+		if member.shake > 0.0:
+			pos.x += sin(member.shake * 60.0) * 4.0
+		var sprite_size := member.sprite.get_size() * 3.0
+		var top := pos.y + 40.0 - sprite_size.y
+		var tint := Color(0.4, 0.4, 0.4) if member.is_down() else Color.WHITE
+		_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(pos.x - sprite_size.x / 2, top), sprite_size), false, tint)
+
+		# Show whose turn it is to choose.
+		if _is_choosing(i):
+			_draw_centered(member.name, Vector2(pos.x, top - 8), FONT_SIZE, member.color)
+
+
+func _is_choosing(member_index: int) -> bool:
+	var picking := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY]
+	return picking and member_index == current_member
 
 
 func _draw_speech(text: String, bottom_center: Vector2) -> void:
@@ -684,7 +717,7 @@ func _draw_party_panel() -> void:
 	for i in party.size():
 		var member := party[i]
 		var x := 40.0 + i * 300.0
-		var choosing := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY] and i == current_member
+		var choosing := _is_choosing(i)
 		var name_color := member.color if not member.is_down() else Color.DIM_GRAY
 		_overlay.draw_string(_font, Vector2(x, PANEL_Y), member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, name_color)
 		_draw_bar(Rect2(x + 70, PANEL_Y - 11, 80, 10), float(member.hp) / member.max_hp, YELLOW)
@@ -736,7 +769,7 @@ func _draw_box_contents() -> void:
 ## Draws one option in a list. The SOUL sits to its left as the cursor.
 func _draw_row(row: int, text: String, color: Color) -> void:
 	var area := box.get_inner_rect()
-	_overlay.draw_string(_font, Vector2(area.position.x + 40, _row_y(row)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+	_overlay.draw_string(_font, Vector2(area.position.x + 50, _row_y(row)), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 
 
 func _draw_fight_bar(area: Rect2) -> void:

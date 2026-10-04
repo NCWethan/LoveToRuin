@@ -13,8 +13,8 @@ const INTRO := [
 
 static func create_party() -> Array[PartyMember]:
 	var party: Array[PartyMember] = [
-		PartyMember.new("Elric", 30, 6, Color(0.8, 0.65, 1.0)),
-		PartyMember.new("Hop", 35, 7, Color(0.75, 0.75, 0.75)),
+		PartyMember.new("Elric", 30, 6, Color(0.8, 0.65, 1.0), load("res://art/sprites/elric.png")),
+		PartyMember.new("Hop", 35, 7, Color(0.75, 0.75, 0.75), load("res://art/sprites/hop.png")),
 	]
 	return party
 
@@ -26,7 +26,8 @@ static func create_enemies() -> Array[Enemy]:
 	eggo.hp = 60
 	eggo.attack = 3
 	eggo.defense = 1
-	eggo.position = Vector2(230, 140)
+	eggo.position = Vector2(410, 140)
+	eggo.sprite = load("res://art/sprites/eggo.png")
 	eggo.head_color = Color(1.0, 0.85, 0.2)
 	eggo.body_color = Color(0.15, 0.2, 0.45)
 	eggo.check_text = "* EGGO - ATK 6 DEF 1\n* Co-founder of Revolution. Chill.\n* Can't resist a good pun."
@@ -59,7 +60,8 @@ static func create_enemies() -> Array[Enemy]:
 	bigjoe.hp = 70
 	bigjoe.attack = 4
 	bigjoe.defense = 2
-	bigjoe.position = Vector2(410, 140)
+	bigjoe.position = Vector2(560, 140)
+	bigjoe.sprite = load("res://art/sprites/bigjoe6.png")
 	bigjoe.head_color = Color(0.78, 0.8, 0.86)
 	bigjoe.body_color = Color(0.12, 0.12, 0.12)
 	bigjoe.check_text = "* BIGJOE6 - ATK 8 DEF 2\n* Co-founder of Revolution.\n* Fights for justice and truth."

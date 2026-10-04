@@ -45,8 +45,8 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 ### Appearance
 - Average size.
 - Gender-neutral.
-- Short hair.
-- Dirty, scruffy clothing (fits a life on the road).
+- Short hair *(dark brown in the current sprite — not decided yet)*.
+- Dirty, scruffy clothing (fits a life on the road) — a patched brown tunic with a rope belt and olive pants in the current sprite.
 - Soft, almost pastel **purple skin**.
 
 ## 4. The cast
@@ -427,7 +427,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Sparing (names turn yellow) → **BOND**; defeating → **LOVE** (EXP)
 - [x] Party turns (Elric + Hop)
 - [x] The full tutorial fight, scripted turn by turn
-- [ ] Real sprites for Eggo, BigJoe6, Elric and Hop (currently placeholder blocks)
+- [x] Pixel-art battle sprites for Eggo, BigJoe6, Elric and Hop (`art/sprites/`, drawn by `tools/make_sprites.ps1`)
 - [ ] Pixel font, sound effects and battle music
 - [ ] A proper GAME OVER screen (the SOUL shattering)
 
