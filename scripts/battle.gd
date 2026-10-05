@@ -1169,10 +1169,12 @@ const TENT_LINES := [
 	"* We remember.",
 ]
 const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
-## How long each part lasts: silence, the scream, black, and the laugh.
+## How long each part lasts: silence, the scream, black, and the laugh (the
+## jumpscare plays over the start of the laugh).
 const TENT_SILENCE := 1.6
 const TENT_SCREAM_TIME := 3.0
-const TENT_BLACK_TIME := 0.5
+## (A long, silent black, so you think it's over...)
+const TENT_BLACK_TIME := 1.4
 const TENT_LAUGH_TIME := 3.8
 
 ## "silence", "scream", "black" or "laugh".
@@ -1182,6 +1184,13 @@ var _tent_time: float = 0.0
 var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
+
+## The jumpscare: Hopkuna's face, laughing, right up against the screen.
+const JUMPSCARE_TIME := 2.9
+## When each "HA" of the laugh sound starts and how long it lasts (see Sfx.laugh),
+## so his jaw can move with it.
+const LAUGH_SYLLABLES := [[0.0, 0.32], [0.5, 0.32], [1.0, 0.3], [1.45, 0.2], [1.7, 0.2], [1.95, 0.2], [2.2, 0.45]]
+var _face_script: GDScript
 
 
 ## The music cuts off. Nothing happens for a moment.
@@ -1210,6 +1219,7 @@ func _process_tent(delta: float) -> void:
 			if _tent_time >= TENT_BLACK_TIME:
 				_tent_phase = "laugh"
 				_tent_time = 0.0
+				Game.play_sfx("scream")
 				Game.play_sfx("laugh")
 		"laugh":
 			if _tent_time >= TENT_LAUGH_TIME:
@@ -1248,6 +1258,93 @@ func _draw_tent() -> void:
 			x += step
 	elif _tent_phase in ["black", "laugh", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
+		if _tent_phase == "laugh" and _tent_time < JUMPSCARE_TIME:
+			_draw_jumpscare(_tent_time)
+
+
+## How far open Hopkuna's jaw is at `time` into the laugh: wide open for the
+## scream, then snapping open on each "HA".
+func _laugh_jaw(time: float) -> float:
+	if time < 0.35:
+		return 1.0
+	var open := 0.15
+	for syllable in LAUGH_SYLLABLES:
+		var into: float = time - syllable[0]
+		if into >= 0.0 and into < syllable[1] + 0.1:
+			open = maxf(open, sin(clampf(into / (syllable[1] + 0.1), 0.0, 1.0) * PI))
+	return open
+
+
+## The jumpscare, over black:
+##   SLAM    his face lunges in from huge to full-screen, with the scream
+##   HOLD    for half a second, shaking, laughing
+##   FLICKER cutting between his face, a red ghosted copy, a tighter close-up, a
+##           photo-negative and black (never faster than about 8 times a second)
+##   LUNGE   one last rush at the screen, then black (the laugh carries on)
+func _draw_jumpscare(time: float) -> void:
+	if _face_script == null:
+		_face_script = load("res://scripts/hopkuna_face.gd")
+	var center := Vector2(320, 236)
+	var laugh := _laugh_jaw(time)
+	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * (14.0 if time < 0.6 else 6.0)
+	var scale := 1.28 + time * 0.08
+	var mode := 0
+	if time < 0.14:
+		var slam := time / 0.14
+		scale = lerpf(2.6, 1.28, 1.0 - pow(1.0 - slam, 3.0))
+	elif time > JUMPSCARE_TIME - 0.22:
+		var lunge := (time - (JUMPSCARE_TIME - 0.22)) / 0.22
+		scale = lerpf(1.5, 3.4, lunge * lunge)
+		center.y += lunge * 60.0
+	elif time > 0.6:
+		# A new cut every 0.13 seconds, chosen at random (but never two blacks in a row).
+		var cut := int((time - 0.6) / 0.13)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = cut * 7919 + 3
+		mode = rng.randi_range(0, 9)
+		if mode == 2 and cut % 2 == 1:
+			mode = 0
+	match mode:
+		2, 3:
+			# Black: only the eyes, glowing.
+			for side in [-1.0, 1.0]:
+				var eye := center + Vector2(side * 76, -52) * scale + shake
+				_overlay.draw_circle(eye, 40.0, Color(1.0, 0.1, 0.12, 0.25))
+				_overlay.draw_circle(eye, 12.0, Color(1.0, 0.15, 0.15))
+				_overlay.draw_circle(eye, 3.0, Color(0, 0, 0))
+			return
+		4:
+			# A photo-negative frame.
+			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color(0.9, 0.9, 0.9), true)
+		5, 6:
+			# A tight close-up on the grin.
+			_face_script.draw(_overlay, center + Vector2(0, -170) + shake, scale * 1.9, laugh, time)
+		7:
+			# Ghosted: red and cyan copies split apart behind him.
+			_face_script.draw(_overlay, center + shake + Vector2(-16, 0), scale, laugh, time, Color(0.2, 1.0, 1.0, 0.5))
+			_face_script.draw(_overlay, center + shake + Vector2(16, 0), scale, laugh, time, Color(1.0, 0.1, 0.1, 0.6))
+			_face_script.draw(_overlay, center + shake, scale, laugh, time)
+		_:
+			_face_script.draw(_overlay, center + shake, scale, laugh, time)
+	_draw_jumpscare_grime(time)
+
+
+## Over the face: a red vignette, scanlines, film grain, and torn glitch bars.
+func _draw_jumpscare_grime(time: float) -> void:
+	for k in 8:
+		_overlay.draw_rect(Rect2(-20, -20, 680, 520).grow(-k * 16), Color(0.25, 0.0, 0.02, 0.07), false, 16.0)
+	for y in range(0, 480, 3):
+		_overlay.draw_line(Vector2(0, y), Vector2(640, y), Color(0, 0, 0, 0.22), 1.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(time * 30.0)
+	for g in 300:
+		var spot := Vector2(rng.randf() * 640.0, rng.randf() * 480.0)
+		_overlay.draw_rect(Rect2(spot, Vector2(2, 2)), Color(1, 1, 1, rng.randf() * 0.12))
+	if time > 0.14:
+		for bar in rng.randi_range(0, 3):
+			var y := rng.randf() * 480.0
+			var height := rng.randf_range(3.0, 14.0)
+			_overlay.draw_rect(Rect2(0, y, 640, height), Color(0, 0, 0, 0.8) if rng.randf() < 0.5 else Color(0.9, 0.05, 0.1, 0.35))
 
 
 # --- Helpers --------------------------------------------------------------

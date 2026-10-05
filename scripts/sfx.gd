@@ -44,6 +44,7 @@ static func make_all() -> Dictionary:
 		"file_hit": tone([2349, 3136, 2794], 0.05, 0.17),
 		"squeak": slide(800, 1600, 0.1, 0.18),
 		"black_flash": black_flash(),
+		"scream": scream(),
 	}
 
 
@@ -100,6 +101,39 @@ static func black_flash() -> AudioStreamWAV:
 		ring_phase = fmod(ring_phase + (1240.0 + sin(t * 40.0) * 60.0) / RATE, 1.0)
 		value += clampf(sin(ring_phase * TAU) * 3.0, -1.0, 1.0) * 0.18 * pow(maxf(0.0, 1.0 - t / length), 2.0)
 		data.encode_s16(s * 2, int(clampf(value * 0.5, -1.0, 1.0) * 32767.0))
+	return _wav(data)
+
+
+## The jumpscare: a sudden blast of noise and a shrieking, detuned chord that
+## slides down, with a deep thump under it. Clipped hard so it sounds torn.
+static func scream() -> AudioStreamWAV:
+	var length := 1.4
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 66
+	var phases := [0.0, 0.0, 0.0, 0.0]
+	var detune := [1.0, 1.06, 1.49, 0.5]
+	var thump := 0.0
+	var held := 0.0
+	for s in count:
+		var t := float(s) / RATE
+		var value := 0.0
+		# The shriek: four saws a little out of tune, sliding from high to low.
+		var freq := lerpf(1100.0, 420.0, minf(t / 1.1, 1.0)) * (1.0 + 0.03 * sin(t * 90.0))
+		for v in phases.size():
+			phases[v] = fmod(phases[v] + freq * detune[v] / RATE, 1.0)
+			value += (phases[v] * 2.0 - 1.0) * 0.35
+		# The blast of noise right at the start.
+		if s % 2 == 0:
+			held = rng.randf_range(-1.0, 1.0)
+		value += held * (1.4 * maxf(0.0, 1.0 - t / 0.3) + 0.25)
+		# The thump.
+		thump = fmod(thump + lerpf(90.0, 30.0, minf(t / 0.4, 1.0)) / RATE, 1.0)
+		value += sin(thump * TAU) * 1.5 * maxf(0.0, 1.0 - t / 0.5)
+		var envelope := minf(1.0, t / 0.002) * pow(1.0 - t / length, 0.8)
+		data.encode_s16(s * 2, int(clampf(value * 1.8, -1.0, 1.0) * envelope * 0.7 * 32767.0))
 	return _wav(data)
 
 
