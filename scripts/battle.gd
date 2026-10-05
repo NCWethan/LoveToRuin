@@ -1543,33 +1543,26 @@ var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
 
-## The jumpscare: Hopkuna, laughing, right up against the screen.
+## The jumpscare: two glowing red eyes, right up against the screen.
 const JUMPSCARE_TIME := 2.9
-## How much light falls on him: barely any. You know he's there, but all you can
-## really see are his eyes.
-const JUMPSCARE_LIGHT := 0.07
-## When each "HA" of the laugh sound starts and how long it lasts (see Sfx.laugh),
-## so his jaw can move with it.
-const LAUGH_SYLLABLES := [[0.0, 0.32], [0.5, 0.32], [1.0, 0.3], [1.45, 0.2], [1.7, 0.2], [1.95, 0.2], [2.2, 0.45]]
-var _hopkuna_sprite: Texture2D
-## Where things are on Hopkuna's sprite (in its pixels, counting the outline): the
-## point between his eyes, the two eye pixels, and his teeth.
-const HOPKUNA_EYES_MIDDLE := Vector2(13.0, 8.5)
-const HOPKUNA_EYE_PIXELS := [Vector2(11, 8), Vector2(14, 8)]
-const HOPKUNA_TEETH := [Vector2(11, 11), Vector2(13, 11), Vector2(15, 11)]
+## The eyes, in their own pixels: each one an oval this many pixels across and
+## tall (half-sizes), this far apart from the middle.
+const EYE_HALF_WIDTH := 2.5
+const EYE_HALF_HEIGHT := 4.2
+const EYE_SPACING := 3.6
 
-## The recorded laugh (audio/sfx/hopkuna_laugh, if it's there): where in the file the
-## laughing starts, and how loud it is every 50th of a second from there (0 to 9),
-## measured from the recording. His jaw follows it.
+## The recorded laugh (audio/sfx/hopkuna_laugh): where in the file the laughing
+## starts, and how loud it is every 50th of a second from there (0 to 9), measured
+## from the recording. The eyes jerk and squint along with it.
 const LAUGH_FILE_START := 0.7
 const LAUGH_FILE_BOOST_DB := 6.0
 const LAUGH_ENVELOPE := "011111122233333444455545555556555656555557765565555455565555665454455555556656653334344545646554444455565555443333445555544333333445444433322345566666654433333445666665544333334678767666645455555555534567777654465565666554445566655444444456655554445677665444433345566655444433222334566777666543322222222334566554444443332222233334789754333455555432111111111"
-## The recording's last, loudest burst: his face comes back for a second scare.
+## The recording's last, loudest burst: the eyes come back for a second scare.
 const SECOND_SCARE_AT := 6.52
 const SECOND_SCARE_TIME := 0.34
 
 
-## The recorded laugh if there is one, or the made-up one.
+## Is the laugh recording there? (If not, the jumpscare is silent but for the scream.)
 func _recorded_laugh() -> bool:
 	return Game.has_sfx("hopkuna_laugh")
 
@@ -1601,10 +1594,9 @@ func _process_tent(delta: float) -> void:
 				_tent_phase = "laugh"
 				_tent_time = 0.0
 				Game.play_sfx("scream")
+				# Only the recorded laugh (and silence if it isn't there).
 				if _recorded_laugh():
 					Game.play_sfx("hopkuna_laugh", 1.0, LAUGH_FILE_START, LAUGH_FILE_BOOST_DB)
-				else:
-					Game.play_sfx("laugh")
 		"laugh":
 			if _recorded_laugh() and _tent_time - delta < SECOND_SCARE_AT and _tent_time >= SECOND_SCARE_AT:
 				Game.play_sfx("scream", 0.85)
@@ -1651,47 +1643,41 @@ func _draw_tent() -> void:
 			_draw_second_scare(_tent_time - SECOND_SCARE_AT)
 
 
-## How far open Hopkuna's jaw is at `time` into the laugh: wide open for the
-## scream, then snapping open on each "HA".
-func _laugh_jaw(time: float) -> float:
+## How hard the laugh is going at `time` into it (0 to 1): full for the scream,
+## then following the recording's loudness.
+func _laugh_strength(time: float) -> float:
 	if time < 0.35:
 		return 1.0
-	if _recorded_laugh():
-		var index := clampi(int(time / 0.02), 0, LAUGH_ENVELOPE.length() - 1)
-		# Averaged with its neighbours, so the jaw doesn't rattle.
-		var level := 0.0
-		for k in range(index - 2, index + 3):
-			level += int(LAUGH_ENVELOPE[clampi(k, 0, LAUGH_ENVELOPE.length() - 1)])
-		return clampf((level / 5.0 - 2.0) / 6.0, 0.1, 1.0)
-	var open := 0.15
-	for syllable in LAUGH_SYLLABLES:
-		var into: float = time - syllable[0]
-		if into >= 0.0 and into < syllable[1] + 0.1:
-			open = maxf(open, sin(clampf(into / (syllable[1] + 0.1), 0.0, 1.0) * PI))
-	return open
+	if not _recorded_laugh():
+		return 0.2
+	var index := clampi(int(time / 0.02), 0, LAUGH_ENVELOPE.length() - 1)
+	# Averaged with its neighbours, so the eyes don't rattle.
+	var level := 0.0
+	for k in range(index - 2, index + 3):
+		level += int(LAUGH_ENVELOPE[clampi(k, 0, LAUGH_ENVELOPE.length() - 1)])
+	return clampf((level / 5.0 - 2.0) / 6.0, 0.1, 1.0)
 
 
-## The jumpscare, over black. It's Hopkuna's own sprite, blown up huge, almost
-## entirely in the dark: just the shape of him, his two red eyes glowing, and a
-## glint off his teeth. He jerks with each burst of the laugh.
-##   SLAM    he lunges in from huge to filling the screen, with the scream
-##   HOLD    for half a second, shaking, laughing
-##   FLICKER cutting between him, a red ghosted copy, a tighter close-up, an even
-##           darker frame, and black with only the eyes (never faster than about 8
-##           cuts a second; with Reduce flashing on, it just holds on him)
+## The jumpscare, over black: nothing but two glowing red eyes, huge.
+##   SLAM    they lunge in from enormous to filling the middle of the screen,
+##           with the scream
+##   HOLD    for half a second, shaking, as the laugh starts
+##   FLICKER cutting between the eyes, a red ghosted copy, a tighter close-up,
+##           dimmer eyes, and pure black (never faster than about 8 cuts a second;
+##           with Reduce flashing on, they just hold)
 ##   LUNGE   one last rush at the screen, then black (the laugh carries on)
 func _draw_jumpscare(time: float) -> void:
-	var focus := Vector2(320, 210)
-	var laugh := _laugh_jaw(time)
+	var focus := Vector2(320, 220)
+	var laugh := _laugh_strength(time)
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * (14.0 if time < 0.6 else 6.0)
-	var size := 34.0 + time * 2.0
+	var cell := 12.0 + time * 0.8
 	var mode := 0
 	if time < 0.14:
 		var slam := time / 0.14
-		size = lerpf(80.0, 34.0, 1.0 - pow(1.0 - slam, 3.0))
+		cell = lerpf(32.0, 12.0, 1.0 - pow(1.0 - slam, 3.0))
 	elif time > JUMPSCARE_TIME - 0.22:
 		var lunge := (time - (JUMPSCARE_TIME - 0.22)) / 0.22
-		size = lerpf(40.0, 110.0, lunge * lunge)
+		cell = lerpf(14.0, 40.0, lunge * lunge)
 	elif time > 0.6 and not Game.reduce_flashing():
 		# A new cut every 0.13 seconds, chosen at random (but never two blacks in a row).
 		var cut := int((time - 0.6) / 0.13)
@@ -1701,69 +1687,65 @@ func _draw_jumpscare(time: float) -> void:
 		if mode == 2 and cut % 2 == 1:
 			mode = 0
 	match mode:
-		2, 3:
-			# Black: only the eyes.
-			_draw_hopkuna_in_dark(focus + shake, size, laugh, 0.0)
+		2:
+			# Pure black, for a split second. Where did they go?
+			pass
 		4:
-			_draw_hopkuna_in_dark(focus + shake, size * 1.15, laugh, JUMPSCARE_LIGHT * 0.4)
+			_draw_eyes(focus + shake, cell, laugh, 0.45)
 		5, 6:
-			# A tight close-up on his eyes and grin.
-			_draw_hopkuna_in_dark(focus + Vector2(0, 40) + shake, size * 1.8, laugh, JUMPSCARE_LIGHT)
+			# A tight close-up.
+			_draw_eyes(focus + shake, cell * 1.8, laugh, 1.0)
 		7:
 			# Ghosted: a red copy split off to one side.
-			_draw_hopkuna_in_dark(focus + shake + Vector2(18, 0), size, laugh, JUMPSCARE_LIGHT, Color(1.0, 0.1, 0.1, 0.5))
-			_draw_hopkuna_in_dark(focus + shake, size, laugh, JUMPSCARE_LIGHT)
+			_draw_eyes(focus + shake + Vector2(cell * 1.5, 0), cell, laugh, 0.5, Color(1.0, 0.3, 0.3, 0.5))
+			_draw_eyes(focus + shake, cell, laugh, 1.0)
 		_:
-			_draw_hopkuna_in_dark(focus + shake, size, laugh, JUMPSCARE_LIGHT)
+			_draw_eyes(focus + shake, cell, laugh, 1.0)
 	_draw_jumpscare_grime(time)
 
 
-## The second scare, on the laugh's last burst: out of the dark, he rushes in even
-## closer than before, then he's gone.
+## The second scare, on the laugh's last burst: out of the dark, the eyes rush in
+## even closer than before, then they're gone.
 func _draw_second_scare(time: float) -> void:
 	var rush := clampf(time / 0.08, 0.0, 1.0)
-	var size := lerpf(110.0, 52.0, 1.0 - pow(1.0 - rush, 3.0)) + time * 20.0
+	var cell := lerpf(40.0, 18.0, 1.0 - pow(1.0 - rush, 3.0)) + time * 8.0
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 18.0
-	_draw_hopkuna_in_dark(Vector2(320, 200) + shake, size, 1.0, JUMPSCARE_LIGHT)
+	_draw_eyes(Vector2(320, 210) + shake, cell, 1.0, 1.0)
 	_draw_jumpscare_grime(time + 10.0)
 
 
-## Hopkuna's sprite, `size` screen pixels per sprite pixel, with the point between
-## his eyes at `focus`. `light` is how much of him you can see (0 = only the eyes).
-## His eyes glow at full strength no matter what, and his teeth catch a little light.
-func _draw_hopkuna_in_dark(focus: Vector2, size: float, laugh: float, light: float, tint: Color = Color.WHITE) -> void:
-	if _hopkuna_sprite == null:
-		_hopkuna_sprite = load("res://art/sprites/hopkuna.png")
-	# He jerks up and stretches a little with each burst of laughter.
-	var stretch := Vector2(1.0 - 0.03 * laugh, 1.0 + 0.06 * laugh)
-	var pixel := Vector2(size, size) * stretch
-	var origin := focus - HOPKUNA_EYES_MIDDLE * pixel - Vector2(0, laugh * size * 0.5)
-	var spot := func(texel: Vector2) -> Vector2: return origin + texel * pixel
-	if light > 0.0:
-		var dim := Color(light * 1.3, light, light, 1.0) * tint
-		_overlay.draw_texture_rect(_hopkuna_sprite, Rect2(origin, _hopkuna_sprite.get_size() * pixel), false, dim)
-		# The grin: his tooth pixels catch a little of the light.
-		for tooth in HOPKUNA_TEETH:
-			_overlay.draw_rect(Rect2(spot.call(tooth), pixel), Color(0.9, 0.85, 0.7, 0.12) * tint)
-	# The eyes: two glowing red pixels with soft light around them.
-	for eye in HOPKUNA_EYE_PIXELS:
-		var middle: Vector2 = spot.call(eye + Vector2(0.5, 0.5))
-		_soft_glow(middle, size * 3.2, Color(1.0, 0.08, 0.1, 0.32) * tint)
-		_soft_glow(middle, size * 1.3, Color(1.0, 0.15, 0.12, 0.6) * tint)
-		_overlay.draw_rect(Rect2(spot.call(eye), pixel), Color(1.0, 0.12, 0.12) * tint)
-		_overlay.draw_rect(Rect2(spot.call(eye) + pixel * 0.3, pixel * 0.4), Color(1.0, 0.75, 0.6) * tint)
+## Two tall oval eyes, glowing red, made of chunky square pixels (`cell` screen
+## pixels each), like a face in the dark you can't otherwise see. Bright in the
+## middle, deep red at the edges, with a little highlight, and a blocky glow of dim
+## red pixels around each. They jerk up and squint a little with each burst of
+## laughter. `brightness` dims them; `tint` colors them (for ghost copies).
+func _draw_eyes(focus: Vector2, cell: float, laugh: float, brightness: float, tint: Color = Color.WHITE) -> void:
+	var squint := 1.0 - 0.18 * laugh
+	var lift := Vector2(0, -laugh * cell * 0.7)
+	for side in [-1.0, 1.0]:
+		var middle := focus + lift + Vector2(side * EYE_SPACING * cell, 0)
+		for gy in range(-10, 11):
+			for gx in range(-7, 8):
+				# How far this pixel's middle is from the eye's middle, in eye-widths.
+				var d := Vector2(gx / EYE_HALF_WIDTH, gy / (EYE_HALF_HEIGHT * squint)).length()
+				var color: Color
+				if d <= 1.0:
+					color = Color(1.0, 0.32, 0.26).lerp(Color(0.82, 0.02, 0.06), d)
+					color = Color(color.r * brightness, color.g * brightness, color.b * brightness)
+				elif d <= 1.6:
+					color = Color(0.9, 0.04, 0.08, 0.38 * (1.6 - d) / 0.6 * brightness)
+				elif d <= 2.4:
+					color = Color(0.7, 0.02, 0.05, 0.13 * (2.4 - d) / 0.8 * brightness)
+				else:
+					continue
+				var at := middle + Vector2(gx - 0.5, gy - 0.5) * cell
+				_overlay.draw_rect(Rect2(at, Vector2(cell, cell)), color * tint)
+		# A little highlight, up and to the left.
+		var shine := middle + Vector2(-1.5, -2.5 * squint) * cell
+		_overlay.draw_rect(Rect2(shine, Vector2(cell, cell)), Color(1.0, 0.75, 0.68, brightness) * tint)
 
 
-## A soft round glow that fades out to nothing at `radius`.
-func _soft_glow(center: Vector2, radius: float, color: Color) -> void:
-	var clear := Color(color, 0.0)
-	for k in 24:
-		var a := center + Vector2.from_angle(k * TAU / 24) * radius
-		var b := center + Vector2.from_angle((k + 1) * TAU / 24) * radius
-		_overlay.draw_polygon(PackedVector2Array([center, a, b]), PackedColorArray([color, clear, clear]))
-
-
-## Over the face: a red vignette, scanlines, film grain, and torn glitch bars.
+## Over the eyes: a red vignette, scanlines, film grain, and torn glitch bars.
 func _draw_jumpscare_grime(time: float) -> void:
 	for k in 8:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520).grow(-k * 16), Color(0.25, 0.0, 0.02, 0.07), false, 16.0)

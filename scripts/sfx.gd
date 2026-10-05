@@ -31,7 +31,6 @@ static func make_all() -> Dictionary:
 		"thud": slide(140, 40, 0.25, 0.35),
 		"ping": slide(1400, 1100, 0.18, 0.12),
 		"zap": noise(0.18, 0.28),
-		"laugh": laugh(),
 		"stinger": stinger(),
 		"engine": engine(),
 		"brakes": slide(1900, 1500, 0.4, 0.07),
@@ -155,43 +154,6 @@ static func engine() -> AudioStreamWAV:
 		data.encode_s16(s * 2, int(value * envelope * 0.28 * 32767.0))
 	return _wav(data)
 
-
-## A slow, deep, distorted laugh: "HA... HA... HA... HA HA HA HA" sinking lower,
-## with a wobble in each "HA" and an echo trailing behind.
-static func laugh() -> AudioStreamWAV:
-	var syllables := [[0.0, 0.32, 150.0], [0.5, 0.32, 140.0], [1.0, 0.3, 128.0],
-		[1.45, 0.2, 120.0], [1.7, 0.2, 110.0], [1.95, 0.2, 100.0], [2.2, 0.45, 82.0]]
-	var length := 3.6
-	var count := int(length * RATE)
-	var samples := PackedFloat32Array()
-	samples.resize(count)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 13
-	for syllable in syllables:
-		var start := int(syllable[0] * RATE)
-		var size := int(syllable[1] * RATE)
-		var phase := 0.0
-		for s in size:
-			var t := float(s) / size
-			# Each "HA" starts sharp and falls in pitch, with a shaky vibrato.
-			var freq: float = syllable[2] * (1.15 - 0.3 * t) * (1.0 + 0.06 * sin(t * 60.0))
-			phase = fmod(phase + freq / RATE, 1.0)
-			var saw := phase * 2.0 - 1.0
-			var square := 1.0 if phase < 0.5 else -1.0
-			var breath := rng.randf_range(-1.0, 1.0) * 0.35
-			var envelope := minf(1.0, t * 12.0) * (1.0 - t)
-			samples[start + s] += (saw * 0.5 + square * 0.3 + breath) * envelope
-	# A low echo, a quarter second behind and quieter.
-	var delay := int(0.26 * RATE)
-	for s in range(count - 1, delay - 1, -1):
-		samples[s] += samples[s - delay] * 0.45
-	var data := PackedByteArray()
-	data.resize(count * 2)
-	for s in count:
-		# Clipping hard makes it sound distorted and wrong.
-		var value := clampf(samples[s] * 1.6, -1.0, 1.0)
-		data.encode_s16(s * 2, int(value * 0.45 * 32767.0))
-	return _wav(data)
 
 
 ## Plays the notes one after another (0 means a short silence).
