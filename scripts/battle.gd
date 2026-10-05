@@ -1636,8 +1636,6 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 	else:
 		var breath := sin(t * 2.4 + index * 1.3)
 		scale = Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
-		# Ready to fight: fists up, feet planted.
-		pose = "stance"
 		if _is_choosing(index):
 			offset.y -= absf(sin(t * 5.0)) * 3.0
 		if member.defending:
@@ -1687,8 +1685,8 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 
 	# Effects around the pose.
 	if attacking and state == State.FIGHT_BAR:
-		# Where the raised hand is in the windup pose (Elric's claws high, Hop's fist cocked back).
-		var hand := feet + offset + (Vector2(3, -90) if not is_hop else Vector2(-10, -74))
+		# Where the raised hand is in the windup pose.
+		var hand := feet + offset + (Vector2(40, -72) if not is_hop else Vector2(36, -64))
 		if is_hop:
 			# Energy gathering around his fist: rings closing in, getting redder.
 			var charge := clampf(1.0 - _bar_wait / FIGHT_WINDUP, 0.0, 1.0) if _bar_wait > 0.0 else 1.0
@@ -1710,7 +1708,7 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 			_overlay.draw_line(Vector2(feet.x + offset.x - 70, y), Vector2(feet.x + offset.x - 20, y), Color(1, 1, 1, 0.5), 2.0)
 	if member.is_down() and member.ko_time > 0.5:
 		# Little stars circling where their head ended up.
-		var head := feet + Vector2(-62, -12)
+		var head := feet + Vector2(-44, -14)
 		for s in 3:
 			var angle := t * 3.0 + s * TAU / 3
 			var star := head + Vector2(cos(angle) * 16.0, sin(angle) * 5.0)
