@@ -72,6 +72,13 @@ func _ready() -> void:
 	add_child(_stamina_bar)
 
 
+## If the game window loses focus with Shift held, the key-up never arrives:
+## let go of it, so Elric doesn't keep sprinting.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		Input.action_release("sprint")
+		sprinting = false
+
 ## Loads Elric's pictures: normal, or worse the further down the Genocide path.
 func _load_look() -> void:
 	var base := "res://art/sprites/" + Game.sprite_base("Elric")
@@ -101,7 +108,8 @@ func _physics_process(delta: float) -> void:
 			facing = Vector2(signf(direction.x), 0)
 		else:
 			facing = Vector2(0, signf(direction.y))
-		sprinting = Input.is_action_pressed("sprint") and not _winded and stamina > 0.0
+		# Only while Shift is actually held down, right now (never a toggle).
+		sprinting = Input.is_action_pressed("sprint") and Input.is_physical_key_pressed(KEY_SHIFT) and not _winded and stamina > 0.0
 		velocity = direction * speed * (SPRINT_MULTIPLIER if sprinting else 1.0)
 		var before := position
 		move_and_slide()

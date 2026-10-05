@@ -69,6 +69,9 @@ var _music_current: int = 0
 var _music_name: String = ""
 ## How fast (and how low) the music plays: slowed down in the overworld on the
 ## Genocide path (see Area). Battles set it back to 1.
+## If set, this song plays instead of whatever an area asks for (the Genocide song;
+## see Area). Battles and scene changes clear it.
+var music_override: String = ""
 var music_pitch: float = 1.0:
 	set(value):
 		music_pitch = value
@@ -381,6 +384,21 @@ func equip(member_name: String, item: Dictionary) -> Dictionary:
 	return old
 
 
+## Takes an accessory off a member and puts it back in the bag. Returns false if
+## the bag is full (then nothing changes).
+func unequip(member_name: String, slot: String) -> bool:
+	var worn := worn_by(member_name)
+	if not worn.has(slot):
+		return true
+	if items.size() >= MAX_ITEMS:
+		return false
+	items.append(worn[slot])
+	worn.erase(slot)
+	equipment[member_name] = worn
+	update_stats()
+	return true
+
+
 func heal_party() -> void:
 	for member in party:
 		member.hp = member.max_hp
@@ -391,6 +409,8 @@ func heal_party() -> void:
 ## Plays a song from audio/music/ (by name, like "battle"), fading out whatever was
 ## playing. Does nothing if that song is already playing. "" means silence.
 func play_music(song: String, fade_time: float = 0.6) -> void:
+	if music_override != "" and song != "":
+		song = music_override
 	if song == _music_name:
 		return
 	_music_name = song
@@ -483,8 +503,9 @@ func change_scene(path: String, spawn = null) -> void:
 	transitioning = true
 	await fade_out()
 	spawn_position = spawn
-	# Normal-speed music unless the new scene says otherwise (see Area, Genocide).
+	# Normal music unless the new scene says otherwise (see Area, Genocide).
 	music_pitch = 1.0
+	music_override = ""
 	get_tree().change_scene_to_file(path)
 	# Whatever was going on in the old scene (a cutscene, a conversation) is gone
 	# now, and it can't finish to say so. Start the new scene free to move; its own

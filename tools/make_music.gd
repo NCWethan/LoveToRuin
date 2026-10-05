@@ -696,8 +696,16 @@ const DRUM_VOLUME := 0.18
 
 func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
-	for song_name in SONGS:
-		var stream := render(SONGS[song_name])
+	var songs := SONGS.duplicate(true)
+	# The Genocide path: the music from near a fragment, slowed way down, a few
+	# notes lower, and drowned in reverb, like it's coming from somewhere far away.
+	var genocide: Dictionary = songs["eerie"].duplicate(true)
+	genocide["bpm"] = 32
+	genocide["pitch"] = 0.84
+	genocide["reverb"] = 0.75
+	songs["genocide"] = genocide
+	for song_name in songs:
+		var stream := render(songs[song_name])
 		var path: String = OUT_DIR + song_name + ".res"
 		var error := ResourceSaver.save(stream, path)
 		print("%-10s %5.1f seconds  -> %s %s" % [song_name, stream.get_length(), path, "" if error == OK else "(ERROR %d)" % error])
@@ -721,9 +729,16 @@ func render(song: Dictionary) -> AudioStreamWAV:
 				# Saw waves are much brighter, so play them a bit quieter.
 				if sound["wave"] == "saw":
 					sound["volume"] *= 0.75
-			_render_part(mix, _parse(song[part], part), step_seconds, sound)
+			var notes := _parse(song[part], part)
+			# "pitch" moves the whole song up or down (0.84 = about 3 notes lower).
+			for note in notes:
+				note[2] *= float(song.get("pitch", 1.0))
+			_render_part(mix, notes, step_seconds, sound)
 	if song.has("drums"):
 		_render_drums(mix, song["drums"], step_seconds)
+
+	if song.has("reverb"):
+		mix = _reverb(mix, float(song["reverb"]))
 
 	# Convert to 16-bit audio, gently limiting any loud peaks.
 	var data := PackedByteArray()
@@ -741,6 +756,43 @@ func render(song: Dictionary) -> AudioStreamWAV:
 	stream.loop_begin = 0
 	stream.loop_end = total
 	return stream
+
+
+## A big, washy reverb (four echoing delay lines, then two smearing ones). The song
+## loops, so it's run over the song twice and the second pass is kept: the echoes
+## from the end carry over into the start, and the loop is seamless.
+## `wet` is how much of the reverb is mixed in (0 to 1).
+func _reverb(dry: PackedFloat32Array, wet: float) -> PackedFloat32Array:
+	var n := dry.size()
+	var twice := PackedFloat32Array()
+	twice.resize(n * 2)
+	for i in n * 2:
+		twice[i] = dry[i % n]
+	var scale := RATE / 44100.0
+	var combs := PackedFloat32Array()
+	combs.resize(n * 2)
+	for delay_44k in [1557, 1617, 1491, 1422]:
+		var delay := int(delay_44k * scale * 2.2)
+		var line := PackedFloat32Array()
+		line.resize(n * 2)
+		for i in n * 2:
+			var echo := line[i - delay] if i >= delay else 0.0
+			line[i] = twice[i] + echo * 0.86
+			combs[i] += line[i] * 0.25
+	for delay_44k in [225, 556]:
+		var delay := int(delay_44k * scale * 2.2)
+		var smeared := PackedFloat32Array()
+		smeared.resize(n * 2)
+		for i in n * 2:
+			var back := smeared[i - delay] if i >= delay else 0.0
+			var before := combs[i - delay] if i >= delay else 0.0
+			smeared[i] = -0.5 * combs[i] + before + 0.5 * back
+		combs = smeared
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in n:
+		out[i] = dry[i] * (1.0 - wet * 0.5) + combs[n + i] * wet * 0.6
+	return out
 
 
 ## Reads a part's bars into a list of notes: [start step, length in steps, frequency].

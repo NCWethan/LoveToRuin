@@ -286,29 +286,29 @@ func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
 
 
 # --- Genocide: the world changes with Elric -------------------------------------
-# dread 1: the colors start to drain and the music drags a little.
-# dread 2: grayer, slower, and people back away from Elric and flinch.
-# dread 3: nearly gray, darker, the music slow and low; people keep their distance.
+# The colors stay the same. But something's wrong: every so often a red vignette
+# creeps in around the edges of the screen, pulsing like a heartbeat, then fades.
+# dread 1: now and then, faintly; the music drags a little.
+# dread 2: more often; slower music; people back away from Elric and flinch.
+# dread 3: often, and strong; the music is replaced by the Genocide song (the
+#          fragment music, slowed down and drowned in reverb); people keep away.
 
-const DREAD_COLOR_DRAIN := [0.0, 0.25, 0.5, 0.8]
-const DREAD_MUSIC_PITCH := [1.0, 0.95, 0.9, 0.82]
+const DREAD_MUSIC_PITCH := [1.0, 0.95, 0.9, 1.0]
+## How strong the red vignette gets, and the wait between times it appears
+## (a random number of seconds in this range).
+const DREAD_VIGNETTE := [0.0, 0.3, 0.45, 0.62]
+const DREAD_VIGNETTE_GAP := [Vector2.ZERO, Vector2(18, 30), Vector2(10, 20), Vector2(5, 12)]
+## How long the vignette lasts each time, in seconds.
+const VIGNETTE_LENGTH := 3.4
 ## How close Elric can get before someone backs away, and how far they'll back off
 ## from where they were standing (not too far: you can still reach them to talk).
 const AVOID_RADIUS := [0.0, 0.0, 56.0, 72.0]
 const AVOID_LEASH := 34.0
 
-const DRAIN_SHADER := """
-shader_type canvas_item;
-uniform sampler2D screen : hint_screen_texture, filter_nearest;
-uniform float amount = 0.0;
-void fragment() {
-	vec3 c = texture(screen, SCREEN_UV).rgb;
-	float gray = dot(c, vec3(0.3, 0.59, 0.11));
-	c = mix(c, vec3(gray * 1.05, gray * 0.92, gray * 0.94), amount);
-	c *= 1.0 - 0.28 * amount;
-	COLOR = vec4(c, 1.0);
-}
-"""
+var _vignette: TextureRect
+## Seconds until the vignette next appears, and how far into it we are (-1: not showing).
+var _vignette_wait: float = 0.0
+var _vignette_time: float = -1.0
 
 
 func _add_dread() -> void:
@@ -316,18 +316,56 @@ func _add_dread() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 3
 	add_child(layer)
-	var drain := ColorRect.new()
-	drain.size = Vector2(640, 480)
-	drain.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var material := ShaderMaterial.new()
-	material.shader = Shader.new()
-	material.shader.code = DRAIN_SHADER
-	material.set_shader_parameter("amount", DREAD_COLOR_DRAIN[stage])
-	drain.material = material
-	layer.add_child(drain)
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(0.6, 0.0, 0.04, 0.0))
+	gradient.set_color(1, Color(0.6, 0.0, 0.04, 1.0))
+	gradient.add_point(0.55, Color(0.6, 0.0, 0.04, 0.0))
+	var shade := GradientTexture2D.new()
+	shade.gradient = gradient
+	shade.fill = GradientTexture2D.FILL_RADIAL
+	shade.fill_from = Vector2(0.5, 0.5)
+	shade.fill_to = Vector2(1.05, 1.05)
+	shade.width = 128
+	shade.height = 96
+	_vignette = TextureRect.new()
+	_vignette.texture = shade
+	_vignette.size = Vector2(640, 480)
+	_vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.modulate.a = 0.0
+	layer.add_child(_vignette)
+	# The first one comes sooner than the rest.
+	_vignette_wait = randf_range(3.0, DREAD_VIGNETTE_GAP[stage].x)
+	get_tree().process_frame.connect(_update_vignette)
 	Game.music_pitch = DREAD_MUSIC_PITCH[stage]
+	if stage >= 3:
+		Game.music_override = "genocide"
 	if AVOID_RADIUS[stage] > 0.0:
 		get_tree().process_frame.connect(_keep_away)
+
+
+## The red vignette: waits, then fades in, pulses twice like a heartbeat, and fades out.
+func _update_vignette() -> void:
+	if _vignette == null or not is_instance_valid(_vignette):
+		return
+	var delta := get_process_delta_time()
+	var stage := Game.dread()
+	if _vignette_time < 0.0:
+		_vignette_wait -= delta
+		if _vignette_wait <= 0.0:
+			_vignette_time = 0.0
+		_vignette.modulate.a = 0.0
+		return
+	_vignette_time += delta
+	var t := _vignette_time
+	var strength := clampf(t / 0.9, 0.0, 1.0) * clampf((VIGNETTE_LENGTH - t) / 1.2, 0.0, 1.0)
+	var beat := fmod(t, 0.9)
+	var pulse := 0.75 + 0.25 * (maxf(0.0, 1.0 - beat / 0.15) + maxf(0.0, 1.0 - absf(beat - 0.25) / 0.12))
+	_vignette.modulate.a = DREAD_VIGNETTE[stage] * strength * pulse
+	if t >= VIGNETTE_LENGTH:
+		_vignette_time = -1.0
+		var gap: Vector2 = DREAD_VIGNETTE_GAP[stage]
+		_vignette_wait = randf_range(gap.x, gap.y)
 
 
 ## People back away from Elric when they come near (but stay close to where they
@@ -453,7 +491,7 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 ## Walking around inside one of these rooms eventually starts a random fight.
 var encounter_zones: Array = []
 ## How far Elric walks between random fights, in pixels (a random amount in this range).
-const ENCOUNTER_DISTANCE := Vector2(1000, 1800)
+const ENCOUNTER_DISTANCE := Vector2(550, 1000)
 var _next_encounter: float = -1.0
 
 

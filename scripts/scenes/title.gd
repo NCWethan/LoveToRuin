@@ -150,7 +150,7 @@ func _draw() -> void:
 		var summary := Game.save_summary()
 		if summary != "" and _options[_choice] in ["Continue", "Reset"]:
 			_draw_centered(summary, Vector2(320, 380), 14, Color(0.7, 0.7, 0.7, fade))
-		_draw_centered("Arrow keys to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
+		_draw_centered("Arrow keys or WASD to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
 
 
 ## A dim red glow behind the title that slowly breathes.

@@ -7,7 +7,7 @@ extends RefCounted
 const INTRO := [
 	"* Big Joe blocks the way!\n* Eggo is... also here.",
 	"* Big Joe: \"Hand over the fragment,\n*   Hopkuna's lackey!\"",
-	"* (Use the ARROW KEYS to move your SOUL.\n*  Dodge the attacks!)",
+	"* (Use the ARROW KEYS or WASD to move your SOUL.\n*  Dodge the attacks!)",
 ]
 
 

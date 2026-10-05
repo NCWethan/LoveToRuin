@@ -77,8 +77,16 @@ func _process(_delta: float) -> void:
 	_panel.queue_redraw()
 
 
+## Gear (weapons and things to wear) is one of a kind: once bought, it's SOLD OUT.
+static func sold_out(item: Dictionary) -> bool:
+	return Items.is_accessory(item) and Game.flags.get("bought_" + str(item["name"]), false)
+
+
 func _buy(item: Dictionary) -> void:
-	if Game.money < int(item["price"]):
+	if sold_out(item):
+		_message = "* That's SOLD OUT. There was only one."
+		Game.play_sfx("miss")
+	elif Game.money < int(item["price"]):
 		_message = "* You don't have enough money."
 		Game.play_sfx("miss")
 	elif Game.items.size() >= Game.MAX_ITEMS:
@@ -89,6 +97,8 @@ func _buy(item: Dictionary) -> void:
 		var bought: Dictionary = item.duplicate()
 		bought.erase("price")
 		Game.items.append(bought)
+		if Items.is_accessory(item):
+			Game.flags["bought_" + str(item["name"])] = true
 		_message = "* You bought the %s." % item["name"]
 		Game.play_sfx("item")
 
@@ -126,6 +136,9 @@ func _draw_panel() -> void:
 			label = item["name"]
 			detail = "$%d     %s" % [item["price"], Items.stats_text(item) if Items.is_accessory(item) else "+%d HP" % item["heal"]]
 		var color := Color.YELLOW if i == _cursor else Color.WHITE
+		if i < _stock.size() and sold_out(_stock[i]):
+			detail = "SOLD OUT"
+			color = Color(1.0, 0.45, 0.45) if i == _cursor else Color(0.45, 0.45, 0.45)
 		_panel.draw_string(_font, Vector2(left + 30, row_y), label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		_panel.draw_string(_font, Vector2(left + 260, row_y), detail, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		if i == _cursor:

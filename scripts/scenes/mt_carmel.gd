@@ -312,8 +312,8 @@ func _arrival() -> void:
 	])
 	await _the_voice()
 	await Game.dialogue.say([
-		"* (Use the ARROW KEYS to walk.\n*  Press ENTER to talk to people or look at things.)",
-		"* (Press B to open your BAG.)",
+		"* (Use the ARROW KEYS or WASD to walk.\n*  Hold SHIFT to sprint.)",
+		"* (Press ENTER to talk to people or look at things.\n*  Press B to open your BAG.)",
 	])
 	Game.flags["arrived"] = true
 	Game.busy = false
@@ -486,7 +486,7 @@ func _ambush() -> void:
 		{"who": "BigJoe6", "text": "We're the ones who've been tracking that thing\nfor a week. And you just walked off with it.", "mood": "angry"},
 		{"who": "BigJoe6", "text": "Nobody picks up a fragment by accident.\nYou're working for Hopkuna, aren't you?", "mood": "angry"},
 		"* (Hop goes very quiet.)",
-		{"who": "Elric", "text": "...I'm not."},
+		{"who": "Elric", "choices": ["Who?", "...I'm not."]},
 		{"who": "BigJoe6", "text": "That's EXACTLY what a lackey would say!", "mood": "angry"},
 		{"who": "Eggo", "text": "he's not wrong. that is what a lackey would say.", "mood": "smug"},
 		{"who": "Eggo", "text": "...it's also what a not-lackey would say.\njust saying.", "mood": "smug"},

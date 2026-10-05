@@ -1,7 +1,10 @@
 class_name BagMenu
 extends CanvasLayer
-## Your bag, opened with B while walking around. Under the items: TEAM (who comes
-## along with Elric; only changeable at the Corps' base) and the settings.
+## Your bag, opened with B while walking around. Under the items: TEAM (once you've
+## met Hop) and the settings.
+## TEAM shows each member of the team: their picture, stats, and what they're
+## holding and wearing. Pick something they're wearing to take it off. At the
+## Corps' base, "Change partner" picks who comes along with Elric.
 ## The left side shows the party's HP and your money; the right side lists your items.
 ## Pick an item, then:
 ##   USE    eat it (pick who, if there's more than one of you)
@@ -9,10 +12,12 @@ extends CanvasLayer
 ##   DROP   throw it away
 ## X goes back (or closes the bag).
 
-enum Step { LIST, ACTIONS, TARGET, MESSAGE, TEAM }
+enum Step { LIST, ACTIONS, TARGET, MESSAGE, TEAM, PARTNER }
 
-## The team list: this many names per column.
+## The partner list: this many names per column.
 const TEAM_ROWS := 6
+## The team screen: one card per member.
+const CARD_SIZE := Vector2(280, 290)
 
 const ACTIONS := ["USE", "CHECK", "DROP"]
 const STATS := Rect2(30, 40, 200, 200)
@@ -33,6 +38,12 @@ var _action: int = 0
 var _target: int = 0
 var _message: String = ""
 var _team_cursor: int = 0
+## On the team screen: which member (0 or 1), and which row (the three slots, then
+## "Change partner").
+var _team_member: int = 0
+var _team_slot: int = 0
+## Where a message goes back to when it's closed.
+var _message_return: Step = Step.LIST
 ## Set when the team changes, so the area can swap who's following Elric.
 var _team_changed: bool = false
 
@@ -87,8 +98,8 @@ func _process(_delta: float) -> void:
 
 	match _step:
 		Step.LIST:
-			# Under the items: "Team", then "Settings".
-			var rows := Game.items.size() + 2
+			# Under the items: "Team" (once you've met Hop), then "Settings".
+			var rows := Game.items.size() + (2 if _team_shown() else 1)
 			if up or down:
 				_cursor = wrapi(_cursor + (1 if down else -1), 0, rows)
 				Game.play_sfx("move")
@@ -113,14 +124,27 @@ func _process(_delta: float) -> void:
 			elif back:
 				_step = Step.LIST
 		Step.TARGET:
-			if up or down:
-				_target = wrapi(_target + (1 if down else -1), 0, Game.party.size())
+			# The names are side by side: left and right (A and D) to pick.
+			if left or right:
+				_target = wrapi(_target + (1 if right else -1), 0, Game.party.size())
 				Game.play_sfx("move")
 			elif confirm:
 				_use_on(Game.party[_target])
 			elif back:
 				_step = Step.ACTIONS
 		Step.TEAM:
+			var rows := Game.SLOTS.size() + (1 if _can_change_partner() else 0)
+			if left or right:
+				_team_member = wrapi(_team_member + (1 if right else -1), 0, Game.party.size())
+				Game.play_sfx("move")
+			elif up or down:
+				_team_slot = wrapi(_team_slot + (1 if down else -1), 0, rows)
+				Game.play_sfx("move")
+			elif confirm:
+				_team_choose()
+			elif back:
+				_step = Step.LIST
+		Step.PARTNER:
 			var choices := Game.team_choices()
 			if up or down:
 				_team_cursor = wrapi(_team_cursor + (1 if down else -1), 0, choices.size())
@@ -134,37 +158,66 @@ func _process(_delta: float) -> void:
 					Game.set_partner(id)
 					_team_changed = true
 				Game.play_sfx("select")
-				_show("* (%s will come with you.)" % DialogueBox.display_name(id))
+				_show("* (%s will come with you.)" % DialogueBox.display_name(id), Step.TEAM)
 			elif back:
-				_step = Step.LIST
+				_step = Step.TEAM
 		Step.MESSAGE:
 			if confirm or back:
 				_message = ""
-				_step = Step.LIST
-				_cursor = clampi(_cursor, 0, maxi(0, Game.items.size() - 1))
+				_step = _message_return
+				if _step == Step.LIST:
+					_cursor = clampi(_cursor, 0, maxi(0, Game.items.size() - 1))
 
 	_panel.queue_redraw()
 
 
-## True when the cursor is on the "Settings" row (the last one, below "Team").
+## The "Team" row only shows up once Hop has joined.
+func _team_shown() -> bool:
+	return Game.flags.get("met_hop", false)
+
+
+## True when the cursor is on the "Settings" row (the last one).
 func _on_settings() -> bool:
-	return _cursor >= Game.items.size() + 1
+	return _cursor >= Game.items.size() + (1 if _team_shown() else 0)
 
 
 ## True when the cursor is on the "Team" row (right below the items).
 func _on_team() -> bool:
-	return _cursor == Game.items.size()
+	return _team_shown() and _cursor == Game.items.size()
 
 
-## Picking who comes along. Only at the Corps' base; anywhere else, it just says so.
-func _open_team() -> void:
-	if not Game.flags.get("base_arrived", false):
-		_show("* (It's you and Hop. That's the team.)")
-	elif not get_tree().current_scene.has_method("refresh_partner"):
-		_show("* (%s is with you.)\n* (You can only change who comes along at the Corps' base.)" % DialogueBox.display_name(Game.partner()))
-	else:
-		_step = Step.TEAM
+## The partner can only be changed at the Corps' base.
+func _can_change_partner() -> bool:
+	return Game.flags.get("base_arrived", false) and get_tree().current_scene.has_method("refresh_partner")
+
+
+## ENTER on the team screen: take off whatever's in that slot, or change partner.
+func _team_choose() -> void:
+	if _team_slot >= Game.SLOTS.size():
+		Game.play_sfx("select")
+		_step = Step.PARTNER
 		_team_cursor = maxi(0, Game.team_choices().find(Game.partner()))
+		return
+	var member: PartyMember = Game.party[_team_member]
+	var slot: String = Game.SLOTS[_team_slot]
+	var item: Dictionary = Game.worn_by(member.name).get(slot, {})
+	if item.is_empty():
+		Game.play_sfx("miss")
+		return
+	if not Game.unequip(member.name, slot):
+		Game.play_sfx("miss")
+		_show("* (Your bag is full. Make some room first.)", Step.TEAM)
+		return
+	Game.play_sfx("item")
+	var who := "You" if member.name == "Elric" else member.name
+	_show("* %s took off the %s.\n* (It went back in the bag.)" % [who, item["name"]], Step.TEAM)
+
+
+## The team screen.
+func _open_team() -> void:
+	_step = Step.TEAM
+	_team_member = 0
+	_team_slot = 0
 
 
 func _do_action() -> void:
@@ -221,8 +274,9 @@ func _use_on(member: PartyMember) -> void:
 	_show(text)
 
 
-func _show(text: String) -> void:
+func _show(text: String, return_to: Step = Step.LIST) -> void:
 	_message = text
+	_message_return = return_to
 	_step = Step.MESSAGE
 
 
@@ -269,12 +323,20 @@ func _draw_panel() -> void:
 		_text("OBJECTIVE", goal.position + Vector2(14, 20), Color.YELLOW, 12)
 		_panel.draw_multiline_string(_font, goal.position + Vector2(14, 38), Game.objective(), HORIZONTAL_ALIGNMENT_LEFT, goal.size.x - 24, 13)
 
-	# Your items (or, while picking a team, everyone who could come along).
-	_box(LIST)
-	if _step == Step.TEAM:
-		_draw_team()
-		_text("ENTER: choose   X: back", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+	# The team screen (and the partner list) cover the whole bag.
+	if _step == Step.TEAM or _step == Step.PARTNER or (_step == Step.MESSAGE and _message_return == Step.TEAM):
+		_draw_team_cards()
+		if _step == Step.PARTNER:
+			_draw_partner_list()
+		if _step == Step.MESSAGE:
+			_box(MESSAGE)
+			var message_lines := _message.split("\n")
+			for i in message_lines.size():
+				_text(message_lines[i], MESSAGE.position + Vector2(16, 28 + i * 22))
+		_text("A/D: member   W/S: slot   ENTER: take off   X: back" if _step == Step.TEAM else "ENTER: choose   X: back", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
 		return
+	# Your items.
+	_box(LIST)
 	_text("BAG   (%d / %d)" % [Game.items.size(), Game.MAX_ITEMS], Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
 	if Game.items.is_empty():
 		_text("(Your bag is empty.)", Vector2(LIST.position.x + 40, LIST.position.y + 60), Color.GRAY)
@@ -291,10 +353,11 @@ func _draw_panel() -> void:
 	if _step != Step.ACTIONS:
 		var team_at := Vector2(LIST.position.x + 40, LIST.end.y - 16)
 		var on_team := _on_team() and _step == Step.LIST
-		_text("Team", team_at, Color.YELLOW if on_team else Color(0.75, 0.75, 0.75))
+		if _team_shown():
+			_text("Team", team_at, Color.YELLOW if on_team else Color(0.75, 0.75, 0.75))
 		if on_team:
 			_heart(team_at + Vector2(-18, -6))
-		var settings_at := Vector2(LIST.position.x + 160, LIST.end.y - 16)
+		var settings_at := Vector2(LIST.position.x + (160 if _team_shown() else 40), LIST.end.y - 16)
 		var on_it := _on_settings() and _step == Step.LIST
 		_panel.draw_line(Vector2(LIST.position.x + 14, LIST.end.y - 38), Vector2(LIST.end.x - 14, LIST.end.y - 38), Color(0.3, 0.3, 0.3), 1.0)
 		_text("Settings", settings_at, Color.YELLOW if on_it else Color(0.75, 0.75, 0.75))
@@ -335,8 +398,54 @@ func _draw_panel() -> void:
 	_text(hint, Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
 
 
-## The team list: everyone who could come along, the current partner marked.
-func _draw_team() -> void:
+## The team screen: a card for each member with their picture, HP and stats, and
+## what's in each slot (Weapon, Torso, Shoes). At the base, "Change partner" below.
+func _draw_team_cards() -> void:
+	for m in Game.party.size():
+		var member: PartyMember = Game.party[m]
+		var card := Rect2(Vector2(30 + m * 300, 40), CARD_SIZE)
+		var picked := m == _team_member and _step == Step.TEAM
+		_box(card)
+		if picked:
+			_panel.draw_rect(card.grow(4), Color.YELLOW, false, 2.0)
+		var color: Color = DialogueBox.SPEAKERS.get(member.id, {}).get("color", member.color)
+		_text(member.name.to_upper(), card.position + Vector2(14, 26), color, 18)
+		# Their picture, big.
+		var picture_path := "res://art/sprites/%s.png" % Game.sprite_base(member.id)
+		var picture: Texture2D = load(picture_path) if ResourceLoader.exists(picture_path) else member.sprite
+		if picture:
+			var size := picture.get_size() * 3.0
+			_panel.draw_rect(Rect2(card.position + Vector2(14, 40), Vector2(110, 120)), Color(1, 1, 1, 0.06))
+			_panel.draw_texture_rect(picture, Rect2(card.position + Vector2(69 - size.x / 2, 158 - size.y), size), false)
+		var stats_at := card.position + Vector2(140, 62)
+		_text("HP  %d / %d" % [member.hp, member.max_hp], stats_at, Color.WHITE, 15)
+		_text("ATK %d" % member.attack, stats_at + Vector2(0, 26), Color(1, 0.7, 0.6), 15)
+		_text("DEF %d" % member.defense, stats_at + Vector2(0, 50), Color(0.6, 0.8, 1.0), 15)
+		# What they're holding and wearing.
+		for s in Game.SLOTS.size():
+			var slot: String = Game.SLOTS[s]
+			var item: Dictionary = Game.worn_by(member.name).get(slot, {})
+			var row_at := card.position + Vector2(36, 196 + s * 30)
+			var here := picked and _team_slot == s
+			_text(Game.SLOT_NAMES[slot], row_at, Color(0.6, 0.6, 0.6), 13)
+			var label: String = item.get("name", "(nothing)")
+			if not item.is_empty():
+				label += "  " + Items.stats_text(item).get_slice(": ", 1)
+			_text(label, row_at + Vector2(64, 0), Color.YELLOW if here else (Color.WHITE if not item.is_empty() else Color(0.45, 0.45, 0.45)), 14)
+			if here:
+				_heart(row_at + Vector2(-18, -5))
+	if _can_change_partner():
+		var at := Vector2(56, 360)
+		var here := _step == Step.TEAM and _team_slot == Game.SLOTS.size()
+		_box(Rect2(30, 340, 580, 34))
+		_text("Change partner  (now: %s)" % DialogueBox.display_name(Game.partner()), at + Vector2(0, 4), Color.YELLOW if here else Color.WHITE)
+		if here:
+			_heart(at + Vector2(-16, -2))
+
+
+## The partner list: everyone who could come along, the current partner marked.
+func _draw_partner_list() -> void:
+	_box(LIST)
 	_text("TEAM  -  who comes with you?", Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
 	var choices := Game.team_choices()
 	var helpers: Dictionary = load("res://scripts/helpers.gd").HELPERS

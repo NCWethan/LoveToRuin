@@ -172,6 +172,7 @@ func _ready() -> void:
 			member.sprite = load(look)
 	# Battle music always plays at normal speed (the overworld slows down on Genocide).
 	Game.music_pitch = 1.0
+	Game.music_override = ""
 	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
@@ -2831,6 +2832,7 @@ func _draw_backdrop() -> void:
 			_backdrop_stars(color, t)
 			_backdrop_books(color, t)
 		"spotlights":
+			_backdrop_arena(color, t)
 			_backdrop_spotlights(color, t)
 			_backdrop_crowd(color, t)
 		"shards":
@@ -3024,8 +3026,10 @@ func _backdrop_spotlights(color: Color, t: float) -> void:
 		var side := dir.orthogonal()
 		var far := base + dir * 260.0
 		var beam := PackedVector2Array([base - side * 6.0, base + side * 6.0, far + side * 46.0, far - side * 46.0])
+		# Each beam its own color, brighter on the beat.
+		var beam_color: Color = ARENA_COLORS[(i + int(t * 0.5)) % ARENA_COLORS.size()]
 		for shape in Geometry2D.intersect_polygons(beam, frame):
-			_backdrop.draw_colored_polygon(shape, Color(color.lightened(0.3), 0.1))
+			_backdrop.draw_colored_polygon(shape, Color(beam_color.lerp(color, 0.3), 0.16))
 	var colors := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
 	for i in 34:
 		var fall := fmod(t * (30.0 + i % 4 * 12.0) + i * 41.0, BACKDROP.size.y)
@@ -3179,6 +3183,11 @@ func _backdrop_crowd(color: Color, t: float) -> void:
 		var shade := Color(0.05, 0.04, 0.03, 0.75 * _edge_fade(Vector2(x, BACKDROP.end.y - 30)))
 		_backdrop.draw_circle(at + Vector2(0, -16), 5, shade)
 		_backdrop.draw_rect(Rect2(at + Vector2(-7, -11), Vector2(14, 14)), shade)
+		if i % 4 == 2:
+			# Pom-poms, gold and black, shaking.
+			var shake := sin(t * 14.0 + i) * 3.0
+			_backdrop.draw_circle(at + Vector2(-9 + shake, -22), 5, Color(1.0, 0.8, 0.15, 0.85))
+			_backdrop.draw_circle(at + Vector2(9 - shake, -22), 5, Color(0.08, 0.08, 0.08, 0.85))
 		if i % 4 == 0:
 			# Someone waving a pennant.
 			var wave := sin(t * 6.0 + i) * 0.5
@@ -3186,6 +3195,77 @@ func _backdrop_crowd(color: Color, t: float) -> void:
 			var tip := hand + Vector2.from_angle(-PI / 2 + wave) * 14
 			_backdrop.draw_line(at + Vector2(5, -8), hand, shade, 2.0)
 			_backdrop.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(8, 3), tip + Vector2(0, 6)]), Color(color, 0.7))
+
+
+## Wally's song is 168 beats per minute; his arena flashes and bursts along with it.
+const WALLY_BPM := 168.0
+const ARENA_COLORS := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
+
+
+## Wally's halftime show, behind everything: a scoreboard with chasing marquee bulbs
+## flashing "WALLY! WALLY!" on the beat, colored light pools sweeping the floor,
+## lasers crisscrossing, fireworks on the beat, and camera flashes in the crowd.
+func _backdrop_arena(color: Color, t: float) -> void:
+	var song := Game.music_time()
+	var beats := (song if song >= 0.0 else t) * WALLY_BPM / 60.0
+	var on_beat := pow(1.0 - fmod(beats, 1.0), 3.0)
+	var calm := Game.reduce_flashing()
+	# Light pools sweeping across the floor.
+	for k in 3:
+		var x := BACKDROP.get_center().x + sin(t * (0.6 + k * 0.25) + k * 2.1) * 230.0
+		var pool := Vector2(x, BACKDROP.end.y - 26)
+		_backdrop.draw_set_transform(pool, 0.0, Vector2(1.0, 0.3))
+		_backdrop.draw_circle(Vector2.ZERO, 70.0, Color(ARENA_COLORS[(k * 2 + int(beats / 4.0)) % ARENA_COLORS.size()], 0.14))
+		_backdrop.draw_set_transform(Vector2.ZERO)
+	# Lasers from the top corners, sweeping back and forth.
+	for corner in 2:
+		var from := Vector2(BACKDROP.position.x + 10 if corner == 0 else BACKDROP.end.x - 10, BACKDROP.position.y + 6)
+		for k in 3:
+			var angle := PI / 2 + (0.9 - k * 0.45) * (1.0 if corner == 0 else -1.0) + sin(t * 1.3 + k + corner * 2.0) * 0.35
+			var to := from + Vector2.from_angle(angle) * 340.0
+			var laser: Color = ARENA_COLORS[(k + corner * 2) % ARENA_COLORS.size()]
+			_backdrop.draw_line(from, to, Color(laser, 0.18), 3.0)
+			_backdrop.draw_line(from, to, Color(laser.lightened(0.5), 0.45), 1.0)
+	# The scoreboard.
+	var board := Rect2(BACKDROP.get_center().x - 100, BACKDROP.position.y + 10, 200, 46)
+	_backdrop.draw_rect(board, Color(0.05, 0.05, 0.07))
+	_backdrop.draw_rect(board, Color(0.85, 0.65, 0.15), false, 2.0)
+	var flash := int(beats) % 2 == 0
+	var shout := "WALLY! WALLY!" if flash or calm else "GO WOLVERINES!"
+	var width := _font.get_string_size(shout, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+	_backdrop.draw_string(_font, Vector2(board.get_center().x - width / 2, board.position.y + 22), shout, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1.0, 0.85, 0.2, 0.75 + 0.25 * on_beat))
+	_backdrop.draw_string(_font, Vector2(board.position.x + 30, board.end.y - 7), "HOME 7      AWAY 3", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.35, 0.3))
+	# Chasing bulbs all the way around the board.
+	var bulbs := 26
+	for k in bulbs:
+		var f := float(k) / bulbs
+		var at: Vector2
+		if f < 0.5:
+			at = board.position + Vector2(board.size.x * f * 2.0, -4)
+		else:
+			at = Vector2(board.end.x - board.size.x * (f - 0.5) * 2.0, board.end.y + 4)
+		var lit := (k + int(t * 10.0)) % 3 == 0
+		_backdrop.draw_circle(at, 2.0, Color(1.0, 0.9, 0.5, 0.95) if lit else Color(0.4, 0.3, 0.1, 0.6))
+	# Fireworks: a burst every other bar, up in the rafters.
+	var bar := int(beats / 4.0)
+	var into := beats / 4.0 - bar
+	if bar % 2 == 0 and into < 0.6:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = bar * 131 + 7
+		for burst in 2:
+			var middle := Vector2(BACKDROP.position.x + rng.randf_range(60.0, BACKDROP.size.x - 60.0), BACKDROP.position.y + rng.randf_range(30.0, 90.0))
+			var spark: Color = ARENA_COLORS[rng.randi() % ARENA_COLORS.size()]
+			for s in 14:
+				var dir := Vector2.from_angle(s * TAU / 14)
+				var reach := 8.0 + into * 60.0
+				_backdrop.draw_line(middle + dir * reach * 0.6, middle + dir * reach, Color(spark, 0.9 * (1.0 - into / 0.6)), 2.0)
+	# Camera flashes in the crowd (not with Reduce flashing on).
+	if not calm:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(t * 7.0)
+		for f in 3:
+			var at := Vector2(BACKDROP.position.x + rng.randf_range(20.0, BACKDROP.size.x - 20.0), BACKDROP.end.y - rng.randf_range(12.0, 30.0))
+			_backdrop.draw_circle(at, 3.0 + rng.randf() * 3.0, Color(1, 1, 1, 0.5 * rng.randf()))
 
 
 ## Hopkuna's song is 184 beats per minute; his background pulses along with it.

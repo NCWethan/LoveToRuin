@@ -113,6 +113,18 @@ func _ready() -> void:
 
 # --- The map --------------------------------------------------------------
 
+## The blast from the crater: how far it scorched the ground and burned the trees
+## (in tiles), measured from the crater.
+const BLAST_RADIUS := 13.0
+const TREE_BLAST_RADIUS := 19.0
+## True once the shockwave has gone off (from the moment it happens, and on every
+## visit after).
+var _blasted: bool = false
+## While above 0, the shockwave ring is spreading out from the crater.
+var _shock_time: float = 0.0
+const SHOCK_LENGTH := 1.0
+
+
 func build_map() -> void:
 	room.setup(40, 30, Room.GRASS)
 	room.fill(0, 0, 40, 1, Room.TREE)
@@ -134,11 +146,31 @@ func build_map() -> void:
 	# The path in from the road at the bottom.
 	room.fill(19, 22, 3, 6, Room.SIDEWALK)
 	room.fill(0, 28, 40, 2, Room.ROAD)
+	# After the eruption, the blast has torn up the park, for good.
+	if flag("hp_erupted"):
+		_blast_tiles()
+
+
+## The shockwave's damage: grass and field burned to scorched ground in a ragged
+## circle around the crater, and every tree in reach burned down to a stump.
+func _blast_tiles() -> void:
+	_blasted = true
+	var middle := CRATER / Room.TILE
+	for y in room.height:
+		for x in room.width:
+			var tile := room.get_tile(x, y)
+			var distance := Vector2(x + 0.5, y + 0.5).distance_to(middle)
+			var ragged := float((x * 7 + y * 13) % 5) * 0.6 - 1.2
+			if tile in [Room.GRASS, Room.FIELD, Room.FIELD_LINE] and distance < BLAST_RADIUS + ragged:
+				room.set_tile(x, y, Room.SCORCHED)
+			elif tile == Room.TREE and distance < TREE_BLAST_RADIUS:
+				room.set_tile(x, y, Room.STUMP)
 
 
 func _process(delta: float) -> void:
 	_time += delta
 	_beam_time = maxf(_beam_time - delta, 0.0)
+	_shock_time = maxf(_shock_time - delta, 0.0)
 	if not _charge_hold:
 		_charge_time = maxf(_charge_time - delta, 0.0)
 	_spark_time = maxf(_spark_time - delta, 0.0)
@@ -177,9 +209,23 @@ func _draw_decor() -> void:
 		var pulse := 0.35 + 0.25 * sin(_time * 2.5)
 		_decor.draw_circle(CRATER, 14, Color(1, 0.15, 0.2, pulse))
 		_decor.draw_circle(CRATER, 6, Color(1, 0.5, 0.5, pulse))
-	else:
+	elif not _blasted:
 		_decor.draw_circle(CRATER, 16, Color8(70, 50, 35))
 		_decor.draw_arc(CRATER, 16, 0, TAU, 20, Color8(45, 30, 20), 3.0)
+	else:
+		# A deep crater, with scorch marks raying out from it.
+		for k in 12:
+			var dir := Vector2.from_angle(k * TAU / 12 + 0.3)
+			_decor.draw_line(CRATER + dir * 30, CRATER + dir * (60 + (k * 17) % 40), Color8(25, 18, 14), 3.0)
+		_decor.draw_circle(CRATER, 36, Color8(40, 30, 24))
+		_decor.draw_circle(CRATER, 26, Color8(28, 20, 16))
+		_decor.draw_arc(CRATER, 36, 0, TAU, 32, Color8(80, 62, 48), 3.0)
+		# The wrecked sprinkler heads, one in each corner of what was the field.
+		for corner in SPRINKLERS:
+			var head := _quadrant(corner).get_center()
+			_decor.draw_line(head, head + Vector2(6, -3), Color8(70, 70, 76), 2.0)
+			_decor.draw_circle(head, 3, Color8(60, 60, 66))
+			_decor.draw_rect(Rect2(head + Vector2(-6, 3), Vector2(12, 3)), Color(0.4, 0.55, 0.7, 0.4))
 		if not flag("has_fragment_3"):
 			_decor.draw_circle(CRATER, 4, Color(1, 0.2, 0.25, 0.6 + 0.3 * sin(_time * 6)))
 
@@ -262,9 +308,42 @@ func _draw_crater_blast() -> void:
 		_fx.draw_line(at, at + shard_dir * 6.0, Color(red if s % 2 == 0 else black, fade), 2.0)
 
 
+## The shockwave: a ring of force tears out of the crater, and everything it passes
+## burns. The damage stays (see _blast_tiles).
+func _shockwave() -> void:
+	_shock_time = SHOCK_LENGTH
+	Game.play_sfx("black_flash", 0.7)
+	Game.play_sfx("shatter")
+	shake(14.0, 1.0)
+	await get_tree().create_timer(SHOCK_LENGTH * 0.35).timeout
+	_blast_tiles()
+	room.build()
+	await get_tree().create_timer(SHOCK_LENGTH * 0.65 + 0.4).timeout
+
+
+## The shockwave ring: a bright edge of force, a wall of dust and embers behind it.
+func _draw_shockwave() -> void:
+	if _shock_time <= 0.0:
+		return
+	var progress := 1.0 - _shock_time / SHOCK_LENGTH
+	var radius := (1.0 - pow(1.0 - progress, 2.0)) * (BLAST_RADIUS + 3.0) * Room.TILE
+	var fade := 1.0 - progress
+	_fx.draw_circle(CRATER, radius, Color(1.0, 0.45, 0.2, 0.12 * fade))
+	_fx.draw_arc(CRATER, radius, 0, TAU, 64, Color(0.35, 0.25, 0.2, 0.7 * fade), 26.0)
+	_fx.draw_arc(CRATER, radius, 0, TAU, 64, Color(1.0, 0.6, 0.3, fade), 6.0)
+	_fx.draw_arc(CRATER, radius, 0, TAU, 64, Color(1, 1, 0.9, fade), 2.0)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12
+	for k in 60:
+		var dir := Vector2.from_angle(rng.randf() * TAU)
+		var at := CRATER + dir * radius * rng.randf_range(0.7, 1.05)
+		_fx.draw_rect(Rect2(at, Vector2(3, 3)), Color(1.0, 0.5, 0.2, fade) if k % 3 == 0 else Color(0.3, 0.25, 0.22, 0.8 * fade))
+
+
 ## Effects drawn on top of everyone: the Corps' lightning and fire, and the group hug zap.
 func _draw_fx() -> void:
 	_draw_crater_blast()
+	_draw_shockwave()
 	# NCWethan's lightning and Ronin's fire.
 	if _lightning_time > 0.0 and hop and corps.has("NCWethan"):
 		_draw_lightning(corps["NCWethan"].position + Vector2(0, -20), hop.position + Vector2(0, -16), _lightning_time)
@@ -362,7 +441,8 @@ func _quadrant(corner: String) -> Rect2:
 
 
 func _sprinkler_on(corner: String) -> bool:
-	return not flag("sprinkler_off_" + corner)
+	# (The blast wrecked them all.)
+	return not _blasted and not flag("sprinkler_off_" + corner)
 
 
 ## True if Elric is standing in a corner of the field that's being sprayed.
@@ -577,6 +657,7 @@ func _eruption() -> void:
 	await _flash(Color(1.0, 0.35, 0.4), 0.15)
 	hop.lie_down()
 	await get_tree().create_timer(0.6).timeout
+	await _shockwave()
 
 	await Game.dialogue.say([
 		"* (Hop jumped in front of you.)",
@@ -619,7 +700,7 @@ func _eruption() -> void:
 		{"who": "Hopkuna", "text": "Tonight, he had no other choice. Thanks to you."},
 		{"who": "Hopkuna", "text": "And look. You've been carrying two of my\nfragments for me. How thoughtful."},
 		{"who": "Hopkuna", "text": "Hand them over."},
-		{"who": "Elric", "text": "...No.", "mood": "angry"},
+		{"who": "Elric", "choices": ["...No.", "Never."], "mood": "angry"},
 		{"who": "Hopkuna", "text": "Then I'll take them."},
 	])
 	await Game.start_battle("hopkuna", SCENE, player.position)
@@ -745,9 +826,9 @@ func _corps_arrives() -> void:
 		{"who": "Supreme", "text": "Statistically, we can't beat him.\nBut we can make him want to leave.", "mood": "shocked"},
 		{"who": "Agent", "text": "He's stalling. He wants the fragments, not a fight.\nElric. Whatever happens, don't let go of them."},
 		{"who": "Nat", "text": "Elric. Hop's still in there.\nTalk to him."},
-		{"who": "Elric", "text": "...Hop."},
-		{"who": "Elric", "text": "You jumped in front of that for me."},
-		{"who": "Elric", "text": "Come back."},
+		{"who": "Elric", "choices": ["...Hop.", "Hop. Listen to me."]},
+		{"who": "Elric", "choices": ["You jumped in front of that for me.", "You took that hit so I wouldn't have to."]},
+		{"who": "Elric", "choices": ["Come back.", "We need you. Come back."]},
 		"* (Hopkuna's hand starts to shake.)",
 		{"who": "Hopkuna", "text": "...Tch. Sentimental."},
 		{"who": "Hopkuna", "text": "Keep him, then. For now."},
@@ -831,7 +912,7 @@ func _route_choice() -> void:
 
 func _ending_pacifist() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "text": "...I'm in."},
+		{"who": "Elric", "choices": ["...I'm in.", "Count me in."]},
 		{"who": "BigJoe6", "text": "Then welcome to the REVOLUTION Corps.", "mood": "happy"},
 		{"who": "Eggo", "text": "membership: a lot more than two now.", "mood": "happy"},
 		{"who": "NCWethan", "text": "GROUP HUG!!!", "mood": "happy"},
@@ -841,7 +922,7 @@ func _ending_pacifist() -> void:
 		"* (N.C. Wethan hugs everyone at once.\n*  There is a small electrical shock.)",
 		{"who": "Rooster", "text": "...My hair is standing up. My HAIR.", "mood": "angry"},
 		{"who": "Hop", "text": "...You'd still want me around?\nAfter all that?", "mood": "sad"},
-		{"who": "Elric", "text": "...You saved me. We'll save you."},
+		{"who": "Elric", "choices": ["...You saved me. We'll save you.", "...Of course we would."]},
 		{"who": "Hop", "text": "...Okay. Okay.", "mood": "happy"},
 		"* (Hop laughs, and wipes his eyes,\n*  and doesn't say anything else for a while.)",
 		{"who": "Nat", "text": "If the fragments are destroyed, Hopkuna can never\nfully wake up. That's our job now."},
@@ -880,7 +961,7 @@ func _group_hug() -> void:
 
 func _ending_neutral() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "text": "...I need to think. On my own."},
+		{"who": "Elric", "choices": ["...I need to think. On my own.", "...Not yet. I need some time."]},
 		{"who": "Nassan", "text": "I understand. The offer stands.\nWhenever you're ready, you know where we are.", "mood": "sad"},
 		{"who": "BigJoe6", "text": "...Just don't make us regret letting you walk.", "mood": "angry"},
 		{"who": "Hop", "text": "Take care of yourself, mysterious traveler.", "mood": "sad"},
@@ -892,7 +973,7 @@ func _ending_neutral() -> void:
 
 func _ending_genocide() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "text": "...I'm going with Hop."},
+		{"who": "Elric", "choices": ["...I'm going with Hop.", "...Hop's coming with me."]},
 		{"who": "BigJoe6", "text": "...What?", "mood": "shocked"},
 		{"who": "Eggo", "text": "elric. no.", "mood": "sad"},
 		{"who": "Supreme", "text": "That's... that's the worst possible outcome.", "mood": "shocked"},
@@ -919,7 +1000,7 @@ func _talk_to_hop_after() -> void:
 				{"who": "Hop", "text": "Nine fragments left. Whenever you're ready,\nI'm ready. Probably. Mostly.", "mood": "happy"},
 			], [
 				[{"who": "Hop", "text": "N.C. Wethan says the zap was \"bonding.\"\nMy left arm is still buzzing.", "mood": "shocked"}],
-				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "text": "...Right."}, {"who": "Hop", "text": "...Okay. Good.", "mood": "happy"}],
+				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "choices": ["...Right.", "...I promise."]}, {"who": "Hop", "text": "...Okay. Good.", "mood": "happy"}],
 				[{"who": "Hop", "text": "Agent says I'm \"statistically a liability.\"\nSupreme says Agent's math is wrong. They're still arguing.", "mood": "smug"}],
 			])
 		"genocide":

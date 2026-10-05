@@ -93,9 +93,23 @@ func say(lines: Array) -> void:
 	var was_busy := Game.busy
 	Game.busy = true
 	_panel.visible = true
+	var previous = null
 	for line in lines:
+		# A line with "choices" (Elric's lines): the player picks what Elric says.
+		# The line being answered stays on screen with the options under it.
+		if line is Dictionary and line.has("choices"):
+			var options: Array = line["choices"]
+			_show(previous if previous != null else "* (What do you say?)")
+			_typed = _text.length()
+			_choices = options
+			_choice = 0
+			await _advanced
+			var picked := _choice
+			_choices = []
+			line = {"who": line.get("who", ""), "text": options[picked], "mood": line.get("mood", "")}
 		_show(line)
 		await _advanced
+		previous = line
 	_panel.visible = false
 	# Wait one frame so the Z press that closed the box doesn't also
 	# count as "talk to whatever is in front of me" again.

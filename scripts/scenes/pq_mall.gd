@@ -537,7 +537,7 @@ func _talk_rooster() -> void:
 	if choice == 0:
 		Game.flags["roasted_rooster"] = true
 		await Game.dialogue.say([
-			{"who": "Elric", "text": "...Nice suit. Couldn't pick a color?", "mood": "smug"},
+			{"who": "Elric", "choices": ["...Nice suit. Couldn't pick a color?", "...Did a penguin dress you?"], "mood": "smug"},
 			{"who": "Rooster", "text": "...", "mood": "shocked"},
 			{"who": "Rooster", "text": "HEY. That's- that's a FASHION choice.\nIt's called DUALITY.", "mood": "angry"},
 			"* (Rooster is visibly upset.)",
@@ -692,10 +692,10 @@ func _talk_nassan() -> void:
 
 const RPS_GAME := preload("res://scripts/ui/rps_game.gd")
 const ROUNDS := [
-	{"opponent": "NCWethan", "throw": 0, "tell": "sparks"},
-	{"opponent": "NCWethan", "throw": 2, "tell": "sparks"},
-	{"opponent": "NCWethan", "throw": 1, "tell": "sparks"},
-	{"opponent": "Ronin", "throw": 2, "tell": "shadow"},
+	{"opponent": "NCWethan", "throw": -1, "tell": "sparks"},
+	{"opponent": "NCWethan", "throw": -1, "tell": "sparks"},
+	{"opponent": "NCWethan", "throw": -1, "tell": "sparks"},
+	{"opponent": "Ronin", "throw": -1, "tell": "shadow"},
 	{"opponent": "Agent", "throw": -1, "tell": "math"},
 ]
 
@@ -722,7 +722,15 @@ func _play_games() -> void:
 	Game.play_music("rps", 0.3)
 	var game = RPS_GAME.new()
 	add_child(game)
-	var wins: int = await game.play(ROUNDS)
+	# A fresh random throw for N.C. Wethan and Ronin every time (their tells still
+	# give it away). Agent works his out from your throws.
+	var rounds: Array = []
+	for round_info in ROUNDS:
+		var this_round: Dictionary = round_info.duplicate()
+		if this_round["tell"] != "math":
+			this_round["throw"] = randi() % 3
+		rounds.append(this_round)
+	var wins: int = await game.play(rounds)
 	Game.play_music("mall", 0.8)
 	var beat_agent: bool = game._result == 1
 	game.queue_free()

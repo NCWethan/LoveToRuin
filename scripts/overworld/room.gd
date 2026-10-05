@@ -11,13 +11,13 @@ enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE,
-	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP }
+	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP, SCORCHED, STUMP }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE,
-	BUNKER_WALL, BUNKER_DOOR, PROP]
+	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP]
 
 var width: int = 0
 var height: int = 0
@@ -275,6 +275,23 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			var light := (x + y) % 2 == 0
 			draw_rect(r, Color8(205, 205, 195) if light else Color8(185, 185, 178))
 			_specks(x, y, r, Color8(160, 160, 155), 2)
+		SCORCHED, STUMP:
+			# Ground burned black by the blast: ash, cracks, a few embers still glowing.
+			draw_rect(r, Color8(50, 40, 34))
+			_specks(x, y, r, Color8(95, 90, 86), 4)
+			_specks(x, y + 99, r, Color8(30, 24, 20), 3)
+			if _hash(x, y, 4) % 7 == 0:
+				draw_line(p + Vector2(2, 8), p + Vector2(10, 12), Color8(25, 18, 15), 1.0)
+				draw_line(p + Vector2(10, 12), p + Vector2(17, 9), Color8(25, 18, 15), 1.0)
+			if _hash(x, y, 5) % 11 == 0:
+				draw_rect(Rect2(p + Vector2(_hash(x, y, 6) % 16, _hash(x, y, 7) % 16), Vector2(2, 2)), Color8(230, 90, 40))
+			if tile == STUMP:
+				# What's left of a tree: a charred stump with a split top.
+				_ground_shadow(p + Vector2(10, 17), 7.0)
+				draw_rect(Rect2(p + Vector2(6, 8), Vector2(8, 10)), Color8(40, 28, 20))
+				draw_rect(Rect2(p + Vector2(6, 8), Vector2(2, 10)), Color8(60, 44, 32))
+				draw_colored_polygon(PackedVector2Array([p + Vector2(6, 8), p + Vector2(9, 4), p + Vector2(11, 8), p + Vector2(13, 5), p + Vector2(14, 8)]), Color8(30, 20, 15))
+				draw_rect(Rect2(p + Vector2(8, 9), Vector2(4, 2)), Color8(120, 60, 30))
 		BUNKER_FLOOR, PROP:
 			# Poured concrete, in big slabs. (PROP is solid floor that furniture is
 			# drawn on top of.)
