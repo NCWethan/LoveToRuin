@@ -27,7 +27,17 @@ static func make(who: String, is_solid: bool = true) -> Character:
 	var character := Character.new().setup(load(base + ".png"), back, is_solid)
 	if ResourceLoader.exists(base + "_side.png") and ResourceLoader.exists(base + "_side2.png"):
 		character.with_side(load(base + "_side.png"), load(base + "_side2.png"))
+	character.front_walk.assign(walk_frames(base))
+	character.back_walk.assign(walk_frames(base + "_back"))
 	return character
+
+
+## The two walking frames for a picture (base + "_walk1/2.png"), or none.
+static func walk_frames(base: String) -> Array[Texture2D]:
+	var result: Array[Texture2D] = []
+	if ResourceLoader.exists(base + "_walk1.png") and ResourceLoader.exists(base + "_walk2.png"):
+		result.assign([load(base + "_walk1.png"), load(base + "_walk2.png")])
+	return result
 
 
 ## The picture used for someone's dialogue portrait, or null if there isn't one.

@@ -46,6 +46,29 @@ func setup_area(default_spawn: Vector2) -> void:
 	camera.position_smoothing_enabled = true
 	player.add_child(camera)
 
+	# A soft vignette: the edges of the screen fade a little darker, which makes
+	# everything feel more lit and less flat.
+	var vignette_layer := CanvasLayer.new()
+	vignette_layer.layer = 4
+	add_child(vignette_layer)
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(0, 0, 0, 0.0))
+	gradient.set_color(1, Color(0, 0, 0, 0.38))
+	gradient.add_point(0.62, Color(0, 0, 0, 0.0))
+	var shade := GradientTexture2D.new()
+	shade.gradient = gradient
+	shade.fill = GradientTexture2D.FILL_RADIAL
+	shade.fill_from = Vector2(0.5, 0.5)
+	shade.fill_to = Vector2(1.08, 1.08)
+	shade.width = 128
+	shade.height = 96
+	var vignette := TextureRect.new()
+	vignette.texture = shade
+	vignette.size = Vector2(640, 480)
+	vignette.stretch_mode = TextureRect.STRETCH_SCALE
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vignette_layer.add_child(vignette)
+
 	# A compass in the top-right corner (it never turns; north is always up).
 	var compass_layer := CanvasLayer.new()
 	compass_layer.layer = 5
@@ -282,7 +305,7 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 ## Walking around inside one of these rooms eventually starts a random fight.
 var encounter_zones: Array = []
 ## How far Elric walks between random fights, in pixels (a random amount in this range).
-const ENCOUNTER_DISTANCE := Vector2(450, 850)
+const ENCOUNTER_DISTANCE := Vector2(1000, 1800)
 var _next_encounter: float = -1.0
 
 

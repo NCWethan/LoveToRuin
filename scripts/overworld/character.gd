@@ -9,6 +9,11 @@ extends Node2D
 
 var front: Texture2D
 var back: Texture2D
+## Walking frames for the front and back views (optional): one step with each leg.
+var front_walk: Array[Texture2D] = []
+var back_walk: Array[Texture2D] = []
+## How long each frame of the walk cycle shows, in seconds.
+const WALK_STEP := 0.11
 ## Two side-view walking frames (optional). Flipped when facing left.
 var side: Array[Texture2D] = []
 ## What happens when Elric presses Z next to it. Can use `await` inside.
@@ -135,14 +140,20 @@ func _update_sprite() -> void:
 		_sprite.texture = frames[int(_time / frame_time) % frames.size()]
 		return
 	_sprite.flip_h = false
+	# A four-step walk cycle: step, stand, other step, stand.
+	var phase := int(_time / WALK_STEP) % 4 if _walking else 1
 	if _facing.x != 0 and not side.is_empty():
-		var frame := int(_time / 0.15) % 2 if _walking else 0
-		_sprite.texture = side[frame]
+		_sprite.texture = side[1 if _walking and phase % 2 == 0 else 0]
 		_sprite.flip_h = _facing.x < 0
-		_sprite.position.y = 0.0
+		_sprite.position.y = -1.0 if _walking and phase % 2 == 0 else 0.0
 	else:
-		_sprite.texture = back if _facing == Vector2.UP else front
-		_sprite.position.y = -absf(sin(_time * 12.0)) * 1.5 if _walking else 0.0
+		var up := _facing == Vector2.UP
+		var steps: Array[Texture2D] = back_walk if up else front_walk
+		if _walking and steps.size() == 2 and phase % 2 == 0:
+			_sprite.texture = steps[phase / 2]
+		else:
+			_sprite.texture = back if up else front
+		_sprite.position.y = -1.0 if _walking and phase % 2 == 0 else 0.0
 
 
 ## Walks back and forth between two points forever. Stops in place (and stays
@@ -186,6 +197,8 @@ func set_look(who: String) -> void:
 	front = look.front
 	back = look.back
 	side = look.side
+	front_walk = look.front_walk
+	back_walk = look.back_walk
 	look.free()
 
 
@@ -194,3 +207,12 @@ func lie_down(down: bool = true) -> void:
 	# Tipping the picture over around the feet lays it flat on the ground.
 	if _sprite:
 		_sprite.rotation = PI / 2 if down else 0.0
+
+
+## A soft oval shadow on the ground under them (drawn before their picture, so
+## it sits underneath).
+func _draw() -> void:
+	var width := front.get_width() * 0.42 if front else 8.0
+	draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.32))
+	draw_circle(Vector2.ZERO, width, Color(0, 0, 0, 0.28))
+	draw_set_transform(Vector2.ZERO)

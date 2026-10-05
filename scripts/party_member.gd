@@ -15,6 +15,8 @@ var defending: bool = false
 var sprite: Texture2D
 ## Counts down after getting hit; the member shakes while it's above 0.
 var shake: float = 0.0
+## Seconds since this member was knocked out (for the falling-over animation).
+var ko_time: float = 0.0
 
 
 func _init(p_name: String, p_max_hp: int, p_attack: int, p_color: Color, p_sprite: Texture2D = null) -> void:

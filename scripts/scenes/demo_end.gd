@@ -36,7 +36,7 @@ func _draw() -> void:
 	_centered("Chapter 1  -  to be continued", 190, 18, Color(0.8, 0.8, 0.8, alpha))
 	var next := "Next stop: the PQ Mall."
 	if Game.flags.get("westview_done", false):
-		next = "2 of 12 fragments found.   Next stop: Hilltop Park."
+		next = "2 of 12 fragments found.   Next stop: Westview Field."
 	elif Game.flags.get("mall_done", false):
 		next = "Next stop: Westview High School... after dark."
 	_centered(next, 250, 18, Color(1, 1, 0.6, alpha))

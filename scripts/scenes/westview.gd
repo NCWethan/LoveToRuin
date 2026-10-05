@@ -189,7 +189,24 @@ func _draw_decor() -> void:
 		_decor.draw_string(_font, bell + Vector2(-8, -10), ["1ST", "2ND", "3RD"][i], HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
 
 	# The center circle on the gym floor.
-	_decor.draw_arc(Vector2(100 * T + 10, 43 * T), 50, 0, TAU, 32, Color(1, 1, 1, 0.8), 2.0)
+	var center := Vector2(100 * T + 10, 43 * T)
+	_decor.draw_arc(center, 50, 0, TAU, 32, Color(1, 1, 1, 0.8), 2.0)
+	# Westview's logo at center court: a big black W, outlined in gold, then white.
+	var gold := Color8(225, 175, 45)
+	var logo_size := 64
+	var logo_width := _font.get_string_size("W", HORIZONTAL_ALIGNMENT_LEFT, -1, logo_size).x
+	var logo_at := center + Vector2(-logo_width / 2, 22)
+	_decor.draw_string_outline(_font, logo_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, logo_size, 14, Color.WHITE)
+	_decor.draw_string_outline(_font, logo_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, logo_size, 8, gold)
+	_decor.draw_string(_font, logo_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, logo_size, Color8(15, 15, 18))
+	# The banner on the gym bleachers.
+	var banner_center := Vector2(100 * T + 10, 33 * T)
+	var banner := Rect2(banner_center - Vector2(120, 10), Vector2(240, 20))
+	_decor.draw_rect(banner, Color8(15, 15, 18))
+	_decor.draw_rect(banner, gold, false, 2.0)
+	var motto := "HOME OF THE WOLVERINES"
+	var motto_width := _font.get_string_size(motto, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+	_decor.draw_string(_font, banner_center + Vector2(-motto_width / 2, 5), motto, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, gold)
 
 
 # --- People and things ----------------------------------------------------

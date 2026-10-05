@@ -71,6 +71,8 @@ var shake: float = 0.0
 var flash: float = 0.0
 ## The HP the health bar shows. It drains toward `hp` smoothly after a hit.
 var shown_hp: float = -1.0
+## Seconds since this enemy was knocked out (-1 if it hasn't been), for its KO animation.
+var ko_time: float = -1.0
 
 var _act_counts: Dictionary = {}
 var _last_act: String = ""

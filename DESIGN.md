@@ -24,9 +24,9 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Mt. Carmel High School** | **Starting area** · **Fragment 1** | Where Elric's journey begins and where Elric first meets Hop. Elric finds the **1st fragment** here — and picking it up is exactly what gets Eggo and BigJoe6's attention. The **tutorial fight** happens just **outside the school**. |
 | **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. Shops for healing items, NPCs, and cast members hanging out between adventures. A safe place — **no fragment here**. |
 | **Westview High School** | **The "dungeon"** · **Fragment 2** | Chapter 1's big exploration area — the school after hours, twisted by the fragment's power into a maze of puzzles, locked rooms and enemies (like Deltarune's Dark World). The **2nd fragment** is hidden deep inside. |
-| **Hilltop Park** | **REVOLUTION Corps base** · **Fragment 3** · **Chapter 1's final battle** | The Corps' base. The **3rd fragment** is buried under the **big field**. When it erupts, Hop takes the hit, Hopkuna comes out, and Chapter 1's final battle — **against Hopkuna himself** — happens on the field. The Corps returns, and the **route choice** happens. |
+| **Westview Field** | **REVOLUTION Corps base** · **Fragment 3** · **Chapter 1's final battle** | The Corps' base. The **3rd fragment** is buried under the **big field**. When it erupts, Hop takes the hit, Hopkuna comes out, and Chapter 1's final battle — **against Hopkuna himself** — happens on the field. The Corps returns, and the **route choice** happens. |
 
-**Chapter 1 path:** Mt. Carmel HS → PQ Mall → Westview HS → Hilltop Park
+**Chapter 1 path:** Mt. Carmel HS → PQ Mall → Westview HS → Westview Field
 
 **SAVE points** can appear anywhere as the player progresses.
 
@@ -299,7 +299,7 @@ Pronouns: he/him
 
 **Where he shows up**
 - **PQ Mall:** leaning by the FOR LEASE store (he wrote "REVOLUTION HQ" in the dust; the question marks were Eggo). He stays through the afternoon and evening, giving blunt advice about Westview.
-- **Hilltop Park:** arrives with the Corps against Hopkuna ("Eleven of us. One of you. Do the math."), and reacts to Elric's route choice.
+- **Westview Field:** arrives with the Corps against Hopkuna ("Eleven of us. One of you. Do the math."), and reacts to Elric's route choice.
 
 **Appearance** (based on his Roblox avatar)
 - Yellow skin and a friendly smile.
@@ -377,7 +377,7 @@ Pronouns: he/him
 Elric is a traveling adventurer with no fixed home.
 
 #### Chapter 1 opening — how Elric meets the cast
-0. **The voice.** Before anything else, a voice with no face (secretly Hopkuna) explains the objective — find the 12 fragments — and the ways to get there: TALK and SPARE for BOND, or FIGHT for LOVE. Then it asks: *"Here is your objective. How will you do it?"* Elric's answer comes back to haunt them when Hopkuna is revealed at Hilltop Park.
+0. **The voice.** Before anything else, a voice with no face (secretly Hopkuna) explains the objective — find the 12 fragments — and the ways to get there: TALK and SPARE for BOND, or FIGHT for LOVE. Then it asks: *"Here is your objective. How will you do it?"* Elric's answer comes back to haunt them when Hopkuna is revealed at Westview Field.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
@@ -526,7 +526,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
   - Mt. Carmel: the field gate is chained shut. Hop mentions the coach loses his keys ("...the week before, a tree"). One courtyard tree glints: shake it for the keys.
   - PQ Mall: Rock Paper Scissors, where you read each opponent's tell.
   - Westview: the endless hallway (humming locker) and the bell order (chalkboard).
-  - Hilltop Park: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE (use the compass): turn off the corner you want to walk through.
+  - Westview Field: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE (use the compass): turn off the corner you want to walk through.
 
 ### Battle polish (from feedback)
 - [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
@@ -541,6 +541,12 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **Flee**: MERCY opens Spare / Flee. Fleeing turns Elric and Hop around and they walk off the left side of the screen, then you're back in the overworld where the fight started. (Not allowed in boss, story or scripted fights.)
 - [x] The title screen: centered, with a red glow, twelve red fragments circling the title, rising embers and a glowing crack under "LOVE TO RUIN"
 - [x] People walking around stop when you talk to them
+- [x] Shading: every sprite is shaded (lit from the top-left), arms and legs have space between them, characters and objects cast soft shadows, walls and trees shade the ground, and the screen edges have a soft vignette
+- [x] Smoother walking: a four-step cycle (step, stand, other step, stand) with legs lifting and arms swinging, for everyone
+- [x] WASD works as well as the arrow keys
+- [x] A hidden quarter-second pause after each ENTER in text, so it can't be mashed through
+- [x] Mt. Carmel: a big yellow MC outlined in red at midfield, and a HOME OF THE SUNDEVILS banner. Westview: a big black W outlined in white and gold at center court, and a HOME OF THE WOLVERINES banner
+- [x] Battle poses (sprites) for Elric and Hop: windup, strike, guard, arm raised, hurt and knocked out. Elric draws back their arm (nails glinting) then dashes in claws-first with afterimages; Hop crouches and charges a punch (energy gathering at his fist) then rockets in. Enemies each wind up and throw their own way (Eggo bounces, BigJoe6 lunges, papers flutter, the bell swings, Mystery Meat jiggles, Hopkuna swells). Eggo and BigJoe6 flash a shocked face when hit. Everyone has a KO: party members topple over with stars circling; enemies shudder, fall over and kick up dust. The FIGHT bar can come from either side.
 - [x] Battle animations: everyone breathes and bobs; FIGHT winds up then leaps at the enemy; ACT hops; ITEM squashes with sparkles; MERCY waves; DEFEND crouches behind a shimmering shield; getting hit flashes red and flinches; knocked-out members lie down. Enemies bob gently too.
 - [x] Wally's CLAW SWIPE: three glowing claw marks rake right through the SOUL (after dashed scratch warnings), then a second set crosses them from the other side
 - [x] Boss health bars across the top of the screen, styled per boss (Wally: gold fur and claw marks; Hopkuna: pulsing red with tattoo zigzags and "??? / ???")
@@ -562,16 +568,16 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
   - **Overdue Book** (47 years late): fluttering pages, bookmarks aimed at you, a sliding bookshelf with a gap. ACT: Read It, Return It, Shush.
   - **The tent** (very rare, ~1%): a three-person tent. The music cuts off. Red text crawls into the box ("We were here, too." "Three of us." "We remember."), then **DID YOU THINK WE WOULD FORGET?** shakes across the screen, everything goes black, a distorted laugh plays, and you're put back where you were.
 - **Wally is a miniboss** with **his own upbeat fight song** ("wally"), a dance in battle (hopping to the beat, swaying, spinning every eighth beat), a gold boss health bar with claw marks, **350 HP**, faster attacks that speed up again below half health, and three extra attacks (rising bleachers, a mascot spin that flings claws in a spiral, and FRENZY: claws and dodgeballs at once). Sparing him is a challenge: four ACTs (Cheer, Look Inside, Paw Five, The Wave) worth a little each, and he gets bored if the same ACT is used twice in a row, even by different party members.
-- **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it and **hangs in the air**. Elric has to walk over to take it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Hilltop Park.
+- **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it and **hangs in the air**. Elric has to walk over to take it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Westview Field.
 
-### Milestone 7 — Hilltop Park and the climax
+### Milestone 7 — Westview Field and the climax
 - [x] The 3rd fragment erupts → Hop takes the hit → Hopkuna erupts (cutscene)
 - [x] The final battle against **Hopkuna** on the big field
 - [x] The REVOLUTION Corps arrives
 - [x] **The route choice** — end of Chapter 1
 
 **As built:**
-- **Hilltop Park at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Hilltop at Night." NCWethan's lightning visibly arcs from him into Hopkuna, then Ronin's fire roars in, then both at once ("TOGETHER!!!"). In the Corps ending, NCWethan's group hug yanks everyone into a huddle and zaps them. After the chapter, Hop can be talked to (different on each route).
+- **Westview Field at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Westview Field at Night." NCWethan's lightning visibly arcs from him into Hopkuna, then Ronin's fire roars in, then both at once ("TOGETHER!!!"). In the Corps ending, NCWethan's group hug yanks everyone into a huddle and zaps them. After the chapter, Hop can be talked to (different on each route).
 - **The eruption** — walking toward the glow, the fragment fires at Elric. Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
 - **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks (all aimed at the SOUL, with warnings, 6 damage, faster every turn): **Cleave** (glowing slashes through your position), **Slash Grid** (three slashes crossing where you stand, one after another), **Red Arrows** (volleys of three that curve toward you), **Closing Ring** (shards circle you and collapse inward; one gap), **Flaming Arrow** (a big burning arrow that chases you). A red aura pulses around the box during his turns. ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
 - **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola, Rooster and Agent surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.

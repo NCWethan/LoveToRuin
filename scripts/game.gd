@@ -388,7 +388,7 @@ const AREA_NAMES := {
 	"res://scenes/mt_carmel.tscn": "Mt. Carmel",
 	"res://scenes/pq_mall.tscn": "PQ Mall",
 	"res://scenes/westview.tscn": "Westview High",
-	"res://scenes/hilltop.tscn": "Hilltop Park",
+	"res://scenes/hilltop.tscn": "Westview Field",
 }
 
 
@@ -444,6 +444,13 @@ func _add_input_actions() -> void:
 	_add_keys("confirm", [KEY_ENTER, KEY_KP_ENTER])
 	_add_keys("cancel", [KEY_X, KEY_SHIFT])
 	_add_keys("menu", [KEY_B])
+	# WASD works for moving (and for menus) as well as the arrow keys.
+	var wasd := {"ui_up": KEY_W, "ui_left": KEY_A, "ui_down": KEY_S, "ui_right": KEY_D}
+	for action in wasd:
+		var event := InputEventKey.new()
+		event.physical_keycode = wasd[action]
+		if not InputMap.action_has_event(action, event):
+			InputMap.action_add_event(action, event)
 
 
 func _add_keys(action: String, keys: Array) -> void:

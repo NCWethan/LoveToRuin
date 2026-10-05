@@ -17,6 +17,11 @@ const BOTTOM_BOX := Rect2(30, 330, 580, 130)
 const TOP_BOX := Rect2(30, 40, 580, 130)
 
 const TYPE_SPEED := 40.0
+## After an ENTER is used, further presses are ignored for this long (seconds).
+const CONFIRM_BUFFER := 0.25
+var _confirm_ready_at: float = 0.0
+## Seconds this box has existed (game time, so it slows and speeds with the game).
+var _clock: float = 0.0
 const FONT_SIZE := 16
 const LINE_HEIGHT := 22
 ## Portraits are the speaker's head and shoulders, drawn this many times bigger.
@@ -138,6 +143,7 @@ func _finished() -> bool:
 
 
 func _process(delta: float) -> void:
+	_clock += delta
 	# Ignore the key press that opened this box (so the first line doesn't skip ahead).
 	if not _active or Engine.get_process_frames() == _shown_frame:
 		return
@@ -157,7 +163,12 @@ func _process(delta: float) -> void:
 			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed(forward) else -1), 0, _choices.size())
 			Game.play_sfx("move")
 
-	if Input.is_action_just_pressed("confirm"):
+	# A hidden quarter-second pause after each ENTER that does something, so the
+	# text can't be mashed straight through. Extra presses in that time do nothing.
+	if Input.is_action_just_pressed("confirm") and _clock < _confirm_ready_at:
+		pass
+	elif Input.is_action_just_pressed("confirm"):
+		_confirm_ready_at = _clock + CONFIRM_BUFFER
 		if _finished():
 			_active = false
 			if not _choices.is_empty():

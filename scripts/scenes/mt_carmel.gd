@@ -24,6 +24,9 @@ const FIELD_EDGE_X := 570.0                 # walking left of this after the fra
 ## The field gate (two tiles tall) and the tree the gate key is stuck in.
 const GATE_CELL := Vector2i(29, 18)
 const KEY_TREE := Vector2i(16, 17)
+## Where the "MC" is painted on the field, and where the Sundevils banner hangs.
+const FIELD_LOGO := Vector2(760, 375)
+const SUNDEVIL_BANNER := Vector2(760, 300)
 const CURB_Y := 488.0                      # the bottom sidewalk, right at the curb
 const CAR_LANE_Y := 538.0                   # where a car's wheels touch the road (the near lane)
 
@@ -36,8 +39,36 @@ var bigjoe: Character
 func _ready() -> void:
 	setup_area(START)
 	Game.play_music("mt_carmel")
+	_add_school_pride()
 	_place_characters()
 	_start_story.call_deferred()
+
+
+## Mt. Carmel's colors: a big yellow "MC" outlined in red painted at midfield, and a
+## "HOME OF THE SUNDEVILS" banner hung on the bleachers.
+func _add_school_pride() -> void:
+	var paint := Node2D.new()
+	add_child(paint)
+	# On the ground, under everyone walking around.
+	move_child(paint, world.get_index())
+	var font := ThemeDB.fallback_font
+	var yellow := Color8(250, 205, 40)
+	var red := Color8(190, 30, 35)
+	paint.draw.connect(func() -> void:
+		var logo := "MC"
+		var size := 60
+		var width := font.get_string_size(logo, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		var at := Vector2(FIELD_LOGO.x - width / 2, FIELD_LOGO.y + 22)
+		paint.draw_string_outline(font, at, logo, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 10, red)
+		paint.draw_string(font, at, logo, HORIZONTAL_ALIGNMENT_LEFT, -1, size, yellow)
+		# The banner on the bleachers.
+		var banner := Rect2(SUNDEVIL_BANNER.x - 110, SUNDEVIL_BANNER.y - 10, 220, 20)
+		paint.draw_rect(banner, red)
+		paint.draw_rect(banner, yellow, false, 2.0)
+		var text := "HOME OF THE SUNDEVILS"
+		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		paint.draw_string(font, Vector2(SUNDEVIL_BANNER.x - text_width / 2, SUNDEVIL_BANNER.y + 5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, yellow)
+	)
 
 
 func _flag(name: String) -> bool:
@@ -513,9 +544,8 @@ func _ride_home() -> void:
 
 	eggo.walk_to(Vector2(eggo.position.x - 20, CURB_Y - 6), 120.0)
 	await bigjoe.walk_to(Vector2(bigjoe.position.x - 20, CURB_Y + 4), 120.0)
-	Game.play_sfx("honk")
-	await Game.dialogue.say([{"who": "Eggo", "text": "oh. that's our ride."}])
 
+	# A car comes down the road, pulls up, and honks.
 	var stop_x := bigjoe.position.x + 10.0
 	var car := CAR_SCRIPT.new()
 	car.scale = Vector2(1.5, 1.5)
@@ -523,10 +553,18 @@ func _ride_home() -> void:
 	car.position = Vector2(stop_x - 640.0, CAR_LANE_Y)
 	world.add_child(car)
 	await car.drive_to(stop_x, 260.0)
+	Game.play_sfx("honk")
+	await get_tree().create_timer(0.3).timeout
+	await Game.dialogue.say([
+		{"who": "Eggo", "text": "oh. that's our ride."},
+		{"who": "Mom", "tag": "Eggo's Mom", "face": false, "text": "GET IN THE CAR. BOTH OF YOU.\nYOU WERE SUPPOSED TO BE HOME AN HOUR AGO!"},
+		{"who": "BigJoe6", "text": "Coming, Mrs.-", "mood": "shocked"},
+		{"who": "Mom", "tag": "Eggo's Mom", "face": false, "text": "NOW!!"},
+	])
 
 	# In they go.
 	for who in [eggo, bigjoe]:
-		await who.walk_to(Vector2(stop_x - 10, CAR_LANE_Y - 12), 120.0)
+		await who.walk_to(Vector2(stop_x - 10, CAR_LANE_Y - 12), 160.0)
 		Game.play_sfx("door")
 		who.queue_free()
 		await get_tree().create_timer(0.2).timeout
@@ -536,6 +574,7 @@ func _ride_home() -> void:
 	Game.play_music("mt_carmel", 1.5)
 	await car.drive_to(room.pixel_size().x + 160.0, 240.0)
 	car.queue_free()
+	await Game.dialogue.say([{"who": "Hop", "text": "...Their mom came and got them.\nWimps.", "mood": "smug"}])
 
 	look = create_tween()
 	look.tween_property(camera, "offset:y", 0.0, 0.6)

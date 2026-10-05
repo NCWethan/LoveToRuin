@@ -1,5 +1,5 @@
 extends Area
-## Hilltop Park: the REVOLUTION Corps' base, and Chapter 1's climax.
+## Westview Field: the REVOLUTION Corps' base, and Chapter 1's climax.
 ##
 ## What happens here, in order (flags in Game.flags):
 ##   hp_arrived        Elric and Hop arrive. Hop is quiet.
@@ -383,7 +383,7 @@ func _physics_process(_delta: float) -> void:
 
 func _arrival() -> void:
 	await Game.dialogue.say([
-		"* (Hilltop Park. The big field is dark and empty.)",
+		"* (Westview Field. The big field is dark and empty.)",
 		{"who": "Hop", "text": "This is it. Revolution's base is supposed to be\nthe shelter by the field.", "mood": "sad"},
 		{"who": "Hop", "text": "...Nobody's home.", "mood": "sad"},
 		"* (In the middle of the field, something is glowing red.)",
@@ -712,7 +712,7 @@ func _ending_neutral() -> void:
 		{"who": "BigJoe6", "text": "...Just don't make us regret letting you walk.", "mood": "angry"},
 		{"who": "Hop", "text": "Take care of yourself, mysterious traveler.", "mood": "sad"},
 		{"who": "Hop", "text": "We'll keep an eye on each other. Me and them.", "mood": "sad"},
-		"* (You walk away from Hilltop Park alone.)",
+		"* (You walk away from Westview Field alone.)",
 		"* (Behind you, the Corps gathers around Hop.)",
 	])
 
@@ -757,7 +757,7 @@ func _talk_to_hop_after() -> void:
 				{"who": "Hop", "text": "...Did you hear that? ...No? Okay.", "mood": "shocked"},
 			], [
 				[{"who": "Hop", "text": "I'll follow you. Wherever. That's the deal, right?", "mood": "sad"}],
-				[{"who": "Hop", "text": "My head's been really loud since Hilltop.", "mood": "sad"}],
+				[{"who": "Hop", "text": "My head's been really loud since the field.", "mood": "sad"}],
 			])
 		_:
 			await chat("hop_after", [

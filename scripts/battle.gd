@@ -82,6 +82,8 @@ var _bar_pos: float = 0.0
 var _bar_member: PartyMember
 var _bar_target: Enemy
 var _bar_wait: float = 0.0
+## Which way the FIGHT bar moves: 1 = left to right, -1 = right to left.
+var _bar_dir: float = 1.0
 ## Recent bar positions, drawn as a fading afterimage.
 var _bar_trail: Array[float] = []
 
@@ -95,12 +97,18 @@ var _anim_landed: bool = false
 var _enemy_timer: float = 0.0
 var _spawn_timers: Dictionary = {}
 var _spawn_steps: Dictionary = {}
+## When each enemy last launched an attack this turn (seconds into the turn), for its "throw" animation.
+var _last_spawn: Dictionary = {}
 var _turn_patterns: Dictionary = {}
 ## The attack each enemy used last turn, so it doesn't repeat right away.
 var _last_patterns: Dictionary = {}
 var _attackers: Array[Enemy] = []
 var _speech: Dictionary = {}
 var _invincible_timer: float = 0.0
+
+## Game time in this battle, and when ENTER will next be accepted in the text box.
+var _battle_clock: float = 0.0
+var _confirm_ready_at: float = 0.0
 
 ## The animation each party member is playing: {member: {"type": "ACT", "time": seconds}}.
 var _member_anim: Dictionary = {}
@@ -167,6 +175,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	# The tent's red text crawls out slowly.
+	_battle_clock += delta
 	_typed += delta * TYPE_SPEED * Game.text_speed() * (0.35 if _text_color != Color.WHITE else 1.0)
 	_update_effects(delta)
 	_text_beeps()
@@ -241,7 +250,12 @@ func _text_finished() -> bool:
 
 
 func _process_text() -> void:
+	# The same hidden quarter-second pause as the overworld text box, so battle text
+	# can't be mashed straight through either.
+	if _pressed("confirm") and _battle_clock < _confirm_ready_at:
+		return
 	if _pressed("confirm"):
+		_confirm_ready_at = _battle_clock + DialogueBox.CONFIRM_BUFFER
 		if _text_finished():
 			_next_message()
 		else:
@@ -536,7 +550,9 @@ func _after_actions() -> void:
 func _start_fight_bar(member: PartyMember, target: Enemy) -> void:
 	_bar_member = member
 	_bar_target = target
-	_bar_pos = 0.0
+	# The bar comes in from the left or the right, at random.
+	_bar_dir = 1.0 if randf() < 0.5 else -1.0
+	_bar_pos = 0.0 if _bar_dir > 0.0 else 1.0
 	_bar_wait = FIGHT_WINDUP
 	_bar_trail.clear()
 	_text = ""
@@ -552,11 +568,11 @@ func _process_fight_bar(delta: float) -> void:
 	_bar_trail.append(_bar_pos)
 	if _bar_trail.size() > 6:
 		_bar_trail.pop_front()
-	_bar_pos += delta / FIGHT_BAR_TIME
+	_bar_pos += _bar_dir * delta / FIGHT_BAR_TIME
 	if _pressed("confirm"):
 		# 1.0 for a hit dead in the middle, 0.0 at the very edges.
 		_resolve_hit(1.0 - absf(_bar_pos - 0.5) * 2.0)
-	elif _bar_pos >= 1.0:
+	elif _bar_pos >= 1.0 or _bar_pos <= 0.0 and _bar_dir < 0:
 		_resolve_hit(-1.0)
 
 
@@ -615,6 +631,8 @@ func _process_fight_anim(delta: float) -> void:
 		lines[0] += "\n" + target.hit_line
 	if target.hp == 0:
 		target.state = "defeated"
+		target.ko_time = 0.0
+		Game.play_sfx("thud")
 		exp_gained += target.exp_reward
 		lines.append("* %s was knocked out!" % target.name)
 	_show_messages(lines, _run_next_action)
@@ -631,6 +649,7 @@ func _start_enemy_turn() -> void:
 
 	_spawn_timers.clear()
 	_spawn_steps.clear()
+	_last_spawn.clear()
 	_turn_patterns.clear()
 	_speech.clear()
 	for enemy in _attackers:
@@ -675,6 +694,7 @@ func _process_enemy_turn(delta: float) -> void:
 				var wait := Attacks.spawn(_turn_patterns[enemy], enemy, self, box.get_inner_rect(), soul.global_position, _spawn_steps[enemy])
 				_spawn_timers[enemy] = wait * crowding
 				_spawn_steps[enemy] += 1
+				_last_spawn[enemy] = ENEMY_TURN_TIME - _enemy_timer
 
 	if _invincible_timer > 0.0:
 		# Just got hit: make the SOUL blink until the invincibility wears off.
@@ -1070,6 +1090,8 @@ func _update_effects(delta: float) -> void:
 	for enemy in enemies:
 		enemy.shake = maxf(enemy.shake - delta, 0.0)
 		enemy.flash = maxf(enemy.flash - delta, 0.0)
+		if enemy.ko_time >= 0.0:
+			enemy.ko_time += delta
 		# The health bar drains smoothly toward the real HP.
 		if enemy.shown_hp < 0.0:
 			enemy.shown_hp = enemy.hp
@@ -1078,6 +1100,7 @@ func _update_effects(delta: float) -> void:
 		_member_anim[member]["time"] += delta
 	for member in party:
 		member.shake = maxf(member.shake - delta, 0.0)
+		member.ko_time = member.ko_time + delta if member.is_down() else 0.0
 
 
 func _row_y(row: int) -> float:
@@ -1205,6 +1228,101 @@ func _draw_hop_strike() -> void:
 			_overlay.draw_rect(Rect2(center + drift + Vector2(e * 3 - 12, 10), Vector2(2, 2)), Color(red, fade))
 
 
+## How each kind of enemy moves when it winds up an attack (at the start of its
+## turn) and when it throws one (every time it launches bullets).
+##   bounce  (Eggo)            squashes down, then hops with each throw
+##   charge  (BigJoe6)         leans back, then lunges forward
+##   flutter (papers & books)  wobbles, then flicks
+##   swing   (Tardy Bell)      swings like a ringing bell
+##   jiggle  (Mystery Meat)    wobbles like jelly, then splats
+##   menace  (Hopkuna)         swells up, then snaps forward
+##   dance   (Wally)           his halftime show (see _dance_transform)
+const ENEMY_STYLES := {
+	"eggo": "bounce", "bigjoe6": "charge", "pop_quiz": "flutter", "hall_pass": "flutter",
+	"overdue_book": "flutter", "tardy_bell": "swing", "mystery_meat": "jiggle", "hopkuna": "menace",
+}
+const ENEMY_WINDUP_TIME := 0.45
+
+
+## The enemy's sprite file name, like "eggo".
+func _enemy_kind(enemy: Enemy) -> String:
+	return enemy.sprite.resource_path.get_file().get_basename() if enemy.sprite else ""
+
+
+## [offset, rotation, scale] for an enemy right now: idle bobbing, its windup at the
+## start of an attack, the jolt each time it throws something, or its KO.
+func _enemy_motion(enemy: Enemy) -> Array:
+	var t := Time.get_ticks_msec() / 1000.0
+	var offset := Vector2.ZERO
+	var rot := 0.0
+	var scale := Vector2.ONE
+	var style: String = ENEMY_STYLES.get(_enemy_kind(enemy), "")
+	if enemy.state == "defeated":
+		# KO: shudder, then topple over backwards and stay down.
+		var k := maxf(enemy.ko_time, 0.0)
+		if k < 0.3:
+			offset.x = sin(k * 70.0) * 5.0
+		var fall := clampf((k - 0.3) / 0.4, 0.0, 1.0)
+		rot = PI / 2 * (1.0 - pow(1.0 - fall, 3)) * 0.92
+		offset.x += 14.0 * fall
+		return [offset, rot, scale]
+	if not enemy.is_active() or _data.event != "":
+		return [offset, rot, scale]
+	# Idle: everyone still fighting bobs gently, each at their own pace.
+	offset.y = sin(t * 2.2 + enemy.position.x * 0.05) * 2.5
+	if state != State.ENEMY_TURN or not _attackers.has(enemy):
+		return [offset, rot, scale]
+	var clock := ENEMY_TURN_TIME - _enemy_timer
+	# Rises and falls once over the windup.
+	var windup := sin(clampf(clock / ENEMY_WINDUP_TIME, 0.0, 1.0) * PI)
+	var throw := clampf(1.0 - (clock - float(_last_spawn.get(enemy, -9.0))) / 0.25, 0.0, 1.0)
+	match style:
+		"bounce":
+			scale = Vector2(1.0 + 0.15 * windup, 1.0 - 0.18 * windup)
+			offset.y -= 18.0 * sin(throw * PI)
+		"charge":
+			rot = 0.14 * windup - 0.08 * throw
+			offset.x = 6.0 * windup - 22.0 * throw
+		"flutter":
+			rot = sin(t * 30.0) * 0.12 * windup - 0.25 * throw
+			scale = Vector2.ONE * (1.0 + 0.1 * throw)
+		"swing":
+			rot = sin(t * 12.0) * (0.12 + 0.2 * windup) + sin(t * 40.0) * 0.08 * throw
+		"jiggle":
+			var wobble := sin(t * 18.0) * (0.06 + 0.1 * windup)
+			scale = Vector2(1.0 + wobble + 0.2 * throw, 1.0 - wobble - 0.2 * throw)
+		"menace":
+			scale = Vector2.ONE * (1.0 + 0.12 * windup + 0.06 * throw)
+			offset.x = -10.0 * throw
+		_:
+			rot = 0.08 * windup
+			offset.x = -12.0 * throw
+	return [offset, rot, scale]
+
+
+## The picture shown for a moment when an enemy is hit: their shocked face, for
+## anyone who has one (Eggo and BigJoe6), otherwise their normal picture.
+var _hurt_pictures: Dictionary = {}
+
+func _enemy_hurt_picture(enemy: Enemy) -> Texture2D:
+	var kind := _enemy_kind(enemy)
+	if not _hurt_pictures.has(kind):
+		var path := "res://art/portraits/%s_shocked.png" % kind
+		_hurt_pictures[kind] = load(path) if ResourceLoader.exists(path) else enemy.sprite
+	return _hurt_pictures[kind]
+
+
+## Dust puffing up as a knocked-out enemy hits the ground.
+func _draw_enemy_ko_dust(enemy: Enemy, feet: Vector2) -> void:
+	if enemy.state != "defeated" or enemy.ko_time < 0.55 or enemy.ko_time > 1.3:
+		return
+	var age := (enemy.ko_time - 0.55) / 0.75
+	for puff in 6:
+		var dir := -1.0 if puff % 2 == 0 else 1.0
+		var at := feet + Vector2(dir * (10.0 + puff * 6.0 + age * 30.0), -4.0 - age * 14.0 - puff * 2.0)
+		_overlay.draw_circle(at, 6.0 * (1.0 - age) + 2.0, Color(0.75, 0.72, 0.68, 0.6 * (1.0 - age)))
+
+
 func _draw_enemies() -> void:
 	for enemy in enemies:
 		var pos := enemy.position
@@ -1220,21 +1338,28 @@ func _draw_enemies() -> void:
 			# Pixel art is drawn big (3x by default) so each pixel shows up as a crisp block.
 			var sprite_size := enemy.sprite.get_size() * enemy.battle_scale
 			top = pos.y + 40.0 - sprite_size.y
-			if enemy.dance and enemy.is_active():
-				_dance_transform(Vector2(pos.x, pos.y + 40.0))
-				var feet_rect := Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size)
-				_overlay.draw_texture_rect(enemy.sprite, feet_rect, false, tint)
-				if enemy.flash > 0.0:
-					_overlay.draw_texture_rect(enemy.sprite, feet_rect, false, Color(4, 4, 4, enemy.flash * 3.0))
+			var feet := Vector2(pos.x, pos.y + 40.0)
+			var feet_rect := Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size)
+			# A soft shadow on the ground.
+			if enemy.state != "spared":
+				_overlay.draw_set_transform(feet, 0.0, Vector2(1.0, 0.28))
+				_overlay.draw_circle(Vector2.ZERO, sprite_size.x * 0.4, Color(0, 0, 0, 0.35))
 				_overlay.draw_set_transform(Vector2.ZERO)
+			if enemy.dance and enemy.is_active():
+				_dance_transform(feet + _enemy_motion(enemy)[0])
 			else:
-				# Everyone still fighting bobs gently, each at their own pace.
-				var idle := sin(Time.get_ticks_msec() / 1000.0 * 2.2 + pos.x * 0.05) * 2.5 if enemy.is_active() and _data.event == "" else 0.0
-				var rect := Rect2(Vector2(pos.x - sprite_size.x / 2, top + idle), sprite_size)
-				_overlay.draw_texture_rect(enemy.sprite, rect, false, tint)
-				# Flash white for a moment when hit.
-				if enemy.flash > 0.0:
-					_overlay.draw_texture_rect(enemy.sprite, rect, false, Color(4, 4, 4, enemy.flash * 3.0))
+				var motion := _enemy_motion(enemy)
+				_overlay.draw_set_transform(feet + motion[0], motion[1], motion[2])
+			# When hit, some enemies show their shocked face for a moment.
+			var picture := enemy.sprite
+			if enemy.shake > 0.2 and enemy.is_active():
+				picture = _enemy_hurt_picture(enemy)
+			_overlay.draw_texture_rect(picture, feet_rect, false, tint)
+			# Flash white for a moment when hit.
+			if enemy.flash > 0.0:
+				_overlay.draw_texture_rect(picture, feet_rect, false, Color(4, 4, 4, enemy.flash * 3.0))
+			_overlay.draw_set_transform(Vector2.ZERO)
+			_draw_enemy_ko_dust(enemy, feet)
 		else:
 			# Placeholder figure: a blocky head and body.
 			_overlay.draw_rect(Rect2(pos + Vector2(-24, -10), Vector2(48, 50)), enemy.body_color * tint)
@@ -1399,53 +1524,100 @@ func _draw_party_sprites() -> void:
 			_draw_centered(member.name.to_upper() + "'S TURN", Vector2(pos.x, top - 32 - bob), 14, member.color)
 
 
+## Battle pose pictures (art/sprites/battle/<name>_<pose>.png), loaded once.
+var _pose_cache: Dictionary = {}
+
+
+## A party member's picture for a pose ("windup", "strike", "guard", "raise", "hurt",
+## "ko"), or their normal picture if they don't have that pose.
+func _pose(member: PartyMember, pose: String) -> Texture2D:
+	if pose == "":
+		return member.sprite
+	var path := "res://art/sprites/battle/%s_%s.png" % [member.name.to_lower(), pose]
+	if not _pose_cache.has(path):
+		_pose_cache[path] = load(path) if ResourceLoader.exists(path) else null
+	return _pose_cache[path] if _pose_cache[path] else member.sprite
+
+
 ## Draws a party member in their current pose, standing on `feet`.
-##   idle      breathing (a gentle stretch and squash)
-##   choosing  a little bounce
-##   FIGHT     leaning back to wind up while the timing bar runs, then a lunge at the
-##             enemy (Hop's fists blur through his three punches)
-##   ACT       a hop      ITEM  a squash-and-stretch with sparkles
-##   MERCY     a wave     DEFEND  a crouch behind a shimmering shield
-##   hurt      a flinch backward, flashing red
-##   down      lying on the ground
-func _draw_member(member: PartyMember, index: int, feet: Vector2, sprite_size: Vector2, tint: Color) -> void:
+##   idle     breathing (a gentle stretch and squash)
+##   choosing a little bounce
+##   FIGHT    each has their own attack:
+##            Elric draws their arm back (nails glinting), then dashes in and rakes
+##            with their claws, leaving afterimages behind.
+##            Hop crouches and charges up a punch (energy gathers around his fist),
+##            then rockets forward and slams it home.
+##   ACT / ITEM / MERCY   the arm goes up (a hop, a squash with sparkles, a wave)
+##   DEFEND   arms crossed behind a shimmering shield
+##   hurt     a shocked face, arms flung out, flashing red and knocked back
+##   KO       falls over with a bounce, X'd-out eyes, little stars circling
+func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: Vector2, tint: Color) -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var offset := Vector2.ZERO
 	var rot := 0.0
 	var scale := Vector2.ONE
 	var anim: Dictionary = _member_anim.get(member, {})
 	var anim_time: float = anim.get("time", 99.0)
+	var pose := ""
+	var is_hop := member.name == "Hop"
+	var attacking := _bar_member == member and state in [State.FIGHT_BAR, State.FIGHT_ANIM]
 
 	if member.is_down():
-		rot = -PI / 2
-		offset = Vector2(-sprite_size.y * 0.25, 0)
+		pose = "ko"
+		# Topple over backwards with a little bounce, then stay down.
+		var fall := clampf(member.ko_time / 0.45, 0.0, 1.0)
+		var bounce := absf(sin(clampf((member.ko_time - 0.45) / 0.3, 0.0, 1.0) * PI)) * 0.12
+		rot = -PI / 2 * (1.0 - pow(1.0 - fall, 3)) + bounce
+		# (Slides right a little as they fall, so they land on screen.)
+		offset.x = 34.0 * fall
+	elif member.shake > 0.0:
+		pose = "hurt"
+		var hurt := member.shake / 0.4
+		rot = -0.15 * hurt
+		offset.x = -10.0 * hurt
+		tint = tint.lerp(Color(1.0, 0.35, 0.35), hurt)
+	elif attacking and state == State.FIGHT_BAR:
+		pose = "windup"
+		if is_hop:
+			# Crouched, coiled, shaking harder as the punch charges.
+			scale = Vector2(1.06, 0.9)
+			offset.x = -8.0 + sin(t * 40.0) * 1.5
+			rot = -0.08
+		else:
+			rot = -0.14 + sin(t * 16.0) * 0.02
+			offset.x = -6.0
+	elif attacking:
+		var out := clampf(_anim_time / (0.06 if is_hop else 0.12), 0.0, 1.0)
+		var back := clampf((_anim_time - 0.7) / 0.3, 0.0, 1.0)
+		var lunge := out * (1.0 - back)
+		pose = "strike" if lunge > 0.3 else "windup"
+		if is_hop:
+			# Rockets straight in, low and fast, then shudders with each punch.
+			offset.x = 90.0 * lunge
+			rot = 0.12 * lunge
+			if _anim_time < 0.36:
+				offset.x += sin(_anim_time * 90.0) * 5.0
+		else:
+			# Dashes in with a hop, claws first.
+			offset.x = 70.0 * lunge
+			offset.y = -sin(clampf(_anim_time / 0.2, 0.0, 1.0) * PI) * 22.0 * (1.0 - back)
+			rot = 0.2 * lunge
 	else:
 		var breath := sin(t * 2.4 + index * 1.3)
 		scale = Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
 		if _is_choosing(index):
 			offset.y -= absf(sin(t * 5.0)) * 3.0
 		if member.defending:
-			scale *= Vector2(1.08, 0.86)
-		# FIGHT: wind up, then lunge.
-		if _bar_member == member and state == State.FIGHT_BAR:
-			rot = -0.1 + sin(t * 14.0) * 0.015
-			offset.x = -6.0
-		elif _bar_member == member and state == State.FIGHT_ANIM:
-			var out := clampf(_anim_time / 0.1, 0.0, 1.0)
-			var back := clampf((_anim_time - 0.65) / 0.3, 0.0, 1.0)
-			var lunge := out * (1.0 - back)
-			offset.x = 60.0 * lunge
-			offset.y = -sin(clampf(_anim_time / 0.2, 0.0, 1.0) * PI) * 22.0 * (1.0 - back)
-			rot = 0.16 * lunge
-			if member.name == "Hop" and _anim_time < 0.36:
-				offset.x += sin(_anim_time * 90.0) * 6.0
-		# The other actions play once, right as they happen.
+			pose = "guard"
+			scale *= Vector2(1.05, 0.92)
 		match anim.get("type", ""):
 			"ACT":
-				if anim_time < 0.5:
-					offset.y -= sin(anim_time / 0.5 * PI) * 22.0
+				if anim_time < 0.6:
+					pose = "raise"
+					offset.y -= sin(anim_time / 0.5 * PI) * 22.0 if anim_time < 0.5 else 0.0
 			"ITEM":
 				if anim_time < 0.6:
+					pose = "raise"
 					var squash := sin(anim_time / 0.6 * PI * 2.0)
 					scale *= Vector2(1.0 + 0.12 * squash, 1.0 - 0.12 * squash)
 					for s in 6:
@@ -1453,26 +1625,67 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, sprite_size: V
 						_overlay.draw_rect(Rect2(spark, Vector2(3, 3)), Color(0.4, 1.0, 0.5, 1.0 - anim_time / 0.6))
 			"MERCY":
 				if anim_time < 0.8:
+					pose = "raise"
 					rot = sin(anim_time * 20.0) * 0.12 * (1.0 - anim_time / 0.8)
 					offset.y -= absf(sin(anim_time * 10.0)) * 6.0
 			"DEFEND":
 				if anim_time < 0.25:
 					offset.y -= sin(anim_time / 0.25 * PI) * 8.0
-		# Hit: knocked back a little, flashing red.
-		if member.shake > 0.0:
-			var hurt := member.shake / 0.4
-			rot -= 0.18 * hurt
-			offset.x -= 8.0 * hurt
-			tint = tint.lerp(Color(1.0, 0.3, 0.3), hurt)
 
-	_overlay.draw_set_transform(feet + offset, rot, scale)
-	_overlay.draw_texture_rect(member.sprite, Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size), false, tint)
+	var texture := _pose(member, pose)
+	var size := texture.get_size() * 3.0
+
+	# A soft shadow on the ground.
+	_overlay.draw_set_transform(feet + Vector2(offset.x, 0), 0.0, Vector2(1.0, 0.28))
+	_overlay.draw_circle(Vector2.ZERO, 26.0, Color(0, 0, 0, 0.35))
 	_overlay.draw_set_transform(Vector2.ZERO)
 
+	# Elric's dash leaves a trail of afterimages.
+	if attacking and state == State.FIGHT_ANIM and not is_hop and _anim_time < 0.4:
+		for ghost in 3:
+			var behind := offset - Vector2(18.0 * (ghost + 1), 0)
+			_overlay.draw_set_transform(feet + behind, rot, scale)
+			_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false, Color(member.color, 0.25 - ghost * 0.07))
+		_overlay.draw_set_transform(Vector2.ZERO)
+
+	_overlay.draw_set_transform(feet + offset, rot, scale)
+	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false, tint)
+	_overlay.draw_set_transform(Vector2.ZERO)
+
+	# Effects around the pose.
+	if attacking and state == State.FIGHT_BAR:
+		var hand := feet + offset + (Vector2(40, -72) if not is_hop else Vector2(36, -64))
+		if is_hop:
+			# Energy gathering around his fist: rings closing in, getting redder.
+			var charge := clampf(1.0 - _bar_wait / FIGHT_WINDUP, 0.0, 1.0) if _bar_wait > 0.0 else 1.0
+			for ring in 3:
+				var r := fmod(t * 1.5 + ring / 3.0, 1.0)
+				_overlay.draw_arc(hand, 26.0 * (1.0 - r) + 4.0, 0, TAU, 16, Color(1.0, 0.5 - 0.3 * charge, 0.3, (0.3 + 0.5 * charge) * r), 2.0)
+			_overlay.draw_circle(hand, 4.0 + 4.0 * charge, Color(1.0, 0.3, 0.3, 0.35 + 0.25 * sin(t * 20.0)))
+		else:
+			# A glint running along the nails.
+			var glint := fmod(t * 1.4, 1.0)
+			if glint < 0.25:
+				var at := hand + Vector2(-6 + glint * 40.0, 0)
+				_overlay.draw_line(at + Vector2(-5, 0), at + Vector2(5, 0), Color(1, 1, 1, 0.9), 1.5)
+				_overlay.draw_line(at + Vector2(0, -5), at + Vector2(0, 5), Color(1, 1, 1, 0.9), 1.5)
+	elif attacking and is_hop and _anim_time < 0.12:
+		# Speed lines as Hop launches.
+		for line in 5:
+			var y := feet.y - 20.0 - line * 14.0
+			_overlay.draw_line(Vector2(feet.x + offset.x - 70, y), Vector2(feet.x + offset.x - 20, y), Color(1, 1, 1, 0.5), 2.0)
+	if member.is_down() and member.ko_time > 0.5:
+		# Little stars circling where their head ended up.
+		var head := feet + Vector2(-44, -14)
+		for s in 3:
+			var angle := t * 3.0 + s * TAU / 3
+			var star := head + Vector2(cos(angle) * 16.0, sin(angle) * 5.0)
+			_overlay.draw_line(star + Vector2(-3, 0), star + Vector2(3, 0), Color(1, 0.95, 0.4), 1.5)
+			_overlay.draw_line(star + Vector2(0, -3), star + Vector2(0, 3), Color(1, 0.95, 0.4), 1.5)
 	# A shimmering shield in front of anyone defending.
 	if member.defending and not member.is_down():
 		var shimmer := 0.5 + 0.5 * sin(t * 6.0)
-		var center := feet + Vector2(34, -sprite_size.y * 0.45)
+		var center := feet + Vector2(34, -size.y * 0.45)
 		_overlay.draw_arc(center, 30.0, -1.1, 1.1, 16, Color(0.5, 0.8, 1.0, 0.35 + 0.3 * shimmer), 4.0)
 		_overlay.draw_arc(center, 24.0, -0.9, 0.9, 12, Color(0.8, 0.95, 1.0, 0.25 + 0.2 * shimmer), 2.0)
 

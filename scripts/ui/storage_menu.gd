@@ -2,7 +2,7 @@ class_name StorageMenu
 extends CanvasLayer
 ## A storage box: move items between your bag and the box.
 ## Every box in the game opens the same storage, so you can put something in at
-## Mt. Carmel and take it out at Hilltop Park.
+## Mt. Carmel and take it out at Westview Field.
 ## Left/Right to switch sides, Up/Down to pick, Enter to move the item across, X to close.
 
 signal _closed

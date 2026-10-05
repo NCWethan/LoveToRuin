@@ -1,6 +1,6 @@
 class_name HilltopBattles
 extends RefCounted
-## The fight at Hilltop Park: Hopkuna, wearing Hop's body. It can't be won,
+## The fight at Westview Field: Hopkuna, wearing Hop's body. It can't be won,
 ## only survived, until the REVOLUTION Corps arrives.
 
 const SURVIVE_TURNS := 5

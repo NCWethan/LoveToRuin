@@ -616,9 +616,11 @@ func _talk_nassan() -> void:
 	Game.flags["heard_westview"] = true
 	Game.set_objective("Kill some time until it gets dark.")
 	await get_tree().create_timer(0.3).timeout
+	# If you've met him, you know that voice.
+	var caller := "NCWethan" if int(Game.flags.get("talks_ncwethan", 0)) > 0 else "???"
 	await Game.dialogue.say([
-		{"who": "NCWethan", "tag": "???", "face": false, "text": "HEYYY!! NEW PERSON!! OVER HERE!!"},
-		{"who": "NCWethan", "tag": "???", "face": false, "text": "WE NEED A THIRD PLAYER!! IT'S AN EMERGENCY!!"},
+		{"who": "NCWethan", "tag": caller, "face": false, "text": "HEYYY!! NEW PERSON!! OVER HERE!!"},
+		{"who": "NCWethan", "tag": caller, "face": false, "text": "WE NEED A THIRD PLAYER!! IT'S AN EMERGENCY!!"},
 		{"who": "Hop", "text": "...That's NCWethan. It's never an emergency.", "mood": "smug"},
 		{"who": "Hop", "text": "We should probably go anyway.\nHe'll just keep yelling.", "mood": "happy"},
 	])

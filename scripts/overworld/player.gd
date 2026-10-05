@@ -16,6 +16,9 @@ var _front: Texture2D = load("res://art/sprites/elric.png")
 var _back: Texture2D = load("res://art/sprites/elric_back.png")
 ## Two side-view frames (legs together / mid-step). Flipped when walking left.
 var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png")]
+## Walking frames for the front and back views: one step with each leg.
+var _front_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric")
+var _back_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric_back")
 var _sprite: Sprite2D
 var _walk_time: float = 0.0
 var _moving: bool = false
@@ -73,16 +76,21 @@ func _physics_process(delta: float) -> void:
 ## Picks the right picture for the direction Elric faces, and animates walking.
 func _update_sprite() -> void:
 	_sprite.flip_h = false
+	# A four-step walk cycle: step, stand, other step, stand (see Character.WALK_STEP).
+	var phase := int(_walk_time / Character.WALK_STEP) % 4 if _moving else 1
+	var stepping := _moving and phase % 2 == 0
 	if facing.x != 0:
-		# Side view: swap between the two frames every 0.15 seconds while walking.
-		var frame := int(_walk_time / 0.15) % 2 if _moving else 0
-		_sprite.texture = _side[frame]
+		_sprite.texture = _side[1 if stepping else 0]
 		_sprite.flip_h = facing.x < 0
-		_sprite.position.y = 0
 	else:
-		_sprite.texture = _back if facing == Vector2.UP else _front
-		# Facing up or down: a little bounce while walking.
-		_sprite.position.y = -absf(sin(_walk_time * 12.0)) * 1.5 if _moving else 0.0
+		var up := facing == Vector2.UP
+		var steps := _back_walk if up else _front_walk
+		if stepping and steps.size() == 2:
+			_sprite.texture = steps[phase / 2]
+		else:
+			_sprite.texture = _back if up else _front
+	# A tiny bob on each step.
+	_sprite.position.y = -1.0 if stepping else 0.0
 
 
 func _record_trail() -> void:
@@ -132,3 +140,10 @@ func show_alert(on: bool) -> void:
 	alert.visible = on
 	if on:
 		Game.play_sfx("encounter")
+
+
+## A soft oval shadow on the ground under Elric (drawn underneath the picture).
+func _draw() -> void:
+	draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.32))
+	draw_circle(Vector2.ZERO, 11.0, Color(0, 0, 0, 0.28))
+	draw_set_transform(Vector2.ZERO)

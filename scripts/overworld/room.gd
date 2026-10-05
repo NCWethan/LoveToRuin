@@ -107,6 +107,37 @@ func _draw() -> void:
 	for y in height:
 		for x in width:
 			_draw_tile(x, y, get_tile(x, y))
+	_draw_wall_shadows()
+
+
+## Tiles that cast a shadow onto the ground below them (buildings, walls, lockers...).
+const SHADOW_CASTERS := [WALL, WINDOW, DOOR, STUCCO, GLASS, WOOD_WALL, RED_WALL,
+	INTERIOR_WALL, LOCKER, CHALKBOARD, BLEACHERS]
+
+
+## A soft shadow along the ground at the foot of every wall, and a thinner one
+## down the right side of buildings (the light comes from the top-left).
+func _draw_wall_shadows() -> void:
+	for y in height:
+		for x in width:
+			var tile := get_tile(x, y)
+			if not tile in SHADOW_CASTERS:
+				continue
+			var below := get_tile(x, y + 1)
+			if y + 1 < height and not below in SHADOW_CASTERS and below != VOID and below != ROOF:
+				var p := Vector2(x * TILE, (y + 1) * TILE)
+				draw_rect(Rect2(p, Vector2(TILE, 7)), Color(0, 0, 0, 0.16))
+				draw_rect(Rect2(p, Vector2(TILE, 3)), Color(0, 0, 0, 0.14))
+			var right := get_tile(x + 1, y)
+			if x + 1 < width and not right in SHADOW_CASTERS and right != VOID and right != ROOF:
+				draw_rect(Rect2(Vector2((x + 1) * TILE, y * TILE + 4), Vector2(4, TILE)), Color(0, 0, 0, 0.13))
+
+
+## A soft oval shadow on the ground (under trees).
+func _ground_shadow(center: Vector2, radius: float) -> void:
+	draw_set_transform(center, 0.0, Vector2(1.0, 0.35))
+	draw_circle(Vector2.ZERO, radius, Color(0, 0, 0, 0.22))
+	draw_set_transform(Vector2.ZERO)
 
 
 ## A repeatable "random" number for each tile, so details like grass specks
@@ -153,8 +184,12 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			draw_rect(Rect2(p + Vector2(13, 10), Vector2(2, 2)), Color8(230, 200, 90))
 		TREE:
 			_grass(x, y, r)
+			_ground_shadow(p + Vector2(12, 18), 9.0)
 			draw_rect(Rect2(p + Vector2(8, 12), Vector2(4, 8)), Color8(100, 70, 40))
 			draw_circle(p + Vector2(10, 9), 9.0, Color8(36, 92, 44))
+			# A darker underside on the leaves, lit from the top-left.
+			draw_circle(p + Vector2(12, 11), 6.0, Color8(28, 74, 36))
+			draw_circle(p + Vector2(9, 8), 6.0, Color8(36, 92, 44))
 			draw_circle(p + Vector2(7, 6), 3.0, Color8(60, 125, 62))
 		FENCE:
 			_grass(x, y, r)
@@ -262,6 +297,7 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 				draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(250, 250, 250))
 		PALM:
 			_grass(x, y, r)
+			_ground_shadow(p + Vector2(12, 18), 8.0)
 			draw_rect(Rect2(p + Vector2(9, 8), Vector2(3, 12)), Color8(140, 105, 60))
 			for i in 5:
 				var dir := Vector2.from_angle(-PI / 2 + (i - 2) * 0.7) * 9.0

@@ -1151,6 +1151,42 @@ foreach ($who in $sideUpper.Keys) {
     $sprites["${who}_side2"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $true)
 }
 
+# --- Limbs that aren't glued to the body ---------------------------------------
+# Most of the cast share one body layout: shoulders on rows 12-14, arms in columns
+# 3-6 and 17-20 down to row 21, legs below with a dividing line in column 12.
+# Below the shoulders, each arm moves out by one pixel, and the legs get a gap
+# between them. The outline then fills those gaps, so arms and legs read as
+# separate limbs instead of one solid block.
+
+function Add-LimbGaps([string[]]$rows) {
+    $out = [string[]]$rows.Clone()
+    if ($rows[0].Length -ne 24 -or $rows.Count -lt 32) { return $out }
+    # Only for sprites with this exact layout: arms on both sides, room to move out.
+    $r = $rows[15]
+    if ($r[3] -eq '.' -or $r[20] -eq '.' -or $r[2] -ne '.' -or $r[21] -ne '.') { return $out }
+    for ($y = 15; $y -le 21; $y++) {
+        $c = $out[$y].ToCharArray()
+        if ($c[2] -ne '.' -or $c[21] -ne '.') { continue }
+        $left = $c[3..6]
+        $right = $c[17..20]
+        for ($i = 0; $i -lt 4; $i++) { $c[2 + $i] = $left[$i]; $c[18 + $i] = $right[$i] }
+        $c[6] = '.'
+        $c[17] = '.'
+        $out[$y] = -join $c
+    }
+    # A gap between the legs (above the shoes).
+    for ($y = 22; $y -le 29; $y++) {
+        $c = $out[$y].ToCharArray()
+        if ($c[11] -ne '.' -and $c[13] -ne '.') { $c[12] = '.' }
+        $out[$y] = -join $c
+    }
+    return $out
+}
+
+foreach ($name in @($sprites.Keys)) {
+    $sprites[$name] = Add-LimbGaps $sprites[$name]
+}
+
 # --- Facial expressions (dialogue portraits only) -----------------------------
 # Each mood is a little 8 x 6 stamp drawn over the face (columns 8-15, rows 6-11
 # of the front view). In a stamp:
@@ -1254,6 +1290,191 @@ foreach ($mood in $visor.Keys) {
     $portraits["bigjoe6_$mood"] = $rows
 }
 
+# --- Walking frames (front and back views) ------------------------------------
+# For everyone with the standard body layout: two extra frames where one leg lifts
+# (its foot one pixel higher) and the arms swing (one up a pixel, one down). The
+# game cycles  step A, stand, step B, stand  for a smooth walk.
+# Saved as name_walk1 / name_walk2 (and name_back_walk1 / name_back_walk2).
+
+function Shift-Block([string[]]$rows, [int]$x0, [int]$x1, [int]$y0, [int]$y1, [int]$dy) {
+    $copy = [string[]]$rows.Clone()
+    # Clear the block, then redraw it moved by dy rows.
+    for ($y = $y0; $y -le $y1; $y++) {
+        $c = $rows[$y].ToCharArray()
+        for ($x = $x0; $x -le $x1; $x++) { $c[$x] = '.' }
+        $rows[$y] = -join $c
+    }
+    for ($y = $y0; $y -le $y1; $y++) {
+        $ty = $y + $dy
+        if ($ty -lt 0 -or $ty -ge $rows.Count) { continue }
+        $c = $rows[$ty].ToCharArray()
+        for ($x = $x0; $x -le $x1; $x++) {
+            $ch = $copy[$y][$x]
+            if ($ch -ne '.') { $c[$x] = $ch }
+        }
+        $rows[$ty] = -join $c
+    }
+}
+
+function Make-Step([string[]]$rows, [bool]$leftLeg) {
+    $p = [string[]]$rows.Clone()
+    # Lift one leg (and its shoe) by a pixel.
+    if ($leftLeg) { Shift-Block $p 7 11 22 31 -1 } else { Shift-Block $p 13 16 22 31 -1 }
+    # Swing the arms: the arm on the lifted leg's side goes back (down), the other forward (up).
+    if ($leftLeg) { Shift-Block $p 2 5 15 21 1; Shift-Block $p 18 21 15 21 -1 }
+    else { Shift-Block $p 2 5 15 21 -1; Shift-Block $p 18 21 15 21 1 }
+    return $p
+}
+
+$walkFrames = [ordered]@{}
+foreach ($name in @($sprites.Keys)) {
+    $rows = $sprites[$name]
+    if ($rows[0].Length -ne 24 -or $rows.Count -lt 32) { continue }
+    # Only bodies with separated arms (see Add-LimbGaps) and legs.
+    if ($rows[15][2] -eq '.' -or $rows[15][21] -eq '.' -or $rows[24][8] -eq '.') { continue }
+    $walkFrames["${name}_walk1"] = Make-Step $rows $true
+    $walkFrames["${name}_walk2"] = Make-Step $rows $false
+}
+
+# --- Battle poses (Elric and Hop) ---------------------------------------------
+# Built from each character's front view by moving the arm pixels around. The
+# canvas is 6 pixels wider on each side, so an outstretched arm fits. Poses:
+#   windup  the right arm drawn back and up, ready to strike
+#   strike  the right arm thrown straight out toward the enemy
+#   guard   both arms crossed over the chest
+#   raise   the right arm held straight up (ACT, ITEM, MERCY)
+#   hurt    a shocked face, arms flung out
+#   ko      X'd-out eyes (the game tips this one over)
+
+$poseSkin = @{ 'elric' = 'L'; 'hop' = 'N' }
+$PAD = 6
+
+function Pad-Rows([string[]]$rows) {
+    $edge = '.' * $PAD
+    return [string[]]($rows | ForEach-Object { $edge + $_ + $edge })
+}
+
+# A character's right arm (below the shoulder), top to bottom: 7 rows of 4 pixels.
+function Get-Arm([string[]]$rows, [bool]$right) {
+    $x = if ($right) { 18 + $PAD } else { 2 + $PAD }
+    $arm = @()
+    for ($y = 15; $y -le 21; $y++) { $arm += $rows[$y].Substring($x, 4) }
+    return $arm
+}
+
+function Clear-Arm([string[]]$rows, [bool]$right) {
+    $x = if ($right) { 18 + $PAD } else { 2 + $PAD }
+    for ($y = 15; $y -le 21; $y++) {
+        $c = $rows[$y].ToCharArray()
+        for ($i = 0; $i -lt 4; $i++) { $c[$x + $i] = '.' }
+        $rows[$y] = -join $c
+    }
+}
+
+function Put([string[]]$rows, [int]$x, [int]$y, [string]$ch) {
+    if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[0].Length -or $ch -eq '.') { return }
+    $c = $rows[$y].ToCharArray()
+    $c[$x] = $ch
+    $rows[$y] = -join $c
+}
+
+# Draws an arm (7 x 4, shoulder end first) from (x, y), stepping (dx, dy) per pixel
+# of length; the arm's width runs along (wx, wy).
+function Draw-Arm([string[]]$rows, [string[]]$arm, [int]$x, [int]$y, [double]$dx, [double]$dy, [int]$wx, [int]$wy) {
+    for ($k = 0; $k -lt $arm.Count; $k++) {
+        for ($w = 0; $w -lt 4; $w++) {
+            $px = [int][math]::Round($x + $k * $dx + $w * $wx)
+            $py = [int][math]::Round($y + $k * $dy + $w * $wy)
+            Put $rows $px $py ([string]$arm[$k][$w])
+        }
+    }
+}
+
+function Stamp-Face([string[]]$rows, [string[]]$stamp, [string]$skin, [string]$feature) {
+    for ($r = 0; $r -lt $stamp.Count; $r++) {
+        $c = $rows[6 + $r].ToCharArray()
+        for ($k = 0; $k -lt 8; $k++) {
+            $s = $stamp[$r][$k]
+            if ($s -eq '.') { continue }
+            $c[$PAD + 8 + $k] = switch ($s) { 's' { $skin } 'K' { $feature } default { $s } }
+        }
+        $rows[6 + $r] = -join $c
+    }
+}
+
+$koFace = @(
+    "........",
+    ".KsKKsK.",
+    "..Kss.K.",
+    ".KsKKsK.",
+    "........",
+    ".sKKKKs."
+)
+
+$poses = [ordered]@{}
+foreach ($who in $poseSkin.Keys) {
+    $base = Pad-Rows $sprites[$who]
+    $skin = $poseSkin[$who]
+    $arm = Get-Arm $base $true
+    $leftArm = Get-Arm $base $false
+    $shoulderX = 18 + $PAD
+
+    # Windup: the arm swings up and back over the shoulder, hand high.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Draw-Arm $p $arm ($shoulderX) 14 0.7 -1.0 1 0
+    if ($who -eq 'elric') {
+        # Nails catching the light.
+        Put $p ($shoulderX + 5) 6 'W'; Put $p ($shoulderX + 7) 6 'W'; Put $p ($shoulderX + 8) 7 'W'
+    }
+    $poses["${who}_windup"] = $p
+
+    # Strike: the arm thrown straight out to the right.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Draw-Arm $p $arm ($shoulderX) 14 1 0 0 1
+    $tip = $shoulderX + $arm.Count
+    if ($who -eq 'elric') {
+        # Three claws.
+        Put $p $tip 14 'W'; Put $p ($tip + 1) 14 'W'
+        Put $p $tip 16 'W'; Put $p ($tip + 1) 16 'W'
+        Put $p $tip 18 'W'
+    } else {
+        # A big fist with knuckles.
+        for ($yy = 13; $yy -le 18; $yy++) { Put $p $tip $yy 'l'; Put $p ($tip + 1) $yy 'l' }
+        Put $p ($tip + 1) 14 'K'; Put $p ($tip + 1) 16 'K'
+    }
+    $poses["${who}_strike"] = $p
+
+    # Guard: both arms folded across the chest.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Clear-Arm $p $false
+    Draw-Arm $p $leftArm (2 + $PAD) 15 1.3 0.35 0 1
+    Draw-Arm $p $arm ($shoulderX + 3) 17 -1.3 0.35 0 1
+    $poses["${who}_guard"] = $p
+
+    # Raise: the arm straight up, hand above the head.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Draw-Arm $p $arm ($shoulderX) 14 0 -1.4 1 0
+    $poses["${who}_raise"] = $p
+
+    # Hurt: a shocked face, and both arms flung outward.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Clear-Arm $p $false
+    Draw-Arm $p $arm ($shoulderX) 14 0.75 0.7 1 0
+    Draw-Arm $p $leftArm (5 + $PAD) 14 -0.75 0.7 -1 0
+    Stamp-Face $p $moods['shocked'] $skin 'K'
+    $poses["${who}_hurt"] = $p
+
+    # Knocked out: X'd-out eyes.
+    $p = [string[]]$base.Clone()
+    Stamp-Face $p $koFace $skin 'K'
+    $poses["${who}_ko"] = $p
+}
+
 # --- Saving -------------------------------------------------------------------
 
 function Save-Sprite([string]$name, [string[]]$rows, [string]$dir) {
@@ -1272,6 +1493,15 @@ function Save-Sprite([string]$name, [string[]]$rows, [string]$dir) {
             if ($ch -eq '.') { continue }
             if (-not $palette.ContainsKey($ch)) { throw "$name uses '$ch', which isn't in the palette" }
             $c = $palette[$ch]
+            # Shading, lit from the top-left: pixels on a bottom or right edge are
+            # darker, pixels on a top or left edge are lighter, and where two colors
+            # meet (a sleeve and a hand, say) there's a soft crease.
+            $isEmpty = { param($xx, $yy) $xx -lt 0 -or $yy -lt 0 -or $xx -ge $w -or $yy -ge $h -or [string]$rows[$yy][$xx] -eq '.' }
+            $shade = 1.0
+            if ((& $isEmpty ($x + 1) $y) -or (& $isEmpty $x ($y + 1))) { $shade = 0.76 }
+            elseif ((& $isEmpty ($x - 1) $y) -or (& $isEmpty $x ($y - 1))) { $shade = 1.16 }
+            elseif ([string]$rows[$y][$x + 1] -ne $ch -or [string]$rows[$y + 1][$x] -ne $ch) { $shade = 0.9 }
+            $c = @([math]::Min(255, [int]($c[0] * $shade)), [math]::Min(255, [int]($c[1] * $shade)), [math]::Min(255, [int]($c[2] * $shade)))
             $bmp.SetPixel($x + 1, $y + 1, [System.Drawing.Color]::FromArgb(255, $c[0], $c[1], $c[2]))
             $filled[($x + 1), ($y + 1)] = $true
         }
@@ -1302,3 +1532,7 @@ New-Item -ItemType Directory -Force $portraitDir | Out-Null
 
 foreach ($name in $sprites.Keys) { Save-Sprite $name $sprites[$name] $spriteDir }
 foreach ($name in $portraits.Keys) { Save-Sprite $name $portraits[$name] $portraitDir }
+$battleDir = Join-Path $spriteDir "battle"
+New-Item -ItemType Directory -Force $battleDir | Out-Null
+foreach ($name in $poses.Keys) { Save-Sprite $name $poses[$name] $battleDir }
+foreach ($name in $walkFrames.Keys) { Save-Sprite $name $walkFrames[$name] $spriteDir }
