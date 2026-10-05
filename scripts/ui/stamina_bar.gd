@@ -14,7 +14,8 @@ const LINGER := 1.0
 var _canvas: Node2D
 var _font: Font
 var _shown: float = 0.0
-var _full_for: float = 0.0
+## (Starts as if it has been full a while, so it isn't shown when an area loads.)
+var _full_for: float = LINGER
 var _time: float = 0.0
 
 

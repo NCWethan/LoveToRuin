@@ -12,6 +12,11 @@ extends Area
 
 const SCENE := "res://scenes/hilltop.tscn"
 const DEMO_END_SCENE := "res://scenes/demo_end.tscn"
+## Chapter 2: the hatch under the shelter leads down into the Corps' base, and the
+## road south goes back through Westview (into the gym, by the emergency exit).
+const CORPS_BASE_SCENE := "res://scenes/corps_base.tscn"
+const WESTVIEW_SCENE := "res://scenes/westview.tscn"
+const HATCH := Vector2(7 * 20 + 10, 5 * 20 + 10)
 const T := Room.TILE
 
 ## Where Elric arrives (the path at the bottom of the park).
@@ -71,7 +76,8 @@ func _ready() -> void:
 	_font = ThemeDB.fallback_font
 
 	_night = CanvasModulate.new()
-	_night.color = Color(0.6, 0.62, 0.85)
+	# (Chapter 2 visits are by day.)
+	_night.color = Color(1, 1, 1) if _day() else Color(0.6, 0.62, 0.85)
 	add_child(_night)
 
 	_decor = Node2D.new()
@@ -144,6 +150,11 @@ func _process(delta: float) -> void:
 
 
 func _draw_decor() -> void:
+	# Chapter 2: the hatch down to the base, in front of the shelter.
+	if _day():
+		_decor.draw_rect(Rect2(HATCH + Vector2(-14, -10), Vector2(28, 18)), Color8(85, 90, 98))
+		_decor.draw_rect(Rect2(HATCH + Vector2(-14, -10), Vector2(28, 18)), Color8(50, 54, 60), false, 2.0)
+		_decor.draw_arc(HATCH + Vector2(0, -1), 5.0, 0.0, TAU, 12, Color8(150, 155, 165), 2.0)
 	# The REVOLUTION banner on the shelter.
 	var banner := Rect2(52, 46, 86, 16)
 	_decor.draw_rect(banner, Color8(235, 225, 200))
@@ -409,7 +420,25 @@ func _control_box() -> void:
 
 # --- People -----------------------------------------------------------------
 
+## Chapter 2: daytime at the park, after the Corps' base.
+func _day() -> bool:
+	return flag("base_arrived")
+
+
 func _place_people() -> void:
+	if _day():
+		# Whoever's coming along follows Elric. (The Corps is down in the base.)
+		hop = Cast.make(Game.partner())
+		add_character(hop, player.position + Vector2(-20, -4))
+		hop.follow = player
+		world.add_child(Hotspot.create(HATCH, _go_down_hatch))
+		var star := make_save_star()
+		star.glow = true
+		star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
+		star.on_interact = _use_save_point
+		add_storage_box(Vector2(322, 500))
+		add_character(star, Vector2(360, 500))
+		return
 	hop = Cast.make("Hop")
 	add_character(hop, player.position + Vector2(-20, -4))
 
@@ -915,4 +944,15 @@ func _talk_to_hop_after() -> void:
 
 
 func _leave_after_chapter() -> void:
+	if _day():
+		# Back to Westview, in through the gym's emergency exit.
+		await Game.change_scene(WESTVIEW_SCENE, Vector2(116 * 20, 42 * 20 + 10))
+		return
 	await Game.change_scene(DEMO_END_SCENE)
+
+
+func _go_down_hatch() -> void:
+	var choice := await Game.dialogue.ask("* (The hatch to the Corps' base.\n*  Climb down?)", ["Climb down", "Stay"])
+	if choice == 0:
+		Game.play_sfx("door")
+		await Game.change_scene(CORPS_BASE_SCENE, Vector2(20 * 20, 5 * 20))

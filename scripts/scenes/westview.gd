@@ -11,6 +11,9 @@ extends Area
 ## Story flags (in Game.flags):
 ##   ww_arrived, ww_inside, ww_loops (a count), loop_broken, ww_classroom,
 ##   read_board, bells_solved, ww_gym, mascot_started, has_fragment_2
+##
+## In Chapter 2 (after the Corps' base: base_arrived), it's daytime: see the
+## bottom of this file.
 
 const SCENE := "res://scenes/westview.tscn"
 const HILLTOP_SCENE := "res://scenes/hilltop.tscn"
@@ -45,6 +48,10 @@ const MASCOT_SPOT := Vector2(100 * T + 10, 42 * T)
 const BELL_ORDER := [3, 1, 2]
 
 var hop: Character
+## Chapter 2: whoever's coming along with Elric (Game.partner()).
+var partner: Character
+## Chapter 2: the school by day (see the bottom of this file).
+var _day: bool = false
 var mascot: Character
 ## Fragment 2, floating over Wally's costume until Elric takes it.
 var floating_fragment: Character
@@ -61,22 +68,26 @@ var _glow_time: float = 0.0
 
 
 func _ready() -> void:
+	_day = flag("base_arrived")
 	rooms.assign([_px(OUTSIDE), _px(HALLWAY), _px(CLASSROOM), _px(GYM)])
 	# Random fights in the hallway and the classroom (see westview_battles.gd for how
 	# often each one shows up). There are no enemies wandering around: just these.
-	encounter_zones = [
-		[_px(HALLWAY), WestviewBattles.HALLWAY_ENCOUNTERS],
-		[_px(CLASSROOM), WestviewBattles.CLASSROOM_ENCOUNTERS],
-	]
+	# (None by day: it's just a school again.)
+	if not _day:
+		encounter_zones = [
+			[_px(HALLWAY), WestviewBattles.HALLWAY_ENCOUNTERS],
+			[_px(CLASSROOM), WestviewBattles.CLASSROOM_ENCOUNTERS],
+		]
 	setup_area(ENTRY)
-	Game.play_music("westview")
+	Game.play_music("mt_carmel" if _day else "westview")
 	_font = ThemeDB.fallback_font
 
 	# Night: everything in the world is drawn darker and bluer. (The text box and
 	# menus are on their own layers, so they stay bright.)
-	var night := CanvasModulate.new()
-	night.color = Color(0.5, 0.5, 0.72)
-	add_child(night)
+	if not _day:
+		var night := CanvasModulate.new()
+		night.color = Color(0.5, 0.5, 0.72)
+		add_child(night)
 
 	_add_decor()
 	_place_people()
@@ -266,6 +277,9 @@ func _draw_decor() -> void:
 # --- People and things ----------------------------------------------------
 
 func _place_people() -> void:
+	if _day:
+		_place_day_people()
+		return
 	hop = Cast.make("Hop")
 	add_character(hop, player.position + Vector2(-20, -4))
 	hop.follow = player
@@ -356,6 +370,12 @@ func _place_hotspots() -> void:
 	]
 	for i in 3:
 		spots.append([Vector2((60 + i * 2) * T + 10, 36 * T - 4), _ring_bell.bind(i + 1)])
+	# By day, the spooky things are just things.
+	if _day:
+		var daytime := {_read_chalkboard: _day_chalkboard, _humming_locker: _day_locker, _read_poster: _day_poster, _emergency_exit: _day_exit}
+		for spot in spots:
+			if daytime.has(spot[1]):
+				spot[1] = daytime[spot[1]]
 	for spot in spots:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 
@@ -675,3 +695,83 @@ func _emergency_exit() -> void:
 	])
 	Game.flags["westview_done"] = true
 	await Game.change_scene(HILLTOP_SCENE)
+
+
+# --- Chapter 2: Westview by day ---------------------------------------------------
+# Once Elric has been to the Corps' base, Westview is just a school again: lights
+# on, no random fights, students everywhere, still buzzing about last night. It's
+# the way between the PQ Mall side of town and the park (Westview Field) where the
+# base is: in the front doors, through the gym, out the emergency exit.
+
+## Where Elric comes in from the park: just inside the gym's emergency exit.
+const GYM_FROM_PARK := Vector2(116 * T, 42 * T + 10)
+
+## The students: which picture, where (in tiles), what they say, two answers to
+## pick from, and what they say back to each.
+const STUDENTS := [
+	["Student1", Vector2i(8, 12), "Did you hear? Somebody broke into the school last\nnight. The bells were ringing at like 3 AM.", ["That was weird.", "...That was me."], ["Right?? My mom thought it was a fire drill.", "Ha! Sure. And I'm the principal."]],
+	["Student2", Vector2i(23, 12), "Ugh. Pop quiz first period. I didn't study.", ["Me neither.", "Answer C."], ["Solidarity.", "...C? Is it always C? It's always C, isn't it."]],
+	["Student3", Vector2i(13, 14), "Is it just me, or is the hallway shorter today?", ["It's just you.", "It used to loop."], ["Yeah, probably. I didn't sleep.", "...Loop? Okay, weirdo."]],
+	["Student4", Vector2i(20, 15), "Nice outfit. Very... wanderer.", ["Thanks!", "It's called style."], ["No problem, traveler.", "Okay, okay. Style. Sure."]],
+	["Student5", Vector2i(58, 12), "My locker was humming this morning.\nLike, a song. I'm not okay.", ["Lockers do that.", "Was it in tune?"], ["They DO?", "...Actually, yeah. Kinda catchy."]],
+	["Student6", Vector2i(75, 10), "Have you seen my hall pass? It ran away.", ["It RAN?", "Check the gym."], ["I said what I said.", "Why would it be in the... you know what, I'll check."]],
+	["Student7", Vector2i(96, 13), "The library book I returned was 47 years overdue.\nThe fine is insane.", ["Yikes.", "Worth it?"], ["They want $4,000. In 1979 money.", "...It was a good book."]],
+	["Student8", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"]],
+	["Student3", Vector2i(60, 46), "Shh! I'm trying to nap before class.", ["Sorry.", "WAKE UP!"], ["Zzz...", "AH! ...I was awake. Totally awake."]],
+	["Student1", Vector2i(95, 40), "Somebody wrecked Wally's costume.\nHe's just... lying there. Empty.", ["Rest in peace.", "He'll be back."], ["Go Wolverines... :(", "You think?? GO WOLVERINES!!"]],
+	["Student6", Vector2i(104, 45), "Did you see the foam finger? It's GONE.\nTHE foam finger!", ["No idea.", "...It's in my bag."], ["The whole team's freaking out.", "WHAT. ...Okay, keep it. It looks good on you."]],
+	["Student2", Vector2i(112, 38), "The emergency exit goes out to the park.\nPractice is out there today.", ["Thanks.", "Is it safe?"], ["No prob. Watch out for the sprinklers.", "It's a park. What could happen?"]],
+]
+
+
+func _place_day_people() -> void:
+	partner = Cast.make(Game.partner())
+	add_character(partner, player.position + Vector2(-20, -4))
+	partner.follow = player
+	hop = partner
+	add_storage_box(Vector2(9 * T + 36, 12 * T + 10))
+	add_storage_box(Vector2(86 * T + 36, 45 * T))
+	_add_save_point(Vector2(9 * T, 12 * T + 10), [
+		"* (The school's busy. Somebody's playing music\n*  out of their phone.)",
+		"* (It fills you with DETERMINATION.)",
+	])
+	_add_save_point(Vector2(86 * T, 45 * T), [
+		"* (The gym smells like floor polish and old popcorn.)",
+		"* (It's just a gym now. It fills you with DETERMINATION.)",
+	])
+	if flag("has_fragment_2"):
+		_add_empty_costume()
+	for i in STUDENTS.size():
+		var student: Array = STUDENTS[i]
+		var spot: Vector2i = student[1]
+		add_npc(student[0], Vector2(spot.x * T + 10, spot.y * T + 10), _talk_to_student.bind(i))
+
+
+## A student says something, Elric picks one of two answers, and they react.
+func _talk_to_student(i: int) -> void:
+	var student: Array = STUDENTS[i]
+	var who: String = student[0]
+	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[2]}])
+	var choice := await Game.dialogue.ask("* (What do you say?)", student[3])
+	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[4][choice]}])
+
+
+func _day_chalkboard() -> void:
+	await Game.dialogue.say([
+		"* (Today's lesson is on the board.\n*  Off in the corner, faint: \"3, 1, 2.\")",
+		"* (Nobody has erased it.)",
+	])
+
+
+func _day_locker() -> void:
+	await Game.dialogue.say(["* (Just a locker. It isn't humming anymore.)", "* (...Probably.)"])
+
+
+func _day_poster() -> void:
+	await Game.dialogue.say(["* (A poster: \"GO WOLVERINES! GAME FRIDAY 7PM.\")", "* (Someone drew a little foam finger on it.)"])
+
+
+func _day_exit() -> void:
+	var choice := await Game.dialogue.ask("* (The emergency exit. Go out to the park?)", ["Go out", "Stay"])
+	if choice == 0:
+		await Game.change_scene(HILLTOP_SCENE)

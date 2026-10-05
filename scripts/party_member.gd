@@ -2,7 +2,11 @@ class_name PartyMember
 extends RefCounted
 ## One member of Elric's party during a battle.
 
+## The name shown ("Big Joe").
 var name: String
+## Who they are, for pictures and stats ("BigJoe6"). The same as `name` unless
+## their display name is different.
+var id: String
 var max_hp: int
 var hp: int
 ## Base damage for FIGHT. A perfect hit does roughly 3x this.
@@ -23,6 +27,7 @@ var ko_time: float = 0.0
 
 func _init(p_name: String, p_max_hp: int, p_attack: int, p_color: Color, p_sprite: Texture2D = null) -> void:
 	name = p_name
+	id = p_name
 	max_hp = p_max_hp
 	hp = p_max_hp
 	attack = p_attack

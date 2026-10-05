@@ -1,6 +1,7 @@
 class_name BagMenu
 extends CanvasLayer
-## Your bag, opened with B while walking around. The last row opens the settings.
+## Your bag, opened with B while walking around. Under the items: TEAM (who comes
+## along with Elric; only changeable at the Corps' base) and the settings.
 ## The left side shows the party's HP and your money; the right side lists your items.
 ## Pick an item, then:
 ##   USE    eat it (pick who, if there's more than one of you)
@@ -8,7 +9,10 @@ extends CanvasLayer
 ##   DROP   throw it away
 ## X goes back (or closes the bag).
 
-enum Step { LIST, ACTIONS, TARGET, MESSAGE }
+enum Step { LIST, ACTIONS, TARGET, MESSAGE, TEAM }
+
+## The team list: this many names per column.
+const TEAM_ROWS := 6
 
 const ACTIONS := ["USE", "CHECK", "DROP"]
 const STATS := Rect2(30, 40, 200, 200)
@@ -28,6 +32,9 @@ var _cursor: int = 0
 var _action: int = 0
 var _target: int = 0
 var _message: String = ""
+var _team_cursor: int = 0
+## Set when the team changes, so the area can swap who's following Elric.
+var _team_changed: bool = false
 
 
 func _ready() -> void:
@@ -50,12 +57,16 @@ func open() -> void:
 	_step = Step.LIST
 	_cursor = 0
 	_message = ""
+	_team_changed = false
 	_panel.visible = true
 	Game.play_sfx("select")
 	await _closed
 	_panel.visible = false
 	await get_tree().process_frame
 	Game.busy = was_busy
+	# A new partner: the area brings them in (see corps_base.gd).
+	if _team_changed and get_tree().current_scene.has_method("refresh_partner"):
+		get_tree().current_scene.refresh_partner()
 
 
 func _process(_delta: float) -> void:
@@ -76,8 +87,8 @@ func _process(_delta: float) -> void:
 
 	match _step:
 		Step.LIST:
-			# The last row is always "Settings", under the items.
-			var rows := Game.items.size() + 1
+			# Under the items: "Team", then "Settings".
+			var rows := Game.items.size() + 2
 			if up or down:
 				_cursor = wrapi(_cursor + (1 if down else -1), 0, rows)
 				Game.play_sfx("move")
@@ -85,6 +96,8 @@ func _process(_delta: float) -> void:
 				Game.play_sfx("select")
 				if _on_settings():
 					await Game.settings_menu.open()
+				elif _on_team():
+					_open_team()
 				else:
 					_step = Step.ACTIONS
 					_action = 0
@@ -107,6 +120,23 @@ func _process(_delta: float) -> void:
 				_use_on(Game.party[_target])
 			elif back:
 				_step = Step.ACTIONS
+		Step.TEAM:
+			var choices := Game.team_choices()
+			if up or down:
+				_team_cursor = wrapi(_team_cursor + (1 if down else -1), 0, choices.size())
+				Game.play_sfx("move")
+			elif left or right:
+				_team_cursor = clampi(_team_cursor + (TEAM_ROWS if right else -TEAM_ROWS), 0, choices.size() - 1)
+				Game.play_sfx("move")
+			elif confirm:
+				var id: String = choices[_team_cursor]
+				if id != Game.partner():
+					Game.set_partner(id)
+					_team_changed = true
+				Game.play_sfx("select")
+				_show("* (%s will come with you.)" % DialogueBox.display_name(id))
+			elif back:
+				_step = Step.LIST
 		Step.MESSAGE:
 			if confirm or back:
 				_message = ""
@@ -116,9 +146,25 @@ func _process(_delta: float) -> void:
 	_panel.queue_redraw()
 
 
-## True when the cursor is on the "Settings" row (below the items).
+## True when the cursor is on the "Settings" row (the last one, below "Team").
 func _on_settings() -> bool:
-	return _cursor >= Game.items.size()
+	return _cursor >= Game.items.size() + 1
+
+
+## True when the cursor is on the "Team" row (right below the items).
+func _on_team() -> bool:
+	return _cursor == Game.items.size()
+
+
+## Picking who comes along. Only at the Corps' base; anywhere else, it just says so.
+func _open_team() -> void:
+	if not Game.flags.get("base_arrived", false):
+		_show("* (It's you and Hop. That's the team.)")
+	elif not get_tree().current_scene.has_method("refresh_partner"):
+		_show("* (%s is with you.)\n* (You can only change who comes along at the Corps' base.)" % DialogueBox.display_name(Game.partner()))
+	else:
+		_step = Step.TEAM
+		_team_cursor = maxi(0, Game.team_choices().find(Game.partner()))
 
 
 func _do_action() -> void:
@@ -204,7 +250,7 @@ func _draw_panel() -> void:
 	var left := STATS.position.x + 14
 	var y := STATS.position.y + 24
 	for member in Game.party:
-		_text(member.name.to_upper(), Vector2(left, y), DialogueBox.SPEAKERS.get(member.name, {}).get("color", Color.WHITE))
+		_text(member.name.to_upper(), Vector2(left, y), DialogueBox.SPEAKERS.get(member.id, {}).get("color", member.color))
 		_text("HP %d/%d" % [member.hp, member.max_hp], Vector2(left + 76, y), Color.WHITE, 14)
 		_text("ATK %d   DEF %d" % [member.attack, member.defense], Vector2(left, y + 18), Color(0.75, 0.75, 0.75), 13)
 		y += 42
@@ -223,8 +269,12 @@ func _draw_panel() -> void:
 		_text("OBJECTIVE", goal.position + Vector2(14, 20), Color.YELLOW, 12)
 		_panel.draw_multiline_string(_font, goal.position + Vector2(14, 38), Game.objective(), HORIZONTAL_ALIGNMENT_LEFT, goal.size.x - 24, 13)
 
-	# Your items.
+	# Your items (or, while picking a team, everyone who could come along).
 	_box(LIST)
+	if _step == Step.TEAM:
+		_draw_team()
+		_text("ENTER: choose   X: back", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+		return
 	_text("BAG   (%d / %d)" % [Game.items.size(), Game.MAX_ITEMS], Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
 	if Game.items.is_empty():
 		_text("(Your bag is empty.)", Vector2(LIST.position.x + 40, LIST.position.y + 60), Color.GRAY)
@@ -239,7 +289,12 @@ func _draw_panel() -> void:
 	# "Settings", along the bottom of the list (where USE / CHECK / DROP go when
 	# an item is picked).
 	if _step != Step.ACTIONS:
-		var settings_at := Vector2(LIST.position.x + 40, LIST.end.y - 16)
+		var team_at := Vector2(LIST.position.x + 40, LIST.end.y - 16)
+		var on_team := _on_team() and _step == Step.LIST
+		_text("Team", team_at, Color.YELLOW if on_team else Color(0.75, 0.75, 0.75))
+		if on_team:
+			_heart(team_at + Vector2(-18, -6))
+		var settings_at := Vector2(LIST.position.x + 160, LIST.end.y - 16)
 		var on_it := _on_settings() and _step == Step.LIST
 		_panel.draw_line(Vector2(LIST.position.x + 14, LIST.end.y - 38), Vector2(LIST.end.x - 14, LIST.end.y - 38), Color(0.3, 0.3, 0.3), 1.0)
 		_text("Settings", settings_at, Color.YELLOW if on_it else Color(0.75, 0.75, 0.75))
@@ -278,6 +333,22 @@ func _draw_panel() -> void:
 
 	var hint := "ENTER: choose   X: back   B: close"
 	_text(hint, Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+
+
+## The team list: everyone who could come along, the current partner marked.
+func _draw_team() -> void:
+	_text("TEAM  -  who comes with you?", Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
+	var choices := Game.team_choices()
+	var helpers: Dictionary = load("res://scripts/helpers.gd").HELPERS
+	for i in choices.size():
+		var id: String = choices[i]
+		var at := Vector2(LIST.position.x + 40 + (i / TEAM_ROWS) * 170, LIST.position.y + 62 + (i % TEAM_ROWS) * 32)
+		var color: Color = helpers.get(id, {}).get("color", Color(0.85, 0.85, 0.85))
+		var label := DialogueBox.display_name(id) + ("  *" if id == Game.partner() else "")
+		_text(label, at, Color.YELLOW if i == _team_cursor else color)
+		if i == _team_cursor:
+			_heart(at + Vector2(-16, -6))
+	_text("* = with you now.   Elric always comes.", Vector2(LIST.position.x + 14, LIST.end.y - 14), Color(0.55, 0.55, 0.55), 12)
 
 
 func _heart(center: Vector2) -> void:

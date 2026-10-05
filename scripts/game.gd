@@ -255,7 +255,10 @@ func lv_for(exp_amount: int) -> int:
 
 const BOND_THRESHOLDS := [0, 20, 50, 100, 170, 260, 380, 530, 720, 950]
 ## Each member's starting max HP and attack.
-const BASE_STATS := {"Elric": [30, 6], "Hop": [35, 7]}
+const BASE_STATS := {"Elric": [30, 6], "Hop": [35, 7],
+	# REVOLUTION Corps members, when they come along instead of Hop (see partner()).
+	"BigJoe6": [44, 5], "Eggo": [32, 6], "Nassan": [30, 5], "Nat": [28, 5], "NCWethan": [34, 8],
+	"Ronin": [30, 7], "Supreme": [28, 5], "Crayola": [26, 4], "Rooster": [30, 6], "Agent": [28, 6]}
 ## What each level adds, for every party member.
 const HP_PER_LV := 3
 const ATTACK_PER_LV := 2
@@ -297,7 +300,7 @@ func next_bond() -> int:
 ## they're wearing. Growing taller max HP also heals by the same amount.
 func update_stats() -> void:
 	for member in party:
-		var base: Array = BASE_STATS.get(member.name, [member.max_hp, member.attack])
+		var base: Array = BASE_STATS.get(member.id, [member.max_hp, member.attack])
 		var new_max: int = base[0] + HP_PER_LV * (lv() - 1) + HP_PER_BOND_LV * (bond_level() - 1)
 		var attack: int = base[1] + ATTACK_PER_LV * (lv() - 1) + ATTACK_PER_BOND_LV * (bond_level() - 1)
 		var defense := 0
@@ -310,6 +313,52 @@ func update_stats() -> void:
 		member.hp = mini(member.hp, member.max_hp)
 		member.attack = attack
 		member.defense = defense
+
+
+# --- The team ------------------------------------------------------------
+# Elric always goes, and one partner comes along (in battle and walking around).
+# In Chapter 1 that's Hop. Once you've been to the Corps' base, any Corps member
+# can come instead, but the team can only be changed at the base (in the bag).
+
+## Who's coming along with Elric: "Hop", or a Corps member's id ("BigJoe6").
+func partner() -> String:
+	return flags.get("partner", "Hop")
+
+
+## Everyone who could come along right now.
+func team_choices() -> Array:
+	var choices: Array = ["Hop"]
+	if flags.get("base_arrived", false):
+		choices.append_array(load("res://scripts/helpers.gd").CORPS)
+	return choices
+
+
+## Joined the REVOLUTION Corps (the Pacifist route): friends can be called into fights.
+func joined_corps() -> bool:
+	return flags.get("route", "") == "pacifist"
+
+
+func set_partner(id: String) -> void:
+	flags["partner"] = id
+	_build_partner()
+	heal_party()
+
+
+## Puts the partner into the party (after Elric), with their stats.
+func _build_partner() -> void:
+	var id := partner()
+	if party.size() > 1 and party[1].id == id:
+		return
+	var colors := {"Hop": Color(0.75, 0.75, 0.75)}
+	var helpers: Dictionary = load("res://scripts/helpers.gd").HELPERS
+	var color: Color = colors.get(id, helpers.get(id, {}).get("color", Color.WHITE))
+	var member := PartyMember.new(DialogueBox.display_name(id), 30, 5, color, load("res://art/sprites/%s.png" % id.to_lower()))
+	member.id = id
+	if party.size() > 1:
+		party[1] = member
+	else:
+		party.append(member)
+	update_stats()
 
 
 ## {slot: item} for everything one member is wearing.
@@ -629,7 +678,9 @@ func load_game() -> void:
 		equipment[member_name] = {}
 		for slot in worn[member_name]:
 			equipment[member_name][slot] = _item_from_save(worn[member_name][slot])
-	# Levels and accessories first, then the HP they had when they saved.
+	# The team (who's coming along), then levels and accessories, then the HP they
+	# had when they saved.
+	_build_partner()
 	update_stats()
 	for saved in data.get("party", []):
 		for member in party:

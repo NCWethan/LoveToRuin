@@ -330,8 +330,8 @@ func _add_dread() -> void:
 		get_tree().process_frame.connect(_keep_away)
 
 
-## People back away from Elric when he comes near (but stay close to where they
-## were, so he can still talk to them).
+## People back away from Elric when they come near (but stay close to where they
+## were, so Elric can still talk to them).
 func _keep_away() -> void:
 	if Game.busy or Game.transitioning or player == null:
 		return
@@ -347,7 +347,7 @@ func _keep_away() -> void:
 		var wanted: Vector2 = npc.position + away.normalized() * 70.0 * delta
 		if wanted.distance_to(home) <= AVOID_LEASH:
 			npc.position = wanted
-		# Turned away from him.
+		# Turned away from Elric.
 		npc.face(away)
 
 

@@ -14,6 +14,7 @@ extends Area
 ## Story flags (in Game.flags): base_arrived, plus talks_base_<id> for each chat.
 
 const SCENE := "res://scenes/corps_base.tscn"
+const HILLTOP_SCENE := "res://scenes/hilltop.tscn"
 const T := Room.TILE
 
 const HALL := Rect2i(0, 0, 40, 26)
@@ -44,6 +45,9 @@ const MEMBERS := [
 	{"id": "Agent", "room": "Strategy", "color": Color(0.7, 0.5, 1.0), "spot": Vector2i(13, 12)},
 ]
 
+## Whoever's coming along with Elric (Game.partner()), following behind.
+var partner: Character
+## Hop, waiting in the hall when someone else is coming along instead.
 var hop: Character
 var _decor: Node2D
 var _font: Font
@@ -214,6 +218,9 @@ func _add_lamps() -> void:
 func _place_people() -> void:
 	for i in MEMBERS.size():
 		var member: Dictionary = MEMBERS[i]
+		# Whoever's out with Elric isn't in their room.
+		if member["id"] == Game.partner():
+			continue
 		var r := room_rect(i)
 		var spot: Vector2i = r.position + member["spot"]
 		var id: String = member["id"]
@@ -229,20 +236,26 @@ func _place_people() -> void:
 	var dummy := Character.new().setup(load("res://art/sprites/training_dummy.png"))
 	dummy.on_interact = _spar
 	add_character(dummy, Vector2(33 * T, 13 * T))
-	# Hop: by your side on the Pacifist route; on the Neutral route he's been
-	# living here, and he's waiting in the hall.
-	hop = Cast.make("Hop")
-	if Game.flags.get("route", "") == "neutral":
+	# Whoever's coming along follows Elric. If that isn't Hop, Hop hangs out on the
+	# couch in the hall.
+	partner = Cast.make(Game.partner())
+	add_character(partner, player.position + Vector2(-20, 0))
+	partner.follow = player
+	if Game.partner() != "Hop":
+		hop = Cast.make("Hop")
 		hop.on_interact = func() -> void:
 			hop.face(player.position - hop.position)
 			await chat("base_hop", [
-				{"who": "Hop", "text": "They gave me the couch. It's a good couch.", "mood": "happy"},
-				{"who": "Hop", "text": "...I'm glad you came back, Elric.", "mood": "sad"},
-			], [[{"who": "Hop", "text": "Nine fragments to go. We'll get there.", "mood": "happy"}]])
+				{"who": "Hop", "text": "Taking someone else out, huh? It's cool.\nI'll guard the couch.", "mood": "smug"},
+				{"who": "Hop", "text": "...Come get me if things get weird, okay?", "mood": "sad"},
+			], [[{"who": "Hop", "text": "Couch status: guarded.", "mood": "happy"}], [{"who": "Hop", "text": "Nine fragments to go. We'll get there.", "mood": "happy"}]])
 		add_character(hop, Vector2(6 * T, 17 * T))
-	else:
-		add_character(hop, player.position + Vector2(-20, 0))
-		hop.follow = player
+
+
+## A new partner was picked in the bag: reload the base, so they're the one
+## following Elric (and back out of their room).
+func refresh_partner() -> void:
+	await Game.change_scene(SCENE, player.position)
 
 
 func _place_hotspots() -> void:
@@ -439,11 +452,12 @@ func _spar() -> void:
 		await Game.start_battle("training", SCENE, player.position)
 
 
+## Up the ladder: the hatch comes out in front of the shelter at Westview Field.
 func _ladder() -> void:
-	await Game.dialogue.say([
-		"* (The ladder up to the hatch. Westview Field is up there.)",
-		"* (Your next adventure starts from here...\n*  once Nassan figures out where.)",
-	])
+	var choice := await Game.dialogue.ask("* (The ladder up to the hatch.\n*  Westview Field is up there.)", ["Climb up", "Stay"])
+	if choice == 0:
+		Game.play_sfx("door")
+		await Game.change_scene(HILLTOP_SCENE, Vector2(7 * T + 10, 7 * T))
 
 
 func _map_table() -> void:

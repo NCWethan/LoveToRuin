@@ -1357,6 +1357,49 @@ foreach ($mood in $visor.Keys) {
     $portraits["bigjoe6_$mood"] = $rows
 }
 
+# --- Westview students (Chapter 2: the school by day) ----------------------------
+# Made from Elric's body (front and back), recolored: skin, hair, shirt, pants,
+# and a beanie on some. They get walking frames like everyone else.
+# skin, hair, shirt, shirt detail, pants, pants line, beanie (or '')
+$studentLooks = @(
+    @('Q', 'K', 'S', 'u', 'J', 'j', ''),
+    @('4', 'K', 'E', 'D', 'P', 'k', ''),
+    @('2', 'H', '5', 'D', 'B', 'n', ''),
+    @('Y', 'h', '#', 'D', 'J', 'j', 'b'),
+    @('Q', 'w', 'R', 'D', 'x', 'k', ''),
+    @('4', '8', '1', 'D', 'J', 'j', 'u'),
+    @('2', 'K', 'W', 'a', 'P', 'k', ''),
+    @('Q', 'H', 'E', 'D', 'B', 'n', 'R')
+)
+
+function Recolor-Student([string[]]$rows, $look) {
+    $out = @()
+    for ($y = 0; $y -lt $rows.Count; $y++) {
+        $c = $rows[$y].ToCharArray()
+        for ($x = 0; $x -lt $c.Length; $x++) {
+            switch -CaseSensitive ([string]$c[$x]) {
+                'L' { $c[$x] = $look[0] }
+                'h' { $c[$x] = if ($look[6] -ne '' -and $y -le 4) { $look[6] } else { $look[1] } }
+                'T' { $c[$x] = $look[2] }
+                # Elric's patches and dirt just become plain shirt (or pants).
+                't' { $c[$x] = if ($y -ge 22) { $look[4] } else { $look[2] } }
+                'd' { $c[$x] = if ($y -ge 22) { $look[4] } else { $look[2] } }
+                'r' { $c[$x] = $look[3] }
+                'O' { $c[$x] = $look[4] }
+                'o' { $c[$x] = $look[5] }
+            }
+        }
+        $out += -join $c
+    }
+    return [string[]]$out
+}
+
+for ($s = 0; $s -lt $studentLooks.Count; $s++) {
+    $n = $s + 1
+    $sprites["student$n"] = Recolor-Student $sprites['elric'] $studentLooks[$s]
+    $sprites["student${n}_back"] = Recolor-Student $sprites['elric_back'] $studentLooks[$s]
+}
+
 # --- Walking frames (front and back views) ------------------------------------
 # For everyone with the standard body layout: two extra frames where one leg lifts
 # (its foot one pixel higher) and the arms swing (one up a pixel, one down). The

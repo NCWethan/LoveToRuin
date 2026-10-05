@@ -167,7 +167,7 @@ func _ready() -> void:
 	_data = Battles.create(Game.pending_battle if Game.pending_battle != "" else "tutorial")
 	# Elric looks how they look in the overworld (worse, the more they've killed).
 	for member in party:
-		var look := "res://art/sprites/%s.png" % Game.sprite_base(member.name)
+		var look := "res://art/sprites/%s.png" % Game.sprite_base(member.id)
 		if ResourceLoader.exists(look):
 			member.sprite = load(look)
 	# Battle music always plays at normal speed (the overworld slows down on Genocide).
@@ -485,16 +485,24 @@ func _confirm_list_choice() -> void:
 			if choice == "Spare":
 				_open_list(State.TARGET_ENEMY, _active_enemies())
 			elif choice == "Call":
+				if _call_wait() > 0:
+					Game.play_sfx("miss")
+					return
 				_open_list(State.CALL_LIST, _callable_helpers())
 			else:
 				_try_flee()
 		State.CALL_LIST:
+			var wait := _helper_wait(choice)
+			if wait != 0:
+				Game.play_sfx("miss")
+				return
 			_choose({"type": "CALL", "helper": choice})
 
 
 # --- Player turn: running the actions -------------------------------------
 
 func _run_actions() -> void:
+	_turn_number += 1
 	_action_index = -1
 	_run_next_action()
 
@@ -582,19 +590,34 @@ func _after_actions() -> void:
 
 
 # --- CALL: a friend jumps in (Pacifist route) ------------------------------------
-# MERCY > Call a friend, once per battle: a REVOLUTION Corps member who isn't in
-# the party runs in, does one move, and runs off again (see helpers.gd).
+# MERCY > Call a friend: a REVOLUTION Corps member who isn't in the party runs in,
+# does their move, and runs off again (see helpers.gd). Only once Elric has joined
+# the Corps. It isn't free: after any call, nobody can be called for CALL_COOLDOWN
+# turns, and each friend has their own wait (`cooldown`) and a number of `charges`
+# per battle.
 
 const CALL_ROWS := 5
 const CALL_COLUMN := 250.0
+## Turns before anyone can be called again.
+const CALL_COOLDOWN := 3
 ## When the helper's move lands, and when they're gone, in seconds.
 const CALL_HIT_TIME := 0.75
 const CALL_LENGTH := 1.6
+## Big Joe's shield: how much damage gets through while it's up.
+const SHIELD_LETS_THROUGH := 0.2
 
 var _helpers_script: GDScript
-var _called_this_battle: bool = false
+## How many turns the party has taken this battle (counted when the actions run).
+var _turn_number: int = 0
+## The turn of the last call (-99: no call yet), and each friend's last call and
+## how many times they've been called.
+var _last_call_turn: int = -99
+var _helper_last_turn: Dictionary = {}
+var _helper_uses: Dictionary = {}
 ## The call happening right now: who, how long they've been here, their target.
 var _call: Dictionary = {}
+## Big Joe's shield is up for this enemy turn (damage cut by 80%).
+var _shield_up: bool = false
 
 
 func _helpers() -> GDScript:
@@ -603,27 +626,34 @@ func _helpers() -> GDScript:
 	return _helpers_script
 
 
-## Spare and Flee, and Call a friend when you can.
+## Spare and Flee, and Call a friend once Elric has joined the Corps.
 func _mercy_options() -> Array:
 	var options: Array = ["Spare", "Flee"]
-	if _can_call():
+	if Game.joined_corps() and not _callable_helpers().is_empty() and not actions.any(func(a: Dictionary) -> bool: return a["type"] == "CALL"):
 		options.append("Call")
 	return options
 
 
-## Only on the Pacifist route, once per battle, and only if someone's free to come.
-func _can_call() -> bool:
-	if Game.flags.get("route", "") != "pacifist" or _called_this_battle:
-		return false
-	if actions.any(func(a: Dictionary) -> bool: return a["type"] == "CALL"):
-		return false
-	return not _callable_helpers().is_empty()
-
-
 ## Corps members who aren't already fighting.
 func _callable_helpers() -> Array:
-	var fighting := party.map(func(m: PartyMember) -> String: return m.name)
-	return _helpers().CORPS.filter(func(id: String) -> bool: return not DialogueBox.display_name(id) in fighting and not id in fighting)
+	var fighting := party.map(func(m: PartyMember) -> String: return m.id)
+	return _helpers().CORPS.filter(func(id: String) -> bool: return not id in fighting)
+
+
+## Turns until anyone can be called (0 = now).
+func _call_wait() -> int:
+	return maxi(0, _last_call_turn + CALL_COOLDOWN - (_turn_number + 1))
+
+
+## Turns until this friend can be called (0 = now), counting the shared wait too.
+## -1 means they're out of charges for this battle.
+func _helper_wait(id: String) -> int:
+	var info: Dictionary = _helpers().HELPERS[id]
+	var charges: int = info.get("charges", -1)
+	if charges >= 0 and int(_helper_uses.get(id, 0)) >= charges:
+		return -1
+	var own: int = int(_helper_last_turn.get(id, -99)) + int(info.get("cooldown", CALL_COOLDOWN)) - (_turn_number + 1)
+	return maxi(_call_wait(), maxi(own, 0))
 
 
 func _start_call(member: PartyMember, helper: String) -> void:
@@ -631,7 +661,9 @@ func _start_call(member: PartyMember, helper: String) -> void:
 	if targets.is_empty():
 		_run_next_action()
 		return
-	_called_this_battle = true
+	_last_call_turn = _turn_number
+	_helper_last_turn[helper] = _turn_number
+	_helper_uses[helper] = int(_helper_uses.get(helper, 0)) + 1
 	var info: Dictionary = _helpers().HELPERS[helper]
 	var sprite_path := "res://art/sprites/%s.png" % helper.to_lower()
 	_call = {"id": helper, "time": 0.0, "target": targets.pick_random(), "landed": false, "member": member,
@@ -647,47 +679,58 @@ func _process_call(delta: float) -> void:
 	_call["time"] += delta
 	var target: Enemy = _call["target"]
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
+	var shield: bool = info.get("kind", "hit") == "shield"
 	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
 		_call["landed"] = true
-		var damage := 4 + Game.lv() * 2 + randi() % 4
-		# Pacifists don't finish anyone off.
-		damage = mini(damage, target.hp - 1)
-		_call["damage"] = maxi(damage, 0)
-		target.hp -= _call["damage"]
-		target.shake = 0.5
-		target.flash = 0.2
-		Game.play_sfx("punch_hit")
-		_impact(target, 0.07, false)
-		_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
-		_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
+		if shield:
+			# Big Joe plants his shield in front of the party.
+			_shield_up = true
+			Game.play_sfx("bonk", 0.6)
+			Game.play_sfx("shing", 0.7)
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 20, true)
+		else:
+			var damage := 4 + Game.lv() * 2 + randi() % 4
+			# Pacifists don't finish anyone off.
+			damage = mini(damage, target.hp - 1)
+			_call["damage"] = maxi(damage, 0)
+			target.hp -= _call["damage"]
+			target.shake = 0.5
+			target.flash = 0.2
+			Game.play_sfx("punch_hit")
+			_impact(target, 0.07, false)
+			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
+			_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
 	if _call["time"] < CALL_LENGTH:
 		return
 	var helper_name := DialogueBox.display_name(_call["id"])
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
-	if _call["damage"] == 0:
+	if shield:
+		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif _call["damage"] == 0:
 		line = "* %s used %s!\n* (%s is hanging on by a thread. They won't finish it.)" % [helper_name, info["move"], target.name]
 	_call = {}
 	_show_messages([line, "* %s waved and ran off." % helper_name], _run_next_action)
 
 
-## The helper running in from the left, lunging at their target, and running off.
+## The helper running in from the left, doing their move, and running off. Most
+## lunge at their target; Big Joe plants himself in front of the party instead.
 func _draw_call() -> void:
 	if _call.is_empty() or _call["sprite"] == null:
 		return
 	var t: float = _call["time"]
 	var target: Enemy = _call["target"]
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
+	var shield: bool = info.get("kind", "hit") == "shield"
 	var texture: Texture2D = _call["sprite"]
-	# They strike from the open space between the party and the enemies.
-	var stop_x := 290.0
+	# Attackers strike from the open space between the party and the enemies.
+	var stop_x := 250.0 if shield else 290.0
 	var x: float
 	var leaving := t > 1.1
 	if t < 0.45:
 		x = lerpf(-60.0, stop_x, 1.0 - pow(1.0 - t / 0.45, 2.0))
 	elif t < 1.1:
-		# A quick lunge at the target as the move lands.
 		var lunge := clampf((t - 0.6) / 0.15, 0.0, 1.0) * clampf((1.1 - t) / 0.25, 0.0, 1.0)
-		x = stop_x + 40.0 * lunge
+		x = stop_x + (0.0 if shield else 40.0 * lunge)
 	else:
 		x = lerpf(stop_x, -80.0, (t - 1.1) / 0.5)
 	var bob := -absf(sin(t * 18.0)) * 6.0 if (t < 0.45 or leaving) else 0.0
@@ -696,15 +739,44 @@ func _draw_call() -> void:
 	_overlay.draw_set_transform(feet, 0.0, Vector2(-1.0 if leaving else 1.0, 1.0))
 	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false)
 	_overlay.draw_set_transform(Vector2.ZERO)
-	# The move: a burst in their color around the target.
 	var since := t - CALL_HIT_TIME
-	if since >= 0.0 and since < 0.4:
-		var center := target.position + Vector2(0, -20)
-		var fade := 1.0 - since / 0.4
-		_overlay.draw_circle(center, 20.0 + since * 120.0, Color(info["color"], 0.25 * fade))
-		for k in 12:
-			var dir := Vector2.from_angle(k * TAU / 12 + 0.2)
-			_overlay.draw_line(center + dir * (14.0 + since * 80.0), center + dir * (30.0 + since * 140.0), Color(info["color"], fade), 3.0)
+	if since < 0.0 or since > 0.4:
+		return
+	var fade := 1.0 - since / 0.4
+	if shield:
+		# The shield going up: a golden flash spreading over the party.
+		_overlay.draw_circle(Vector2(130, 120), 40.0 + since * 200.0, Color(info["color"], 0.3 * fade))
+		return
+	var center := target.position + Vector2(0, -20)
+	_overlay.draw_circle(center, 20.0 + since * 120.0, Color(info["color"], 0.25 * fade))
+	for k in 12:
+		var dir := Vector2.from_angle(k * TAU / 12 + 0.2)
+		_overlay.draw_line(center + dir * (14.0 + since * 80.0), center + dir * (30.0 + since * 140.0), Color(info["color"], fade), 3.0)
+
+
+## Big Joe's shield, while it's up: a glowing golden wall in front of the party,
+## with a big kite shield in the middle, and a note over the box.
+func _draw_shield() -> void:
+	if not _shield_up:
+		return
+	var gold := Color(1.0, 0.82, 0.25)
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 200.0)
+	var wall := Rect2(30, 40, 230, 160)
+	_overlay.draw_rect(wall, Color(gold, 0.06 + 0.04 * pulse))
+	_overlay.draw_rect(wall, Color(gold, 0.5), false, 2.0)
+	var middle := Vector2(240, 115)
+	var s := 26.0
+	var outline := PackedVector2Array([middle + Vector2(-s, -s), middle + Vector2(s, -s), middle + Vector2(s * 0.95, s * 0.2), middle + Vector2(0, s * 1.3), middle + Vector2(-s * 0.95, s * 0.2)])
+	_overlay.draw_colored_polygon(outline, Color(0.82, 0.84, 0.9, 0.85))
+	var field := PackedVector2Array()
+	for p in outline:
+		field.append(middle + (p - middle) * 0.75)
+	_overlay.draw_colored_polygon(field, Color(0.2, 0.32, 0.65, 0.9))
+	_overlay.draw_string(_font, middle + Vector2(-9, 7), "BJ", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, gold)
+	if state == State.ENEMY_TURN:
+		var frame := box.get_inner_rect()
+		_overlay.draw_string(_font, Vector2(frame.end.x + 12, frame.position.y + 14), "SHIELD", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, gold)
+		_overlay.draw_string(_font, Vector2(frame.end.x + 12, frame.position.y + 30), "-80% damage", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, gold)
 
 
 # --- FIGHT bar ------------------------------------------------------------
@@ -1083,6 +1155,8 @@ func _hurt_party(amount: int) -> void:
 	# Defense (from accessories) softens every hit; defending halves what's left.
 	var after_defense := maxi(1, amount - member.defense)
 	var damage := ceili(after_defense / 2.0) if member.defending else after_defense
+	if _shield_up:
+		damage = roundi(damage * SHIELD_LETS_THROUGH)
 	member.hp = maxi(member.hp - damage, 0)
 	member.shake = 0.4
 	_add_popup(str(damage), _panel_position(member), Color.RED)
@@ -1094,6 +1168,8 @@ func _hurt_party(amount: int) -> void:
 
 
 func _end_enemy_turn() -> void:
+	# Big Joe's shield only lasts one turn.
+	_shield_up = false
 	# Back to the plain red cursor for the menus.
 	soul.fragmented = false
 	_clear_bullets()
@@ -1281,8 +1357,12 @@ func _try_flee() -> void:
 	Game.play_sfx("select")
 	for member in party:
 		member.defending = false
-		var base := "res://art/sprites/" + Game.sprite_base(member.name)
-		_side_frames[member] = [load(base + "_side.png"), load(base + "_side2.png")]
+		var base := "res://art/sprites/" + Game.sprite_base(member.id)
+		# (Members without side-view pictures run off with their front picture.)
+		if ResourceLoader.exists(base + "_side.png") and ResourceLoader.exists(base + "_side2.png"):
+			_side_frames[member] = [load(base + "_side.png"), load(base + "_side2.png")]
+		else:
+			_side_frames[member] = [member.sprite, member.sprite]
 	var names := party.filter(func(m: PartyMember) -> bool: return not m.is_down()).map(func(m: PartyMember) -> String: return m.name)
 	_text = "* %s ran away!" % " and ".join(names)
 	_typed = _text.length()
@@ -1652,6 +1732,7 @@ func _draw_overlay() -> void:
 
 	_draw_aura()
 	_draw_party_sprites()
+	_draw_shield()
 	_draw_call()
 	_draw_enemies()
 	_draw_boss_bar()
@@ -2307,7 +2388,7 @@ var _pose_cache: Dictionary = {}
 func _pose(member: PartyMember, pose: String) -> Texture2D:
 	if pose == "":
 		return member.sprite
-	var path := "res://art/sprites/battle/%s_%s.png" % [Game.sprite_base(member.name), pose]
+	var path := "res://art/sprites/battle/%s_%s.png" % [Game.sprite_base(member.id), pose]
 	if not _pose_cache.has(path):
 		_pose_cache[path] = load(path) if ResourceLoader.exists(path) else null
 	return _pose_cache[path] if _pose_cache[path] else member.sprite
@@ -2570,12 +2651,22 @@ func _draw_box_contents() -> void:
 			_draw_row(0, "Spare", YELLOW if anyone_spareable else Color.WHITE)
 			_draw_row(1, "Flee", Color.WHITE)
 			if _list.size() > 2:
-				_draw_row(2, "Call a friend", Color(0.6, 0.9, 1.0))
+				var wait := _call_wait()
+				_draw_row(2, "Call a friend" if wait == 0 else "Call a friend  (%d turn%s)" % [wait, "" if wait == 1 else "s"], Color(0.6, 0.9, 1.0) if wait == 0 else Color(0.45, 0.45, 0.45))
 		State.CALL_LIST:
 			for i in _list.size():
-				var helper: Dictionary = _helpers().HELPERS[_list[i]]
+				var id: String = _list[i]
+				var helper: Dictionary = _helpers().HELPERS[id]
 				var spot := Vector2(area.position.x + 50 + (i / CALL_ROWS) * CALL_COLUMN, _row_y(i % CALL_ROWS))
-				_overlay.draw_string(_font, spot, DialogueBox.display_name(_list[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, helper["color"])
+				var wait := _helper_wait(id)
+				var label := DialogueBox.display_name(id)
+				if wait == -1:
+					label += "  (no charges)"
+				elif wait > 0:
+					label += "  (%d turn%s)" % [wait, "" if wait == 1 else "s"]
+				elif helper.get("charges", -1) >= 0:
+					label += "  (%d left)" % (int(helper["charges"]) - int(_helper_uses.get(id, 0)))
+				_overlay.draw_string(_font, spot, label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, helper["color"] if wait == 0 else Color(0.45, 0.45, 0.45))
 		State.FLEEING:
 			_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		State.FIGHT_BAR, State.FIGHT_ANIM:
