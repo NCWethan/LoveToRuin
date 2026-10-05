@@ -36,6 +36,8 @@ static func make_all() -> Dictionary:
 		"engine": engine(),
 		"brakes": slide(1900, 1500, 0.4, 0.07),
 		"alert": tone([784, 1175, 1568, 2093], 0.04, 0.24),
+		"shing": slide(2600, 3400, 0.09, 0.13),
+		"bonk": slide(520, 140, 0.16, 0.38),
 	}
 
 

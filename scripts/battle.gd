@@ -601,16 +601,31 @@ func _resolve_hit(accuracy: float) -> void:
 ## The slash plays across the enemy; when it lands, the damage pops out and the
 ## HP bar drains. Then the result is shown in the text box.
 func _process_fight_anim(delta: float) -> void:
+	# Hit-stop: everything holds still for a split second when a blow lands.
+	if _hitstop > 0.0:
+		_hitstop -= delta
+		return
 	var before := _anim_time
 	_anim_time += delta
 	var member := _bar_member
 	var target := _bar_target
-	if member.name == "Hop":
-		# Hop's punches each land with their own thump.
+	var weapon := _weapon_style(member)
+	if weapon == "file":
+		# A flurry of quick jabs, each with a metallic shing.
+		for at in FILE_JABS:
+			if before < at and _anim_time >= at:
+				Game.play_sfx("shing", randf_range(0.9, 1.2))
+				target.shake = 0.12
+	elif weapon == "finger":
+		if before < 0.02 and _anim_time >= 0.02:
+			Game.play_sfx("slash", 0.6)
+	elif member.name == "Hop":
+		# Hop's punches each land with their own thump, and a tiny freeze.
 		for at in HOP_PUNCHES:
 			if before < at and _anim_time >= at:
 				Game.play_sfx("punch", randf_range(0.9, 1.15))
 				target.shake = 0.15
+				_hitstop = 0.035
 	if not _anim_landed and _anim_time >= ATTACK_SLASH_TIME:
 		_anim_landed = true
 		target.hp = maxi(target.hp - _anim_damage, 0)
@@ -618,6 +633,13 @@ func _process_fight_anim(delta: float) -> void:
 		target.flash = 0.25
 		Game.play_sfx("hit")
 		var critical := _anim_accuracy >= CRITICAL
+		# The impact frame: a freeze, a flash, and the enemy as a silhouette.
+		_impact(target, 0.13 if critical else 0.08, critical)
+		if weapon == "finger":
+			Game.play_sfx("bonk")
+			_squash_enemy = target
+			_squash_time = 0.45
+			_add_popup("BONK!", target.position + Vector2(-40, -90), Color(1.0, 0.85, 0.2), 24, true)
 		_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
 		if critical:
 			_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
@@ -1115,6 +1137,8 @@ func _update_effects(delta: float) -> void:
 		if enemy.shown_hp < 0.0:
 			enemy.shown_hp = enemy.hp
 		enemy.shown_hp = move_toward(enemy.shown_hp, enemy.hp, enemy.max_hp * 0.8 * delta)
+	_impact_time = maxf(_impact_time - delta, 0.0)
+	_squash_time = maxf(_squash_time - delta, 0.0)
 	for member in _member_anim:
 		_member_anim[member]["time"] += delta
 	for member in party:
@@ -1155,6 +1179,137 @@ func _draw_overlay() -> void:
 
 	if _data and _data.event == "tent":
 		_draw_tent()
+	_draw_impact()
+
+
+# --- Impact frames ------------------------------------------------------------
+# When a blow lands, everything freezes for an instant (hit-stop), and for a couple
+# of frames the screen goes stark white with the enemy as a black silhouette and
+# speed lines bursting from the hit, like a manga panel. A CRITICAL also flips to
+# an inverted frame (black screen, white silhouette, red lines).
+
+const IMPACT_FLASH := 0.07
+
+var _hitstop: float = 0.0
+var _impact_time: float = 0.0
+var _impact_length: float = 0.0
+var _impact_target: Enemy
+var _impact_critical: bool = false
+
+
+func _impact(target: Enemy, freeze: float, critical: bool) -> void:
+	_hitstop = freeze
+	_impact_target = target
+	_impact_critical = critical
+	_impact_length = IMPACT_FLASH * (2.0 if critical else 1.0)
+	_impact_time = _impact_length
+
+
+func _draw_impact() -> void:
+	if _impact_time <= 0.0 or _impact_target == null:
+		return
+	var inverted := _impact_critical and _impact_time < _impact_length / 2
+	var background := Color.BLACK if inverted else Color(1, 1, 1, 0.92)
+	var ink := Color.WHITE if inverted else Color.BLACK
+	_overlay.draw_rect(Rect2(-20, -20, 680, 520), background)
+	# Speed lines bursting out from the hit.
+	var center := _impact_target.position + Vector2(0, -20)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(_impact_time * 1000.0)
+	for i in 28:
+		var angle := i * TAU / 28 + rng.randf_range(-0.08, 0.08)
+		var dir := Vector2.from_angle(angle)
+		var from := center + dir * rng.randf_range(50, 90)
+		var to := center + dir * 700
+		var width := rng.randf_range(1.0, 5.0)
+		_overlay.draw_line(from, to, Color(1.0, 0.15, 0.2) if inverted else ink, width)
+	# The enemy, as a solid silhouette.
+	var enemy := _impact_target
+	if enemy.sprite:
+		var size := enemy.sprite.get_size() * enemy.battle_scale
+		var rect := Rect2(Vector2(enemy.position.x - size.x / 2, enemy.position.y + 40.0 - size.y), size)
+		_overlay.draw_texture_rect(enemy.sprite, rect, false, Color(8, 8, 8) if inverted else Color(0, 0, 0))
+
+
+# --- Weapon attacks -----------------------------------------------------------
+# What the attacker has in their Weapon slot changes how they attack:
+#   Nail File    a flurry of quick silver jabs, sparks flying
+#   Foam Finger  a giant foam finger swings down and BONKS the enemy flat
+# Without a weapon, Elric slashes with their claws and Hop throws punches.
+
+## When each Nail File jab lands, in seconds after the bar is stopped.
+const FILE_JABS := [0.05, 0.12, 0.19, 0.26]
+
+## Squashing an enemy flat (after a BONK).
+var _squash_enemy: Enemy
+var _squash_time: float = 0.0
+
+
+## "file", "finger", or "" (no weapon / a weapon with no special attack).
+func _weapon_style(member: PartyMember) -> String:
+	if member == null or Game.pending_battle == "":
+		return ""
+	var weapon: Dictionary = Game.worn_by(member.name).get("weapon", {})
+	match weapon.get("name", ""):
+		"Nail File": return "file"
+		"Foam Finger": return "finger"
+	return ""
+
+
+## Nail File: four silver jabs stabbing in from the left, each leaving a spark,
+## then a final bright slash.
+func _draw_file_strike() -> void:
+	var center := _bar_target.position + Vector2(0, -20)
+	var silver := Color(0.88, 0.9, 0.95)
+	for i in FILE_JABS.size():
+		var age: float = _anim_time - FILE_JABS[i]
+		if age < -0.04 or age > 0.25:
+			continue
+		var at := center + Vector2(-6 + (i % 2) * 12, -22 + i * 13)
+		var reach := clampf((age + 0.04) / 0.05, 0.0, 1.0)
+		var fade := clampf(1.0 - age / 0.25, 0.0, 1.0)
+		var from := at + Vector2(-70, 8)
+		_overlay.draw_line(from, from.lerp(at, reach), Color(silver, 0.35 * fade), 7.0)
+		_overlay.draw_line(from, from.lerp(at, reach), Color(silver, fade), 2.0)
+		if age >= 0.0:
+			for s in 6:
+				var dir := Vector2.from_angle(s * TAU / 6 + i)
+				_overlay.draw_line(at + dir * (3 + age * 40), at + dir * (7 + age * 60), Color(1, 1, 0.8, fade), 1.5)
+	if _anim_landed:
+		var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.4, 0.0, 1.0)
+		_overlay.draw_line(center + Vector2(-50, 40), center + Vector2(50, -40), Color(silver, fade), 3.0)
+		_overlay.draw_line(center + Vector2(-50, 40), center + Vector2(50, -40), Color(1, 1, 1, fade), 1.0)
+
+
+## Foam Finger: a giant yellow foam finger swings down from above like a hammer,
+## then hangs there for a moment while stars circle the enemy's head.
+func _draw_foam_finger() -> void:
+	var target := _bar_target
+	var pivot := target.position + Vector2(-90, -105)
+	var swing := clampf(_anim_time / ATTACK_SLASH_TIME, 0.0, 1.0)
+	var angle := lerpf(-1.8, 0.6, swing * swing)
+	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME - 0.5) / 0.3, 0.0, 1.0)
+	if fade <= 0.0:
+		return
+	_overlay.draw_set_transform(pivot, angle, Vector2(0.8, 0.8))
+	var yellow := Color(1.0, 0.85, 0.2, fade)
+	var dark := Color(0.75, 0.55, 0.05, fade)
+	# The handle, the big foam hand, and the pointing finger.
+	_overlay.draw_rect(Rect2(0, -6, 60, 12), dark)
+	_overlay.draw_rect(Rect2(56, -22, 46, 44), yellow)
+	_overlay.draw_rect(Rect2(56, -22, 46, 44), dark, false, 2.0)
+	_overlay.draw_rect(Rect2(98, -10, 44, 16), yellow)
+	_overlay.draw_rect(Rect2(98, -10, 44, 16), dark, false, 2.0)
+	_overlay.draw_string(_font, Vector2(62, 6), "#1", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.6, 0.1, 0.1, fade))
+	_overlay.draw_set_transform(Vector2.ZERO)
+	# Stars circling after the BONK.
+	if _anim_landed:
+		var head := target.position + Vector2(0, -70)
+		var t := _anim_time * 6.0
+		for s in 4:
+			var star := head + Vector2(cos(t + s * TAU / 4) * 26.0, sin(t + s * TAU / 4) * 8.0)
+			_overlay.draw_line(star + Vector2(-4, 0), star + Vector2(4, 0), Color(1, 0.95, 0.4, fade), 2.0)
+			_overlay.draw_line(star + Vector2(0, -4), star + Vector2(0, 4), Color(1, 0.95, 0.4, fade), 2.0)
 
 
 ## The attack animation: three glowing slashes sweep across the enemy, in the
@@ -1162,6 +1317,13 @@ func _draw_overlay() -> void:
 func _draw_slash() -> void:
 	if state != State.FIGHT_ANIM or _bar_target == null:
 		return
+	match _weapon_style(_bar_member):
+		"file":
+			_draw_file_strike()
+			return
+		"finger":
+			_draw_foam_finger()
+			return
 	if _bar_member.name == "Hop":
 		_draw_hop_strike()
 		return
@@ -1290,6 +1452,11 @@ func _enemy_motion(enemy: Enemy) -> Array:
 		return [offset, rot, scale]
 	# Idle: everyone still fighting bobs gently, each at their own pace.
 	offset.y = sin(t * 2.2 + enemy.position.x * 0.05) * 2.5
+	# Flattened by a BONK, springing back.
+	if enemy == _squash_enemy and _squash_time > 0.0:
+		var flat := _squash_time / 0.45
+		scale = Vector2(1.0 + 0.4 * flat, 1.0 - 0.45 * flat)
+		return [offset, rot, scale]
 	if state != State.ENEMY_TURN or not _attackers.has(enemy):
 		return [offset, rot, scale]
 	var clock := ENEMY_TURN_TIME - _enemy_timer
