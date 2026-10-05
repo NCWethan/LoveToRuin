@@ -8,7 +8,8 @@ extends RefCounted
 ##   - a grin stretched cheek to cheek, wide open, full of jagged yellow teeth
 ## `laugh` (0 to 1) opens the jaw, so it can move in time with the laugh sound.
 ## `tint` multiplies every color (for red / cyan ghost copies), and `invert` draws
-## a photo-negative.
+## a photo-negative. `light` (0 to 1) is how much light falls on him: at a little
+## above 0 he's a shape in the dark, and only his glowing eyes really show.
 
 const SKIN := Color(0.52, 0.42, 0.42)
 const SKIN_DARK := Color(0.07, 0.02, 0.03)
@@ -21,12 +22,17 @@ const TOOTH_DARK := Color(0.45, 0.38, 0.22)
 static var _canvas: CanvasItem
 static var _tint: Color = Color.WHITE
 static var _invert: bool = false
+static var _light: float = 1.0
+## Parts that give off their own light (the eyes, the cracks) aren't darkened as much.
+static var _boost: float = 0.0
 
 
-static func draw(canvas: CanvasItem, center: Vector2, scale: float, laugh: float, t: float, tint: Color = Color.WHITE, invert: bool = false) -> void:
+static func draw(canvas: CanvasItem, center: Vector2, scale: float, laugh: float, t: float, tint: Color = Color.WHITE, invert: bool = false, light: float = 1.0) -> void:
 	_canvas = canvas
 	_tint = tint
 	_invert = invert
+	_light = light
+	_boost = 0.0
 	# He throws his head back a little with each laugh, and twitches.
 	var tilt := -0.05 * laugh + sin(t * 37.0) * 0.012
 	canvas.draw_set_transform(center, tilt, Vector2(scale, scale))
@@ -41,6 +47,10 @@ static func draw(canvas: CanvasItem, center: Vector2, scale: float, laugh: float
 		_eye(side, t)
 	_nose()
 	_mouth(jaw, t)
+	if light < 1.0:
+		_rim(jaw)
+		for side in [-1.0, 1.0]:
+			_eye_glow(side, t)
 	canvas.draw_set_transform(Vector2.ZERO)
 
 
@@ -49,6 +59,8 @@ static func _c(color: Color) -> Color:
 	var out := color
 	if _invert:
 		out = Color(1.0 - out.r, 1.0 - out.g, 1.0 - out.b, out.a)
+	var bright := lerpf(_light, 1.0, _boost)
+	out = Color(out.r * bright, out.g * bright, out.b * bright, out.a)
 	return out * _tint
 
 
@@ -136,6 +148,7 @@ static func _tattoos(jaw: float, t: float) -> void:
 
 ## Cracks of red light running through the skin, flickering like a FRAGMENT's.
 static func _cracks(t: float) -> void:
+	_boost = 0.15
 	var flicker := 0.7 + 0.3 * sin(t * 45.0)
 	var cracks := [
 		PackedVector2Array([Vector2(-40, -205), Vector2(-52, -170), Vector2(-38, -140), Vector2(-60, -112), Vector2(-50, -90)]),
@@ -146,6 +159,7 @@ static func _cracks(t: float) -> void:
 		_line(crack, Color(GLOW, 0.25 * flicker), 9.0)
 		_line(crack, Color(GLOW, flicker), 3.0)
 		_line(crack, Color(1, 0.8, 0.7, flicker), 1.0)
+	_boost = 0.0
 
 
 static func _hat() -> void:
@@ -264,6 +278,8 @@ static func _mouth(jaw: float, t: float) -> void:
 	_line(upper, Color(0.55, 0.06, 0.12), 9.0)
 	_line(lower, Color(0.55, 0.06, 0.12), 9.0)
 	# Teeth: long and sharp in the middle, smaller toward the corners, uneven.
+	# (In the dark, they catch a little light.)
+	_boost = 0.08
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
 	for row in 2:
@@ -285,6 +301,7 @@ static func _mouth(jaw: float, t: float) -> void:
 		var length := 10.0 + absf(sin(b)) * 16.0
 		_line(PackedVector2Array([top, top + Vector2(1, length)]), Color(0.5, 0.0, 0.04), 3.0)
 		_canvas.draw_circle(top + Vector2(1, length), 2.5, _c(Color(0.5, 0.0, 0.04)))
+	_boost = 0.0
 	# Strings of spit stretching between the rows as the jaw opens.
 	if jaw > 15.0:
 		for s in [-60.0, 25.0, 90.0]:
@@ -294,3 +311,41 @@ static func _mouth(jaw: float, t: float) -> void:
 	# Cracked lips around it all.
 	_line(upper, Color(0.25, 0.04, 0.06), 3.0)
 	_line(lower, Color(0.25, 0.04, 0.06), 3.0)
+
+
+## In the dark: a thin red edge of light along one side of his head and hat, so
+## you can just make out that something is there.
+static func _rim(jaw: float) -> void:
+	_boost = 1.0
+	var edge := PackedVector2Array()
+	for k in range(-14, 13):
+		var a := k * PI / 48.0
+		var down := maxf(sin(a), 0.0)
+		var width := 186.0 * (1.0 - 0.42 * down * down) + 8.0 * cos(a * 2.0)
+		var height := (200.0 + jaw) if sin(a) > 0.0 else 222.0
+		edge.append(Vector2(cos(a) * width, sin(a) * height + 10.0 * down))
+	_line(edge, Color(0.6, 0.04, 0.08, 0.35), 3.0)
+	_line(PackedVector2Array([Vector2(150, -208), Vector2(250, -196)]), Color(0.6, 0.04, 0.08, 0.3), 2.0)
+	_boost = 0.0
+
+
+## In the dark: the eyes, glowing at full strength and throwing a little red light
+## onto the face around them.
+static func _eye_glow(side: float, t: float) -> void:
+	_boost = 1.0
+	var iris := Vector2(side * 76, -52) + Vector2(sin(t * 23.0 + side) * 3.0, cos(t * 31.0) * 2.0)
+	var spill := PackedVector2Array()
+	for k in 24:
+		spill.append(iris + Vector2.from_angle(k * TAU / 24) * Vector2(120, 90))
+	_fan(iris, Color(GLOW, 0.16), spill, func(_p: Vector2) -> Color: return Color(GLOW, 0.0))
+	# Soft glows, fading out smoothly (no hard edges).
+	for halo in [[48.0, 0.35], [22.0, 0.55]]:
+		var ring := PackedVector2Array()
+		for k in 24:
+			ring.append(iris + Vector2.from_angle(k * TAU / 24) * halo[0])
+		_fan(iris, Color(GLOW, halo[1]), ring, func(_p: Vector2) -> Color: return Color(GLOW, 0.0))
+	_canvas.draw_circle(iris, 11, _c(GLOW))
+	_canvas.draw_circle(iris, 5.5, _c(Color(1.0, 0.65, 0.4)))
+	_canvas.draw_circle(iris, 1.8, _c(INK))
+	_canvas.draw_circle(iris + Vector2(-4, -4), 1.8, _c(Color(1, 1, 1, 0.9)))
+	_boost = 0.0

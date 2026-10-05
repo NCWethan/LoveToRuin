@@ -1187,6 +1187,9 @@ var _frozen_at: float = 0.0
 
 ## The jumpscare: Hopkuna's face, laughing, right up against the screen.
 const JUMPSCARE_TIME := 2.9
+## How much light falls on his face: barely any. You know he's there, but all you
+## can really see are his eyes.
+const JUMPSCARE_LIGHT := 0.07
 ## When each "HA" of the laugh sound starts and how long it lasts (see Sfx.laugh),
 ## so his jaw can move with it.
 const LAUGH_SYLLABLES := [[0.0, 0.32], [0.5, 0.32], [1.0, 0.3], [1.45, 0.2], [1.7, 0.2], [1.95, 0.2], [2.2, 0.45]]
@@ -1308,8 +1311,9 @@ func _laugh_jaw(time: float) -> float:
 ## The jumpscare, over black:
 ##   SLAM    his face lunges in from huge to full-screen, with the scream
 ##   HOLD    for half a second, shaking, laughing
-##   FLICKER cutting between his face, a red ghosted copy, a tighter close-up, a
-##           photo-negative and black (never faster than about 8 times a second)
+##   FLICKER cutting between his face, a red ghosted copy, a tighter close-up, an
+##           even darker one, and black (never faster than about 8 times a second)
+## All of it in the dark: just the shape of him, and his eyes glowing.
 ##   LUNGE   one last rush at the screen, then black (the laugh carries on)
 func _draw_jumpscare(time: float) -> void:
 	if _face_script == null:
@@ -1344,18 +1348,18 @@ func _draw_jumpscare(time: float) -> void:
 				_overlay.draw_circle(eye, 3.0, Color(0, 0, 0))
 			return
 		4:
-			# A photo-negative frame.
-			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color(0.9, 0.9, 0.9), true)
+			# Even darker: his outline is gone, only the eyes and the glint of teeth.
+			_face_script.draw(_overlay, center + shake, scale * 1.15, laugh, time, Color.WHITE, false, 0.02)
 		5, 6:
 			# A tight close-up on the grin.
-			_face_script.draw(_overlay, center + Vector2(0, -170) + shake, scale * 1.9, laugh, time)
+			_face_script.draw(_overlay, center + Vector2(0, -170) + shake, scale * 1.9, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
 		7:
 			# Ghosted: red and cyan copies split apart behind him.
-			_face_script.draw(_overlay, center + shake + Vector2(-16, 0), scale, laugh, time, Color(0.2, 1.0, 1.0, 0.5))
-			_face_script.draw(_overlay, center + shake + Vector2(16, 0), scale, laugh, time, Color(1.0, 0.1, 0.1, 0.6))
-			_face_script.draw(_overlay, center + shake, scale, laugh, time)
+			_face_script.draw(_overlay, center + shake + Vector2(-16, 0), scale, laugh, time, Color(0.2, 1.0, 1.0, 0.5), false, JUMPSCARE_LIGHT)
+			_face_script.draw(_overlay, center + shake + Vector2(16, 0), scale, laugh, time, Color(1.0, 0.1, 0.1, 0.6), false, JUMPSCARE_LIGHT)
+			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
 		_:
-			_face_script.draw(_overlay, center + shake, scale, laugh, time)
+			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
 	_draw_jumpscare_grime(time)
 
 
@@ -1368,8 +1372,8 @@ func _draw_second_scare(time: float) -> void:
 	var scale := lerpf(3.4, 1.75, 1.0 - pow(1.0 - rush, 3.0)) + time * 0.6
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 18.0
 	var center := Vector2(320, 200) + shake
-	_face_script.draw(_overlay, center + Vector2(14, 0), scale, 1.0, time, Color(1.0, 0.1, 0.1, 0.6))
-	_face_script.draw(_overlay, center, scale, 1.0, time)
+	_face_script.draw(_overlay, center + Vector2(14, 0), scale, 1.0, time, Color(1.0, 0.1, 0.1, 0.6), false, JUMPSCARE_LIGHT)
+	_face_script.draw(_overlay, center, scale, 1.0, time, Color.WHITE, false, JUMPSCARE_LIGHT)
 	_draw_jumpscare_grime(time + 10.0)
 
 
