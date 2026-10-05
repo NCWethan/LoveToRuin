@@ -173,6 +173,9 @@ func _ready() -> void:
 	# Battle music always plays at normal speed (the overworld slows down on Genocide).
 	Game.music_pitch = 1.0
 	Game.music_override = ""
+	# Overheal only lasts for the battle it was given in.
+	for member in party:
+		member.overheal = 0
 	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
@@ -604,6 +607,9 @@ const CALL_COOLDOWN := 3
 ## When the helper's move lands, and when they're gone, in seconds.
 const CALL_HIT_TIME := 0.75
 const CALL_LENGTH := 1.6
+## Eggo's The-Eggo Benedict: overheal HP per serving, and the most anyone can have.
+const BENEDICT_OVERHEAL := 13
+const MAX_OVERHEAL := 26
 ## Big Joe's shield: how much damage gets through while it's up.
 const SHIELD_LETS_THROUGH := 0.2
 
@@ -681,9 +687,17 @@ func _process_call(delta: float) -> void:
 	var target: Enemy = _call["target"]
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
+	var food: bool = info.get("kind", "hit") == "food"
 	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
 		_call["landed"] = true
-		if shield:
+		if food:
+			# Whoever called him eats it: overheal HP, past their max.
+			var eater: PartyMember = _call["member"]
+			eater.overheal = mini(eater.overheal + BENEDICT_OVERHEAL, MAX_OVERHEAL)
+			Game.play_sfx("heal")
+			_add_popup("+%d" % BENEDICT_OVERHEAL, _panel_position(eater) + Vector2(60, 0), Color(0.4, 0.7, 1.0), 22, true)
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 18, true)
+		elif shield:
 			# Big Joe plants his shield in front of the party.
 			_shield_up = true
 			Game.play_sfx("bonk", 0.6)
@@ -707,6 +721,9 @@ func _process_call(delta: float) -> void:
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
 	if shield:
 		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif food:
+		var eater: PartyMember = _call["member"]
+		line = "* %s served %s The-Eggo Benedict!\n* %s gained %d overheal HP!" % [helper_name, eater.name, eater.name, BENEDICT_OVERHEAL]
 	elif _call["damage"] == 0:
 		line = "* %s used %s!\n* (%s is hanging on by a thread. They won't finish it.)" % [helper_name, info["move"], target.name]
 	_call = {}
@@ -722,16 +739,18 @@ func _draw_call() -> void:
 	var target: Enemy = _call["target"]
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
+	var food: bool = info.get("kind", "hit") == "food"
 	var texture: Texture2D = _call["sprite"]
-	# Attackers strike from the open space between the party and the enemies.
-	var stop_x := 250.0 if shield else 290.0
+	# Attackers strike from the open space between the party and the enemies;
+	# Big Joe and Eggo come right up to the party.
+	var stop_x := 250.0 if (shield or food) else 290.0
 	var x: float
 	var leaving := t > 1.1
 	if t < 0.45:
 		x = lerpf(-60.0, stop_x, 1.0 - pow(1.0 - t / 0.45, 2.0))
 	elif t < 1.1:
 		var lunge := clampf((t - 0.6) / 0.15, 0.0, 1.0) * clampf((1.1 - t) / 0.25, 0.0, 1.0)
-		x = stop_x + (0.0 if shield else 40.0 * lunge)
+		x = stop_x + (0.0 if (shield or food) else 40.0 * lunge)
 	else:
 		x = lerpf(stop_x, -80.0, (t - 1.1) / 0.5)
 	var bob := -absf(sin(t * 18.0)) * 6.0 if (t < 0.45 or leaving) else 0.0
@@ -744,6 +763,22 @@ func _draw_call() -> void:
 	if since < 0.0 or since > 0.4:
 		return
 	var fade := 1.0 - since / 0.4
+	if food:
+		# The plate: two eggs Benedict, steaming, then a sparkle as it's eaten.
+		# Over the head of whoever called him.
+		var plate := Vector2(80.0 + party.find(_call["member"]) * 100.0, 62.0)
+		_overlay.draw_set_transform(plate, 0.0, Vector2(1.0, 0.4))
+		_overlay.draw_circle(Vector2.ZERO, 22.0, Color(0.95, 0.95, 0.95, fade))
+		_overlay.draw_set_transform(Vector2.ZERO)
+		for e in 2:
+			var egg := plate + Vector2(-9 + e * 18, -4)
+			_overlay.draw_circle(egg, 7.0, Color(0.85, 0.65, 0.35, fade))
+			_overlay.draw_circle(egg + Vector2(0, -3), 6.0, Color(1.0, 0.98, 0.9, fade))
+			_overlay.draw_circle(egg + Vector2(0, -4), 3.0, Color(1.0, 0.8, 0.2, fade))
+		for k in 8:
+			var dir := Vector2.from_angle(k * TAU / 8)
+			_overlay.draw_line(plate + dir * (10.0 + since * 60.0), plate + dir * (16.0 + since * 80.0), Color(0.5, 0.75, 1.0, fade), 2.0)
+		return
 	if shield:
 		# The shield going up: a golden flash spreading over the party.
 		_overlay.draw_circle(Vector2(130, 120), 40.0 + since * 200.0, Color(info["color"], 0.3 * fade))
@@ -1158,9 +1193,16 @@ func _hurt_party(amount: int) -> void:
 	var damage := ceili(after_defense / 2.0) if member.defending else after_defense
 	if _shield_up:
 		damage = roundi(damage * SHIELD_LETS_THROUGH)
+	# Overheal soaks up the hit first.
+	var soaked := mini(damage, member.overheal)
+	if soaked > 0:
+		member.overheal -= soaked
+		damage -= soaked
+		_add_popup(str(soaked), _panel_position(member) + Vector2(60, 0), Color(0.4, 0.7, 1.0))
 	member.hp = maxi(member.hp - damage, 0)
 	member.shake = 0.4
-	_add_popup(str(damage), _panel_position(member), Color.RED)
+	if damage > 0 or soaked == 0:
+		_add_popup(str(damage), _panel_position(member), Color.RED)
 	Game.play_sfx("hurt")
 	_invincible_timer = invincibility_time
 
@@ -2575,7 +2617,18 @@ func _draw_party_panel() -> void:
 		var name_width := _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
 		_overlay.draw_string(_font, Vector2(x + name_width + 6, PANEL_Y - 1), "LV %d" % Game.lv(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.8, 0.8, 0.8))
 		_draw_bar(Rect2(x + 98, PANEL_Y - 13, 96, 14), float(member.hp) / member.max_hp, YELLOW)
-		_overlay.draw_string(_font, Vector2(x + 200, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+		# Overheal: the bar grows longer, with a blue piece joined onto the end.
+		var extra := 0.0
+		if member.overheal > 0:
+			extra = minf(96.0 * member.overheal / member.max_hp, 36.0)
+			var blue := Rect2(x + 98 + 96, PANEL_Y - 13, extra, 14)
+			_overlay.draw_rect(blue.grow(1), Color(0.9, 0.9, 0.9))
+			_overlay.draw_rect(blue, Color(0.25, 0.55, 1.0))
+			_overlay.draw_rect(Rect2(blue.position, Vector2(blue.size.x, blue.size.y * 0.3)), Color(1, 1, 1, 0.3))
+			# Joined to the yellow: no border between them.
+			_overlay.draw_rect(Rect2(blue.position + Vector2(-1, 0), Vector2(2, 14)), Color(0.25, 0.55, 1.0) if member.hp >= member.max_hp else Color(0.45, 0.0, 0.0))
+			_overlay.draw_string(_font, blue.position + Vector2(2, 11), "+%d" % member.overheal, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		_overlay.draw_string(_font, Vector2(x + 200 + extra, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE if extra == 0.0 else 14, Color.WHITE)
 		if member.defending:
 			_overlay.draw_string(_font, Vector2(x + 256, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
 

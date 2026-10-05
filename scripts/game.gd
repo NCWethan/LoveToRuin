@@ -576,7 +576,9 @@ func finish_battle(result: Dictionary) -> void:
 	update_stats()
 	pending_battle = ""
 	# Anyone knocked down gets back up with a little HP, like in Deltarune.
+	# (And overheal from the fight wears off.)
 	for member in party:
+		member.overheal = 0
 		if member.is_down():
 			member.hp = maxi(1, member.max_hp / 4)
 	busy = false
