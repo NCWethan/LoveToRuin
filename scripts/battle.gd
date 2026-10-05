@@ -747,7 +747,7 @@ func _process_fight_anim(delta: float) -> void:
 			_squash_time = 0.45
 			_add_popup("BONK!", target.position + Vector2(-40, -90), Color(1.0, 0.85, 0.2), 24, true)
 		_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
-		if critical:
+		if critical and not _black_flash:
 			_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
 	if _anim_time < ATTACK_SLASH_TIME + 0.9:
 		return
@@ -2283,6 +2283,10 @@ func _draw_fight_bar(area: Rect2) -> void:
 	if state == State.FIGHT_ANIM:
 		prompt = "CRITICAL!" if _anim_accuracy >= CRITICAL else "HIT!"
 	var prompt_color := YELLOW if state == State.FIGHT_ANIM or _bar_wait <= 0.0 else Color.GRAY
+	if state == State.FIGHT_ANIM and _black_flash:
+		# Flickers between red and a dark red, like the flash itself.
+		prompt = "BLACK FLASH!"
+		prompt_color = Color(1.0, 0.15, 0.2) if int(Time.get_ticks_msec() / 80) % 2 == 0 else Color(0.45, 0.0, 0.05)
 	var prompt_width := _font.get_string_size(prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
 	_overlay.draw_string(_font, Vector2(area.end.x - prompt_width - 14, _row_y(0)), prompt, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, prompt_color)
 
