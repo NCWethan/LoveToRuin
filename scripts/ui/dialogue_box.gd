@@ -29,6 +29,15 @@ const PORTRAIT_SCALE := 4.0
 ## How far the text moves right to make room for a portrait.
 const PORTRAIT_SPACE := 112.0
 
+## How some names are written on screen (their pictures and saves still use the
+## left-hand name).
+const DISPLAY_NAMES := {"BigJoe6": "Big Joe", "NCWethan": "N.C. Wethan"}
+
+
+static func display_name(who: String) -> String:
+	return DISPLAY_NAMES.get(who, who)
+
+
 ## Name tag color and voice pitch for each speaker. Anyone not listed uses white / normal.
 const SPEAKERS := {
 	"Elric": {"color": Color(0.8, 0.65, 1.0), "pitch": 1.25},
@@ -118,7 +127,7 @@ func _show(line) -> void:
 		# "face": false hides the portrait (e.g. someone shouting from off-screen).
 		_show_face = line.get("face", true)
 		# "tag" changes the name shown, e.g. "???" for someone not met yet.
-		_tag = line.get("tag", _who)
+		_tag = line.get("tag", display_name(_who))
 		# "mood" picks a facial expression: happy, angry, sad, shocked or smug.
 		_mood = line.get("mood", "")
 	else:

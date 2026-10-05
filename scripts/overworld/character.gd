@@ -12,6 +12,12 @@ var back: Texture2D
 ## Walking frames for the front and back views (optional): one step with each leg.
 var front_walk: Array[Texture2D] = []
 var back_walk: Array[Texture2D] = []
+## Running frames (optional), used when following Elric while he sprints.
+## Side runs have three: stride, stride (other arm), knee up.
+var front_run: Array[Texture2D] = []
+var back_run: Array[Texture2D] = []
+var side_run: Array[Texture2D] = []
+var _running: bool = false
 ## How long each frame of the walk cycle shows, in seconds.
 const WALK_STEP := 0.11
 ## Two side-view walking frames (optional). Flipped when facing left.
@@ -123,10 +129,14 @@ func _process(delta: float) -> void:
 		# trail is too short to stay behind, just wait where we are.
 		if step.length() > 0.5 and target.distance_to(follow.global_position) > 16.0:
 			face(step)
-			global_position = global_position.move_toward(target, 160.0 * delta)
+			# Run to keep up when Elric sprints.
+			_running = follow.sprinting
+			var pace := 160.0 * (Player.SPRINT_MULTIPLIER if _running else 1.0)
+			global_position = global_position.move_toward(target, pace * delta)
 			_walking = true
 		else:
 			_walking = false
+			_running = false
 
 	_update_patrol(delta)
 	_update_sprite()
@@ -140,6 +150,8 @@ func _update_sprite() -> void:
 		_sprite.texture = frames[int(_time / frame_time) % frames.size()]
 		return
 	_sprite.flip_h = false
+	if _running and _walking and _update_run_sprite():
+		return
 	# A four-step walk cycle: step, stand, other step, stand.
 	var phase := int(_time / WALK_STEP) % 4 if _walking else 1
 	if _facing.x != 0 and not side.is_empty():
@@ -158,6 +170,25 @@ func _update_sprite() -> void:
 		else:
 			_sprite.texture = back if up else front
 		_sprite.position.y = -1.0 if _walking and phase % 2 == 0 else 0.0
+
+
+## Running (see Player._update_run_sprite). False if there are no running pictures.
+func _update_run_sprite() -> bool:
+	var phase := int(_time * 1.3 / WALK_STEP) % 4
+	if _facing.x != 0:
+		if side_run.size() < 3:
+			return false
+		_sprite.texture = side_run[2] if phase % 2 == 1 else side_run[phase / 2]
+		_sprite.flip_h = _facing.x < 0
+		_sprite.position.y = -2.0 if phase % 2 == 1 else 0.0
+		return true
+	var up := _facing == Vector2.UP
+	var runs := back_run if up else front_run
+	if runs.size() < 2:
+		return false
+	_sprite.texture = runs[phase / 2] if phase % 2 == 0 else (back if up else front)
+	_sprite.position.y = -2.0 if phase % 2 == 0 else 0.0
+	return true
 
 
 ## Walks back and forth between two points forever. Stops in place (and stays
@@ -203,6 +234,9 @@ func set_look(who: String) -> void:
 	side = look.side
 	front_walk = look.front_walk
 	back_walk = look.back_walk
+	front_run = look.front_run
+	back_run = look.back_run
+	side_run = look.side_run
 	look.free()
 
 

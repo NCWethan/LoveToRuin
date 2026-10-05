@@ -86,6 +86,19 @@ var _bar_wait: float = 0.0
 var _bar_dir: float = 1.0
 ## Recent bar positions, drawn as a fading afterimage.
 var _bar_trail: Array[float] = []
+## Nail File only: three bars cross one after another, each stopped with its own
+## press. Each is {"pos": 0..1, "done": bool, "accuracy": float (-1 = missed)}.
+## Every bar deals a third of the damage.
+var _file_bars: Array[Dictionary] = []
+## How far apart the Nail File's bars are (as a fraction of the bar's width).
+const FILE_BAR_GAP := 0.24
+
+## Hop's BLACK FLASH (only with the Divergent Glove): a 1 in 20 chance on each hit.
+const BLACK_FLASH_CHANCE := 0.05
+const BLACK_FLASH_DAMAGE := 2.5
+var _black_flash: bool = false
+## For tests: the next hit by Hop with the glove is always a Black Flash.
+var force_black_flash: bool = false
 
 # The attack animation after the bar is stopped.
 var _anim_time: float = 0.0
@@ -555,6 +568,11 @@ func _start_fight_bar(member: PartyMember, target: Enemy) -> void:
 	_bar_pos = 0.0 if _bar_dir > 0.0 else 1.0
 	_bar_wait = FIGHT_WINDUP
 	_bar_trail.clear()
+	_file_bars.clear()
+	if _weapon_style(member) == "file":
+		# The second and third bars start further back, so they come in one by one.
+		for i in 3:
+			_file_bars.append({"pos": _bar_pos - _bar_dir * FILE_BAR_GAP * i, "done": false, "accuracy": -1.0})
 	_text = ""
 	soul.visible = false
 	state = State.FIGHT_BAR
@@ -565,6 +583,9 @@ func _process_fight_bar(delta: float) -> void:
 	if _bar_wait > 0.0:
 		_bar_wait -= delta
 		return
+	if not _file_bars.is_empty():
+		_process_file_bars(delta)
+		return
 	_bar_trail.append(_bar_pos)
 	if _bar_trail.size() > 6:
 		_bar_trail.pop_front()
@@ -574,6 +595,63 @@ func _process_fight_bar(delta: float) -> void:
 		_resolve_hit(1.0 - absf(_bar_pos - 0.5) * 2.0)
 	elif _bar_pos >= 1.0 or _bar_pos <= 0.0 and _bar_dir < 0:
 		_resolve_hit(-1.0)
+
+
+## Nail File: all three bars move together; ENTER stops the one in front. Once
+## every bar is stopped (or has run off the end), the hit is worked out.
+func _process_file_bars(delta: float) -> void:
+	var lead := -1
+	for i in _file_bars.size():
+		var bar := _file_bars[i]
+		if bar["done"]:
+			continue
+		bar["pos"] += _bar_dir * delta / FIGHT_BAR_TIME
+		if (bar["pos"] >= 1.0 and _bar_dir > 0.0) or (bar["pos"] <= 0.0 and _bar_dir < 0.0):
+			bar["done"] = true
+			Game.play_sfx("miss")
+			_add_popup("MISS", _bar_target.position + Vector2(-30 + i * 30, -30), Color.LIGHT_GRAY, 16)
+		elif lead == -1:
+			lead = i
+	if lead != -1 and _pressed("confirm"):
+		var bar := _file_bars[lead]
+		# A bar that hasn't come onto the track yet can't be stopped.
+		if bar["pos"] >= 0.0 and bar["pos"] <= 1.0:
+			bar["done"] = true
+			bar["accuracy"] = 1.0 - absf(bar["pos"] - 0.5) * 2.0
+			Game.play_sfx("shing", 0.8 + 0.2 * lead)
+	if _file_bars.all(func(b: Dictionary) -> bool: return b["done"]):
+		_resolve_file()
+
+
+## Nail File: each bar that hit deals a third of a normal hit's damage (for its own
+## accuracy). All three in the CRITICAL zone makes the whole thing a CRITICAL.
+func _resolve_file() -> void:
+	var member := _bar_member
+	var target := _bar_target
+	var total := 0.0
+	var hits := 0
+	var sum := 0.0
+	var criticals := 0
+	for bar in _file_bars:
+		var accuracy: float = bar["accuracy"]
+		if accuracy < 0.0:
+			continue
+		hits += 1
+		sum += accuracy
+		total += member.attack * (0.8 + 2.2 * accuracy) / 3.0
+		if accuracy >= CRITICAL:
+			criticals += 1
+	if hits == 0:
+		_resolve_hit(-1.0)
+		return
+	var damage := maxi(1, roundi(total) - target.defense)
+	var accuracy := sum / hits
+	if criticals == 3:
+		damage = roundi(damage * 1.25)
+		accuracy = 1.0
+	else:
+		accuracy = minf(accuracy, CRITICAL - 0.01)
+	_start_attack_anim(damage, accuracy)
 
 
 ## The bar was stopped (or ran out). Work out the damage, then play the attack animation.
@@ -589,6 +667,20 @@ func _resolve_hit(accuracy: float) -> void:
 	var damage := maxi(1, roundi(member.attack * (0.8 + 2.2 * accuracy)) - target.defense)
 	if accuracy >= CRITICAL:
 		damage = roundi(damage * 1.25)
+	_start_attack_anim(damage, accuracy)
+
+
+## Hop, wearing the Divergent Glove? Then every hit has a chance to be a BLACK FLASH.
+func _can_black_flash(member: PartyMember) -> bool:
+	return member.name == "Hop" and Game.worn_by("Hop").get("weapon", {}).get("name", "") == "Divergent Glove"
+
+
+func _start_attack_anim(damage: int, accuracy: float) -> void:
+	var member := _bar_member
+	_black_flash = _can_black_flash(member) and (force_black_flash or randf() < BLACK_FLASH_CHANCE)
+	if _black_flash:
+		force_black_flash = false
+		damage = roundi(damage * BLACK_FLASH_DAMAGE)
 	_anim_damage = damage
 	_anim_accuracy = accuracy
 	_anim_time = 0.0
@@ -611,11 +703,14 @@ func _process_fight_anim(delta: float) -> void:
 	var target := _bar_target
 	var weapon := _weapon_style(member)
 	if weapon == "file":
-		# A flurry of quick jabs, each with a metallic shing.
-		for at in FILE_JABS:
-			if before < at and _anim_time >= at:
+		# One quick jab for each bar that hit, each with a metallic shing and its
+		# share of the damage.
+		for i in FILE_JABS.size():
+			if before < FILE_JABS[i] and _anim_time >= FILE_JABS[i] and _file_jab_landed(i):
 				Game.play_sfx("shing", randf_range(0.9, 1.2))
 				target.shake = 0.12
+				var share := roundi(_anim_damage / float(_file_hit_count()))
+				_add_popup(str(share), target.position + Vector2(-34 + i * 34, -60 - i * 8), Color(0.85, 0.88, 0.95), 16)
 	elif weapon == "finger":
 		if before < 0.02 and _anim_time >= 0.02:
 			Game.play_sfx("slash", 0.6)
@@ -639,6 +734,13 @@ func _process_fight_anim(delta: float) -> void:
 		var critical := _anim_accuracy >= CRITICAL
 		# The impact frame: a freeze, a flash, and the enemy as a silhouette.
 		_impact(target, 0.13 if critical else 0.08, critical)
+		if _black_flash:
+			# BLACK FLASH: a much longer freeze, flickering black and red.
+			Game.play_sfx("black_flash")
+			_impact(target, BLACK_FLASH_FREEZE, true)
+			_impact_black = true
+			target.shake = 0.9
+			_add_popup("BLACK FLASH", target.position + Vector2(0, -105), Color(1.0, 0.12, 0.18), 30, true)
 		if weapon == "finger":
 			Game.play_sfx("bonk")
 			_squash_enemy = target
@@ -653,6 +755,9 @@ func _process_fight_anim(delta: float) -> void:
 	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, _anim_damage]]
 	if _anim_accuracy >= CRITICAL:
 		lines[0] = "* CRITICAL HIT!\n" + lines[0]
+	if _black_flash:
+		lines[0] = lines[0].trim_prefix("* CRITICAL HIT!\n")
+		lines.insert(0, "* BLACK FLASH!!\n* For an instant, the air around Hop's fist went black.")
 	if target.hit_line != "":
 		lines[0] += "\n" + target.hit_line
 	if target.hp == 0:
@@ -699,6 +804,10 @@ func _start_enemy_turn() -> void:
 
 	create_tween().tween_property(box, "size", ATTACK_BOX_SIZE, 0.25)
 	soul.global_position = BOX_CENTER
+	# Whose SOUL is out (and takes the hits). X switches it during the turn.
+	if _soul_member().is_down():
+		_soul_owner = party.find(_first_standing())
+	_update_soul_look()
 	soul.visible = true
 	soul.can_move = true
 
@@ -719,6 +828,8 @@ func _pick_pattern(enemy: Enemy) -> String:
 
 func _process_enemy_turn(delta: float) -> void:
 	_enemy_timer -= delta
+	if _pressed("cancel"):
+		_switch_soul()
 
 	# Give the box a moment to shrink before the bullets start.
 	# Stop spawning a moment before the turn ends, so the last bullets can clear out.
@@ -763,12 +874,61 @@ func _check_hits() -> void:
 
 ## A bullet hit. The SOUL is Elric's, so Elric (the first party member) takes the damage.
 ## If Elric is knocked down, the next member still standing takes it instead.
-func _hurt_party(amount: int) -> void:
-	var member: PartyMember = null
+## Which party member's SOUL is out during enemy turns (an index into `party`).
+## Elric's SOUL is red; Hop's is silver, cracked into shards, with red light inside.
+var _soul_owner: int = 0
+
+
+func _soul_member() -> PartyMember:
+	return party[clampi(_soul_owner, 0, party.size() - 1)]
+
+
+func _first_standing() -> PartyMember:
 	for candidate in party:
 		if not candidate.is_down():
-			member = candidate
-			break
+			return candidate
+	return party[0]
+
+
+## X during the enemy's turn: switch to the next party member who's still standing.
+func _switch_soul() -> void:
+	for step in range(1, party.size()):
+		var next := (_soul_owner + step) % party.size()
+		if not party[next].is_down():
+			_soul_owner = next
+			Game.play_sfx("select")
+			_soul_flash = 0.25
+			_update_soul_look()
+			return
+
+
+func _update_soul_look() -> void:
+	soul.fragmented = _soul_member().name == "Hop"
+
+
+## A quick flash when the SOUL switches owners.
+var _soul_flash: float = 0.0
+
+
+## The label over the box during the enemy's turn: whose SOUL it is, and how to switch.
+func _draw_soul_owner() -> void:
+	if state != State.ENEMY_TURN:
+		return
+	var member := _soul_member()
+	var frame := box.get_inner_rect()
+	var label := "%s'S SOUL" % member.name.to_upper()
+	if party.filter(func(m: PartyMember) -> bool: return not m.is_down()).size() > 1:
+		label += "    X: switch"
+	_draw_centered(label, Vector2(frame.get_center().x, frame.position.y - 10), 12, member.color)
+	if _soul_flash > 0.0:
+		_overlay.draw_circle(soul.global_position, 14.0 * (1.0 - _soul_flash / 0.25) + 6.0, Color(member.color, _soul_flash * 2.0))
+
+
+func _hurt_party(amount: int) -> void:
+	# Whoever's SOUL is out takes the hit (or the first one still standing).
+	var member := _soul_member()
+	if member.is_down():
+		member = _first_standing()
 	if member == null:
 		return
 	# Defense (from accessories) softens every hit; defending halves what's left.
@@ -785,6 +945,8 @@ func _hurt_party(amount: int) -> void:
 
 
 func _end_enemy_turn() -> void:
+	# Back to the plain red cursor for the menus.
+	soul.fragmented = false
 	_clear_bullets()
 	soul.can_move = false
 	soul.visible = true
@@ -1142,6 +1304,7 @@ func _update_effects(delta: float) -> void:
 			enemy.shown_hp = enemy.hp
 		enemy.shown_hp = move_toward(enemy.shown_hp, enemy.hp, enemy.max_hp * 0.8 * delta)
 	_impact_time = maxf(_impact_time - delta, 0.0)
+	_soul_flash = maxf(_soul_flash - delta, 0.0)
 	_squash_time = maxf(_squash_time - delta, 0.0)
 	for member in _member_anim:
 		_member_anim[member]["time"] += delta
@@ -1169,6 +1332,7 @@ func _draw_overlay() -> void:
 	_draw_party_sprites()
 	_draw_enemies()
 	_draw_boss_bar()
+	_draw_soul_owner()
 	_draw_slash()
 	_draw_party_panel()
 	_draw_buttons()
@@ -1199,18 +1363,25 @@ var _impact_time: float = 0.0
 var _impact_length: float = 0.0
 var _impact_target: Enemy
 var _impact_critical: bool = false
+## A BLACK FLASH's impact: longer, flickering between black and red, with lightning.
+var _impact_black: bool = false
+const BLACK_FLASH_FREEZE := 0.42
 
 
 func _impact(target: Enemy, freeze: float, critical: bool) -> void:
 	_hitstop = freeze
 	_impact_target = target
 	_impact_critical = critical
-	_impact_length = IMPACT_FLASH * (2.0 if critical else 1.0)
+	_impact_black = false
+	_impact_length = maxf(IMPACT_FLASH * (2.0 if critical else 1.0), freeze if freeze >= BLACK_FLASH_FREEZE else 0.0)
 	_impact_time = _impact_length
 
 
 func _draw_impact() -> void:
 	if _impact_time <= 0.0 or _impact_target == null:
+		return
+	if _impact_black:
+		_draw_black_flash_frames()
 		return
 	var inverted := _impact_critical and _impact_time < _impact_length / 2
 	var background := Color.BLACK if inverted else Color(1, 1, 1, 0.92)
@@ -1241,8 +1412,8 @@ func _draw_impact() -> void:
 #   Foam Finger  a giant foam finger swings down and BONKS the enemy flat
 # Without a weapon, Elric slashes with their claws and Hop throws punches.
 
-## When each Nail File jab lands, in seconds after the bar is stopped.
-const FILE_JABS := [0.05, 0.12, 0.19, 0.26]
+## When each Nail File jab lands, in seconds after the bar is stopped (one per bar).
+const FILE_JABS := [0.06, 0.15, 0.24]
 
 ## Squashing an enemy flat (after a BONK).
 var _squash_enemy: Enemy
@@ -1260,14 +1431,76 @@ func _weapon_style(member: PartyMember) -> String:
 	return ""
 
 
-## Nail File: four silver jabs stabbing in from the left, each leaving a spark,
+## Did the Nail File's bar number `i` hit? (Outside of Nail File attacks, every jab counts.)
+func _file_jab_landed(i: int) -> bool:
+	return _file_bars.is_empty() or (i < _file_bars.size() and _file_bars[i]["accuracy"] >= 0.0)
+
+
+func _file_hit_count() -> int:
+	var count := 0
+	for i in FILE_JABS.size():
+		if _file_jab_landed(i):
+			count += 1
+	return maxi(count, 1)
+
+
+## A jagged lightning bolt from `from` to `to`. The same `seed` gives the same bolt.
+func _draw_bolt(from: Vector2, to: Vector2, color: Color, width: float, seed_value: int, canvas: CanvasItem = null) -> void:
+	if canvas == null:
+		canvas = _overlay
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var points := PackedVector2Array([from])
+	var steps := 9
+	var side := (to - from).orthogonal().normalized()
+	for k in range(1, steps):
+		points.append(from.lerp(to, float(k) / steps) + side * rng.randf_range(-16.0, 16.0))
+	points.append(to)
+	canvas.draw_polyline(points, color, width)
+	# A short fork off the middle.
+	var fork_at := points[steps / 2]
+	canvas.draw_polyline(PackedVector2Array([fork_at, fork_at + side * 22.0 + (to - from).normalized() * 18.0, fork_at + side * 30.0 + (to - from).normalized() * 40.0]), color, width * 0.6)
+
+
+## BLACK FLASH impact frames: the screen snaps between black-on-red and
+## red-on-black several times, with black and red lightning crashing into the
+## enemy (a silhouette, then inverted), and the hit warping the air around it.
+func _draw_black_flash_frames() -> void:
+	var enemy := _impact_target
+	var center := enemy.position + Vector2(0, -20)
+	var progress := 1.0 - _impact_time / _impact_length
+	var frame := int(progress * 7.0)
+	var red := Color(0.85, 0.02, 0.08)
+	var black := Color(0.02, 0.0, 0.0)
+	var background := black if frame % 2 == 0 else red
+	var ink := red if frame % 2 == 0 else black
+	_overlay.draw_rect(Rect2(-20, -20, 680, 520), background)
+	# Bolts crashing down from every direction into the hit.
+	for b in 7:
+		var angle := b * TAU / 7 + frame * 0.6
+		var from := center + Vector2.from_angle(angle) * 420.0
+		_draw_bolt(from, center, Color(ink, 0.35), 9.0, frame * 31 + b)
+		_draw_bolt(from, center, ink, 3.0, frame * 31 + b)
+		_draw_bolt(from, center, Color(1, 1, 1, 0.8) if frame % 2 == 1 else Color(1, 0.6, 0.6, 0.8), 1.0, frame * 31 + b)
+	# The warp: rings squeezing in on the hit.
+	for r in 3:
+		_overlay.draw_arc(center, (1.0 - fmod(progress * 3.0 + r / 3.0, 1.0)) * 140.0, 0, TAU, 40, ink, 2.0)
+	if enemy.sprite:
+		var size := enemy.sprite.get_size() * enemy.battle_scale
+		var rect := Rect2(Vector2(enemy.position.x - size.x / 2, enemy.position.y + 40.0 - size.y), size)
+		_overlay.draw_texture_rect(enemy.sprite, rect, false, Color(0, 0, 0) if frame % 2 == 1 else Color(10, 1, 1))
+	_overlay.draw_circle(center, 14.0 + 10.0 * sin(progress * PI), Color(1, 1, 1))
+	_overlay.draw_circle(center, 7.0, Color(0, 0, 0))
+
+
+## Nail File: a silver jab for each bar that hit, stabbing in from the left, each leaving a spark,
 ## then a final bright slash.
 func _draw_file_strike() -> void:
 	var center := _bar_target.position + Vector2(0, -20)
 	var silver := Color(0.88, 0.9, 0.95)
 	for i in FILE_JABS.size():
 		var age: float = _anim_time - FILE_JABS[i]
-		if age < -0.04 or age > 0.25:
+		if age < -0.04 or age > 0.25 or not _file_jab_landed(i):
 			continue
 		var at := center + Vector2(-6 + (i % 2) * 12, -22 + i * 13)
 		var reach := clampf((age + 0.04) / 0.05, 0.0, 1.0)
@@ -1397,6 +1630,16 @@ func _draw_hop_strike() -> void:
 			var mid := at + dir * (10 + grow * 14) + dir.orthogonal() * 4.0
 			var end := at + dir * (16 + grow * 26)
 			_overlay.draw_polyline(PackedVector2Array([at + dir * 6, mid, end]), Color(red, fade), 2.0)
+	# After a BLACK FLASH, black and red sparks of lightning keep crackling off the target.
+	if _black_flash and _anim_landed:
+		var crackle := _anim_time - ATTACK_SLASH_TIME
+		if crackle < 0.8:
+			var seed_step := int(crackle * 20.0)
+			for b in 4:
+				var dir := Vector2.from_angle(b * TAU / 4 + seed_step)
+				var fade := 1.0 - crackle / 0.8
+				_draw_bolt(center + dir * 8.0, center + dir * (50.0 + 20.0 * fade), Color(0.02, 0, 0, fade), 4.0, seed_step * 7 + b)
+				_draw_bolt(center + dir * 8.0, center + dir * (50.0 + 20.0 * fade), Color(1, 0.1, 0.15, fade), 1.5, seed_step * 7 + b)
 	# The finisher: a red X burned across the target, with a dark smoky edge.
 	var x_age := _anim_time - ATTACK_SLASH_TIME
 	if x_age >= 0.0:
@@ -2035,6 +2278,8 @@ func _draw_fight_bar(area: Rect2) -> void:
 	var title := "* %s attacks %s!" % [_bar_member.name, _bar_target.name]
 	_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), title, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 	var prompt := "READY..." if _bar_wait > 0.0 else "Press ENTER in the green!"
+	if not _file_bars.is_empty() and _bar_wait <= 0.0:
+		prompt = "ENTER for each bar!"
 	if state == State.FIGHT_ANIM:
 		prompt = "CRITICAL!" if _anim_accuracy >= CRITICAL else "HIT!"
 	var prompt_color := YELLOW if state == State.FIGHT_ANIM or _bar_wait <= 0.0 else Color.GRAY
@@ -2057,6 +2302,9 @@ func _draw_fight_bar(area: Rect2) -> void:
 	_overlay.draw_line(Vector2(mid, target.position.y), Vector2(mid, target.end.y), Color(1, 1, 1, 0.8), 1.0)
 	_overlay.draw_rect(target, Color.WHITE, false, 2.0)
 
+	if not _file_bars.is_empty():
+		_draw_file_bars(target, color)
+		return
 	# The bar, with an afterimage trail.
 	for i in _bar_trail.size():
 		var tx := target.position.x + clampf(_bar_trail[i], 0.0, 1.0) * target.size.x
@@ -2066,6 +2314,31 @@ func _draw_fight_bar(area: Rect2) -> void:
 	_overlay.draw_rect(Rect2(x - 7, target.position.y - 6, 14, target.size.y + 12), Color(color, 0.3 * glow))
 	_overlay.draw_rect(Rect2(x - 3, target.position.y - 6, 6, target.size.y + 12), Color(color, glow))
 	_overlay.draw_rect(Rect2(x - 1, target.position.y - 6, 2, target.size.y + 12), Color(1, 1, 1, glow))
+
+
+## Nail File: three thinner silver bars. Stopped bars stay where they stopped,
+## marked with their share of the hit; bars that ran off the end are gone.
+func _draw_file_bars(target: Rect2, color: Color) -> void:
+	var glow := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 90.0) if _bar_wait > 0.0 else 1.0
+	var silver := Color(0.85, 0.88, 0.95)
+	for i in _file_bars.size():
+		var bar := _file_bars[i]
+		var pos: float = bar["pos"]
+		if pos < 0.0 or pos > 1.0:
+			continue
+		if bar["done"] and bar["accuracy"] < 0.0:
+			continue
+		var x := target.position.x + pos * target.size.x
+		var top := target.position.y - 6
+		var height := target.size.y + 12
+		if bar["done"]:
+			# Stopped: a solid silver line with a little notch number on top.
+			_overlay.draw_rect(Rect2(x - 2, top, 4, height), silver)
+			_overlay.draw_string(_font, Vector2(x - 4, top - 4), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, silver)
+		else:
+			_overlay.draw_rect(Rect2(x - 5, top, 10, height), Color(color, 0.3 * glow))
+			_overlay.draw_rect(Rect2(x - 2, top, 4, height), Color(silver, glow))
+			_overlay.draw_rect(Rect2(x - 0.5, top, 1, height), Color(1, 1, 1, glow))
 
 
 ## A health bar with a thin border. `trailing` (if given) is the HP still draining
@@ -2484,14 +2757,57 @@ func _backdrop_crowd(color: Color, t: float) -> void:
 			_backdrop.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(8, 3), tip + Vector2(0, 6)]), Color(color, 0.7))
 
 
-## A slow red heartbeat pulsing in from the edges (Hopkuna).
+## Hopkuna's song is 184 beats per minute; his background pulses along with it.
+const HOPKUNA_BPM := 184.0
+
+
+## A red heartbeat pulsing in from the edges, and glowing orbs (his eyes, and a
+## ring of smaller ones circling them) that throb on every beat of the music,
+## hardest on the first beat of each bar. Every couple of bars, a BLACK FLASH bolt
+## strikes somewhere in the background (Hopkuna).
 func _backdrop_heartbeat(color: Color, t: float) -> void:
-	var beat := fmod(t, 1.1)
-	var pulse := maxf(0.0, 1.0 - beat / 0.25) + maxf(0.0, 1.0 - absf(beat - 0.3) / 0.2) * 0.6
+	var song := Game.music_time()
+	var beats := (song if song >= 0.0 else t) * HOPKUNA_BPM / 60.0
+	var into_beat := fmod(beats, 1.0)
+	var downbeat := int(beats) % 4 == 0
+	var pulse := pow(1.0 - into_beat, 3.0) * (1.0 if downbeat else 0.6)
 	for i in 6:
 		var inset := i * 10.0
 		_backdrop.draw_rect(BACKDROP.grow(-inset), Color(color, (0.07 - i * 0.01) * (0.4 + pulse)), false, 10.0)
 	var center := BACKDROP.get_center()
+	# The ring of small orbs, turning slowly, each one throbbing a little after the last.
+	for k in 8:
+		var angle := t * 0.4 + k * TAU / 8
+		var orb := center + Vector2(cos(angle) * 150.0, sin(angle) * 70.0)
+		var late := pow(1.0 - fmod(beats - k * 0.06 + 1.0, 1.0), 3.0)
+		_backdrop.draw_circle(orb, 7.0 + late * 8.0, Color(color, 0.08 + 0.25 * late))
+		_backdrop.draw_circle(orb, 2.5 + late * 2.5, Color(color.lightened(0.5), 0.3 + 0.6 * late))
+	# His eyes.
 	for side in [-1, 1]:
 		var eye := center + Vector2(side * 30, -10)
-		_backdrop.draw_circle(eye, 10.0 + pulse * 4.0, Color(color, 0.05 + 0.08 * pulse))
+		_backdrop.draw_circle(eye, 20.0 + pulse * 14.0, Color(color, 0.06 + 0.16 * pulse))
+		_backdrop.draw_circle(eye, 10.0 + pulse * 6.0, Color(color, 0.15 + 0.35 * pulse))
+		_backdrop.draw_circle(eye, 3.0 + pulse * 2.5, Color(1, 0.75, 0.75, 0.3 + 0.6 * pulse))
+	_backdrop_black_flash(color, beats)
+
+
+## Every two bars, on the downbeat, a black-and-red bolt cracks down through the
+## background and the whole thing flickers.
+func _backdrop_black_flash(color: Color, beats: float) -> void:
+	var window := int(beats / 8.0)
+	var into := beats - window * 8.0
+	if into > 1.2:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = window * 977 + 13
+	var x := BACKDROP.position.x + rng.randf_range(60.0, BACKDROP.size.x - 60.0)
+	var from := Vector2(x, BACKDROP.position.y)
+	var to := Vector2(x + rng.randf_range(-80.0, 80.0), BACKDROP.end.y)
+	var fade := 1.0 - into / 1.2
+	# A dark flicker over everything for the first instant.
+	if into < 0.25:
+		_backdrop.draw_rect(BACKDROP, Color(0, 0, 0, 0.35 * (1.0 - into / 0.25)))
+	var shape_seed := window * 31 + int(into * 6.0)
+	_draw_bolt(from, to, Color(color, 0.25 * fade), 12.0, shape_seed, _backdrop)
+	_draw_bolt(from, to, Color(0.02, 0.0, 0.0, 0.9 * fade), 5.0, shape_seed, _backdrop)
+	_draw_bolt(from, to, Color(1.0, 0.15, 0.2, fade), 1.5, shape_seed, _backdrop)

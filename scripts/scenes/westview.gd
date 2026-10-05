@@ -50,7 +50,13 @@ var mascot: Character
 var floating_fragment: Character
 var _decor: Node2D
 var _font: Font
-var _bells_rung: Array = []
+## The bells rung so far, in order. Kept in the game's flags (not just here), so a
+## random fight in the middle of the puzzle doesn't reset it.
+var _bells_rung: Array:
+	get:
+		if not Game.flags.has("bells_rung"):
+			Game.flags["bells_rung"] = []
+		return Game.flags["bells_rung"]
 var _glow_time: float = 0.0
 
 
@@ -153,6 +159,53 @@ func _build_gym() -> void:
 	room.fill(118, 41, 1, 2, Room.DOOR)
 
 
+## Westview's colors on the outside of the school: the name across the wall in gold,
+## a big W over the front doors, black-and-gold pennants hanging from the roof, a
+## marquee sign on the lawn, and a flagpole with the school flag.
+func _draw_school_front() -> void:
+	var gold := Color8(225, 175, 45)
+	var black := Color8(15, 15, 18)
+	var t := _glow_time
+	# The school's name on the wall, between the window rows.
+	var school_name := "WESTVIEW HIGH SCHOOL"
+	var name_width := _font.get_string_size(school_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+	var name_at := Vector2(16 * T - name_width / 2, 6 * T + 4)
+	_decor.draw_rect(Rect2(name_at + Vector2(-8, -13), Vector2(name_width + 16, 18)), black)
+	_decor.draw_string(_font, name_at, school_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, gold)
+	# A big W over the front doors.
+	var w_at := Vector2(16 * T - 11, 8 * T - 2)
+	_decor.draw_string_outline(_font, w_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 6, Color.WHITE)
+	_decor.draw_string_outline(_font, w_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, 3, gold)
+	_decor.draw_string(_font, w_at, "W", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, black)
+	# Pennants along the edge of the roof, swaying a little.
+	for i in 11:
+		var x := 5 * T + i * 44.0
+		var sway := sin(t * 2.0 + i) * 2.0
+		var top := Vector2(x, 3 * T)
+		var color := gold if i % 2 == 0 else black
+		_decor.draw_colored_polygon(PackedVector2Array([top, top + Vector2(14, 0), top + Vector2(7 + sway, 16)]), color)
+		_decor.draw_polyline(PackedVector2Array([top, top + Vector2(14, 0), top + Vector2(7 + sway, 16), top]), Color(1, 1, 1, 0.4), 1.0)
+	# The marquee sign on the lawn, letters flickering in the dark.
+	var marquee := Rect2(22 * T, 12 * T - 6, 92, 34)
+	_decor.draw_rect(Rect2(marquee.position + Vector2(10, marquee.size.y), Vector2(4, 14)), Color8(60, 60, 66))
+	_decor.draw_rect(Rect2(marquee.position + Vector2(marquee.size.x - 14, marquee.size.y), Vector2(4, 14)), Color8(60, 60, 66))
+	_decor.draw_rect(marquee, black)
+	_decor.draw_rect(marquee, gold, false, 2.0)
+	var flicker := 0.55 if fmod(t * 3.1, 1.0) < 0.06 else 1.0
+	_decor.draw_string(_font, marquee.position + Vector2(8, 14), "GO WOLVERINES!", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(gold, flicker))
+	_decor.draw_string(_font, marquee.position + Vector2(8, 27), "GAME FRI 7PM", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1, 1, 1, 0.85 * flicker))
+	# A flagpole with the school flag rippling.
+	var pole := Vector2(4 * T + 10, 15 * T)
+	_decor.draw_line(pole, pole - Vector2(0, 74), Color8(180, 180, 186), 2.0)
+	var flag := PackedVector2Array()
+	for k in 7:
+		flag.append(pole + Vector2(1 + k * 4, -72 + sin(t * 4.0 + k * 0.8) * 2.0))
+	for k in range(6, -1, -1):
+		flag.append(pole + Vector2(1 + k * 4, -56 + sin(t * 4.0 + k * 0.8) * 2.0))
+	_decor.draw_colored_polygon(flag, gold)
+	_decor.draw_string(_font, pole + Vector2(8, -59), "W", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, black)
+
+
 ## Things drawn on top of the map: posters, bell labels, the humming locker, the gym circle.
 func _add_decor() -> void:
 	_decor = Node2D.new()
@@ -168,6 +221,7 @@ func _process(delta: float) -> void:
 
 
 func _draw_decor() -> void:
+	_draw_school_front()
 	# Hallway posters on the wall above the lockers. Their message changes as you loop.
 	var loops := int(Game.flags.get("ww_loops", 0))
 	var poster_text: String = ["NO RUNNING", "TURN BACK", "TURN BACK!!", "YOU'VE BEEN HERE"][mini(loops, 3)]
@@ -241,7 +295,7 @@ func _place_people() -> void:
 
 ## Fragment 2, hovering over Wally's costume and bobbing gently, waiting to be taken.
 func _add_floating_fragment(at: Vector2) -> Character:
-	floating_fragment = Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
+	floating_fragment = make_fragment()
 	floating_fragment.glow = true
 	floating_fragment.on_interact = _claim_fragment
 	add_character(floating_fragment, at)
@@ -556,7 +610,7 @@ func _after_mascot() -> void:
 	# ...and the fragment rises out of it, glowing, and hangs there.
 	Game.flags["wally_done"] = true
 	Game.flags["wally_spared"] = spared
-	var shard := Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
+	var shard := make_fragment()
 	shard.glow = true
 	add_character(shard, at + Vector2(0, -4))
 	Game.play_sfx("fragment")

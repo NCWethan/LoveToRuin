@@ -1,9 +1,25 @@
 class_name Player
 extends CharacterBody2D
-## Elric in the overworld. Arrow keys walk; ENTER talks to / inspects whatever is in front;
-## B opens the bag.
+## Elric in the overworld. Arrow keys walk; hold SHIFT to sprint (until the stamina
+## bar runs out); ENTER talks to / inspects whatever is in front; B opens the bag.
 
 @export var speed: float = 110.0
+## How much faster sprinting is than walking.
+const SPRINT_MULTIPLIER := 1.75
+## Stamina runs from 0 to 1. A full bar lasts this many seconds of sprinting...
+const SPRINT_SECONDS := 2.6
+## ...and refills in this many seconds, starting a moment after you stop.
+const REFILL_SECONDS := 3.2
+const REFILL_DELAY := 0.5
+## Run the bar all the way down and Elric is winded: no sprinting again until it's
+## back up to this much.
+const WINDED_UNTIL := 0.35
+
+var stamina: float = 1.0
+## True while Elric is actually sprinting (followers run to keep up).
+var sprinting: bool = false
+var _winded: bool = false
+var _refill_wait: float = 0.0
 
 ## Which way Elric is facing (used for talking to things and picking the sprite).
 var facing: Vector2 = Vector2.DOWN
@@ -19,6 +35,11 @@ var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("r
 ## Walking frames for the front and back views: one step with each leg.
 var _front_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric")
 var _back_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric_back")
+## Running frames, for sprinting (see Cast.run_frames).
+var _front_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric")
+var _back_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric_back")
+var _side_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric_side")
+var _stamina_bar: CanvasLayer
 var _sprite: Sprite2D
 var _walk_time: float = 0.0
 var _moving: bool = false
@@ -43,10 +64,16 @@ func _ready() -> void:
 
 	trail.append(global_position)
 
+	# The stamina bar, in the bottom-right corner of the screen.
+	_stamina_bar = load("res://scripts/ui/stamina_bar.gd").new()
+	_stamina_bar.player = self
+	add_child(_stamina_bar)
+
 
 func _physics_process(delta: float) -> void:
 	_moving = false
 	if Game.busy or Game.transitioning:
+		sprinting = false
 		_update_sprite()
 		return
 
@@ -57,13 +84,17 @@ func _physics_process(delta: float) -> void:
 			facing = Vector2(signf(direction.x), 0)
 		else:
 			facing = Vector2(0, signf(direction.y))
-		velocity = direction * speed
+		sprinting = Input.is_action_pressed("sprint") and not _winded and stamina > 0.0
+		velocity = direction * speed * (SPRINT_MULTIPLIER if sprinting else 1.0)
 		var before := position
 		move_and_slide()
 		distance_walked += position.distance_to(before)
 		_moving = true
-		_walk_time += delta
+		_walk_time += delta * (1.3 if sprinting else 1.0)
 		_record_trail()
+	else:
+		sprinting = false
+	_update_stamina(delta)
 
 	_update_sprite()
 
@@ -73,9 +104,53 @@ func _physics_process(delta: float) -> void:
 		Game.bag.open()
 
 
+## Sprinting drains the stamina bar; it refills a moment after you stop. Draining
+## it completely leaves Elric winded until it has partly refilled.
+func _update_stamina(delta: float) -> void:
+	if sprinting:
+		stamina = maxf(stamina - delta / SPRINT_SECONDS, 0.0)
+		_refill_wait = REFILL_DELAY
+		if stamina == 0.0:
+			_winded = true
+			sprinting = false
+	elif _refill_wait > 0.0:
+		_refill_wait -= delta
+	else:
+		stamina = minf(stamina + delta / REFILL_SECONDS, 1.0)
+	if _winded and stamina >= WINDED_UNTIL:
+		_winded = false
+
+
+## True while out of breath (the bar shows it).
+func is_winded() -> bool:
+	return _winded
+
+
+## Sprinting: a faster four-step run cycle with its own pictures. Side view: stride,
+## knee up, other stride, knee up. Front and back: step, stand, other step, stand.
+## Returns false if there are no running pictures (then the walk is used).
+func _update_run_sprite() -> bool:
+	var phase := int(_walk_time / Character.WALK_STEP) % 4
+	if facing.x != 0:
+		if _side_run.size() < 3:
+			return false
+		_sprite.texture = _side_run[2] if phase % 2 == 1 else _side_run[phase / 2]
+		_sprite.flip_h = facing.x < 0
+		_sprite.position.y = -2.0 if phase % 2 == 1 else 0.0
+		return true
+	var runs := _back_run if facing == Vector2.UP else _front_run
+	if runs.size() < 2:
+		return false
+	_sprite.texture = runs[phase / 2] if phase % 2 == 0 else (_back if facing == Vector2.UP else _front)
+	_sprite.position.y = -2.0 if phase % 2 == 0 else 0.0
+	return true
+
+
 ## Picks the right picture for the direction Elric faces, and animates walking.
 func _update_sprite() -> void:
 	_sprite.flip_h = false
+	if sprinting and _moving and _update_run_sprite():
+		return
 	# A four-step walk cycle: step, stand, other step, stand (see Character.WALK_STEP).
 	var phase := int(_walk_time / Character.WALK_STEP) % 4 if _moving else 1
 	var stepping := _moving and phase % 2 == 0

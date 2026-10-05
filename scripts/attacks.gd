@@ -1,87 +1,55 @@
 class_name Attacks
 extends RefCounted
 ## Every enemy attack pattern. Each enemy lists the patterns it knows (in
-## tutorial_battle.gd) and uses a different one each turn.
+## tutorial_battle.gd and friends) and uses a different one each turn.
 ##
 ## spawn() is called whenever a pattern's timer runs out. It adds bullets to the
 ## battle and returns how many seconds to wait before it's called again.
 ## `step` counts how many times it's been called this turn (0, 1, 2, ...).
+##
+## No attack has a safe spot: even the "random" ones aim some of their shots at
+## where the SOUL is (see _aim_x / _aim_y), so standing still always gets you hit.
 
 
 static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2, step: int) -> float:
+	var s := soul_position
 	match pattern:
-		"rain":
-			return _rain(enemy, parent, area)
-		"egg_drop":
-			return _egg_drop(enemy, parent, area)
-		"bunny_hop":
-			return _bunny_hop(enemy, parent, area, step)
-		"lance":
-			return _lance(enemy, parent, area)
-		"sweep":
-			return _sweep(enemy, parent, area, step)
-		"aimed":
-			return _aimed(enemy, parent, area, soul_position)
-		"pencils":
-			return _pencils(enemy, parent, area)
-		"bubbles":
-			return _bubbles(enemy, parent, area, soul_position)
-		"papers":
-			return _papers(enemy, parent, area)
-		"zoom":
-			return _zoom(enemy, parent, area, step)
-		"confetti":
-			return _confetti(enemy, parent, area)
-		"foam_finger":
-			return _foam_finger(enemy, parent, area, step)
-		"dodgeballs":
-			return _dodgeballs(enemy, parent, area, step)
-		"claw_swipe":
-			return _claw_swipe(enemy, parent, area, soul_position)
-		"claw_drop":
-			return _claw_drop(enemy, parent, area)
-		"cleave":
-			return _cleave(enemy, parent, area)
-		"slash_grid":
-			return _slash_grid(enemy, parent, area)
-		"red_arrows":
-			return _red_arrows(enemy, parent, area, soul_position)
-		"burst":
-			return _burst(enemy, parent, area, soul_position)
-		"fire_arrow":
-			return _fire_arrow(enemy, parent, area)
-		"scantron":
-			return _scantron(enemy, parent, area)
-		"tardy_slips":
-			return _tardy_slips(enemy, parent, area, step)
-		"gravy":
-			return _gravy(enemy, parent, area)
-		"tray_toss":
-			return _tray_toss(enemy, parent, area, step)
-		"peas":
-			return _peas(enemy, parent, area, soul_position)
-		"ring":
-			return _ring(enemy, parent, area)
-		"sound_waves":
-			return _sound_waves(enemy, parent, area)
-		"alarm":
-			return _alarm(enemy, parent, area, step)
-		"sonar":
-			return _sonar(enemy, parent, area, soul_position)
-		"clapper":
-			return _clapper(enemy, parent, area, step)
-		"pages":
-			return _pages(enemy, parent, area)
-		"bookmark":
-			return _bookmark(enemy, parent, area, soul_position)
-		"shelf":
-			return _shelf(enemy, parent, area, step)
-		"bleacher_wave":
-			return _bleacher_wave(enemy, parent, area)
-		"mascot_spin":
-			return _mascot_spin(enemy, parent, area, step)
-		"frenzy":
-			return _frenzy(enemy, parent, area, step)
+		"rain": return _rain(enemy, parent, area, s, step)
+		"egg_drop": return _egg_drop(enemy, parent, area, s, step)
+		"bunny_hop": return _bunny_hop(enemy, parent, area, s, step)
+		"lance": return _lance(enemy, parent, area, s, step)
+		"sweep": return _sweep(enemy, parent, area, s, step)
+		"aimed": return _aimed(enemy, parent, area, s)
+		"pencils": return _pencils(enemy, parent, area, s, step)
+		"bubbles": return _bubbles(enemy, parent, area, s)
+		"papers": return _papers(enemy, parent, area, s, step)
+		"zoom": return _zoom(enemy, parent, area, s, step)
+		"confetti": return _confetti(enemy, parent, area, s, step)
+		"foam_finger": return _foam_finger(enemy, parent, area, s, step)
+		"dodgeballs": return _dodgeballs(enemy, parent, area, s, step)
+		"claw_swipe": return _claw_swipe(enemy, parent, area, s)
+		"claw_drop": return _claw_drop(enemy, parent, area, s, step)
+		"cleave": return _cleave(enemy, parent, area)
+		"slash_grid": return _slash_grid(enemy, parent, area)
+		"red_arrows": return _red_arrows(enemy, parent, area, s)
+		"burst": return _burst(enemy, parent, area, s)
+		"fire_arrow": return _fire_arrow(enemy, parent, area)
+		"scantron": return _scantron(enemy, parent, area, s, step)
+		"tardy_slips": return _tardy_slips(enemy, parent, area, s, step)
+		"gravy": return _gravy(enemy, parent, area, s, step)
+		"tray_toss": return _tray_toss(enemy, parent, area, s, step)
+		"peas": return _peas(enemy, parent, area, s)
+		"ring": return _ring(enemy, parent, area, s, step)
+		"sound_waves": return _sound_waves(enemy, parent, area, s)
+		"alarm": return _alarm(enemy, parent, area, s, step)
+		"sonar": return _sonar(enemy, parent, area, s)
+		"clapper": return _clapper(enemy, parent, area, s, step)
+		"pages": return _pages(enemy, parent, area, s, step)
+		"bookmark": return _bookmark(enemy, parent, area, s)
+		"shelf": return _shelf(enemy, parent, area, s, step)
+		"bleacher_wave": return _bleacher_wave(enemy, parent, area, s)
+		"mascot_spin": return _mascot_spin(enemy, parent, area, s, step)
+		"frenzy": return _frenzy(enemy, parent, area, s, step)
 	return 1.0
 
 
@@ -94,67 +62,128 @@ static func _bullet(enemy: Enemy, parent: Node, area: Rect2, at: Vector2) -> Bul
 	return bullet
 
 
-## Eggo: pellets falling straight down from the top of the box.
-static func _rain(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 4, area.end.x - 4)
-	var bullet := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
-	bullet.velocity = Vector2(0, enemy.bullet_speed)
+## An x position: every `every`-th shot lines up with the SOUL (give or take a few
+## pixels), the rest are random. Keeps "random" attacks from having a safe spot.
+static func _aim_x(area: Rect2, soul: Vector2, step: int, every: int, margin: float = 6.0) -> float:
+	if step % every == 0:
+		return clampf(soul.x + randf_range(-6.0, 6.0), area.position.x + margin, area.end.x - margin)
+	return randf_range(area.position.x + margin, area.end.x - margin)
+
+
+static func _aim_y(area: Rect2, soul: Vector2, step: int, every: int, margin: float = 6.0) -> float:
+	if step % every == 0:
+		return clampf(soul.y + randf_range(-6.0, 6.0), area.position.y + margin, area.end.y - margin)
+	return randf_range(area.position.y + margin, area.end.y - margin)
+
+
+## Moves a gap's position at least 40 pixels away from `avoid` (staying between
+## `low` and `high`), so the way through is never where the SOUL is standing.
+static func _away_from(gap: float, avoid: float, low: float, high: float) -> float:
+	if absf(gap - avoid) >= 40.0:
+		return gap
+	var up := avoid - 40.0 - randf() * 20.0
+	var down := avoid + 40.0 + randf() * 20.0
+	if up < low:
+		return minf(down, high)
+	if down > high:
+		return maxf(up, low)
+	return up if randf() < 0.5 else down
+
+
+# --- Eggo -------------------------------------------------------------------------
+
+## Eggo: drops of runny yolk, falling with little trails. Every third one falls
+## right over the SOUL.
+static func _rain(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 3, 4.0)
+	var drop := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
+	drop.shape = "yolk"
+	drop.size = 7.0
+	drop.color = Color(1.0, 0.78, 0.15)
+	drop.velocity = Vector2(0, enemy.bullet_speed)
+	drop.trail_length = 5
 	return 0.3
 
 
-## Eggo: big eggs drop and speed up as they fall, then crack into
-## scattering bits of yolk when they hit the bottom.
-static func _egg_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 10, area.end.x - 10)
+## Eggo: big shaded eggs drop and speed up as they fall, then crack into a splash
+## of yolk drops when they hit the bottom. Every other egg drops over the SOUL.
+static func _egg_drop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 2, 10.0)
 	var egg := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
 	egg.shape = "egg"
-	egg.size = 11.0
+	egg.size = 12.0
 	egg.color = Color(0.97, 0.95, 0.85)
 	egg.velocity = Vector2(0, 20)
 	egg.acceleration = Vector2(0, 170)
 	egg.splits_into = 5
+	egg.split_color = Color(1.0, 0.78, 0.15)
+	egg.split_shape = "yolk"
 	return 0.62
 
 
-## Eggo: Eggo's bunny friend's... friends. They hop across the bottom of the box.
-static func _bunny_hop(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+## Eggo: Eggo's bunny friend's... friends. They hop across the box, and each one
+## jumps high enough to reach wherever the SOUL is.
+static func _bunny_hop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
 	var x := area.position.x + 5 if from_left else area.end.x - 5
 	var bunny := _bullet(enemy, parent, area, Vector2(x, area.end.y - 8))
 	bunny.shape = "bunny"
 	bunny.size = 9.0
-	bunny.velocity = Vector2(95 if from_left else -95, -190)
-	bunny.acceleration = Vector2(0, 340)
-	bunny.bounce_speed = randf_range(150, 200)
+	bunny.color = Color(0.97, 0.97, 1.0)
+	var gravity := 340.0
+	# How fast it has to bounce to reach just above the SOUL: v = sqrt(2 g h).
+	var height := clampf(area.end.y - soul.y + randf_range(-3.0, 5.0), 20.0, area.size.y - 6.0)
+	var jump := sqrt(2.0 * gravity * height)
+	# Time the first hop so its peak is right where the SOUL is.
+	var to_peak := jump / gravity
+	var run := (soul.x - x) / to_peak
+	if absf(run) < 40.0:
+		run = 40.0 if from_left else -40.0
+	bunny.velocity = Vector2(run, -jump)
+	bunny.acceleration = Vector2(0, gravity)
+	bunny.bounce_speed = jump * randf_range(0.9, 1.05)
+	bunny.trail_length = 3
 	return 0.68
 
 
-## BigJoe6: fast pellets flying in from the left or right.
-static func _lance(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var y := randf_range(area.position.y + 4, area.end.y - 4)
+# --- Big Joe ------------------------------------------------------------------------
+
+## Big Joe: lances thrust across the box from the sides, pennants flapping. Every
+## other one comes in right at the SOUL's height (after a flash of warning).
+static func _lance(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var y := _aim_y(area, soul, step, 2, 5.0)
 	var from_left := randf() < 0.5
-	var x := area.position.x + 3 if from_left else area.end.x - 3
-	var bullet := _bullet(enemy, parent, area, Vector2(x, y))
-	bullet.velocity = Vector2(enemy.bullet_speed if from_left else -enemy.bullet_speed, 0)
+	var x := area.position.x + 6 if from_left else area.end.x - 6
+	var lance := _bullet(enemy, parent, area, Vector2(x, y))
+	lance.shape = "lance"
+	lance.size = 9.0
+	lance.color = Color(0.85, 0.87, 0.92)
+	lance.delay = 0.18
+	lance.velocity = Vector2(enemy.bullet_speed if from_left else -enemy.bullet_speed, 0)
+	lance.trail_length = 4
 	return 0.36
 
 
-## BigJoe6: a whole wall of bullets sweeps across the box. Dodge through the gap!
-static func _sweep(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+## Big Joe: a wall of shields sweeps across the box. Dodge through the gap!
+static func _sweep(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
-	var x := area.position.x + 3 if from_left else area.end.x - 3
+	var x := area.position.x + 4 if from_left else area.end.x - 4
 	var gap := randf_range(area.position.y + 22, area.end.y - 22)
-	var y := area.position.y + 4
+	gap = _away_from(gap, soul.y, area.position.y + 22, area.end.y - 22)
+	var y := area.position.y + 6
 	while y < area.end.y - 2:
 		if absf(y - gap) > 15:
-			var bullet := _bullet(enemy, parent, area, Vector2(x, y))
-			bullet.velocity = Vector2(105 if from_left else -105, 0)
-			bullet.color = Color(1.0, 0.75, 0.75)
-		y += 10
+			var shield := _bullet(enemy, parent, area, Vector2(x, y))
+			shield.shape = "shield"
+			shield.size = 10.0
+			shield.color = Color(0.82, 0.84, 0.9)
+			shield.velocity = Vector2(105 if from_left else -105, 0)
+		y += 11
 	return 1.35
 
 
-## BigJoe6: "Justice Strike!" Spinning stars launched right at where the SOUL is.
+## Big Joe: "JUSTICE STRIKE!" Glowing gold stars, spinning, launched right at
+## where the SOUL is, trailing light.
 static func _aimed(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector2) -> float:
 	var start: Vector2
 	match randi() % 3:
@@ -162,9 +191,11 @@ static func _aimed(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vecto
 		1: start = Vector2(area.position.x + 3, randf_range(area.position.y, area.end.y))
 		_: start = Vector2(area.end.x - 3, randf_range(area.position.y, area.end.y))
 	var star := _bullet(enemy, parent, area, start)
-	star.shape = "star"
-	star.size = 9.0
-	star.color = Color(1.0, 0.45, 0.45)
+	star.shape = "justice_star"
+	star.size = 10.0
+	star.color = Color(1.0, 0.82, 0.25)
+	star.glow = true
+	star.trail_length = 6
 	star.velocity = (soul_position - start).normalized() * 150.0
 	return 0.48
 
@@ -172,12 +203,14 @@ static func _aimed(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vecto
 # --- Westview High School ---------------------------------------------------
 
 ## Pop Quiz: pencils rain down at an angle.
-static func _pencils(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 6, area.end.x - 6)
+static func _pencils(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 3)
 	var pencil := _bullet(enemy, parent, area, Vector2(x, area.position.y + 4))
 	pencil.shape = "pencil"
 	pencil.size = 8.0
 	pencil.velocity = Vector2(randf_range(-45, 45), 125)
+	if step % 3 == 0:
+		pencil.velocity = (soul - pencil.position).normalized() * 135.0
 	return 0.45
 
 
@@ -197,8 +230,8 @@ static func _bubbles(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vec
 
 
 ## Hall Pass: little hall passes flutter down, drifting side to side.
-static func _papers(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 10, area.end.x - 10)
+static func _papers(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 3, 10.0)
 	var card := _bullet(enemy, parent, area, Vector2(x, area.position.y + 4))
 	card.shape = "card"
 	card.size = 10.0
@@ -209,9 +242,9 @@ static func _papers(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Hall Pass: a warning shows which row it'll dash down, then it ZOOMS across.
-static func _zoom(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _zoom(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
-	var y := randf_range(area.position.y + 8, area.end.y - 8)
+	var y := _aim_y(area, soul, step, 2, 8.0)
 	var x := area.position.x + 6 if from_left else area.end.x - 6
 	var card := _bullet(enemy, parent, area, Vector2(x, y))
 	card.shape = "card"
@@ -224,8 +257,8 @@ static func _zoom(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 
 ## Pop Quiz: a column of answer bubbles fills in across the box (they flash first).
 ## One bubble in the column is left blank: that's the way through.
-static func _scantron(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 10, area.end.x - 10)
+static func _scantron(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 2, 10.0)
 	var gap := randi_range(1, int(area.size.y / 14) - 2)
 	var row := 0
 	var y := area.position.y + 8
@@ -242,7 +275,7 @@ static func _scantron(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Hall Pass: tardy slips slide in diagonally from the top corners.
-static func _tardy_slips(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _tardy_slips(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
 	var x := area.position.x + 6 if from_left else area.end.x - 6
 	var slip := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
@@ -250,14 +283,17 @@ static func _tardy_slips(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 	slip.size = 10.0
 	slip.color = Color(1.0, 0.75, 0.8)
 	slip.velocity = Vector2(95 if from_left else -95, 85)
+	if step % 3 == 2:
+		# Every third slip is thrown right at the SOUL.
+		slip.velocity = (soul - slip.position).normalized() * 130.0
 	return 0.38
 
 
 # --- Westview: the cafeteria, the bell, the library -------------------------
 
 ## Mystery Meat: blobs of gravy drop, speed up, and splatter into brown drops.
-static func _gravy(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 10, area.end.x - 10)
+static func _gravy(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 2, 10.0)
 	var blob := _bullet(enemy, parent, area, Vector2(x, area.position.y + 6))
 	blob.shape = "egg"
 	blob.size = 10.0
@@ -270,9 +306,9 @@ static func _gravy(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Mystery Meat: lunch trays spin across the box.
-static func _tray_toss(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _tray_toss(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
-	var y := randf_range(area.position.y + 10, area.end.y - 10)
+	var y := _aim_y(area, soul, step, 2, 10.0)
 	var x := area.position.x + 8 if from_left else area.end.x - 8
 	var tray := _bullet(enemy, parent, area, Vector2(x, y))
 	tray.shape = "card"
@@ -280,6 +316,8 @@ static func _tray_toss(enemy: Enemy, parent: Node, area: Rect2, step: int) -> fl
 	tray.color = Color(0.7, 0.72, 0.78)
 	tray.delay = 0.35
 	tray.velocity = Vector2(150 if from_left else -150, randf_range(-30, 30))
+	if step % 2 == 0:
+		tray.velocity = (soul - tray.position).normalized() * 150.0
 	return 0.7
 
 
@@ -297,9 +335,9 @@ static func _peas(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vector
 
 
 ## Tardy Bell: a ring of notes bursts out from a spot on the edge of the box.
-static func _ring(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var center := Vector2(randf_range(area.position.x + 20, area.end.x - 20), area.position.y + 6)
-	var offset := randf() * TAU
+static func _ring(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var center := Vector2(_aim_x(area, soul, step, 2, 20.0), area.position.y + 6)
+	var offset := (soul - center).angle()
 	for i in 10:
 		var note := _bullet(enemy, parent, area, center)
 		note.shape = "star"
@@ -310,8 +348,9 @@ static func _ring(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Tardy Bell: rings of sound roll down the box, each with a quiet gap in it.
-static func _sound_waves(enemy: Enemy, parent: Node, area: Rect2) -> float:
+static func _sound_waves(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2) -> float:
 	var gap := randf_range(area.position.x + 20, area.end.x - 20)
+	gap = _away_from(gap, soul.x, area.position.x + 20, area.end.x - 20)
 	var x := area.position.x + 4
 	while x < area.end.x - 2:
 		if absf(x - gap) > 16:
@@ -324,9 +363,10 @@ static func _sound_waves(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Tardy Bell: the alarm goes off. A line flickers across the box, then blasts.
-static func _alarm(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _alarm(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var horizontal := step % 2 == 0
-	var at := Vector2(randf_range(area.position.x + 10, area.end.x - 10), randf_range(area.position.y + 10, area.end.y - 10))
+	# Every alarm goes off right through the SOUL.
+	var at := soul.clamp(area.position + Vector2(10, 10), area.end - Vector2(10, 10))
 	_beam(enemy, parent, area, at, Vector2.RIGHT if horizontal else Vector2.DOWN, 0.7, Color(1.0, 0.85, 0.2))
 	return 0.85
 
@@ -343,7 +383,7 @@ static func _sonar(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vecto
 	ring.delay = 0.25
 	ring.ring_speed = 75.0
 	# The gap points near the SOUL, but not right at it, so you still have to move.
-	ring.gap_angle = (soul_position - from).angle() + randf_range(-0.6, 0.6)
+	ring.gap_angle = (soul_position - from).angle() + randf_range(0.45, 0.85) * (1.0 if randf() < 0.5 else -1.0)
 	ring.gap_width = 0.55
 	Game.play_sfx("ping")
 	return 0.95
@@ -351,7 +391,7 @@ static func _sonar(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vecto
 
 ## Tardy Bell: the CLAPPER swings across the box like a pendulum, ringing out
 ## little notes at the top of each swing.
-static func _clapper(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _clapper(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	if step == 0:
 		var clapper := _bullet(enemy, parent, area, Vector2(area.get_center().x, area.position.y + 2))
 		clapper.shape = "clapper"
@@ -370,13 +410,13 @@ static func _clapper(enemy: Enemy, parent: Node, area: Rect2, step: int) -> floa
 	note.shape = "star"
 	note.size = 7.0
 	note.color = Color(1.0, 0.9, 0.4)
-	note.velocity = Vector2(70 if from_left else -70, 40)
+	note.velocity = (soul - note.position).normalized() * 85.0
 	return 0.6
 
 
 ## Overdue Book: loose pages flutter down, drifting side to side.
-static func _pages(enemy: Enemy, parent: Node, area: Rect2) -> float:
-	var x := randf_range(area.position.x + 8, area.end.x - 8)
+static func _pages(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 3, 8.0)
 	var page := _bullet(enemy, parent, area, Vector2(x, area.position.y + 4))
 	page.shape = "card"
 	page.size = 11.0
@@ -400,10 +440,11 @@ static func _bookmark(enemy: Enemy, parent: Node, area: Rect2, soul_position: Ve
 
 
 ## Overdue Book: a whole shelf of books slides across. Squeeze through the gap.
-static func _shelf(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _shelf(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
 	var x := area.position.x + 4 if from_left else area.end.x - 4
 	var gap := randf_range(area.position.y + 20, area.end.y - 20)
+	gap = _away_from(gap, soul.y, area.position.y + 20, area.end.y - 20)
 	var colors := [Color(0.7, 0.25, 0.25), Color(0.25, 0.45, 0.7), Color(0.3, 0.6, 0.35), Color(0.75, 0.6, 0.25)]
 	var y := area.position.y + 6
 	var i := 0
@@ -424,8 +465,10 @@ static func _pep(enemy: Enemy) -> float:
 
 
 ## Wally (miniboss): the bleachers rise. A row comes up from the floor with a gap in it.
-static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2) -> float:
+static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2) -> float:
 	var gap := randf_range(area.position.x + 18, area.end.x - 18)
+	# The gap never opens where the SOUL already is: you always have to move to it.
+	gap = _away_from(gap, soul.x, area.position.x + 18, area.end.x - 18)
 	var x := area.position.x + 5
 	while x < area.end.x - 2:
 		if absf(x - gap) > 15:
@@ -439,7 +482,7 @@ static func _bleacher_wave(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Wally (miniboss): a spinning mascot twirl that flings claws out in a spiral.
-static func _mascot_spin(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _mascot_spin(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var center := Vector2(area.get_center().x, area.position.y + 8)
 	for arm in 2:
 		# Two arms sweeping back and forth, always flinging downward into the box.
@@ -449,22 +492,29 @@ static func _mascot_spin(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 		claw.size = 8.0
 		claw.color = Color(1.0, 0.95, 0.85)
 		claw.velocity = Vector2.from_angle(angle) * 135.0
+	# Every so often, one claw is flung straight at the SOUL.
+	if step % 5 == 4:
+		var aimed := _bullet(enemy, parent, area, center)
+		aimed.shape = "claw"
+		aimed.size = 8.0
+		aimed.color = Color(1.0, 0.6, 0.5)
+		aimed.velocity = (soul - center).normalized() * 150.0
 	return 0.15 * _pep(enemy)
 
 
 ## Wally (miniboss): FRENZY. Claws and dodgeballs at the same time, faster than usual.
-static func _frenzy(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _frenzy(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	if step % 2 == 0:
-		_claw_drop(enemy, parent, area)
+		_claw_drop(enemy, parent, area, soul, step / 2)
 	else:
-		_dodgeballs(enemy, parent, area, step)
+		_dodgeballs(enemy, parent, area, soul, step)
 	return 0.45 * _pep(enemy)
 
 
 ## Wally: a shower of colorful confetti.
-static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
+static func _confetti(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var colors := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
-	var x := randf_range(area.position.x + 4, area.end.x - 4)
+	var x := _aim_x(area, soul, step, 4, 4.0)
 	var bit := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
 	bit.size = 4.0
 	bit.color = colors.pick_random()
@@ -474,9 +524,10 @@ static func _confetti(enemy: Enemy, parent: Node, area: Rect2) -> float:
 
 
 ## Wally: a giant foam finger swings across the box (after a warning).
-static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var from_left := step % 2 == 0
-	var y := randf_range(area.position.y + 12, area.end.y - 12)
+	# Every finger swings through the SOUL's row.
+	var y := clampf(soul.y + randf_range(-5, 5), area.position.y + 12, area.end.y - 12)
 	var x := area.position.x + 10 if from_left else area.end.x - 10
 	var finger := _bullet(enemy, parent, area, Vector2(x, y))
 	finger.shape = "finger"
@@ -489,7 +540,7 @@ static func _foam_finger(enemy: Enemy, parent: Node, area: Rect2, step: int) -> 
 
 ## Wally: red dodgeballs. Some roll in from the sides, some drop from the top,
 ## and every ball bounces to its own height (and a little differently each bounce).
-static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
+static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var ball: Bullet
 	if randf() < 0.5:
 		# From the side, thrown in a random arc.
@@ -499,9 +550,20 @@ static func _dodgeballs(enemy: Enemy, parent: Node, area: Rect2, step: int) -> f
 		ball.velocity = Vector2(randf_range(50, 110) * (1 if from_left else -1), -randf_range(110, 250))
 	else:
 		# Dropped from the top, drifting a little sideways.
-		var x := randf_range(area.position.x + 15, area.end.x - 15)
+		var x := _aim_x(area, soul, step, 2, 15.0)
 		ball = _bullet(enemy, parent, area, Vector2(x, area.position.y + 8))
 		ball.velocity = Vector2(randf_range(-45, 45), randf_range(10, 60))
+	if step % 3 == 2:
+		var from_left := randf() < 0.5
+		var start := Vector2(area.position.x + 8 if from_left else area.end.x - 8, area.end.y - 12)
+		ball.position = start
+		var rise := maxf(start.y - soul.y, 10.0)
+		var up := sqrt(2.0 * 330.0 * rise)
+		ball.velocity = Vector2((soul.x - start.x) / (up / 330.0), -up)
+		if start.y - soul.y < 10.0:
+			# The SOUL is down low: skim it along the floor instead.
+			ball.position.y = soul.y
+			ball.velocity = Vector2(190.0 if from_left else -190.0, -40.0)
 	ball.shape = "ball"
 	ball.size = randf_range(12.0, 16.0)
 	ball.color = Color(0.85, 0.15, 0.15)
@@ -531,8 +593,11 @@ static func _claw_swipe(enemy: Enemy, parent: Node, area: Rect2, soul_position: 
 
 
 ## Wally: sets of three claws plunge down from the top (they flash first).
-static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
+static func _claw_drop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	# Every other set lands with its middle claw on the SOUL.
 	var x := randf_range(area.position.x + 14, area.end.x - 34)
+	if step % 2 == 0:
+		x = clampf(soul.x - 10, area.position.x + 14, area.end.x - 34)
 	for i in 3:
 		var claw := _bullet(enemy, parent, area, Vector2(x + i * 10, area.position.y + 8))
 		claw.shape = "claw"

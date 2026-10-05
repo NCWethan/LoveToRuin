@@ -8,7 +8,7 @@ A Deltarune/Undertale-style RPG set in San Diego, California, starring a cast ba
 
 ## 1. The big idea
 
-**Revolution** is the team that **Eggo** and **BigJoe6** started in an attempt to beat **Hopkuna**.
+**Revolution** is the team that **Eggo** and **Big Joe** started in an attempt to beat **Hopkuna**.
 
 The player, **Elric**, gets pulled into this conflict and decides, through how they play, whether to stand with Revolution, ignore the fight, or join Hopkuna.
 
@@ -21,7 +21,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 | Location | Role | Notes |
 |---|---|---|
-| **Mt. Carmel High School** | **Starting area** · **Fragment 1** | Where Elric's journey begins and where Elric first meets Hop. Elric finds the **1st fragment** here — and picking it up is exactly what gets Eggo and BigJoe6's attention. The **tutorial fight** happens just **outside the school**. |
+| **Mt. Carmel High School** | **Starting area** · **Fragment 1** | Where Elric's journey begins and where Elric first meets Hop. Elric finds the **1st fragment** here — and picking it up is exactly what gets Eggo and Big Joe's attention. The **tutorial fight** happens just **outside the school**. |
 | **The PQ Mall** | **Main city / hub** | Where the Vons is, near the Jack in the Box and Knotty Barrel. Shops for healing items, NPCs, and cast members hanging out between adventures. A safe place — **no fragment here**. |
 | **Westview High School** | **The "dungeon"** · **Fragment 2** | Chapter 1's big exploration area — the school after hours, twisted by the fragment's power into a maze of puzzles, locked rooms and enemies (like Deltarune's Dark World). The **2nd fragment** is hidden deep inside. |
 | **Westview Field** | **REVOLUTION Corps base** · **Fragment 3** · **Chapter 1's final battle** | The Corps' base. The **3rd fragment** is buried under the **big field**. When it erupts, Hop takes the hit, Hopkuna comes out, and Chapter 1's final battle — **against Hopkuna himself** — happens on the field. The Corps returns, and the **route choice** happens. |
@@ -39,18 +39,18 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | Who | Where | What happens |
 |---|---|---|
 | **Supreme** | Outside Vons | Rattles off stats from his seven spreadsheets; knows how the tutorial fight went. |
-| **Crayola** | Outside Games & Cards | Shy; offers a card trick (Seven of Hearts). Swims with NCWethan. |
-| **NCWethan** & **Ronin** | Knotty Barrel patio | The checkers running gag ("KING ME!!!" / "THAT'S CHESS."). NCWethan sparks when excited; Ronin has lost 14 in a row and got his guitar banned after "the fire alarm thing." |
+| **Crayola** | Outside Games & Cards | Shy; offers a card trick (Seven of Hearts). Swims with N.C. Wethan. |
+| **N.C. Wethan** & **Ronin** | Knotty Barrel patio | The checkers running gag ("KING ME!!!" / "THAT'S CHESS."). N.C. Wethan sparks when excited; Ronin has lost 14 in a row and got his guitar banned after "the fire alarm thing." |
 | **MuffinMage** | Knotty Barrel patio | Eating a salmon burger in a fish mask. Neutral, but warns Elric about the fragment. |
 | **Rooster** | Parking lot | Roasts Elric; the player can roast back ("Couldn't pick a color?" → "It's called DUALITY."). |
 | **Sansworth** | Parking lot | Looking for a car he doesn't have; gives Elric a Trail Mix. |
 | **Nat** | By the bench near Jack in the Box | **Lore:** the old story of twelve fragments and Hopkuna, with the last page torn out. Hop goes still. |
 | **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. |
 
-**The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. NCWethan yells for a third player, and Elric gets roped into a **Rock Paper Scissors minigame** (drawn hands, a "ROCK... PAPER... SCISSORS... SHOOT!" countdown, a score). Three rounds vs. NCWethan, whose lightning crackles in the *shape* of his throw; one vs. Ronin, who hides his hand but not his *shadow*; and a final round vs. **Agent**, who counts every throw you've made, says the odds out loud, and always plays the counter to your most likely throw. Follow his math and you can beat him. Win all five and Ronin pays up with Curly Fries. Then hours pass:
+**The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. N.C. Wethan yells for a third player, and Elric gets roped into a **Rock Paper Scissors minigame** (drawn hands, a "ROCK... PAPER... SCISSORS... SHOOT!" countdown, a score). Three rounds vs. N.C. Wethan, whose lightning crackles in the *shape* of his throw; one vs. Ronin, who hides his hand but not his *shadow*; and a final round vs. **Agent**, who counts every throw you've made, says the odds out loud, and always plays the counter to your most likely throw. Follow his math and you can beat him. Win all five and Ronin pays up with Curly Fries. Then hours pass:
 - **Afternoon** (golden light): everyone has moved. Supreme does "field research" at Jack in the Box, Crayola and MuffinMage play a made-up card game, Rooster power-walks laps, Sansworth checks every car. Talking to three people makes the sky go orange.
 - **Evening** (pink): shops close, people say goodbye, and Nassan waves Elric over. Talking to him brings nightfall.
-- **Night** (blue): only NCWethan, Ronin (stargazing), Nat and Nassan are left. The road east finally opens. Trying to leave before dark, Hop stops you.
+- **Night** (blue): only N.C. Wethan, Ronin (stargazing), Nat and Nassan are left. The road east finally opens. Trying to leave before dark, Hop stops you.
 
 ## 3. The main character
 
@@ -76,10 +76,10 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | Character | Notes |
 |---|---|
 | **Eggo** | Co-founder of Revolution. See [Eggo](#eggo) below. |
-| **BigJoe6** | Co-founder of Revolution. See [BigJoe6](#bigjoe6) below. |
+| **Big Joe** | Co-founder of Revolution. See [Big Joe](#big-joe) below. |
 | **MuffinMage** | See [MuffinMage](#muffinmage) below. |
 | **Nassan** | See [Nassan](#nassan) below. |
-| **NCWethan** | See [NCWethan](#ncwethan) below. |
+| **N.C. Wethan** | See [N.C. Wethan](#nc-wethan) below. |
 | **Sansworth** | See [Sansworth](#sansworth) below. |
 | **Ronin** | See [Ronin](#ronin) below. |
 | **Rooster** | See [Rooster](#rooster) below. |
@@ -109,7 +109,7 @@ Pronouns: any/all · Co-founder of Revolution
 
 ![Eggo reference](art/reference/eggo.png)
 
-### BigJoe6
+### Big Joe
 
 Pronouns: he/him · Co-founder of Revolution
 
@@ -123,7 +123,7 @@ Pronouns: he/him · Co-founder of Revolution
 - Black shirt with a "777" chain necklace, white cuffs.
 - Belt and blue jeans.
 
-![BigJoe6 reference](art/reference/bigjoe6.png)
+![Big Joe reference](art/reference/bigjoe6.png)
 
 ### MuffinMage
 
@@ -156,7 +156,7 @@ Pronouns: he/him
 
 ![Nassan reference](art/reference/nassan.png)
 
-### NCWethan
+### N.C. Wethan
 
 Pronouns: he/him
 
@@ -175,7 +175,7 @@ Pronouns: he/him
 - Blue pants.
 - Swirling **blue rune ribbons** circling around him (could become his lightning/power effect).
 
-![NCWethan reference](art/reference/ncwethan.png)
+![N.C. Wethan reference](art/reference/ncwethan.png)
 
 ### Sansworth
 
@@ -198,9 +198,9 @@ Pronouns: he/him
 Pronouns: he/him
 
 **Personality**
-- **Loud** — on par with NCWethan.
+- **Loud** — on par with N.C. Wethan.
 - Plays **guitar**.
-- Always seen **losing at checkers to NCWethan** (running gag).
+- Always seen **losing at checkers to N.C. Wethan** (running gag).
 
 **Battle role**
 - **Mage.**
@@ -238,7 +238,7 @@ Pronouns: he/him
 **Personality**
 - **Shy.**
 - Likes to play **card games**.
-- **Swims with NCWethan** for fun.
+- **Swims with N.C. Wethan** for fun.
 
 **Battle role**
 - **Support** character.
@@ -380,7 +380,7 @@ Elric is a traveling adventurer with no fixed home.
 0. **The voice.** Before anything else, a voice with no face (secretly Hopkuna) explains the objective — find the 12 fragments — and the ways to get there: TALK and SPARE for BOND, or FIGHT for LOVE. Then it asks: *"Here is your objective. How will you do it?"* Elric's answer comes back to haunt them when Hopkuna is revealed at Westview Field.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
-3. **Mistaken for an enemy.** **Eggo** and **BigJoe6** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
+3. **Mistaken for an enemy.** **Eggo** and **Big Joe** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
 4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time** — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
    - **The 3rd fragment erupts:** when Elric and Hop uncover it under the big field, its unstable power lashes out — straight at Elric.
    - **Hop takes the hit:** **Hop jumps in front of it** and is badly hurt.
@@ -389,20 +389,20 @@ Elric is a traveling adventurer with no fixed home.
    - **The Corps arrives** and drives Hopkuna back; Hop returns to normal. Elric is still shaken when the Corps asks the big question.
 5. **The route choice ends Chapter 1.** Right after the reveal, the full **REVOLUTION Corps** finds Elric and asks what Elric wants to do (see [The route choice](#the-route-choice)). The player knows exactly what "Go with Hop" means. Chapters 2–4 play out differently depending on the answer.
 
-#### The tutorial fight: Eggo & BigJoe6 *(proposed — open to changes)*
+#### The tutorial fight: Eggo & Big Joe *(proposed — open to changes)*
 
 This fight **teaches every core mechanic**, one at a time, through the characters' own dialogue instead of pop-up text boxes.
 
 | Turn | What happens | Mechanic taught |
 |---|---|---|
-| **Start** | BigJoe6 charges in: "Hand over the fragment, Hopkuna's lackey!" | The battle screen, party HP |
-| **1** | BigJoe6 attacks first. The SOUL appears in the box. | **Dodging** with the SOUL |
+| **Start** | Big Joe charges in: "Hand over the fragment, Hopkuna's lackey!" | The battle screen, party HP |
+| **1** | Big Joe attacks first. The SOUL appears in the box. | **Dodging** with the SOUL |
 | **2** | Hop: "Don't just stand there — hit 'em!" | **FIGHT** (the timing bar) |
 | **3** | Eggo, unbothered: "...you could also just talk to us." | **ACT** — starting with **CHECK** (enemy stats) |
-| **4** | Elric can ACT on each enemy: tell Eggo a pun (he can't resist), tell BigJoe6 the truth (he values justice and truth). | **Character-specific ACTs** |
+| **4** | Elric can ACT on each enemy: tell Eggo a pun (he can't resist), tell Big Joe the truth (he values justice and truth). | **Character-specific ACTs** |
 | **5** | Hop takes his own turn and acts alongside Elric. | **Team turns** (party members act too) |
 | **6** | Elric takes a big hit; Hop tosses over a snack. | **ITEM** and **DEFEND** |
-| **7** | Eggo and BigJoe6's names turn yellow. | **MERCY / SPARE** — sparing earns **BOND** |
+| **7** | Eggo and Big Joe's names turn yellow. | **MERCY / SPARE** — sparing earns **BOND** |
 
 - **Two ways out:** the player can SPARE them (earns BOND) or FIGHT them down (earns LOVE). Either way, they're only **knocked out, not killed** — it's a tutorial, and both survive to become part of the cast.
 - **Hop fights alongside Elric** as a temporary party member — which makes his later reveal hurt more.
@@ -466,7 +466,7 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 Build the game in **milestones**. Each one ends with something playable, so progress is always visible.
 
 ### Milestone 1 — The tutorial fight (battle system)
-Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the battle system works.
+Use the Eggo & Big Joe fight as the target: when it plays start to finish, the battle system works.
 - [x] Battle box and SOUL movement
 - [x] Enemy attacks (bullets) and taking damage / HP
 - [x] Battle menu: **FIGHT · ACT · ITEM · MERCY** (+ DEFEND)
@@ -475,7 +475,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Sparing (names turn yellow) → **BOND**; defeating → **LOVE** (EXP)
 - [x] Party turns (Elric + Hop)
 - [x] The full tutorial fight, scripted turn by turn
-- [x] Pixel-art battle sprites for Eggo, BigJoe6, Elric and Hop (`art/sprites/`, drawn by `tools/make_sprites.ps1`)
+- [x] Pixel-art battle sprites for Eggo, Big Joe, Elric and Hop (`art/sprites/`, drawn by `tools/make_sprites.ps1`)
 - [x] Sound effects (generated in code by `scripts/sfx.gd`)
 - [ ] Pixel font *(needs a download — waiting for approval)*
 - [x] Music: 7 original chiptune tracks (title, Mt. Carmel, PQ Mall, Westview, battle, boss, GAME OVER), composed as note lists in `tools/make_music.gd` and crossfaded between areas
@@ -492,7 +492,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] Walls / collision and the camera
 - [x] Talking to characters and inspecting objects
 - [x] Followers (Hop walks behind Elric)
-- [x] Side-view walking sprites with a 2-frame walk (Elric, Hop, Eggo, BigJoe6)
+- [x] Side-view walking sprites with a 2-frame walk (Elric, Hop, Eggo, Big Joe)
 - [x] Moving between areas (Mt. Carmel ↔ PQ Mall)
 
 ### Milestone 4 — The opening (first playable demo)
@@ -517,7 +517,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **Random encounters** in hostile areas (Westview's hallway and classroom), with a "!" over Elric
 - [x] Wandering enemies you walk into are gone for good after the fight
 - [x] **Objectives**: a "NEW OBJECTIVE" banner at each story beat; the current one is shown in the bag
-- [x] Eggo and BigJoe6 get picked up by a car after the tutorial fight
+- [x] Eggo and Big Joe get picked up by a car after the tutorial fight
 - [x] SAVE stars twinkle between two frames, like in Undertale
 - [x] A compass (N, E, S, W) in the top-right corner
 - [x] Looking at scenery: trees ("It's a tree."), benches, walls, windows, lockers, desks, chalkboards...
@@ -527,9 +527,16 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
   - PQ Mall: Rock Paper Scissors, where you read each opponent's tell.
   - Westview: the endless hallway (humming locker) and the bell order (chalkboard).
   - Westview Field: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE (use the compass): turn off the corner you want to walk through.
+- [x] **Sprinting:** hold Shift to run (1.75x speed) with running sprites (side view: a leaning stride and a knee-up frame; front/back: bigger steps and pumping arms). A stamina bar slides in at the bottom right, drains over about 2.6 seconds and refills after you stop. Run it dry and Elric is WINDED until it's about a third full. Hop runs to keep up.
+- [x] SAVE stars glow yellow and light up the ground around them. FRAGMENTS glow deep red, and the music fades to an eerie drone whenever you get near one (anywhere, any time).
+- [x] PQ Mall: once the sky turns orange, Vons and Knotty Barrel hang CLOSED signs (Jack in the Box stays open late). Streetlights glow orange in the evening and brighter at night, and the music softens at night ("Mall at Night").
+- [x] Westview has school decorations outside: the name over the doors, pennants, a marquee and a flagpole. The bell puzzle remembers your progress through random encounters.
+- [x] The opening's first picture shows Elric from behind, walking down the road toward the sunset.
+- [x] Names shown in game: "Big Joe" and "N.C. Wethan". N.C. Wethan wears a black hard hat with a yellow brim and stripe (like Roblox's Outrageous Builders Club hat). Mt. Carmel's MC is centered on the field, and the tree hiding Coach's keys has a small glint.
+- [x] Music: an overly ambitious, epic theme for Rock Paper Scissors; Wally's fight song is now a faster, more serious chase theme.
 
 ### Battle polish (from feedback)
-- [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · BigJoe6: lance, sweeping wall, aimed stars)
+- [x] Several attacks per enemy, a different one each turn (Eggo: rain, egg drop, bunny hop · Big Joe: lance, sweeping wall, aimed stars)
 - [x] "Ready?" check after choosing, with X to go back and change anything
 - [x] On-screen control hints in menus
 - [x] ENTER is the only confirm key (Z removed)
@@ -547,20 +554,26 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] The opening narration has Undertale-style sepia pictures: Elric on an endless road at sunset, at a bus stop in the rain, on a cliff over the ocean; the whispering city; a humming fragment; a shadow with red eyes.
 - [x] Side-view walking swings the arms.
 - [x] Each kind of battle has its own animated background, with several layers each: a turning star over drifting diamonds (tutorial); a graph-paper floor with falling pencils and red marks (Pop Quiz); rushing lockers and a spinning clock (Hall Pass); a cafeteria with flickering lights, floating trays and a bubbling vat of stew (Mystery Meat); a swinging bell with sound rings and notes (Tardy Bell); a starfield with flapping books (Overdue Book); spotlights, confetti and a cheering crowd (Wally); a red heartbeat with falling shards (Hopkuna); TV static (the tent).
-- [x] When Eggo or BigJoe6 is knocked out, the other reacts (Eggo goes quiet and sad; BigJoe6 gets furious and hits harder).
+- [x] When Eggo or Big Joe is knocked out, the other reacts (Eggo goes quiet and sad; Big Joe gets furious and hits harder).
 - [x] "HOLD IT!" opens with a stinger; Revolution's theme starts as they walk in. Car engine and brake sounds. A sharp "!" sound for random encounters.
 - [x] Shading: every sprite is shaded (lit from the top-left), arms and legs have space between them, characters and objects cast soft shadows, walls and trees shade the ground, and the screen edges have a soft vignette
 - [x] Smoother walking: a four-step cycle (step, stand, other step, stand) with legs lifting and arms swinging, for everyone
 - [x] WASD works as well as the arrow keys
 - [x] A hidden quarter-second pause after each ENTER in text, so it can't be mashed through
 - [x] Mt. Carmel: a big yellow MC outlined in red at midfield, and a HOME OF THE SUNDEVILS banner. Westview: a big black W outlined in white and gold at center court, and a HOME OF THE WOLVERINES banner
-- [x] Battle poses (sprites) for Elric and Hop: windup, strike, guard, arm raised, hurt and knocked out. Elric draws back their arm (nails glinting) then dashes in claws-first with afterimages; Hop crouches and charges a punch (energy gathering at his fist) then rockets in. Enemies each wind up and throw their own way (Eggo bounces, BigJoe6 lunges, papers flutter, the bell swings, Mystery Meat jiggles, Hopkuna swells). Eggo and BigJoe6 flash a shocked face when hit. Everyone has a KO: party members topple over with stars circling; enemies shudder, fall over and kick up dust. The FIGHT bar can come from either side.
+- [x] Battle poses (sprites) for Elric and Hop: windup, strike, guard, arm raised, hurt and knocked out. Elric draws back their arm (nails glinting) then dashes in claws-first with afterimages; Hop crouches and charges a punch (energy gathering at his fist) then rockets in. Enemies each wind up and throw their own way (Eggo bounces, Big Joe lunges, papers flutter, the bell swings, Mystery Meat jiggles, Hopkuna swells). Eggo and Big Joe flash a shocked face when hit. Everyone has a KO: party members topple over with stars circling; enemies shudder, fall over and kick up dust. The FIGHT bar can come from either side.
 - [x] **Impact frames:** when a blow lands, everything freezes for an instant (hit-stop) and the screen flashes white with the enemy as a black silhouette and speed lines bursting from the hit, manga-style. A CRITICAL flips to an inverted frame too (black screen, white silhouette, red lines). Hop's quick punches each get a tiny freeze.
 - [x] **Hit sounds** depend on the attack: Elric's claws slice (shhk), Hop's punch thuds, the Nail File rings (ting), the Foam Finger squeaks and BONKs. Taking damage always makes the same sound.
 - [x] **Weapon attacks:** the Nail File attacks with a flurry of silver jabs and sparks; the Foam Finger swings down and BONKS the enemy flat, with stars circling their head. Without a weapon, Elric slashes with claws and Hop punches.
 - [x] Battle animations: everyone breathes and bobs; FIGHT winds up then leaps at the enemy; ACT hops; ITEM squashes with sparkles; MERCY waves; DEFEND crouches behind a shimmering shield; getting hit flashes red and flinches; knocked-out members lie down. Enemies bob gently too.
 - [x] Wally's CLAW SWIPE: three glowing claw marks rake right through the SOUL (after dashed scratch warnings), then a second set crosses them from the other side
 - [x] Boss health bars across the top of the screen, styled per boss (Wally: gold fur and claw marks; Hopkuna: pulsing red with tattoo zigzags and "??? / ???")
+- [x] **Choose who takes the hits:** during the enemy's turn, X switches whose SOUL is in the box (and who loses HP). Elric's SOUL is red. Hop's is **fragmented**: silver shards drifting apart over a pulsing red glow.
+- [x] **No safe spots:** every attack aims some of its shots at the SOUL (or puts its gap away from you), so standing still always gets you hit. Checked by a test that runs every attack against a SOUL that never moves.
+- [x] New looks for Eggo's and Big Joe's attacks: runny yolk drops with trails; shaded, wobbling eggs that crack as they fall and splatter into yolk; bunnies with floppy ears that hop exactly as high as your SOUL; lances with red-and-gold pennants; a wall of blue kite shields; spinning gold JUSTICE stars trailing light.
+- [x] **Nail File:** three thinner bars cross the FIGHT bar one after another, and ENTER stops each one. Every bar deals a third of the damage (by its own accuracy), each jab shows its share, and all three in the green is a CRITICAL.
+- [x] **Divergent Glove** (Vons, $35, Weapon ATK +1): "It wants a hand the FRAGMENTS have already touched." On Hop, every hit has a 1 in 20 chance to be a **BLACK FLASH**: 2.5x damage, a long freeze that flickers between black and red, black and red lightning crashing into the enemy, its own sound, and crackling sparks afterward.
+- [x] Hopkuna's background: his eyes and a ring of orbs throb on every beat of his music (184 BPM, hardest on the first beat of each bar), and every two bars a black-and-red BLACK FLASH bolt strikes in the background.
 
 ### Milestone 6 — Westview High School
 - [x] The twisted school dungeon: rooms, puzzles, enemies
@@ -588,19 +601,20 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **The route choice** — end of Chapter 1
 
 **As built:**
-- **Westview Field at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Westview Field at Night." NCWethan's lightning visibly arcs from him into Hopkuna, then Ronin's fire roars in, then both at once ("TOGETHER!!!"). In the Corps ending, NCWethan's group hug yanks everyone into a huddle and zaps them. After the chapter, Hop can be talked to (different on each route).
-- **The eruption** — walking toward the glow, the fragment fires at Elric. Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
+- **Westview Field at night** — the big field, the Corps' picnic shelter with a hand-painted REVOLUTION banner, and a map with twelve red circles (two crossed out, a third on this very field). SAVE point. Music: "Westview Field at Night." N.C. Wethan's lightning visibly arcs from him into Hopkuna, then Ronin's fire roars in, then both at once ("TOGETHER!!!"). In the Corps ending, N.C. Wethan's group hug yanks everyone into a huddle and zaps them. After the chapter, Hop can be talked to (different on each route).
+- **The eruption** — walking toward the glow, the field goes dark and the buried fragment charges up: red light spirals into the crater, a black-and-red orb swells out of it, and a thin aiming line locks onto Elric. Then it fires a huge beam (black edge, white-hot core, black lightning crawling along it, shockwaves pumping out of the crater). Hop shoves in front of it ("ELRIC, MOVE!!"), takes the blast, begs Elric to get away, and Hopkuna takes over: tattoos, red tint, glowing red eyes. *"...Finally."* He wants the two fragments Elric carries. Elric: *"...No."*
 - **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks (all aimed at the SOUL, with warnings, 6 damage, faster every turn): **Cleave** (glowing slashes through your position), **Slash Grid** (three slashes crossing where you stand, one after another), **Red Arrows** (volleys of three that curve toward you), **Closing Ring** (shards circle you and collapse inward; one gap), **Flaming Arrow** (a big burning arrow that chases you). A red aura pulses around the box during his turns. ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
-- **The Corps arrives** — BigJoe6, Eggo, Nassan, Nat, NCWethan, Ronin, Supreme, Crayola, Rooster and Agent surround Hopkuna ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
+- **Hopkuna has DETERMINATION too.** Resetting (erasing the save from the title) is remembered outside the save file. After a reset, Hopkuna knows: if you'd already met him, he calls it out ("You RESET. I felt it... Everyone except me."), counts how many times, and adds "Even if you go back and do this all again" when he leaves. If you reset before ever reaching him, he only feels that this has happened before. Without a reset, none of this appears.
+- **The Corps arrives** — Big Joe, Eggo, Nassan, Nat, N.C. Wethan, Ronin, Supreme, Crayola, Rooster and Agent form an even circle around Hopkuna, with a spot for Elric, ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
 - **The route choice** (with an "Are you sure?" confirm):
 
 | Choice | What happens | Locks |
 |---|---|---|
-| **Join the REVOLUTION Corps? (Pacifist)** | Elric joins; NCWethan's group hug; "You saved me. We'll save you." The Corps resolves to destroy the fragments. | Genocide, Neutral |
+| **Join the REVOLUTION Corps? (Pacifist)** | Elric joins; N.C. Wethan's group hug; "You saved me. We'll save you." The Corps resolves to destroy the fragments. | Genocide, Neutral |
 | **Chart your own path? (Neutral)** | Elric walks away alone; the Corps' offer stays open; Hop stays with the Corps. | Genocide |
 | **Go with Hop? (Genocide)** | The Corps throws Elric out ("GET OUT."); Elric and Hop walk into the dark. *"Good choice, little wanderer."* | Pacifist, Neutral |
 
-- The game saves the choice, then shows **CHAPTER 1 COMPLETE** with the route.
+- The game saves the choice, then shows **CHAPTER 1 COMPLETE** with the route, over a slowly turning ring of twelve pieces, one per FRAGMENT. The three found fill in deep red one by one.
 
 ### Throughout
 - Pixel-art sprites for Elric and the cast (from the [reference images](art/reference/))
@@ -613,7 +627,7 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 
 - Exactly how much BOND each action gives, and what BOND improves vs. what LV improves.
 - When does each character become available to join the party? Hop is with Elric for all of Chapter 1 (the story needs him there for the climax) — so does party selection start in Chapter 1 with Hop locked in, or after the route choice?
-- Each cast member's battle abilities (ideas so far: Supreme = super CHECK, Crayola = support cards, NCWethan = lightning, Ronin = fire/guitar magic, Nat = "reading up" to unlock ACTs, Nassan = strategy, Rooster = roasts).
+- Each cast member's battle abilities (ideas so far: Supreme = super CHECK, Crayola = support cards, N.C. Wethan = lightning, Ronin = fire/guitar magic, Nat = "reading up" to unlock ACTs, Nassan = strategy, Rooster = roasts).
 - Where do Chapters 2–4 take place?
 - What do Hopkuna's tattoos look like?
 - What are each character's personality and battle abilities?

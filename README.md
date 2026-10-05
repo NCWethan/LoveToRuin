@@ -15,8 +15,9 @@ See [DESIGN.md](DESIGN.md) for the story, cast and build plan.
 | Key | Action |
 |---|---|
 | Arrow keys or WASD | Move the SOUL / move through menus |
+| Hold Shift | Sprint while exploring (watch the stamina bar) |
 | Enter | Confirm |
-| X or Shift | Go back |
+| X or Shift | Go back (in menus); in battle, X switches whose SOUL takes the hits |
 | B | Open your bag (use, check or drop items, and Settings at the bottom) |
 
 ## Saving and settings

@@ -43,6 +43,7 @@ static func make_all() -> Dictionary:
 		"punch_hit": slide(240, 50, 0.2, 0.42),
 		"file_hit": tone([2349, 3136, 2794], 0.05, 0.17),
 		"squeak": slide(800, 1600, 0.1, 0.18),
+		"black_flash": black_flash(),
 	}
 
 
@@ -68,6 +69,37 @@ static func stinger() -> AudioStreamWAV:
 			value += rng.randf_range(-1.0, 1.0) * (1.0 - t / 0.08) * 0.9
 		var envelope := minf(1.0, t / 0.004) * pow(1.0 - t / length, 1.6)
 		data.encode_s16(s * 2, int(clampf(value * envelope * 0.55, -1.0, 1.0) * 32767.0))
+	return _wav(data)
+
+
+## BLACK FLASH: a split-second of silence, a sharp electric crack, then a deep
+## boom with a distorted ring that tears off at the end.
+static func black_flash() -> AudioStreamWAV:
+	var length := 1.3
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 13
+	var boom_phase := 0.0
+	var ring_phase := 0.0
+	var held := 0.0
+	for s in count:
+		var t := float(s) / RATE
+		var value := 0.0
+		# The crack: crunchy noise that crackles on and off.
+		if t < 0.25:
+			if s % 3 == 0:
+				held = rng.randf_range(-1.0, 1.0)
+			var flicker := 1.0 if int(t * 90.0) % 3 != 2 else 0.2
+			value += held * flicker * (1.0 - t / 0.25)
+		# The boom: a pitch that drops from 160 Hz to 35 Hz.
+		boom_phase = fmod(boom_phase + lerpf(160.0, 35.0, minf(t / 0.6, 1.0)) / RATE, 1.0)
+		value += sin(boom_phase * TAU) * 1.2 * pow(maxf(0.0, 1.0 - t / 1.1), 1.5)
+		# The ring: a high, wobbly tone, clipped hard for distortion.
+		ring_phase = fmod(ring_phase + (1240.0 + sin(t * 40.0) * 60.0) / RATE, 1.0)
+		value += clampf(sin(ring_phase * TAU) * 3.0, -1.0, 1.0) * 0.18 * pow(maxf(0.0, 1.0 - t / length), 2.0)
+		data.encode_s16(s * 2, int(clampf(value * 0.5, -1.0, 1.0) * 32767.0))
 	return _wav(data)
 
 

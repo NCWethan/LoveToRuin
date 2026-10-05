@@ -457,12 +457,12 @@ $sprites['crayola'] = @(
 )
 
 $sprites['ncwethan'] = @(
-    "........................",
-    "........KKKKKKKK........",
+    ".........KKyyKK.........",
+    "........KKKyyKKK........",
+    ".......KKKKyyKKKK.......",
+    ".......DKKKKKKKKD.......",
     ".......KKKKKKKKKK.......",
-    ".......KyyyKKyyyK.......",
-    ".......KyyyKKyyyK.......",
-    "........YYYYYYYY........",
+    ".....AAAAAAAAAAAAAA.....",
     "........YKYYYYKY........",
     "........YKYYYYKY........",
     "........YYYYYYYY........",
@@ -1545,6 +1545,75 @@ function Save-Sprite([string]$name, [string[]]$rows, [string]$dir) {
     Write-Output "Saved $path"
 }
 
+# --- Running frames (Elric and Hop, for sprinting) -----------------------------
+# Front/back: a bigger step than walking (the foot lifts two pixels, the arms pump
+# two). Side: the body leans forward a pixel, with a long stride (front leg reaching,
+# back leg kicked up behind) on two frames and a knee-up "passing" frame between.
+# Saved as name_run1/2, name_back_run1/2 and name_side_run1/2/3.
+
+function Make-Run([string[]]$rows, [bool]$leftLeg) {
+    $p = [string[]]$rows.Clone()
+    if ($leftLeg) { Shift-Block $p 7 11 22 31 -2 } else { Shift-Block $p 13 16 22 31 -2 }
+    if ($leftLeg) { Shift-Block $p 2 5 15 21 2; Shift-Block $p 18 21 15 21 -2 }
+    else { Shift-Block $p 2 5 15 21 -2; Shift-Block $p 18 21 15 21 2 }
+    return $p
+}
+
+# 1 = trousers, 2 = shoes.
+$runStride = @(
+    "..........11111.........",
+    ".........1111.111.......",
+    "........1111...111......",
+    "...221111.......111.....",
+    "...2211..........111....",
+    "..................111...",
+    "..................111...",
+    "...................111..",
+    "..................22222.",
+    "..................22222."
+)
+$runPass = @(
+    "..........11111.........",
+    "..........11111111......",
+    "..........111..111......",
+    "..........111..111......",
+    "..........111..222......",
+    "..........111...........",
+    "..........111...........",
+    "..........111...........",
+    "..........2222..........",
+    "..........2222.........."
+)
+
+function Get-RunLegs([string[]]$template, [string]$c, [string]$shoe) {
+    $out = @()
+    foreach ($row in $template) { $out += $row.Replace('1', $c).Replace('2', $shoe) }
+    return $out
+}
+
+# Leans the upper body (everything above the legs) one pixel forward.
+function Lean([string[]]$rows, [int]$upperCount) {
+    $out = [string[]]$rows.Clone()
+    for ($y = 0; $y -lt $upperCount; $y++) { $out[$y] = "." + $out[$y].Substring(0, $out[$y].Length - 1) }
+    return $out
+}
+
+$runFrames = [ordered]@{}
+foreach ($name in @('elric', 'elric_back', 'hop', 'hop_back')) {
+    if (-not $sprites.Contains($name)) { continue }
+    $runFrames["${name}_run1"] = Make-Run $sprites[$name] $true
+    $runFrames["${name}_run2"] = Make-Run $sprites[$name] $false
+}
+foreach ($who in $sideUpper.Keys) {
+    $legs = $sideLegs[$who]
+    $upper = [string[]]$sideUpper[$who]
+    $stride = [string[]]($upper + (Get-RunLegs $runStride $legs[0] $legs[1]))
+    $pass = [string[]]($upper + (Get-RunLegs $runPass $legs[0] $legs[1]))
+    $runFrames["${who}_side_run1"] = Lean ([string[]](Swing-Arm $stride -1)) $upper.Count
+    $runFrames["${who}_side_run2"] = Lean ([string[]](Swing-Arm $stride 1)) $upper.Count
+    $runFrames["${who}_side_run3"] = Lean $pass $upper.Count
+}
+
 $spriteDir = Join-Path $PSScriptRoot "..\art\sprites"
 $portraitDir = Join-Path $PSScriptRoot "..\art\portraits"
 New-Item -ItemType Directory -Force $spriteDir | Out-Null
@@ -1556,3 +1625,4 @@ $battleDir = Join-Path $spriteDir "battle"
 New-Item -ItemType Directory -Force $battleDir | Out-Null
 foreach ($name in $poses.Keys) { Save-Sprite $name $poses[$name] $battleDir }
 foreach ($name in $walkFrames.Keys) { Save-Sprite $name $walkFrames[$name] $spriteDir }
+foreach ($name in $runFrames.Keys) { Save-Sprite $name $runFrames[$name] $spriteDir }

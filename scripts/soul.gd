@@ -21,7 +21,55 @@ func _ready() -> void:
 		global_position = box.get_inner_rect().get_center()
 
 
+## Hop's SOUL: a silver heart broken into shards that drift apart and back, with
+## red light pulsing through the cracks. (Elric's is the plain red one.)
+var fragmented: bool = false:
+	set(value):
+		fragmented = value
+		if _red_heart == null:
+			_red_heart = texture
+		texture = null if value else _red_heart
+		queue_redraw()
+var _red_heart: Texture2D
+var _time: float = 0.0
+
+## The outline of a heart, about 16 pixels across, centered on (0, 0).
+const HEART := [Vector2(0, -3), Vector2(3, -7), Vector2(6, -7), Vector2(8, -5), Vector2(8, -2),
+	Vector2(0, 7), Vector2(-8, -2), Vector2(-8, -5), Vector2(-6, -7), Vector2(-3, -7)]
+
+
+func _draw() -> void:
+	if not fragmented:
+		return
+	var heart := PackedVector2Array(HEART)
+	var pulse := 0.5 + 0.5 * sin(_time * 5.0)
+	# The red glow underneath, showing through the gaps.
+	var glow := PackedVector2Array()
+	for p in heart:
+		glow.append(p * 1.05)
+	draw_colored_polygon(glow, Color(0.9, 0.08, 0.15, 0.5 + 0.4 * pulse))
+	# Four shards, cut from the heart along two crooked lines, drifting apart.
+	var spread := 1.0 + 0.8 * sin(_time * 2.3)
+	var cuts := [
+		PackedVector2Array([Vector2(-10, -10), Vector2(1, -10), Vector2(-1, -1), Vector2(-10, 1)]),
+		PackedVector2Array([Vector2(1, -10), Vector2(10, -10), Vector2(10, 0), Vector2(-1, -1)]),
+		PackedVector2Array([Vector2(-10, 1), Vector2(-1, -1), Vector2(1, 10), Vector2(-10, 10)]),
+		PackedVector2Array([Vector2(-1, -1), Vector2(10, 0), Vector2(10, 10), Vector2(1, 10)]),
+	]
+	var directions := [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]
+	for i in 4:
+		for piece in Geometry2D.intersect_polygons(heart, cuts[i]):
+			var moved := PackedVector2Array()
+			for p in piece:
+				moved.append(p + directions[i].normalized() * spread)
+			draw_colored_polygon(moved, Color(0.82, 0.84, 0.9))
+			draw_polyline(moved + PackedVector2Array([moved[0]]), Color(0.45, 0.47, 0.55), 1.0)
+
+
 func _process(delta: float) -> void:
+	_time += delta
+	if fragmented:
+		queue_redraw()
 	if not can_move:
 		return
 

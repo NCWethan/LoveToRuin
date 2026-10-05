@@ -32,7 +32,22 @@ static func make(who: String, is_solid: bool = true) -> Character:
 			character.side.append(load(base + "_side3.png"))
 	character.front_walk.assign(walk_frames(base))
 	character.back_walk.assign(walk_frames(base + "_back"))
+	character.front_run.assign(run_frames(base))
+	character.back_run.assign(run_frames(base + "_back"))
+	character.side_run.assign(run_frames(base + "_side"))
 	return character
+
+
+## The running frames for a picture (base + "_run1.png", "_run2.png", and for side
+## views "_run3.png"), or none.
+static func run_frames(base: String) -> Array[Texture2D]:
+	var result: Array[Texture2D] = []
+	for i in range(1, 4):
+		var path := base + "_run%d.png" % i
+		if not ResourceLoader.exists(path):
+			break
+		result.append(load(path))
+	return result
 
 
 ## The two walking frames for a picture (base + "_walk1/2.png"), or none.

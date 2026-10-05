@@ -202,10 +202,10 @@ func _draw_panel() -> void:
 	var round_info := _current()
 	var opponent: String = round_info["opponent"]
 	_centered("ROCK  PAPER  SCISSORS", Vector2(320, 34), 22, Color(1, 0.85, 0.3))
-	_centered("ROUND %d / %d   -   vs. %s" % [_round + 1, _rounds.size(), opponent.to_upper()], Vector2(320, 58), 14, Color(0.8, 0.8, 0.85))
-	_centered("YOU %d  -  %d %s" % [_wins, _losses, opponent.to_upper()], Vector2(320, 80), 14, Color.WHITE)
+	_centered("ROUND %d / %d   -   vs. %s" % [_round + 1, _rounds.size(), DialogueBox.display_name(opponent).to_upper()], Vector2(320, 58), 14, Color(0.8, 0.8, 0.85))
+	_centered("YOU %d  -  %d %s" % [_wins, _losses, DialogueBox.display_name(opponent).to_upper()], Vector2(320, 80), 14, Color.WHITE)
 	_centered("ELRIC", LEFT_HAND + Vector2(0, -62), 14, Color(0.8, 0.65, 1.0))
-	_centered(opponent.to_upper(), RIGHT_HAND + Vector2(0, -62), 14, DialogueBox.SPEAKERS.get(opponent, {}).get("color", Color.WHITE))
+	_centered(DialogueBox.display_name(opponent).to_upper(), RIGHT_HAND + Vector2(0, -62), 14, DialogueBox.SPEAKERS.get(opponent, {}).get("color", Color.WHITE))
 
 	# The hands bob on each beat of the countdown, as fists, then show their throws.
 	var bob := 0.0

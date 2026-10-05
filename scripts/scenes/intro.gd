@@ -59,8 +59,8 @@ var _canvas: Node2D
 var _picture: TextureRect
 var _material: ShaderMaterial
 
-var _side: Array[Texture2D] = []
 var _back: Texture2D
+var _back_walk: Array[Texture2D] = []
 var _front: Texture2D
 
 
@@ -68,8 +68,8 @@ func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
 	_font = ThemeDB.fallback_font
 	Game.play_music("title")
-	_side.assign([load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png"), load("res://art/sprites/elric_side3.png")])
 	_back = load("res://art/sprites/elric_back.png")
+	_back_walk.assign([load("res://art/sprites/elric_back_walk1.png"), _back, load("res://art/sprites/elric_back_walk2.png"), _back])
 	_front = load("res://art/sprites/elric.png")
 
 	# The small canvas each picture is drawn on.
@@ -163,12 +163,15 @@ func _sky(top: Color, bottom: Color, horizon: float) -> void:
 		_canvas.draw_rect(Rect2(0, y, 200, horizon / bands + 1), top.lerp(bottom, float(i) / (bands - 1)))
 
 
-## Elric walking, seen from the side, `scale` times normal size, feet at `feet`.
-func _walking_elric(feet: Vector2, scale: float, walk_time: float) -> void:
-	var phase := int(walk_time / 0.16) % 4
-	var frame: Texture2D = _side[0] if phase % 2 == 1 else _side[1 if phase == 0 else 2]
+## Elric walking away from us, seen from behind, bobbing a little with each step.
+func _elric_walking_away(feet: Vector2, scale: float, walk_time: float) -> void:
+	var phase := int(walk_time / 0.18) % 4
+	var frame: Texture2D = _back_walk[phase]
 	var size := frame.get_size() * scale
-	_canvas.draw_texture_rect(frame, Rect2(feet - Vector2(size.x / 2, size.y), size), false)
+	var bob := 0.0 if phase % 2 == 1 else -0.6
+	# A soft shadow stretching back toward us (the sun is ahead of him).
+	_canvas.draw_colored_polygon(PackedVector2Array([feet + Vector2(-4, 0), feet + Vector2(4, 0), feet + Vector2(9, 10), feet + Vector2(-7, 10)]), Color(0.1, 0.08, 0.08, 0.5))
+	_canvas.draw_texture_rect(frame, Rect2(feet - Vector2(size.x / 2, size.y - bob), size), false)
 
 
 ## 1. An endless road at sunset, telephone poles going by, Elric walking alone.
@@ -215,8 +218,8 @@ func _picture_road() -> void:
 	for i in 3:
 		var at := Vector2(fmod(30 + i * 22 + t * 6.0, 220.0) - 10, 22 + i * 7 + sin(t * 2 + i) * 2)
 		_canvas.draw_polyline(PackedVector2Array([at + Vector2(-3, -1), at, at + Vector2(3, -1)]), Color(0.2, 0.15, 0.15), 1.0)
-	# Elric, walking along the shoulder of the road.
-	_walking_elric(Vector2(62, 112), 0.85, t)
+	# Elric, walking down the middle of the road toward the sunset, his back to us.
+	_elric_walking_away(Vector2(94, 110), 0.9, t)
 
 
 ## 2. A bus stop at night in the rain. The bus is leaving. Elric isn't on it.

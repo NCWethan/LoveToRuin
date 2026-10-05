@@ -32,6 +32,7 @@ const VONS_STOCK := [
 	{"name": "Nail File", "heal": 0, "slot": "weapon", "atk": 2, "def": 0, "price": 18},
 	{"name": "Hoodie", "heal": 0, "slot": "torso", "atk": 0, "def": 2, "price": 24},
 	{"name": "Sneakers", "heal": 0, "slot": "shoes", "atk": 0, "def": 1, "price": 14},
+	{"name": "Divergent Glove", "heal": 0, "slot": "weapon", "atk": 1, "def": 0, "price": 35},
 ]
 const JACK_STOCK := [
 	{"name": "Two Tacos", "heal": 12, "price": 6},
@@ -94,7 +95,8 @@ var people: Dictionary = {}
 
 func _ready() -> void:
 	setup_area(ENTRY)
-	Game.play_music("mall")
+	# A soft, quiet theme at night; the usual upbeat one during the day.
+	Game.play_music("mall_night" if _time_of_day() == "night" else "mall")
 	var tint := CanvasModulate.new()
 	tint.color = TINTS[_time_of_day()]
 	add_child(tint)
@@ -190,11 +192,55 @@ func _add_signs() -> void:
 		["FOR LEASE", Vector2(770, 31), 12, Color8(170, 170, 170)],
 		["JACK IN THE BOX", Vector2(1000, 314), 11, Color8(255, 255, 255)],
 	]
+	var closed := _stores_closed()
 	signs.draw.connect(func() -> void:
 		for label in labels:
 			var width := font.get_string_size(label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2]).x
 			signs.draw_string(font, label[1] - Vector2(width / 2, 0), label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2], label[3])
+		# Once the sun goes down, CLOSED signs hang on Vons and Knotty Barrel.
+		if closed:
+			for door_x in CLOSING_DOORS:
+				var plaque := Rect2(door_x - 16, 108, 32, 11)
+				signs.draw_rect(plaque, Color8(200, 30, 35))
+				signs.draw_rect(plaque, Color8(250, 240, 230), false, 1.0)
+				var w := font.get_string_size("CLOSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+				signs.draw_string(font, Vector2(door_x - w / 2, 117), "CLOSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
 	)
+	_add_streetlights()
+
+
+## The middle of the doors that get a CLOSED sign at night (Vons, Knotty Barrel).
+const CLOSING_DOORS := [180, 580]
+## Where the parking lot's streetlights stand.
+const STREETLIGHTS := [Vector2(130, 368), Vector2(370, 368), Vector2(710, 368), Vector2(870, 186), Vector2(520, 518), Vector2(1000, 518)]
+
+
+## Vons and Knotty Barrel close in the evening. (Jack in the Box is open late.)
+func _stores_closed() -> bool:
+	return _time_of_day() in ["evening", "night"]
+
+
+## Streetlights around the parking lot. They switch on in the evening, and glow a
+## warm orange at night.
+func _add_streetlights() -> void:
+	var time := _time_of_day()
+	var lit := time in ["evening", "night"]
+	for spot in STREETLIGHTS:
+		var lamp := Node2D.new()
+		lamp.position = spot
+		lamp.draw.connect(func() -> void:
+			lamp.draw_rect(Rect2(-1.5, -44, 3, 44), Color8(70, 70, 76))
+			lamp.draw_rect(Rect2(-1.5, -44, 12, 3), Color8(70, 70, 76))
+			lamp.draw_rect(Rect2(6, -42, 8, 4), Color8(255, 190, 90) if lit else Color8(150, 150, 140))
+			lamp.draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.3))
+			lamp.draw_circle(Vector2.ZERO, 5, Color(0, 0, 0, 0.3))
+			lamp.draw_set_transform(Vector2.ZERO)
+		)
+		if lit:
+			var light := make_light(Color(1.0, 0.6, 0.25), 95.0, 1.3 if time == "night" else 0.6)
+			light.position = Vector2(10, -6)
+			lamp.add_child(light)
+		world.add_child(lamp)
 
 
 # --- People ---------------------------------------------------------------
@@ -311,14 +357,23 @@ func _use_save_point() -> void:
 # --- Shops ----------------------------------------------------------------
 
 func _shop_vons() -> void:
+	if _stores_closed():
+		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (Through the glass, someone is mopping the floor.)"])
+		return
 	await Game.shop.open("Vons", "* (Bright lights. Soft music. A shopping cart\n*  with one bad wheel squeaks somewhere.)", VONS_STOCK)
 
 
 func _shop_jack() -> void:
-	await Game.shop.open("Jack in the Box", "* (The menu board glows. It smells amazing in here.)", JACK_STOCK)
+	var greeting := "* (The menu board glows. It smells amazing in here.)"
+	if _stores_closed():
+		greeting = "* (Jack in the Box: open late. The only lights\n*  still on in the whole mall.)"
+	await Game.shop.open("Jack in the Box", greeting, JACK_STOCK)
 
 
 func _shop_knotty() -> void:
+	if _stores_closed():
+		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (The chairs are up on the tables.)"])
+		return
 	await Game.shop.open("Knotty Barrel", "* (Wooden tables, a busy kitchen.\n*  Someone is very loudly recommending the salmon burger.)", KNOTTY_STOCK)
 
 
@@ -365,7 +420,7 @@ func _talk_crayola() -> void:
 		await chat("crayola", [], [
 			[{"who": "Crayola", "text": "...Thanks for talking to me. People usually\njust ask about my shirt.", "mood": "happy"}],
 			[{"who": "Crayola", "text": "It's a job application. I keep meaning to fill it out."}],
-			[{"who": "Crayola", "text": "NCWethan keeps asking me to go swimming.\nHe cannonballs. Every time. Even in the shallow end."}],
+			[{"who": "Crayola", "text": "N.C. Wethan keeps asking me to go swimming.\nHe cannonballs. Every time. Even in the shallow end."}],
 		])
 		return
 
@@ -403,11 +458,11 @@ func _talk_ncwethan() -> void:
 		{"who": "NCWethan", "text": "KING ME!!!", "mood": "happy"},
 		{"who": "Ronin", "text": "THAT'S NOT EVEN A REAL MOVE!\nYOU JUMPED THREE PIECES SIDEWAYS!", "mood": "angry"},
 		{"who": "NCWethan", "text": "AND IT WORKED!!", "mood": "happy"},
-		{"who": "NCWethan", "text": "Oh! Hey! New person! I'm NCWethan! I'm winning!!"},
+		{"who": "NCWethan", "text": "Oh! Hey! New person! I'm N.C. Wethan! I'm winning!!"},
 		{"who": "Ronin", "text": "HE'S CHEATING.", "mood": "angry"},
 		{"who": "NCWethan", "text": "Can't cheat if you don't know the rules!! Checkmate!!", "mood": "smug"},
 		{"who": "Ronin", "text": "THAT'S CHESS.", "mood": "angry"},
-		"* (A spark of lightning jumps off NCWethan's goggles.)",
+		"* (A spark of lightning jumps off N.C. Wethan's goggles.)",
 		{"who": "NCWethan", "text": "Sorry! That happens when I get excited!\nWhich is always!!", "mood": "happy"},
 	], [
 		[{"who": "NCWethan", "text": "Wanna arm wrestle? I've never lost!\nI've also never won! I mostly just zap people!"}],
@@ -542,9 +597,9 @@ func _talk_agent() -> void:
 	]
 	match Game.flags.get("tutorial_path", ""):
 		"spared":
-			first.append({"who": "Agent", "text": "You talked BigJoe6 down. Nobody does that.\nHe doesn't even listen to me. His mistake."})
+			first.append({"who": "Agent", "text": "You talked Big Joe down. Nobody does that.\nHe doesn't even listen to me. His mistake."})
 		"fought":
-			first.append({"who": "Agent", "text": "You beat BigJoe6 and Eggo. Fine. Don't let it go\nto your head. Being impressive is my job.", "mood": "smug"})
+			first.append({"who": "Agent", "text": "You beat Big Joe and Eggo. Fine. Don't let it go\nto your head. Being impressive is my job.", "mood": "smug"})
 	first.append({"who": "Agent", "text": "That fragment. Keep it in your bag, not your pocket.\nPockets get picked."})
 	await chat("agent", first, [
 		[{"who": "Agent", "text": "I don't repeat myself.", "mood": "smug"}, {"who": "Agent", "text": "...That didn't count."}],
@@ -604,7 +659,7 @@ func _talk_nassan() -> void:
 		return
 
 	await Game.dialogue.say([
-		{"who": "Nassan", "text": "You must be Elric. I've heard about you.\nEggo and BigJoe6 have been busy."},
+		{"who": "Nassan", "text": "You must be Elric. I've heard about you.\nEggo and Big Joe have been busy."},
 		{"who": "Nassan", "text": "I'm Nassan. I plan things.\nMostly other people's things."},
 		{"who": "Nassan", "text": "If you're following the fragments, I've been mapping\nstrange reports around the area."},
 		{"who": "Nassan", "text": "Lights in Westview High School after dark.\nDoors that lock on their own."},
@@ -621,14 +676,14 @@ func _talk_nassan() -> void:
 	Game.set_objective("Kill some time until it gets dark.")
 	await get_tree().create_timer(0.3).timeout
 	# If you've met him, you know that voice.
-	var caller := "NCWethan" if int(Game.flags.get("talks_ncwethan", 0)) > 0 else "???"
+	var caller := "N.C. Wethan" if int(Game.flags.get("talks_ncwethan", 0)) > 0 else "???"
 	await Game.dialogue.say([
 		{"who": "NCWethan", "tag": caller, "face": false, "text": "HEYYY!! NEW PERSON!! OVER HERE!!"},
 		{"who": "NCWethan", "tag": caller, "face": false, "text": "WE NEED A THIRD PLAYER!! IT'S AN EMERGENCY!!"},
-		{"who": "Hop", "text": "...That's NCWethan. It's never an emergency.", "mood": "smug"},
+		{"who": "Hop", "text": "...That's N.C. Wethan. It's never an emergency.", "mood": "smug"},
 		{"who": "Hop", "text": "We should probably go anyway.\nHe'll just keep yelling.", "mood": "happy"},
 	])
-	Game.set_objective("See what NCWethan and Ronin are yelling about.")
+	Game.set_objective("See what N.C. Wethan and Ronin are yelling about.")
 
 
 # --- Killing time: Rock Paper Scissors --------------------------------------
@@ -659,13 +714,16 @@ func _play_games() -> void:
 		people["Agent"].face(Vector2.DOWN)
 	await Game.dialogue.say([
 		{"who": "Agent", "text": "Rock Paper Scissors is a game of probability.\nYou two are playing it like a game of yelling.", "mood": "smug"},
-		{"who": "Agent", "text": "Three rounds against NCWethan. One against Ronin.\nThen me. I don't lose. I calculate."},
+		{"who": "Agent", "text": "Three rounds against N.C. Wethan. One against Ronin.\nThen me. I don't lose. I calculate."},
 		{"who": "Hop", "text": "I'll hold your stuff. And judge. Mostly judge.", "mood": "happy"},
 		"* (Watch your opponent closely. Pick a throw with LEFT/RIGHT.\n*  Press ENTER to start the countdown.)",
 	])
+	# Music: overly ambitious.
+	Game.play_music("rps", 0.3)
 	var game = RPS_GAME.new()
 	add_child(game)
 	var wins: int = await game.play(ROUNDS)
+	Game.play_music("mall", 0.8)
 	var beat_agent: bool = game._result == 1
 	game.queue_free()
 

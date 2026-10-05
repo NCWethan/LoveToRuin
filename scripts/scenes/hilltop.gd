@@ -21,20 +21,11 @@ const CRATER := Vector2(410, 270)
 ## How close to the crater Elric has to get for it to erupt.
 const ERUPT_DISTANCE := 95.0
 
-## Who arrives with the REVOLUTION Corps, and where they end up standing
-## (relative to Hopkuna).
-const CORPS := {
-	"BigJoe6": Vector2(-70, -40),
-	"Eggo": Vector2(-90, 0),
-	"Nassan": Vector2(70, -40),
-	"Nat": Vector2(90, 0),
-	"NCWethan": Vector2(-60, 45),
-	"Ronin": Vector2(60, 45),
-	"Supreme": Vector2(-30, -70),
-	"Crayola": Vector2(30, -70),
-	"Rooster": Vector2(0, 75),
-	"Agent": Vector2(115, -35),
-}
+## Who arrives with the REVOLUTION Corps, in the order they stand around Hopkuna
+## (going around the circle from Elric).
+const CORPS := ["Rooster", "Ronin", "Nat", "Agent", "Nassan", "Crayola", "Supreme", "BigJoe6", "Eggo", "NCWethan"]
+## The circle they make around Hopkuna (an oval, since the ground is seen at an angle).
+const CORPS_RING := Vector2(100, 66)
 
 ## The field's sprinklers, one per corner (named like the compass). While a corner's
 ## sprinkler is on, the water pushes Elric back out of it. The control box by the
@@ -47,6 +38,8 @@ var hop: Character
 var corps: Dictionary = {}
 ## Where Elric last stood that wasn't soaking wet (to push them back to).
 var _dry_spot: Vector2
+## Marks where the buried fragment is (removed once it erupts).
+var _crater_marker: Node2D
 var _decor: Node2D
 var _night: CanvasModulate
 var _font: Font
@@ -54,6 +47,13 @@ var _time: float = 0.0
 ## While above 0, a red beam is drawn from the crater toward `_beam_target`.
 var _beam_time: float = 0.0
 var _beam_target: Vector2
+const BEAM_LENGTH := 1.0
+## While above 0, the fragment is charging up: red light pours into the crater and
+## a thin aiming line flickers toward Elric. Counts down from CHARGE_LENGTH.
+var _charge_time: float = 0.0
+const CHARGE_LENGTH := 1.6
+## Keeps the charge at full (while Hop runs in) until it fires.
+var _charge_hold: bool = false
 ## While above 0, sparks and flames fly around Hopkuna.
 var _spark_time: float = 0.0
 ## While above 0, NCWethan's lightning / Ronin's fire stream into Hopkuna.
@@ -92,6 +92,14 @@ func _ready() -> void:
 	_place_people()
 	world.add_child(Hotspot.create(Vector2(110, 96), _read_map))
 	world.add_child(Hotspot.create(CONTROL_BOX, _control_box))
+	# The buried fragment: a red glow in the field, and eerie music when you get close.
+	if not flag("hp_erupted"):
+		_crater_marker = Node2D.new()
+		_crater_marker.position = CRATER
+		_crater_marker.add_to_group("fragment")
+		_crater_marker.set_meta("music_range", 1.8)
+		_crater_marker.add_child(make_light(Color(0.9, 0.1, 0.15), 70.0, 0.9))
+		world.add_child(_crater_marker)
 	_dry_spot = player.position
 	fit_camera_to_room()
 	_start.call_deferred()
@@ -125,6 +133,8 @@ func build_map() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	_beam_time = maxf(_beam_time - delta, 0.0)
+	if not _charge_hold:
+		_charge_time = maxf(_charge_time - delta, 0.0)
 	_spark_time = maxf(_spark_time - delta, 0.0)
 	_lightning_time = maxf(_lightning_time - delta, 0.0)
 	_fire_time = maxf(_fire_time - delta, 0.0)
@@ -162,15 +172,88 @@ func _draw_decor() -> void:
 		if not flag("has_fragment_3"):
 			_decor.draw_circle(CRATER, 4, Color(1, 0.2, 0.25, 0.6 + 0.3 * sin(_time * 6)))
 
-	# The blast from the fragment.
-	if _beam_time > 0.0:
-		_decor.draw_line(CRATER, _beam_target, Color(1, 0.2, 0.25, 0.9), 8.0)
-		_decor.draw_line(CRATER, _beam_target, Color(1, 0.8, 0.8), 3.0)
+	# Cracks splitting the ground around the crater while it charges and fires.
+	if _charge_time > 0.0 or _beam_time > 0.0:
+		var grow := 1.0 - _charge_time / CHARGE_LENGTH if _charge_time > 0.0 else 1.0
+		for c in 7:
+			var dir := Vector2.from_angle(c * TAU / 7 + 0.4)
+			var points := PackedVector2Array([CRATER + dir * 10])
+			for k in 4:
+				points.append(points[-1] + dir.rotated(sin(c * 3.0 + k) * 0.6) * 9.0 * grow)
+			_decor.draw_polyline(points, Color(0.08, 0.02, 0.02), 2.0)
+			_decor.draw_polyline(points, Color(1, 0.2, 0.25, 0.5 * grow), 1.0)
 
+
+
+## The buried fragment charging up and firing. While charging, the field goes dark,
+## red light spirals down into the crater, a black-and-red orb swells out of it, and
+## a thin aiming line flickers toward Elric. Then the blast: a huge beam with a black
+## edge and a white-hot core, black lightning crawling along it, shockwaves pumping
+## out of the crater, and a burst of shards where it hits.
+func _draw_crater_blast() -> void:
+	var red := Color(1.0, 0.12, 0.18)
+	var black := Color(0.04, 0.0, 0.01)
+	if _charge_time > 0.0:
+		var charge := 1.0 - _charge_time / CHARGE_LENGTH
+		# Everything else dims.
+		_fx.draw_rect(Rect2(CRATER - Vector2(900, 700), Vector2(1800, 1400)), Color(0.05, 0.0, 0.02, 0.45 * charge))
+		# Light spiraling in.
+		for i in 18:
+			var spin := _time * 3.0 + i * TAU / 18
+			var dist := fmod(1.0 - _time * 0.9 - i * 0.13, 1.0) * 110.0
+			var at := CRATER + Vector2.from_angle(spin + dist * 0.03) * dist
+			_fx.draw_line(at, at + (CRATER - at).normalized() * 6.0, Color(red, charge), 2.0)
+		# The swelling orb.
+		var orb := 4.0 + 16.0 * charge + sin(_time * 30.0) * 1.5 * charge
+		_fx.draw_circle(CRATER + Vector2(0, -6), orb * 2.2, Color(red, 0.18 * charge))
+		_fx.draw_circle(CRATER + Vector2(0, -6), orb, black)
+		_fx.draw_arc(CRATER + Vector2(0, -6), orb, 0, TAU, 24, red, 2.0)
+		_fx.draw_circle(CRATER + Vector2(0, -6), orb * 0.3, Color(1, 0.7, 0.7))
+		# The aiming line, locked onto Elric.
+		if charge > 0.35 and int(_time * 18.0) % 2 == 0:
+			_fx.draw_line(CRATER + Vector2(0, -6), player.position + Vector2(0, -16), Color(red, 0.7), 1.0)
+			_fx.draw_arc(player.position + Vector2(0, -16), 10.0 - 4.0 * charge, 0, TAU, 16, Color(red, 0.8), 1.0)
+	if _beam_time <= 0.0:
+		return
+	var age := BEAM_LENGTH - _beam_time
+	var fade := clampf(_beam_time / 0.35, 0.0, 1.0)
+	var from := CRATER + Vector2(0, -6)
+	var to := _beam_target
+	var dir := (to - from).normalized()
+	var side := dir.orthogonal()
+	# The beam swells in fast, then thins as it fades.
+	var width := (1.0 - pow(1.0 - clampf(age / 0.08, 0.0, 1.0), 2.0)) * (1.0 + 0.15 * sin(age * 70.0)) * fade
+	# Push past the target a little, so it looks like it goes THROUGH.
+	var end := to + dir * 30.0
+	_fx.draw_line(from, end, Color(red, 0.18), 46.0 * width)
+	_fx.draw_line(from, end, black, 26.0 * width)
+	_fx.draw_line(from, end, red, 16.0 * width)
+	_fx.draw_line(from, end, Color(1, 0.75, 0.75), 6.0 * width)
+	_fx.draw_line(from, end, Color(1, 1, 1), 2.0 * width)
+	# Black lightning crawling up and down the beam.
+	for b in 3:
+		var points := PackedVector2Array()
+		for k in 12:
+			var along := from.lerp(end, k / 11.0)
+			points.append(along + side * randf_range(-16.0, 16.0) * width)
+		_fx.draw_polyline(points, Color(black, fade), 2.5)
+		_fx.draw_polyline(points, Color(red, 0.6 * fade), 1.0)
+	# Shockwave rings pumping out of the crater.
+	for r in 3:
+		var ring := fmod(age * 2.5 + r / 3.0, 1.0)
+		_fx.draw_arc(from, 10.0 + ring * 70.0, 0, TAU, 32, Color(red, (1.0 - ring) * fade), 3.0)
+	# The hit: a flash and shards flying off.
+	_fx.draw_circle(to, 22.0 * width, Color(red, 0.4))
+	_fx.draw_circle(to, 10.0 * width, Color(1, 1, 1, fade))
+	for s in 10:
+		var shard_dir := dir.rotated(randf_range(-1.3, 1.3))
+		var at := to + shard_dir * (8.0 + age * 90.0 + s * 3.0)
+		_fx.draw_line(at, at + shard_dir * 6.0, Color(red if s % 2 == 0 else black, fade), 2.0)
 
 
 ## Effects drawn on top of everyone: the Corps' lightning and fire, and the group hug zap.
 func _draw_fx() -> void:
+	_draw_crater_blast()
 	# NCWethan's lightning and Ronin's fire.
 	if _lightning_time > 0.0 and hop and corps.has("NCWethan"):
 		_draw_lightning(corps["NCWethan"].position + Vector2(0, -20), hop.position + Vector2(0, -16), _lightning_time)
@@ -429,24 +512,39 @@ func _use_save_point() -> void:
 
 func _eruption() -> void:
 	Game.flags["hp_erupted"] = true
+	# The eruption takes over the music from here.
+	forget_fragment_music()
+	if _crater_marker:
+		_crater_marker.queue_free()
+		_crater_marker = null
 	Game.stop_music(1.0)
 	hop.follow = null
 	await Game.dialogue.say([
 		"* (The ground in the middle of the field is shaking.)",
 		{"who": "Hop", "text": "Uh. Elric?", "mood": "shocked"},
 	])
+	# The fragment charges up, aiming right at Elric.
 	Game.play_sfx("fragment")
-	shake(4.0, 0.8)
-	await get_tree().create_timer(0.8).timeout
+	_charge_time = CHARGE_LENGTH
+	shake(2.0, CHARGE_LENGTH)
+	await get_tree().create_timer(0.9).timeout
+	Game.play_sfx("alert")
+	shake(4.0, 0.7)
+	await get_tree().create_timer(0.7).timeout
+	_charge_time = 0.05
+	_charge_hold = true
 
 	# The fragment fires at Elric... and Hop jumps in the way.
 	await Game.dialogue.say([{"who": "Hop", "text": "ELRIC, MOVE!!", "mood": "shocked"}])
 	var between := player.position.lerp(CRATER, 0.35)
 	await hop.walk_to(between, 320.0)
+	_charge_hold = false
+	_charge_time = 0.0
 	_beam_target = hop.position + Vector2(0, -16)
-	_beam_time = 0.6
+	_beam_time = BEAM_LENGTH
+	Game.play_sfx("black_flash")
 	Game.play_sfx("hurt")
-	shake(10.0, 0.6)
+	shake(12.0, 0.9)
 	await _flash(Color(1.0, 0.35, 0.4), 0.15)
 	hop.lie_down()
 	await get_tree().create_timer(0.6).timeout
@@ -482,6 +580,12 @@ func _eruption() -> void:
 		{"who": "Hopkuna", "text": "Do you know how long I've waited,\nlittle wanderer?"},
 		"* (That voice. You've heard it before.)",
 		{"who": "Hopkuna", "text": callback},
+	])
+	await Game.dialogue.say(_reset_lines())
+	# He'll remember this, even if you go back.
+	Game.met_hopkuna = true
+	Game.save_settings()
+	await Game.dialogue.say([
 		{"who": "Hopkuna", "text": "He was always so careful.\nOnly let me out when he had no other choice."},
 		{"who": "Hopkuna", "text": "Tonight, he had no other choice. Thanks to you."},
 		{"who": "Hopkuna", "text": "And look. You've been carrying two of my\nfragments for me. How thoughtful."},
@@ -490,6 +594,41 @@ func _eruption() -> void:
 		{"who": "Hopkuna", "text": "Then I'll take them."},
 	])
 	await Game.start_battle("hopkuna", SCENE, player.position)
+
+
+## Hopkuna has DETERMINATION too. If you've ever RESET, he knows. (Nothing at all
+## if you never have.)
+func _reset_lines() -> Array:
+	if Game.resets == 0:
+		return []
+	if not Game.met_hopkuna:
+		# You reset before ever reaching him. He can't quite place it.
+		return [
+			{"who": "Hopkuna", "text": "...Hm."},
+			{"who": "Hopkuna", "text": "Strange. This feels... familiar.\nLike I've waited for this moment before."},
+			{"who": "Hopkuna", "text": "No... not me. YOU.\nYou went back, didn't you?"},
+			{"who": "Hopkuna", "text": "Interesting."},
+		]
+	var lines: Array = [
+		"* (Hopkuna tilts his head. He's studying you.)",
+		{"who": "Hopkuna", "text": "...Oh. It's you again."},
+		{"who": "Hopkuna", "text": "Don't give me that look. You RESET.\nI felt it."},
+		{"who": "Hopkuna", "text": "Everything rolled back. The road. The city.\nThat little club. They all forgot."},
+		{"who": "Hopkuna", "text": "Everyone except me."},
+		{"who": "Hopkuna", "text": "You're not the only one with DETERMINATION,\nlittle wanderer."},
+	]
+	if Game.resets > 1:
+		lines.append({"who": "Hopkuna", "text": "That's %d times now. I've been counting." % Game.resets})
+	lines.append({"who": "Hopkuna", "text": "Go back as many times as you like.\nThe ending doesn't change."})
+	return lines
+
+
+## Where a Corps member stands: eleven even spots on a ring around Hopkuna, one
+## for each of the ten of them and one for Elric (wherever Elric already is).
+func _corps_spot(who: String) -> Vector2:
+	var elric_angle := (player.position - hop.position).angle()
+	var slot := CORPS.find(who) + 1
+	return hop.position + Vector2.from_angle(elric_angle + slot * TAU / (CORPS.size() + 1)) * CORPS_RING
 
 
 ## Flashes the whole screen a color for a moment.
@@ -530,7 +669,7 @@ func _corps_arrives() -> void:
 		i += 1
 	for member in arrivals:
 		var who: String = corps.find_key(member)
-		member.walk_to(hop.position + CORPS[who], 220.0)
+		member.walk_to(_corps_spot(who), 220.0)
 	await get_tree().create_timer(1.6).timeout
 	for member in arrivals:
 		member.face(hop.position - member.position)
@@ -583,6 +722,8 @@ func _corps_arrives() -> void:
 		{"who": "Hopkuna", "text": "Three fragments, little wanderer.\nNine to go."},
 		{"who": "Hopkuna", "text": "I can wait.\nI'm very, very good at waiting."},
 	])
+	if Game.resets > 0:
+		await Game.dialogue.say([{"who": "Hopkuna", "text": "Even if you go back and do this all again."}])
 
 	# Hopkuna lets go. Hop collapses.
 	Game.stop_music(1.5)
@@ -665,7 +806,7 @@ func _ending_pacifist() -> void:
 	])
 	await _group_hug()
 	await Game.dialogue.say([
-		"* (NCWethan hugs everyone at once.\n*  There is a small electrical shock.)",
+		"* (N.C. Wethan hugs everyone at once.\n*  There is a small electrical shock.)",
 		{"who": "Rooster", "text": "...My hair is standing up. My HAIR.", "mood": "angry"},
 		{"who": "Hop", "text": "...You'd still want me around?\nAfter all that?", "mood": "sad"},
 		{"who": "Elric", "text": "...You saved me. We'll save you."},
@@ -745,7 +886,7 @@ func _talk_to_hop_after() -> void:
 				{"who": "Hop", "text": "...Thanks for not running.", "mood": "sad"},
 				{"who": "Hop", "text": "Nine fragments left. Whenever you're ready,\nI'm ready. Probably. Mostly.", "mood": "happy"},
 			], [
-				[{"who": "Hop", "text": "NCWethan says the zap was \"bonding.\"\nMy left arm is still buzzing.", "mood": "shocked"}],
+				[{"who": "Hop", "text": "N.C. Wethan says the zap was \"bonding.\"\nMy left arm is still buzzing.", "mood": "shocked"}],
 				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "text": "...Right."}, {"who": "Hop", "text": "...Okay. Good.", "mood": "happy"}],
 				[{"who": "Hop", "text": "Agent says I'm \"statistically a liability.\"\nSupreme says Agent's math is wrong. They're still arguing.", "mood": "smug"}],
 			])

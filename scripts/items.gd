@@ -22,6 +22,7 @@ const DESCRIPTIONS := {
 	"Sneakers": "Light on your feet. Easier to dodge.",
 	"Cleats": "Left under the Mt. Carmel bleachers. Good grip.",
 	"Foam Finger": "Wally's giant foam finger. WE'RE NUMBER ONE.",
+	"Divergent Glove": "Black, with red stitching that pulses. It hums near broken\n* things... It wants a hand the FRAGMENTS have already touched.",
 }
 
 

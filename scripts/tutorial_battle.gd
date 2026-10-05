@@ -5,8 +5,8 @@ extends RefCounted
 
 ## Shown before the first enemy turn.
 const INTRO := [
-	"* BigJoe6 blocks the way!\n* Eggo is... also here.",
-	"* BigJoe6: \"Hand over the fragment,\n*   Hopkuna's lackey!\"",
+	"* Big Joe blocks the way!\n* Eggo is... also here.",
+	"* Big Joe: \"Hand over the fragment,\n*   Hopkuna's lackey!\"",
 	"* (Use the ARROW KEYS to move your SOUL.\n*  Dodge the attacks!)",
 ]
 
@@ -54,7 +54,7 @@ static func create_enemies() -> Array[Enemy]:
 	eggo.spare_taunts = ["heh. good one."]
 
 	var bigjoe := Enemy.new()
-	bigjoe.name = "BigJoe6"
+	bigjoe.name = "Big Joe"
 	bigjoe.max_hp = 70
 	bigjoe.hp = 70
 	bigjoe.attack = 4
@@ -63,22 +63,22 @@ static func create_enemies() -> Array[Enemy]:
 	bigjoe.sprite = load("res://art/sprites/bigjoe6.png")
 	bigjoe.head_color = Color(0.78, 0.8, 0.86)
 	bigjoe.body_color = Color(0.12, 0.12, 0.12)
-	bigjoe.check_text = "* BIGJOE6 - ATK 8 DEF 2\n* Co-founder of Revolution.\n* Fights for justice and truth."
+	bigjoe.check_text = "* BIG JOE - ATK 8 DEF 2\n* Co-founder of Revolution.\n* Fights for justice and truth."
 	bigjoe.acts = [
 		{
 			"name": "Tell Truth",
 			"mercy": 40,
 			"lines": [
-				"* {actor} explains the fragment was just lying there.\n* BigJoe6 hesitates.",
-				"* {actor} calmly tells the truth again.\n* BigJoe6's grip loosens.",
-				"* {actor} keeps being honest.\n* BigJoe6 can't argue with the truth.",
+				"* {actor} explains the fragment was just lying there.\n* Big Joe hesitates.",
+				"* {actor} calmly tells the truth again.\n* Big Joe's grip loosens.",
+				"* {actor} keeps being honest.\n* Big Joe can't argue with the truth.",
 			],
 		},
 		{
 			"name": "Joke",
 			"mercy": 20,
 			"lines": [
-				"* {actor} tries a joke.\n* BigJoe6 snorts despite himself.",
+				"* {actor} tries a joke.\n* Big Joe snorts despite himself.",
 			],
 		},
 	]
@@ -88,13 +88,13 @@ static func create_enemies() -> Array[Enemy]:
 	bigjoe.spare_taunts = ["...you're legit?"]
 
 	# If one of them goes down, the other takes it hard.
-	eggo.partner_reactions = {"BigJoe6": {
+	eggo.partner_reactions = {"Big Joe": {
 		"line": "* Eggo: \"...joe? JOE.\"\n* Eggo stops joking. Eggo's hands are shaking.",
 		"mood": "sad",
 		"taunts": ["...get up, joe.", "not funny anymore.", "..."],
 	}}
 	bigjoe.partner_reactions = {"Eggo": {
-		"line": "* BigJoe6: \"EGGO!!\"\n* BigJoe6 is FURIOUS. His attacks get fiercer!",
+		"line": "* Big Joe: \"EGGO!!\"\n* Big Joe is FURIOUS. His attacks get fiercer!",
 		"mood": "angry",
 		"taunts": ["YOU'LL PAY FOR THAT!", "NO MORE HOLDING BACK!", "FOR EGGO!"],
 		"attack": 1,
@@ -120,7 +120,7 @@ static func create_items() -> Array[Dictionary]:
 static func attackers(enemy_turn: int, enemies: Array[Enemy]) -> Array[Enemy]:
 	var result: Array[Enemy] = []
 	for enemy in enemies:
-		if enemy.is_active() and (enemy_turn > 0 or enemy.name == "BigJoe6"):
+		if enemy.is_active() and (enemy_turn > 0 or enemy.name == "Big Joe"):
 			result.append(enemy)
 	# If BigJoe6 is gone, whoever is left attacks.
 	if result.is_empty():
@@ -144,13 +144,13 @@ static func flavor_text(turn: int, enemies: Array[Enemy]) -> String:
 		2:
 			return "* Eggo: \"...you could also just talk to us.\"\n* (Try ACT. CHECK shows an enemy's stats.)"
 		3:
-			return "* (Every enemy has their own ACT options.\n*  Tell Eggo a pun, or tell BigJoe6 the truth.)"
+			return "* (Every enemy has their own ACT options.\n*  Tell Eggo a pun, or tell Big Joe the truth.)"
 		4:
 			return "* (Party members take turns too.\n*  Hop can FIGHT, ACT, use ITEMs or DEFEND.)"
 		5:
 			return "* (Low on HP? ITEM heals.\n*  DEFEND halves the damage you take.)"
 		_:
-			return "* Eggo and BigJoe6 stand their ground."
+			return "* Eggo and Big Joe stand their ground."
 
 
 ## The tutorial fight as BattleData (enemies attack first, scripted hints each turn).

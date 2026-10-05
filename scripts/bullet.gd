@@ -15,7 +15,8 @@ extends Node2D
 @export var damage: int = 3
 @export var color: Color = Color.WHITE
 ## How it's drawn: "square", "egg", "bunny", "star", "pencil", "bubble", "card",
-## "finger", "ball", "claw", "arrow", "beam", "claw_slash", "ring" or "clapper".
+## "finger", "ball", "claw", "arrow", "beam", "claw_slash", "ring", "clapper",
+## "yolk", "lance", "shield" or "justice_star".
 @export var shape: String = "square"
 
 ## Bounces up when it reaches the bottom of the box (for hopping things).
@@ -24,6 +25,8 @@ var bounce_speed: float = 0.0
 var splits_into: int = 0
 ## The color of those pieces.
 var split_color: Color = Color(1.0, 0.85, 0.2)
+## The shape of those pieces.
+var split_shape: String = "square"
 ## Seconds it waits as a faint, harmless warning before it starts moving.
 var delay: float = 0.0
 ## How far it drifts side to side while moving (for falling paper and confetti).
@@ -142,8 +145,10 @@ func _split() -> void:
 		var piece := Bullet.new()
 		piece.bounds = bounds
 		piece.damage = maxi(1, damage - 1)
-		piece.size = 4.0
+		piece.size = 5.0 if split_shape == "yolk" else 4.0
 		piece.color = split_color
+		piece.shape = split_shape
+		piece.trail_length = 3 if split_shape == "yolk" else 0
 		var angle := lerpf(-PI + 0.4, -0.4, float(i) / maxi(1, splits_into - 1))
 		piece.velocity = Vector2(cos(angle), sin(angle)) * 110.0
 		piece.acceleration = Vector2(0, 220)
@@ -249,14 +254,91 @@ func _draw() -> void:
 				draw_line(-beam_vector, beam_vector, color, size * 1.2)
 				draw_line(-beam_vector, beam_vector, Color(1, 0.95, 0.95), size * 0.45)
 		"egg":
-			draw_circle(Vector2(0, 1), half, color)
-			draw_circle(Vector2(0, -1), half * 0.8, color)
+			# A shaded egg, wobbling as it falls, with a crack that grows as it speeds up.
+			var wobble := sin(_time * 9.0) * 0.18
+			draw_set_transform(Vector2.ZERO, wobble, Vector2.ONE)
+			var egg := PackedVector2Array()
+			for k in 20:
+				var a := k * TAU / 20
+				# Narrower at the top, rounder at the bottom.
+				var r := half * (0.82 if sin(a) < 0 else 1.0)
+				egg.append(Vector2(cos(a) * half * 0.85, sin(a) * r * 1.2))
+			draw_colored_polygon(egg, color.darkened(0.25))
+			var inner := PackedVector2Array()
+			for p in egg:
+				inner.append(p * 0.82 + Vector2(-0.8, -0.8))
+			draw_colored_polygon(inner, color)
+			draw_circle(Vector2(-half * 0.3, -half * 0.45), half * 0.22, Color(1, 1, 1, 0.8))
+			var crack := clampf(velocity.length() / 220.0, 0.0, 1.0)
+			if crack > 0.25:
+				var line := PackedVector2Array([Vector2(-half * 0.8, 0), Vector2(-half * 0.3, -2), Vector2(0, 1.5), Vector2(half * 0.35, -1.5), Vector2(half * 0.8, 0.5)])
+				var shown := PackedVector2Array()
+				for k in maxi(2, int(line.size() * crack)):
+					shown.append(line[k])
+				draw_polyline(shown, Color(0.35, 0.3, 0.25), 1.0)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"yolk":
+			# A runny drop of yolk: a round bottom pulled to a point at the top.
+			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN
+			var side := dir.orthogonal()
+			var tail := -dir * half * 1.6
+			draw_colored_polygon(PackedVector2Array([tail, side * half * 0.95, dir * half * 0.2, -side * half * 0.95]), color.darkened(0.15))
+			draw_circle(Vector2.ZERO, half, color.darkened(0.15))
+			draw_circle(-side * 0.6 - dir * 0.6, half * 0.8, color)
+			draw_circle(-side * half * 0.35 - dir * half * 0.3, half * 0.28, Color(1, 1, 0.85, 0.9))
 		"bunny":
-			# A tiny white bunny: body, head and two ears.
-			draw_rect(Rect2(-half, -half * 0.4, size, size * 0.7), color)
-			draw_rect(Rect2(half * 0.2, -half, half * 0.8, half * 0.8), color)
-			draw_rect(Rect2(half * 0.3, -half * 2.0, 1.5, half), color)
-			draw_rect(Rect2(half * 0.8, -half * 2.0, 1.5, half), color)
+			# A little white bunny mid-hop: round body, head, floppy ears, pink nose,
+			# a black eye and a cotton tail. It leans into the jump.
+			var facing := 1.0 if velocity.x >= 0 else -1.0
+			draw_set_transform(Vector2.ZERO, clampf(velocity.y / 600.0, -0.4, 0.4) * facing, Vector2(facing, 1))
+			var ear_flop := clampf(-velocity.y / 300.0, -1.0, 1.0)
+			draw_circle(Vector2(-half * 0.2, half * 0.15), half * 0.8, color.darkened(0.12))
+			draw_circle(Vector2(-half * 0.3, 0), half * 0.72, color)
+			draw_circle(Vector2(-half * 1.05, half * 0.1), half * 0.3, Color(1, 1, 1))
+			draw_circle(Vector2(half * 0.55, -half * 0.45), half * 0.52, color)
+			for e in 2:
+				var base := Vector2(half * (0.35 + e * 0.35), -half * 0.85)
+				var tip := base + Vector2(-half * (0.5 + 0.3 * ear_flop) - e * 1.0, -half * (1.1 - 0.2 * ear_flop))
+				draw_line(base, tip, color, 2.6)
+				draw_line(base.lerp(tip, 0.2), base.lerp(tip, 0.8), Color(1.0, 0.7, 0.78), 1.0)
+			draw_circle(Vector2(half * 0.75, -half * 0.55), 1.0, Color(0.1, 0.1, 0.12))
+			draw_circle(Vector2(half * 1.05, -half * 0.35), 0.9, Color(1.0, 0.55, 0.65))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		"lance":
+			# A knight's lance: a long tapered steel point, a striped grip, and a red
+			# and gold pennant flapping behind it.
+			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.RIGHT
+			var side := dir.orthogonal()
+			if not is_armed():
+				# The warning: a faint line across the box at its height.
+				draw_line(Vector2.ZERO, dir * (bounds.size.x - 8.0 if bounds.has_area() else 200.0), Color(1, 0.3, 0.3, 0.6), 1.0)
+			var back := -dir * size * 2.6
+			draw_colored_polygon(PackedVector2Array([dir * size * 1.6, side * size * 0.38, -side * size * 0.38]), color)
+			draw_line(dir * size * 1.5, side * size * 0.2, Color(1, 1, 1, 0.9), 1.0)
+			draw_colored_polygon(PackedVector2Array([side * size * 0.55, side * size * 0.25 - dir * 3.0, -side * size * 0.25 - dir * 3.0, -side * size * 0.55]), Color(0.75, 0.6, 0.25))
+			draw_line(-dir * 3.0, back, Color(0.55, 0.35, 0.2), 2.5)
+			for k in 3:
+				var at := -dir * (6.0 + k * 5.0)
+				draw_line(at - side * 1.3, at + side * 1.3 - dir * 1.5, Color(0.85, 0.2, 0.2), 1.2)
+			var flap := sin(_time * 18.0) * 2.5
+			draw_colored_polygon(PackedVector2Array([back * 0.55, back * 0.55 + side * size * 0.75, back * 0.95 + side * (size * 0.55 + flap)]), Color(0.85, 0.2, 0.2))
+			draw_colored_polygon(PackedVector2Array([back * 0.55, back * 0.55 + side * size * 0.38, back * 0.8 + side * (size * 0.35 + flap * 0.6)]), Color(1.0, 0.82, 0.25))
+		"shield":
+			# A kite shield: steel rim, blue field, a gold star in the middle.
+			var s := half * 1.15
+			var outline := PackedVector2Array([Vector2(-s, -s * 0.9), Vector2(s, -s * 0.9), Vector2(s * 0.95, s * 0.1), Vector2(0, s * 1.15), Vector2(-s * 0.95, s * 0.1)])
+			draw_colored_polygon(outline, color)
+			var field := PackedVector2Array()
+			for p in outline:
+				field.append(p * 0.72 + Vector2(0, -0.6))
+			draw_colored_polygon(field, Color(0.2, 0.32, 0.65))
+			draw_line(Vector2(-s * 0.72, -s * 0.66), Vector2(-s * 0.1, -s * 0.66), Color(1, 1, 1, 0.5), 1.0)
+			_draw_star(Vector2(0, -s * 0.1), s * 0.38, Color(1.0, 0.82, 0.25), 0.0)
+		"justice_star":
+			# A spinning five-pointed star of light, with a hot white middle.
+			_draw_star(Vector2.ZERO, half * 1.5, Color(color, 0.35), _time * 7.0)
+			_draw_star(Vector2.ZERO, half, color, _time * 7.0)
+			_draw_star(Vector2.ZERO, half * 0.45, Color(1, 1, 0.9), _time * 7.0)
 		"star":
 			var spin := _time * 8.0
 			for i in 4:
@@ -298,6 +380,15 @@ func _draw() -> void:
 			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)
 		_:
 			draw_rect(Rect2(-half, -half, size, size), color)
+
+
+## A filled five-pointed star centered on `at`.
+func _draw_star(at: Vector2, radius: float, star_color: Color, spin: float) -> void:
+	var points := PackedVector2Array()
+	for k in 10:
+		var r := radius if k % 2 == 0 else radius * 0.45
+		points.append(at + Vector2.from_angle(spin - PI / 2 + k * PI / 5) * r)
+	draw_colored_polygon(points, star_color)
 
 
 ## Where the end of a clapper is right now, in screen coordinates.

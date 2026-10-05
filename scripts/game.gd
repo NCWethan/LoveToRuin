@@ -124,6 +124,13 @@ var settings_path: String = SETTINGS_PATH
 ## music / sound: 0 to 1.  text_speed: 0 slow, 1 normal, 2 fast.
 var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "fullscreen": false}
 
+## Things that are remembered even after you RESET (kept with the settings, not
+## the save). Hopkuna has DETERMINATION too: he notices.
+## resets: how many times a save file has been erased.
+## met_hopkuna: whether you've ever seen him wake up.
+var resets: int = 0
+var met_hopkuna: bool = false
+
 
 ## Two audio buses, "Music" and "SFX", so each can have its own volume.
 func _make_audio_buses() -> void:
@@ -140,6 +147,8 @@ func load_settings() -> void:
 	if file.load(settings_path) == OK:
 		for key in settings:
 			settings[key] = file.get_value("settings", key, settings[key])
+		resets = file.get_value("memory", "resets", 0)
+		met_hopkuna = file.get_value("memory", "met_hopkuna", false)
 	apply_settings()
 
 
@@ -147,6 +156,8 @@ func save_settings() -> void:
 	var file := ConfigFile.new()
 	for key in settings:
 		file.set_value("settings", key, settings[key])
+	file.set_value("memory", "resets", resets)
+	file.set_value("memory", "met_hopkuna", met_hopkuna)
 	file.save(settings_path)
 
 
@@ -329,6 +340,20 @@ func play_music(song: String, fade_time: float = 0.6) -> void:
 	_fade_music(new, MUSIC_VOLUME_DB, fade_time, false)
 
 
+## The name of the song playing now ("" for silence).
+func current_music() -> String:
+	return _music_name
+
+
+## How many seconds into the current song we are (for things that move to the
+## beat), or -1.0 if nothing is playing.
+func music_time() -> float:
+	var player := _music_players[_music_current]
+	if _music_name == "" or not player.playing:
+		return -1.0
+	return player.get_playback_position() + AudioServer.get_time_since_last_mix()
+
+
 func stop_music(fade_time: float = 0.6) -> void:
 	play_music("", fade_time)
 
@@ -450,6 +475,9 @@ func has_save() -> bool:
 func delete_save() -> void:
 	if has_save():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+		# Everyone forgets. Almost everyone.
+		resets += 1
+		save_settings()
 	new_game()
 
 
@@ -568,6 +596,7 @@ func _add_input_actions() -> void:
 	_add_keys("confirm", [KEY_ENTER, KEY_KP_ENTER])
 	_add_keys("cancel", [KEY_X, KEY_SHIFT])
 	_add_keys("menu", [KEY_B])
+	_add_keys("sprint", [KEY_SHIFT])
 	# WASD works for moving (and for menus) as well as the arrow keys.
 	var wasd := {"ui_up": KEY_W, "ui_left": KEY_A, "ui_down": KEY_S, "ui_right": KEY_D}
 	for action in wasd:

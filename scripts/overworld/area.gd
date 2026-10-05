@@ -80,6 +80,9 @@ func setup_area(default_spawn: Vector2) -> void:
 	compass.draw.connect(_draw_compass.bind(compass))
 	compass.queue_redraw()
 
+	# Music goes eerie near fragments (checked every frame).
+	get_tree().process_frame.connect(_check_fragment_music)
+
 
 ## N, E, S and W around a little dial.
 func _draw_compass(compass: Control) -> void:
@@ -98,12 +101,80 @@ func _draw_compass(compass: Control) -> void:
 		compass.draw_string(font, letters[letter] + Vector2(-size.x / 2, 4), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
 
 
-## A SAVE point: a star that twinkles between two frames, like in Undertale.
+## A SAVE point: a star that twinkles between two frames, like in Undertale, and
+## always glows a warm yellow, lighting up the ground around it.
 func make_save_star() -> Character:
 	var star := Character.new().setup(load("res://art/sprites/save_star.png"), null, false)
 	star.frames.assign([load("res://art/sprites/save_star.png"), load("res://art/sprites/save_star2.png")])
 	star.frame_time = 0.22
+	star.add_child(make_light(Color(1.0, 0.85, 0.35), 70.0, 0.9))
+	# (Areas that set star.glow = true get a yellow pulse too.)
+	star.glow_color = Color(1.0, 0.9, 0.4)
 	return star
+
+
+## A fragment: a dark red shard that glows a deep red. Walking near one makes the
+## music go eerie (see _check_fragment_music).
+func make_fragment() -> Character:
+	var shard := Character.new().setup(load("res://art/sprites/fragment.png"), null, false)
+	shard.glow = true
+	shard.glow_color = Color(0.85, 0.08, 0.15)
+	shard.add_child(make_light(Color(0.9, 0.1, 0.15), 90.0, 1.1))
+	shard.add_to_group("fragment")
+	return shard
+
+
+## A soft round light (it brightens whatever it shines on, even at night).
+static func make_light(color: Color, radius: float, energy: float) -> PointLight2D:
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1, 1, 1, 1))
+	gradient.set_color(1, Color(1, 1, 1, 0))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 128
+	texture.height = 128
+	var light := PointLight2D.new()
+	light.texture = texture
+	light.color = color
+	light.energy = energy
+	light.texture_scale = radius * 2.0 / 128.0
+	light.position = Vector2(0, -8)
+	return light
+
+
+# --- Music near fragments ----------------------------------------------------------
+# Getting close to a fragment (anything in the "fragment" group) fades the music
+# into an eerie drone. Walking away, or picking it up, brings the area's music back.
+
+const FRAGMENT_MUSIC_RANGE := 120.0
+var _near_fragment: bool = false
+var _music_before_fragment: String = ""
+
+
+func _check_fragment_music() -> void:
+	if not is_inside_tree() or player == null or Game.transitioning:
+		return
+	var closest := INF
+	for node in get_tree().get_nodes_in_group("fragment"):
+		var range_mult: float = node.get_meta("music_range", 1.0)
+		closest = minf(closest, (node as Node2D).global_position.distance_to(player.position) / range_mult)
+	if not _near_fragment and closest < FRAGMENT_MUSIC_RANGE:
+		_near_fragment = true
+		_music_before_fragment = Game.current_music()
+		Game.play_music("eerie", 1.2)
+	elif _near_fragment and closest > FRAGMENT_MUSIC_RANGE * 1.3:
+		_near_fragment = false
+		if Game.current_music() == "eerie":
+			Game.play_music(_music_before_fragment, 1.5)
+
+
+## For cutscenes that take over the music near a fragment: stop the eerie music
+## logic from switching back afterward.
+func forget_fragment_music() -> void:
+	_near_fragment = false
 
 
 # --- Looking at things ---------------------------------------------------------

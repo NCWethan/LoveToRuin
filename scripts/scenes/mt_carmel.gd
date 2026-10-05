@@ -25,8 +25,8 @@ const FIELD_EDGE_X := 570.0                 # walking left of this after the fra
 const GATE_CELL := Vector2i(29, 18)
 const KEY_TREE := Vector2i(16, 17)
 ## Where the "MC" is painted on the field, and where the Sundevils banner hangs.
-const FIELD_LOGO := Vector2(760, 375)
-const SUNDEVIL_BANNER := Vector2(760, 300)
+const FIELD_LOGO := Vector2(750, 375)
+const SUNDEVIL_BANNER := Vector2(750, 300)
 const CURB_Y := 488.0                      # the bottom sidewalk, right at the curb
 const CAR_LANE_Y := 538.0                   # where a car's wheels touch the road (the near lane)
 
@@ -68,7 +68,20 @@ func _add_school_pride() -> void:
 		var text := "HOME OF THE SUNDEVILS"
 		var text_width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		paint.draw_string(font, Vector2(SUNDEVIL_BANNER.x - text_width / 2, SUNDEVIL_BANNER.y + 5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, yellow)
+		# Every couple of seconds, a little glint in the tree with Coach's keys.
+		if not _flag("has_gate_key") and not _flag("gate_open"):
+			var t := Time.get_ticks_msec() / 1000.0
+			var flash := fmod(t, 2.4)
+			if flash < 0.35:
+				var shine := sin(flash / 0.35 * PI)
+				var spot := Vector2(KEY_TREE.x * Room.TILE + 13, KEY_TREE.y * Room.TILE + 6)
+				var glint := 4.0 * shine
+				paint.draw_line(spot - Vector2(glint, 0), spot + Vector2(glint, 0), Color(1, 1, 0.85, shine), 1.0)
+				paint.draw_line(spot - Vector2(0, glint), spot + Vector2(0, glint), Color(1, 1, 0.85, shine), 1.0)
+				paint.draw_circle(spot, 1.2, Color(1, 1, 1, shine))
 	)
+	# Redraw every frame, so the glint can twinkle.
+	get_tree().process_frame.connect(paint.queue_redraw)
 
 
 func _flag(name: String) -> bool:
@@ -143,7 +156,7 @@ func _place_characters() -> void:
 
 	# The fragment, until Elric picks it up.
 	if not _flag("has_fragment_1"):
-		fragment = Character.new().setup(preload("res://art/sprites/fragment.png"), null, false)
+		fragment = make_fragment()
 		fragment.position = FRAGMENT_SPOT
 		fragment.glow = true
 		fragment.on_interact = _inspect_fragment

@@ -57,6 +57,7 @@ func _draw_chapter_complete(alpha: float) -> void:
 	var ending: Array = ROUTE_ENDINGS.get(Game.flags.get("route", "neutral"), ROUTE_ENDINGS["neutral"])
 	var route_color: Color = ending[1]
 	route_color.a = alpha
+	_draw_fragment_ring(alpha)
 	_centered("LOVE TO RUIN", 110, 44, Color(1, 1, 1, alpha))
 	_centered("CHAPTER 1 COMPLETE", 160, 20, Color(0.85, 0.85, 0.85, alpha))
 	# (The route's name stays hidden; only its closing line shows.)
@@ -68,6 +69,49 @@ func _draw_chapter_complete(alpha: float) -> void:
 	if _time > 2.5:
 		_centered("Thank you for playing!", 410, 16, Color(1, 1, 0.6))
 		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
+
+
+## Behind the text: a great ring split into twelve pieces, one for each FRAGMENT,
+## turning slowly. The three found so far fill in deep red one by one (with a
+## flash), and glow. The other nine are just faint outlines... for now.
+const RING_CENTER := Vector2(320, 230)
+const RING_OUTER := 190.0
+const RING_INNER := 150.0
+const FRAGMENTS_FOUND := 3
+
+
+func _draw_fragment_ring(alpha: float) -> void:
+	var spin := _time * 0.05
+	var piece := TAU / 12
+	var gap := 0.04
+	var red := Color(0.8, 0.05, 0.12)
+	for k in 12:
+		var start := spin + k * piece + gap - PI / 2
+		var end := spin + (k + 1) * piece - gap - PI / 2
+		var shape := PackedVector2Array()
+		for s in 9:
+			shape.append(RING_CENTER + Vector2.from_angle(lerpf(start, end, s / 8.0)) * RING_OUTER)
+		for s in 9:
+			shape.append(RING_CENTER + Vector2.from_angle(lerpf(end, start, s / 8.0)) * RING_INNER)
+		var outline := shape.duplicate()
+		outline.append(shape[0])
+		var fill_at := 1.0 + k * 0.6
+		if k < FRAGMENTS_FOUND and _time >= fill_at:
+			var since := _time - fill_at
+			var flash := clampf(1.0 - since / 0.4, 0.0, 1.0)
+			var glow := 0.5 + 0.15 * sin(_time * 2.0 + k)
+			# A soft glow, the red piece, and a white flash as it fills in.
+			var halo := PackedVector2Array()
+			for p in shape:
+				halo.append(RING_CENTER + (p - RING_CENTER) * (1.0 + 0.03 * glow))
+			draw_colored_polygon(halo, Color(red, 0.25 * alpha * glow))
+			draw_colored_polygon(shape, Color(red.lerp(Color.WHITE, flash), alpha * (0.55 + 0.25 * glow)))
+			draw_polyline(outline, Color(1, 0.35, 0.4, alpha), 1.5)
+		else:
+			draw_polyline(outline, Color(0.6, 0.35, 0.38, 0.6 * alpha), 1.0)
+	# Thin circles holding it all together.
+	draw_arc(RING_CENTER, RING_OUTER + 8.0, 0, TAU, 96, Color(0.6, 0.2, 0.25, 0.25 * alpha), 1.0)
+	draw_arc(RING_CENTER, RING_INNER - 8.0, 0, TAU, 96, Color(0.6, 0.2, 0.25, 0.25 * alpha), 1.0)
 
 
 func _centered(text: String, y: float, size: int, color: Color) -> void:
