@@ -56,6 +56,7 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 static func _bullet(enemy: Enemy, parent: Node, area: Rect2, at: Vector2) -> Bullet:
 	var bullet := Bullet.new()
 	bullet.damage = enemy.attack
+	bullet.source = enemy
 	bullet.bounds = area
 	bullet.position = at
 	parent.add_child(bullet)

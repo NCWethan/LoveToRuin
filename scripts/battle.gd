@@ -173,6 +173,9 @@ func _ready() -> void:
 	# Battle music always plays at normal speed (the overworld slows down on Genocide).
 	Game.music_pitch = 1.0
 	Game.music_override = ""
+	# Status effects don't carry over between battles.
+	for member in party:
+		member.statuses.clear()
 	# Overheal only lasts for the battle it was given in.
 	for member in party:
 		member.overheal = 0
@@ -186,6 +189,9 @@ func _ready() -> void:
 				fighting.append(member)
 		party = fighting
 	enemies = _data.enemies
+	# Everyone here goes in the Encyclopedia.
+	for enemy in enemies:
+		_effects().mark_seen(enemy.name)
 
 	box.center = BOX_CENTER
 	box.size = TEXT_BOX_SIZE
@@ -549,7 +555,9 @@ func _run_next_action() -> void:
 func _use_item(member: PartyMember, item: Dictionary, target: PartyMember) -> void:
 	items.erase(item)
 	var was_down := target.is_down()
-	var healed := mini(int(item["heal"]), target.max_hp - target.hp)
+	# (QUEASY: food only does half as much.)
+	var heal_amount := int(item["heal"]) / (2 if target.statuses.has("QUEASY") else 1)
+	var healed := mini(heal_amount, target.max_hp - target.hp)
 	target.hp += healed
 	_add_popup("+%d" % healed, _panel_position(target), Color.GREEN)
 	Game.play_sfx("heal")
@@ -610,6 +618,8 @@ const CALL_LENGTH := 1.6
 ## Eggo's The-Eggo Benedict: overheal HP per serving, and the most anyone can have.
 const BENEDICT_OVERHEAL := 13
 const MAX_OVERHEAL := 26
+## N.C. Wethan's Stravant's Lightning: how many turns the enemy is slowed.
+const STRAVANT_TURNS := 3
 ## Nat's FOOTNOTE: how much closer the enemy gets to being spared.
 const NAT_MERCY := 15
 ## Nassan's plan: how much longer the SOUL is safe after a hit while he's here.
@@ -670,6 +680,11 @@ func _helper_wait(id: String) -> int:
 	var charges: int = info.get("charges", -1)
 	if charges >= 0 and int(_helper_uses.get(id, 0)) >= charges:
 		return -1
+	# Some only come when things are desperate: whoever's calling is below half HP.
+	if info.get("low_hp", false) and current_member < party.size():
+		var caller := party[current_member]
+		if caller.hp * 2 >= caller.max_hp:
+			return -2
 	var own: int = int(_helper_last_turn.get(id, -99)) + int(info.get("cooldown", CALL_COOLDOWN)) - (_turn_number + 1)
 	return maxi(_call_wait(), maxi(own, 0))
 
@@ -701,9 +716,23 @@ func _process_call(delta: float) -> void:
 	var food: bool = info.get("kind", "hit") == "food"
 	var stays: bool = info.get("kind", "hit") == "iframes"
 	var reads: bool = info.get("kind", "hit") == "read"
-	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
+	var lightning: bool = info.get("kind", "hit") == "lightning"
+	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME + (0.35 if lightning else 0.0):
 		_call["landed"] = true
-		if reads:
+		if lightning:
+			var damage := 10 + Game.lv() * 3 + randi() % 4
+			# (Friends never knock anyone out.)
+			_call["damage"] = maxi(mini(damage, target.hp - 1), 0)
+			target.hp -= _call["damage"]
+			target.statuses["STRAVANT"] = STRAVANT_TURNS
+			target.shake = 0.7
+			target.flash = 0.3
+			Game.play_sfx("zap")
+			Game.play_sfx("punch_hit")
+			_impact(target, 0.1, false)
+			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 16)
+			_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
+		elif reads:
 			_nat_reads(target)
 			Game.play_sfx("spare")
 			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
@@ -741,12 +770,14 @@ func _process_call(delta: float) -> void:
 			_impact(target, 0.07, false)
 			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
 			_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
-	if _call["time"] < CALL_LENGTH:
+	if _call["time"] < CALL_LENGTH + (0.5 if lightning else 0.0):
 		return
 	var helper_name := DialogueBox.display_name(_call["id"])
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
 	if shield:
 		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif lightning:
+		line = "* %s used %s!\n* %s took %d damage, and its attacks are slowed\n*  for %d turns." % [helper_name, info["move"], target.name, _call["damage"], STRAVANT_TURNS]
 	elif reads:
 		if target.spare_refusal != "":
 			line = "* %s used %s!\n* (%s can't be talked down. Nat shrugs.)" % [helper_name, info["move"], target.name]
@@ -779,6 +810,9 @@ func _draw_call() -> void:
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
 	var food: bool = info.get("kind", "hit") == "food"
+	if info.get("kind", "hit") == "lightning":
+		_draw_stravant(t, target, _call["sprite"])
+		return
 	var stays: bool = info.get("kind", "hit") == "iframes"
 	# Nassan doesn't run off: once he's in place, he's drawn by _draw_nassan.
 	if stays and _call["landed"]:
@@ -849,6 +883,68 @@ func _nat_reads(target: Enemy) -> void:
 		_nat_pages.append("* (Page %d. %s's next attack:\n*  %s)" % [100 + randi() % 400, enemy.name, hints.get(pattern, "...the page is torn out.")])
 	if _nat_pages.is_empty():
 		_nat_pages.append("* (Nat flips through. \"Nothing's coming next turn.\")")
+
+
+## N.C. Wethan's Stravant's Lightning: he runs in, floats up as glowing blue rune
+## ribbons spiral around him, then a dark blue bolt cracks into the enemy, trailing
+## cyan sparks. Then he drifts down and runs off.
+func _draw_stravant(t: float, target: Enemy, texture: Texture2D) -> void:
+	var spot := 280.0
+	var x: float
+	var leaving := t > 1.6
+	if t < 0.45:
+		x = lerpf(-60.0, spot, 1.0 - pow(1.0 - t / 0.45, 2.0))
+	elif not leaving:
+		x = spot
+	else:
+		x = lerpf(spot, -80.0, (t - 1.6) / 0.5)
+	# Floating: up off the ground, bobbing.
+	var rise := clampf((t - 0.45) / 0.3, 0.0, 1.0) * clampf((1.75 - t) / 0.25, 0.0, 1.0)
+	var feet := Vector2(x, 180.0 - rise * (34.0 + sin(t * 6.0) * 4.0))
+	var blue := Color(0.45, 0.75, 1.0)
+	var ribbons := clampf((t - 0.4) / 0.2, 0.0, 1.0) * clampf((1.7 - t) / 0.3, 0.0, 1.0)
+	# The rune ribbons: rings around him at three heights, behind and in front.
+	for front in [false, true]:
+		if front:
+			var size := texture.get_size() * 3.0
+			_overlay.draw_set_transform(feet, 0.0, Vector2(-1.0 if leaving else 1.0, 1.0))
+			_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false, Color(0.75, 0.9, 1.0) if ribbons > 0.0 else Color.WHITE)
+			_overlay.draw_set_transform(Vector2.ZERO)
+		if ribbons <= 0.0:
+			continue
+		for ring in 3:
+			var middle := feet + Vector2(0, -20.0 - ring * 26.0)
+			var radius := 44.0 - ring * 6.0
+			var spin := t * (3.0 + ring) + ring
+			var points := PackedVector2Array()
+			for k in 17:
+				var a := spin + k * PI / 16 + (0.0 if front else PI)
+				points.append(middle + Vector2(cos(a) * radius, sin(a) * radius * 0.3))
+			_overlay.draw_polyline(points, Color(blue, 0.45 * ribbons), 7.0)
+			# Runes along the ribbon.
+			for k in range(1, 16, 3):
+				var p := points[k]
+				_overlay.draw_line(p + Vector2(-2, -2), p + Vector2(2, 2), Color(0.1, 0.2, 0.5, 0.8 * ribbons), 1.5)
+				_overlay.draw_line(p + Vector2(2, -2), p + Vector2(-1, 1), Color(0.1, 0.2, 0.5, 0.8 * ribbons), 1.5)
+	# The bolt: a thick, jagged dark-blue zigzag, with cyan sparks at both ends.
+	var strike := t - (CALL_HIT_TIME + 0.35)
+	if strike >= -0.05 and strike < 0.45:
+		var fade := clampf(1.0 - strike / 0.45, 0.0, 1.0)
+		var from := feet + Vector2(16, -40)
+		var to := target.position + Vector2(0, -20)
+		var points := PackedVector2Array([from])
+		var side := (to - from).orthogonal().normalized()
+		for k in range(1, 4):
+			points.append(from.lerp(to, k / 4.0) + side * (24.0 if k % 2 == 1 else -24.0))
+		points.append(to)
+		_overlay.draw_polyline(points, Color(0.3, 0.6, 1.0, 0.35 * fade), 18.0)
+		_overlay.draw_polyline(points, Color(0.08, 0.15, 0.85, fade), 9.0)
+		_overlay.draw_polyline(points, Color(0.6, 0.85, 1.0, fade), 2.0)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = int(strike * 30.0)
+		for s in 24:
+			var at := to + Vector2(rng.randf_range(-30, 30), rng.randf_range(-30, 30))
+			_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(0.4, 0.95, 1.0, fade * rng.randf()))
 
 
 ## Nassan, staying beside the party for the turn, with a little planning bubble,
@@ -925,7 +1021,7 @@ func _process_fight_bar(delta: float) -> void:
 	_bar_trail.append(_bar_pos)
 	if _bar_trail.size() > 6:
 		_bar_trail.pop_front()
-	_bar_pos += _bar_dir * delta / FIGHT_BAR_TIME
+	_bar_pos += _bar_dir * delta / _bar_time()
 	if _pressed("confirm"):
 		# 1.0 for a hit dead in the middle, 0.0 at the very edges.
 		_resolve_hit(1.0 - absf(_bar_pos - 0.5) * 2.0)
@@ -941,7 +1037,7 @@ func _process_file_bars(delta: float) -> void:
 		var bar := _file_bars[i]
 		if bar["done"]:
 			continue
-		bar["pos"] += _bar_dir * delta / FIGHT_BAR_TIME
+		bar["pos"] += _bar_dir * delta / _bar_time()
 		if (bar["pos"] >= 1.0 and _bar_dir > 0.0) or (bar["pos"] <= 0.0 and _bar_dir < 0.0):
 			bar["done"] = true
 			Game.play_sfx("miss")
@@ -974,7 +1070,7 @@ func _resolve_file() -> void:
 			continue
 		hits += 1
 		sum += accuracy
-		total += member.attack * (0.8 + 2.2 * accuracy) / 3.0
+		total += _attack_of(member) * (0.8 + 2.2 * accuracy) / 3.0
 		if accuracy >= CRITICAL:
 			criticals += 1
 	if hits == 0:
@@ -1000,7 +1096,7 @@ func _resolve_hit(accuracy: float) -> void:
 		_show_messages(["* %s missed!" % member.name], _run_next_action)
 		return
 
-	var damage := maxi(1, roundi(member.attack * (0.8 + 2.2 * accuracy)) - target.defense)
+	var damage := maxi(1, roundi(_attack_of(member) * (0.8 + 2.2 * accuracy)) - target.defense)
 	if accuracy >= CRITICAL:
 		damage = roundi(damage * 1.25)
 	_start_attack_anim(damage, accuracy)
@@ -1180,10 +1276,21 @@ func _process_enemy_turn(delta: float) -> void:
 		for enemy in _attackers:
 			_spawn_timers[enemy] -= delta
 			if _spawn_timers[enemy] <= 0.0:
+				var before := get_child_count()
 				var wait := Attacks.spawn(_turn_patterns[enemy], enemy, self, box.get_inner_rect(), soul.global_position, _spawn_steps[enemy])
+				# Stravant's Lightning: everything it throws moves slower, and less often.
+				if enemy.statuses.has("STRAVANT"):
+					for k in range(before, get_child_count()):
+						var thrown := get_child(k) as Bullet
+						if thrown:
+							thrown.time_scale = STRAVANT_SLOW
+					wait /= STRAVANT_SLOW
 				_spawn_timers[enemy] = wait * crowding
 				_spawn_steps[enemy] += 1
 				_last_spawn[enemy] = ENEMY_TURN_TIME - _enemy_timer
+
+	# STICKY slows the SOUL down.
+	soul.speed = SOUL_SPEED * (0.7 if _soul_member().statuses.has("STICKY") else 1.0)
 
 	if _invincible_timer > 0.0:
 		# Just got hit: make the SOUL blink until the invincibility wears off.
@@ -1209,7 +1316,7 @@ func _check_hits() -> void:
 			# after a hit, so they can't hit twice). Everything else vanishes.
 			if not bullet.shape in ["beam", "claw_slash", "ring", "clapper"]:
 				bullet.queue_free()
-			_hurt_party(bullet.damage)
+			_hurt_party(bullet.damage, bullet.source)
 			return
 
 
@@ -1265,7 +1372,7 @@ func _draw_soul_owner() -> void:
 		_overlay.draw_circle(soul.global_position, 14.0 * (1.0 - _soul_flash / 0.25) + 6.0, Color(member.color, _soul_flash * 2.0))
 
 
-func _hurt_party(amount: int) -> void:
+func _hurt_party(amount: int, source: Object = null) -> void:
 	# Whoever's SOUL is out takes the hit (or the first one still standing).
 	var member := _soul_member()
 	if member.is_down():
@@ -1291,6 +1398,15 @@ func _hurt_party(amount: int) -> void:
 	# With Nassan here, the SOUL stays safe for longer after each hit.
 	_invincible_timer = invincibility_time * (NASSAN_IFRAMES if _nassan_here else 1.0)
 
+	# Some enemies' hits can leave a status effect behind.
+	var enemy := source as Enemy
+	if enemy and not member.is_down():
+		var debuff: Array = _effects().ENEMY_DEBUFFS.get(enemy.name, [])
+		if not debuff.is_empty() and randf() < float(debuff[1]):
+			var effect: String = debuff[0]
+			member.statuses[effect] = maxi(int(member.statuses.get(effect, 0)), int(debuff[2]))
+			_add_popup(effect + "!", _panel_position(member) + Vector2(0, -26), _effects().EFFECTS[effect]["color"], 15)
+
 	if party.all(func(m: PartyMember) -> bool: return m.is_down()):
 		_game_over()
 
@@ -1299,6 +1415,14 @@ func _end_enemy_turn() -> void:
 	# Big Joe's shield only lasts one turn, and Nassan heads off after his.
 	_shield_up = false
 	_nassan_here = false
+	# Status effects: BURN hurts (never below 1 HP), then everyone's count down.
+	for member in party:
+		if member.statuses.has("BURN") and not member.is_down():
+			member.hp = maxi(member.hp - BURN_DAMAGE, 1)
+			_add_popup(str(BURN_DAMAGE), _panel_position(member), _effects().EFFECTS["BURN"]["color"])
+		_effects().tick(member.statuses)
+	for enemy in enemies:
+		_effects().tick(enemy.statuses)
 	# Back to the plain red cursor for the menus.
 	soul.fragmented = false
 	_clear_bullets()
@@ -1543,8 +1667,7 @@ var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
 
-## The jumpscare: two glowing red eyes, right up against the screen.
-const JUMPSCARE_TIME := 2.9
+## The jumpscare: two glowing red eyes in the dark.
 ## The eyes, in their own pixels: each one an oval this many pixels across and
 ## tall (half-sizes), this far apart from the middle.
 const EYE_HALF_WIDTH := 2.5
@@ -1553,13 +1676,10 @@ const EYE_SPACING := 3.6
 
 ## The recorded laugh (audio/sfx/hopkuna_laugh): where in the file the laughing
 ## starts, and how loud it is every 50th of a second from there (0 to 9), measured
-## from the recording. The eyes jerk and squint along with it.
+## from the recording. The eyes glow brighter with it.
 const LAUGH_FILE_START := 0.7
 const LAUGH_FILE_BOOST_DB := 6.0
 const LAUGH_ENVELOPE := "011111122233333444455545555556555656555557765565555455565555665454455555556656653334344545646554444455565555443333445555544333333445444433322345566666654433333445666665544333334678767666645455555555534567777654465565666554445566655444444456655554445677665444433345566655444433222334566777666543322222222334566554444443332222233334789754333455555432111111111"
-## The recording's last, loudest burst: the eyes come back for a second scare.
-const SECOND_SCARE_AT := 6.52
-const SECOND_SCARE_TIME := 0.34
 
 
 ## Is the laugh recording there? (If not, the jumpscare is silent but for the scream.)
@@ -1588,18 +1708,15 @@ func _process_tent(delta: float) -> void:
 			if _tent_time >= TENT_SCREAM_TIME:
 				_tent_phase = "black"
 				_tent_time = 0.0
-				Game.play_sfx("shatter")
+				# (Silence. The only sound from here on is the laugh.)
 		"black":
 			if _tent_time >= TENT_BLACK_TIME:
 				_tent_phase = "laugh"
 				_tent_time = 0.0
-				Game.play_sfx("scream")
 				# Only the recorded laugh (and silence if it isn't there).
 				if _recorded_laugh():
 					Game.play_sfx("hopkuna_laugh", 1.0, LAUGH_FILE_START, LAUGH_FILE_BOOST_DB)
 		"laugh":
-			if _recorded_laugh() and _tent_time - delta < SECOND_SCARE_AT and _tent_time >= SECOND_SCARE_AT:
-				Game.play_sfx("scream", 0.85)
 			var laugh_length := LAUGH_ENVELOPE.length() * 0.02 + 0.3 if _recorded_laugh() else TENT_LAUGH_TIME
 			if _tent_time >= laugh_length:
 				_tent_phase = "done"
@@ -1637,10 +1754,10 @@ func _draw_tent() -> void:
 			x += step
 	elif _tent_phase in ["black", "laugh", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
-		if _tent_phase == "laugh" and _tent_time < JUMPSCARE_TIME:
+		if _tent_phase == "laugh":
 			_draw_jumpscare(_tent_time)
-		elif _tent_phase == "laugh" and _recorded_laugh() and _tent_time >= SECOND_SCARE_AT and _tent_time < SECOND_SCARE_AT + SECOND_SCARE_TIME:
-			_draw_second_scare(_tent_time - SECOND_SCARE_AT)
+	elif _tent_phase == "silence" and _text.begins_with("* Three of us"):
+		_draw_three_of_us()
 
 
 ## How hard the laugh is going at `time` into it (0 to 1): full for the scream,
@@ -1658,109 +1775,49 @@ func _laugh_strength(time: float) -> float:
 	return clampf((level / 5.0 - 2.0) / 6.0, 0.1, 1.0)
 
 
-## The jumpscare, over black: nothing but two glowing red eyes, huge.
-##   SLAM    they lunge in from enormous to filling the middle of the screen,
-##           with the scream
-##   HOLD    for half a second, shaking, as the laugh starts
-##   FLICKER cutting between the eyes, a red ghosted copy, a tighter close-up,
-##           dimmer eyes, and pure black (never faster than about 8 cuts a second;
-##           with Reduce flashing on, they just hold)
-##   LUNGE   one last rush at the screen, then black (the laugh carries on)
+## The jumpscare, over black: two glowing red eyes, huge, right in the middle of
+## the screen. They just appear, and they stay, perfectly still, until the laugh
+## is over. They glow a little brighter on the loudest parts of the laugh.
 func _draw_jumpscare(time: float) -> void:
-	var focus := Vector2(320, 220)
-	var laugh := _laugh_strength(time)
-	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * (14.0 if time < 0.6 else 6.0)
-	var cell := 12.0 + time * 0.8
-	var mode := 0
-	if time < 0.14:
-		var slam := time / 0.14
-		cell = lerpf(32.0, 12.0, 1.0 - pow(1.0 - slam, 3.0))
-	elif time > JUMPSCARE_TIME - 0.22:
-		var lunge := (time - (JUMPSCARE_TIME - 0.22)) / 0.22
-		cell = lerpf(14.0, 40.0, lunge * lunge)
-	elif time > 0.6 and not Game.reduce_flashing():
-		# A new cut every 0.13 seconds, chosen at random (but never two blacks in a row).
-		var cut := int((time - 0.6) / 0.13)
-		var rng := RandomNumberGenerator.new()
-		rng.seed = cut * 7919 + 3
-		mode = rng.randi_range(0, 9)
-		if mode == 2 and cut % 2 == 1:
-			mode = 0
-	match mode:
-		2:
-			# Pure black, for a split second. Where did they go?
-			pass
-		4:
-			_draw_eyes(focus + shake, cell, laugh, 0.45)
-		5, 6:
-			# A tight close-up.
-			_draw_eyes(focus + shake, cell * 1.8, laugh, 1.0)
-		7:
-			# Ghosted: a red copy split off to one side.
-			_draw_eyes(focus + shake + Vector2(cell * 1.5, 0), cell, laugh, 0.5, Color(1.0, 0.3, 0.3, 0.5))
-			_draw_eyes(focus + shake, cell, laugh, 1.0)
-		_:
-			_draw_eyes(focus + shake, cell, laugh, 1.0)
-	_draw_jumpscare_grime(time)
+	var glow := 0.85 + 0.15 * _laugh_strength(time)
+	_draw_eyes(Vector2(320, 220), 12.0, glow)
 
 
-## The second scare, on the laugh's last burst: out of the dark, the eyes rush in
-## even closer than before, then they're gone.
-func _draw_second_scare(time: float) -> void:
-	var rush := clampf(time / 0.08, 0.0, 1.0)
-	var cell := lerpf(40.0, 18.0, 1.0 - pow(1.0 - rush, 3.0)) + time * 8.0
-	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 18.0
-	_draw_eyes(Vector2(320, 210) + shake, cell, 1.0, 1.0)
-	_draw_jumpscare_grime(time + 10.0)
+## "Three of us.": three pairs of eyes open in the dark above the text, one after
+## another: the red ones in front, and a blue pair and a yellow pair behind them.
+func _draw_three_of_us() -> void:
+	var shown := clampf(_typed / maxf(_text.length(), 1.0), 0.0, 1.0)
+	_draw_eyes(Vector2(290, 60), 4.5, 0.55 * shown, Color(0.35, 0.65, 1.0), Color(0.05, 0.15, 0.7))
+	_draw_eyes(Vector2(440, 60), 4.5, 0.55 * shown, Color(1.0, 0.9, 0.35), Color(0.75, 0.55, 0.0))
+	_draw_eyes(Vector2(365, 82), 6.0, shown)
 
 
-## Two tall oval eyes, glowing red, made of chunky square pixels (`cell` screen
-## pixels each), like a face in the dark you can't otherwise see. Bright in the
-## middle, deep red at the edges, with a little highlight, and a blocky glow of dim
-## red pixels around each. They jerk up and squint a little with each burst of
-## laughter. `brightness` dims them; `tint` colors them (for ghost copies).
-func _draw_eyes(focus: Vector2, cell: float, laugh: float, brightness: float, tint: Color = Color.WHITE) -> void:
-	var squint := 1.0 - 0.18 * laugh
-	var lift := Vector2(0, -laugh * cell * 0.7)
+## Two tall oval eyes, glowing, made of chunky square pixels (`cell` screen pixels
+## each), like a face in the dark you can't otherwise see. Hot in the middle, deep
+## at the edges, with a little highlight, and a blocky glow of dim pixels around
+## each. Red unless `hot` and `deep` say otherwise. `brightness` dims them.
+func _draw_eyes(focus: Vector2, cell: float, brightness: float, hot: Color = Color(1.0, 0.32, 0.26), deep: Color = Color(0.82, 0.02, 0.06)) -> void:
+	if brightness <= 0.0:
+		return
 	for side in [-1.0, 1.0]:
-		var middle := focus + lift + Vector2(side * EYE_SPACING * cell, 0)
+		var middle := focus + Vector2(side * EYE_SPACING * cell, 0)
 		for gy in range(-10, 11):
 			for gx in range(-7, 8):
 				# How far this pixel's middle is from the eye's middle, in eye-widths.
-				var d := Vector2(gx / EYE_HALF_WIDTH, gy / (EYE_HALF_HEIGHT * squint)).length()
+				var d := Vector2(gx / EYE_HALF_WIDTH, gy / EYE_HALF_HEIGHT).length()
 				var color: Color
 				if d <= 1.0:
-					color = Color(1.0, 0.32, 0.26).lerp(Color(0.82, 0.02, 0.06), d)
-					color = Color(color.r * brightness, color.g * brightness, color.b * brightness)
+					color = hot.lerp(deep, d)
+					color = Color(color.r, color.g, color.b, brightness)
 				elif d <= 1.6:
-					color = Color(0.9, 0.04, 0.08, 0.38 * (1.6 - d) / 0.6 * brightness)
+					color = Color(deep.lightened(0.1), 0.38 * (1.6 - d) / 0.6 * brightness)
 				elif d <= 2.4:
-					color = Color(0.7, 0.02, 0.05, 0.13 * (2.4 - d) / 0.8 * brightness)
+					color = Color(deep, 0.13 * (2.4 - d) / 0.8 * brightness)
 				else:
 					continue
-				var at := middle + Vector2(gx - 0.5, gy - 0.5) * cell
-				_overlay.draw_rect(Rect2(at, Vector2(cell, cell)), color * tint)
+				_overlay.draw_rect(Rect2(middle + Vector2(gx - 0.5, gy - 0.5) * cell, Vector2(cell, cell)), color)
 		# A little highlight, up and to the left.
-		var shine := middle + Vector2(-1.5, -2.5 * squint) * cell
-		_overlay.draw_rect(Rect2(shine, Vector2(cell, cell)), Color(1.0, 0.75, 0.68, brightness) * tint)
-
-
-## Over the eyes: a red vignette, scanlines, film grain, and torn glitch bars.
-func _draw_jumpscare_grime(time: float) -> void:
-	for k in 8:
-		_overlay.draw_rect(Rect2(-20, -20, 680, 520).grow(-k * 16), Color(0.25, 0.0, 0.02, 0.07), false, 16.0)
-	for y in range(0, 480, 3):
-		_overlay.draw_line(Vector2(0, y), Vector2(640, y), Color(0, 0, 0, 0.22), 1.0)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = int(time * 30.0)
-	for g in 300:
-		var spot := Vector2(rng.randf() * 640.0, rng.randf() * 480.0)
-		_overlay.draw_rect(Rect2(spot, Vector2(2, 2)), Color(1, 1, 1, rng.randf() * 0.12))
-	if time > 0.14 and not Game.reduce_flashing():
-		for bar in rng.randi_range(0, 3):
-			var y := rng.randf() * 480.0
-			var height := rng.randf_range(3.0, 14.0)
-			_overlay.draw_rect(Rect2(0, y, 640, height), Color(0, 0, 0, 0.8) if rng.randf() < 0.5 else Color(0.9, 0.05, 0.1, 0.35))
+		_overlay.draw_rect(Rect2(middle + Vector2(-1.5, -2.5) * cell, Vector2(cell, cell)), Color(hot.lightened(0.6), brightness))
 
 
 # --- Helpers --------------------------------------------------------------
@@ -2346,6 +2403,7 @@ func _draw_enemies() -> void:
 				# and the tent event has no health at all.
 				if _data.boss_style == "" and _data.event == "":
 					_draw_bar(Rect2(pos + Vector2(-45, 47), Vector2(90, 10)), float(enemy.hp) / enemy.max_hp, Color.GREEN, enemy.shown_hp / enemy.max_hp)
+				_draw_statuses(enemy.statuses, pos + Vector2(-45, 74))
 
 		if _speech.has(enemy) and _speech[enemy] != "":
 			_draw_speech(_speech[enemy], Vector2(pos.x, top - 30))
@@ -2714,6 +2772,7 @@ func _draw_party_panel() -> void:
 		_overlay.draw_string(_font, Vector2(x + 200 + extra, PANEL_Y), hp_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE if extra == 0.0 else 14, Color.WHITE)
 		if member.defending:
 			_overlay.draw_string(_font, Vector2(x + 256, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
+		_draw_statuses(member.statuses, Vector2(x + 98, PANEL_Y + 5), true)
 
 
 func _draw_buttons() -> void:
@@ -2799,6 +2858,8 @@ func _draw_box_contents() -> void:
 				var label := DialogueBox.display_name(id)
 				if wait == -1:
 					label += "  (no charges)"
+				elif wait == -2:
+					label += "  (below 1/2 HP)"
 				elif wait > 0:
 					label += "  (%d turn%s)" % [wait, "" if wait == 1 else "s"]
 				elif helper.get("charges", -1) >= 0:
@@ -2907,6 +2968,48 @@ func _draw_file_bars(target: Rect2, color: Color) -> void:
 			_overlay.draw_rect(Rect2(x - 5, top, 10, height), Color(color, 0.3 * glow))
 			_overlay.draw_rect(Rect2(x - 2, top, 4, height), Color(silver, glow))
 			_overlay.draw_rect(Rect2(x - 0.5, top, 1, height), Color(1, 1, 1, glow))
+
+
+# --- Status effects ---------------------------------------------------------------
+
+## Stravant's Lightning: an enemy's attacks run at this speed.
+const STRAVANT_SLOW := 0.6
+const BURN_DAMAGE := 2
+const SOUL_SPEED := 120.0
+var _effects_script: GDScript
+
+
+func _effects() -> GDScript:
+	if _effects_script == null:
+		_effects_script = load("res://scripts/effects.gd")
+	return _effects_script
+
+
+## FIGHT damage: SHAKEN members hit 30% softer.
+func _attack_of(member: PartyMember) -> float:
+	return member.attack * (0.7 if member.statuses.has("SHAKEN") else 1.0)
+
+
+## How long the FIGHT bar takes to cross: faster for whoever's DIZZY.
+func _bar_time() -> float:
+	return FIGHT_BAR_TIME * (0.7 if _bar_member and _bar_member.statuses.has("DIZZY") else 1.0)
+
+
+## Little colored tags for someone's status effects, each with its turns left
+## ("STRAVANT 3"). In a row for the party, stacked under an enemy.
+func _draw_statuses(statuses: Dictionary, at: Vector2, in_a_row: bool = false) -> void:
+	var spot := at
+	for effect in statuses:
+		var color: Color = _effects().EFFECTS.get(effect, {}).get("color", Color.WHITE)
+		var label := "%s %d" % [effect, statuses[effect]]
+		var width := _font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8
+		_overlay.draw_rect(Rect2(spot, Vector2(width, 14)), Color(0, 0, 0, 0.75))
+		_overlay.draw_rect(Rect2(spot, Vector2(width, 14)), color, false, 1.0)
+		_overlay.draw_string(_font, spot + Vector2(4, 11), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, color)
+		if in_a_row:
+			spot.x += width + 4
+		else:
+			spot.y += 17
 
 
 ## A health bar with a thin border. `trailing` (if given) is the HP still draining

@@ -81,6 +81,8 @@ var ko_time: float = -1.0
 var partner_reactions: Dictionary = {}
 ## Their current expression in battle ("" = normal).
 var mood: String = ""
+## Status effects on it: {name: turns left} (see effects.gd).
+var statuses: Dictionary = {}
 
 var _act_counts: Dictionary = {}
 var _last_act: String = ""

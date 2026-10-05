@@ -1,7 +1,8 @@
 class_name BagMenu
 extends CanvasLayer
 ## Your bag, opened with B while walking around. Under the items: TEAM (once you've
-## met Hop) and the settings.
+## met Hop), the ENCYCLOPEDIA (every enemy you've met: picture, stats, attacks, what
+## they can do to you) and the settings.
 ## TEAM shows each member of the team: their picture, stats, and what they're
 ## holding and wearing. Pick something they're wearing to take it off. At the
 ## Corps' base, "Change partner" picks who comes along with Elric.
@@ -12,7 +13,7 @@ extends CanvasLayer
 ##   DROP   throw it away
 ## X goes back (or closes the bag).
 
-enum Step { LIST, ACTIONS, TARGET, MESSAGE, TEAM, PARTNER }
+enum Step { LIST, ACTIONS, TARGET, MESSAGE, TEAM, PARTNER, BOOK }
 
 ## The partner list: this many names per column.
 const TEAM_ROWS := 6
@@ -44,6 +45,10 @@ var _team_member: int = 0
 var _team_slot: int = 0
 ## Where a message goes back to when it's closed.
 var _message_return: Step = Step.LIST
+## The Encyclopedia: which entry is open, and the enemies themselves (made when it opens).
+var _book_cursor: int = 0
+var _book_enemies: Array = []
+var _effects_script: GDScript
 ## Set when the team changes, so the area can swap who's following Elric.
 var _team_changed: bool = false
 
@@ -98,8 +103,8 @@ func _process(_delta: float) -> void:
 
 	match _step:
 		Step.LIST:
-			# Under the items: "Team" (once you've met Hop), then "Settings".
-			var rows := Game.items.size() + (2 if _team_shown() else 1)
+			# Under the items: "Team" (once you've met Hop), "Encyclopedia", "Settings".
+			var rows := Game.items.size() + (3 if _team_shown() else 2)
 			if up or down:
 				_cursor = wrapi(_cursor + (1 if down else -1), 0, rows)
 				Game.play_sfx("move")
@@ -109,6 +114,8 @@ func _process(_delta: float) -> void:
 					await Game.settings_menu.open()
 				elif _on_team():
 					_open_team()
+				elif _on_book():
+					_open_book()
 				else:
 					_step = Step.ACTIONS
 					_action = 0
@@ -161,6 +168,12 @@ func _process(_delta: float) -> void:
 				_show("* (%s will come with you.)" % DialogueBox.display_name(id), Step.TEAM)
 			elif back:
 				_step = Step.TEAM
+		Step.BOOK:
+			if up or down:
+				_book_cursor = wrapi(_book_cursor + (1 if down else -1), 0, _book_enemies.size())
+				Game.play_sfx("move")
+			elif back or confirm:
+				_step = Step.LIST
 		Step.MESSAGE:
 			if confirm or back:
 				_message = ""
@@ -178,7 +191,28 @@ func _team_shown() -> bool:
 
 ## True when the cursor is on the "Settings" row (the last one).
 func _on_settings() -> bool:
-	return _cursor >= Game.items.size() + (1 if _team_shown() else 0)
+	return _cursor >= Game.items.size() + (2 if _team_shown() else 1)
+
+
+## True when the cursor is on the "Encyclopedia" row (between Team and Settings).
+func _on_book() -> bool:
+	return _cursor == Game.items.size() + (1 if _team_shown() else 0)
+
+
+func _effects() -> GDScript:
+	if _effects_script == null:
+		_effects_script = load("res://scripts/effects.gd")
+	return _effects_script
+
+
+## Opens the Encyclopedia. The enemies are made fresh from their battles (for their
+## pictures, stats, attacks and ACTs).
+func _open_book() -> void:
+	_book_enemies.clear()
+	for entry in _effects().ENCYCLOPEDIA:
+		_book_enemies.append([entry[1], _effects().enemy_for(entry)])
+	_book_cursor = 0
+	_step = Step.BOOK
 
 
 ## True when the cursor is on the "Team" row (right below the items).
@@ -323,6 +357,11 @@ func _draw_panel() -> void:
 		_text("OBJECTIVE", goal.position + Vector2(14, 20), Color.YELLOW, 12)
 		_panel.draw_multiline_string(_font, goal.position + Vector2(14, 38), Game.objective(), HORIZONTAL_ALIGNMENT_LEFT, goal.size.x - 24, 13)
 
+	# The Encyclopedia covers the whole bag.
+	if _step == Step.BOOK:
+		_draw_book()
+		_text("W/S: choose   X: close", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+		return
 	# The team screen (and the partner list) cover the whole bag.
 	if _step == Step.TEAM or _step == Step.PARTNER or (_step == Step.MESSAGE and _message_return == Step.TEAM):
 		_draw_team_cards()
@@ -351,13 +390,18 @@ func _draw_panel() -> void:
 	# "Settings", along the bottom of the list (where USE / CHECK / DROP go when
 	# an item is picked).
 	if _step != Step.ACTIONS:
-		var team_at := Vector2(LIST.position.x + 40, LIST.end.y - 16)
+		var team_at := Vector2(LIST.position.x + 32, LIST.end.y - 16)
 		var on_team := _on_team() and _step == Step.LIST
 		if _team_shown():
 			_text("Team", team_at, Color.YELLOW if on_team else Color(0.75, 0.75, 0.75))
 		if on_team:
 			_heart(team_at + Vector2(-18, -6))
-		var settings_at := Vector2(LIST.position.x + (160 if _team_shown() else 40), LIST.end.y - 16)
+		var book_at := Vector2(LIST.position.x + (122 if _team_shown() else 32), LIST.end.y - 16)
+		var on_book := _on_book() and _step == Step.LIST
+		_text("Encyclopedia", book_at, Color.YELLOW if on_book else Color(0.75, 0.75, 0.75))
+		if on_book:
+			_heart(book_at + Vector2(-18, -6))
+		var settings_at := Vector2(LIST.position.x + (262 if _team_shown() else 172), LIST.end.y - 16)
 		var on_it := _on_settings() and _step == Step.LIST
 		_panel.draw_line(Vector2(LIST.position.x + 14, LIST.end.y - 38), Vector2(LIST.end.x - 14, LIST.end.y - 38), Color(0.3, 0.3, 0.3), 1.0)
 		_text("Settings", settings_at, Color.YELLOW if on_it else Color(0.75, 0.75, 0.75))
@@ -396,6 +440,73 @@ func _draw_panel() -> void:
 
 	var hint := "ENTER: choose   X: back   B: close"
 	_text(hint, Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+
+
+## The Encyclopedia: a list of every enemy down the left ("???" for ones you
+## haven't met), and the open page on the right: the enemy's picture, stats,
+## description, attacks, what it can do to you, and its ACTs. Enemies you haven't
+## met just say "Haven't seen yet."
+func _draw_book() -> void:
+	var index_box := Rect2(30, 40, 170, 410)
+	var page := Rect2(214, 40, 396, 410)
+	_box(index_box)
+	_box(page)
+	_text("ENCYCLOPEDIA", index_box.position + Vector2(12, 24), Color.YELLOW, 15)
+	for i in _book_enemies.size():
+		var enemy_name: String = _book_enemies[i][0]
+		var known: bool = _effects().seen(enemy_name)
+		var at := index_box.position + Vector2(30, 54 + i * 26)
+		_text(enemy_name if known else "???", at, Color.YELLOW if i == _book_cursor else (Color.WHITE if known else Color(0.45, 0.45, 0.45)), 14)
+		if i == _book_cursor:
+			_heart(at + Vector2(-16, -5))
+	var enemy_name: String = _book_enemies[_book_cursor][0]
+	var enemy: Enemy = _book_enemies[_book_cursor][1]
+	if not _effects().seen(enemy_name) or enemy == null:
+		var note := "Haven't seen yet."
+		var width := _font.get_string_size(note, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+		_text(note, page.get_center() - Vector2(width / 2, 0), Color(0.55, 0.55, 0.55), 18)
+		return
+	# The picture.
+	var frame := Rect2(page.position + Vector2(14, 14), Vector2(120, 130))
+	_panel.draw_rect(frame, Color(1, 1, 1, 0.06))
+	_panel.draw_rect(frame, Color(0.4, 0.4, 0.4), false, 1.0)
+	if enemy.sprite:
+		var picture_size := enemy.sprite.get_size()
+		var scale := minf(minf((frame.size.x - 10) / picture_size.x, (frame.size.y - 10) / picture_size.y), 4.0)
+		var size := picture_size * scale
+		_panel.draw_texture_rect(enemy.sprite, Rect2(frame.get_center() - size / 2, size), false)
+	# Name and stats.
+	var right := page.position + Vector2(148, 34)
+	_text(enemy.name.to_upper(), right, Color.YELLOW, 18)
+	_text("HP %d   ATK %d   DEF %d" % [enemy.max_hp, enemy.attack, enemy.defense], right + Vector2(0, 24), Color.WHITE, 13)
+	# The description: the CHECK text, without its first (stats) line.
+	var check_lines := enemy.check_text.split("\n")
+	var description := ""
+	for k in range(1, check_lines.size()):
+		description += check_lines[k].trim_prefix("* ") + " "
+	_panel.draw_multiline_string(_font, right + Vector2(0, 46), description.strip_edges(), HORIZONTAL_ALIGNMENT_LEFT, page.end.x - right.x - 12, 12, -1, Color(0.8, 0.8, 0.8))
+	# Attacks, what it can do to you, and how to talk it down.
+	var names: Array = []
+	for pattern in enemy.patterns:
+		names.append(_effects().ATTACK_NAMES.get(pattern, pattern))
+	var y := page.position.y + 172
+	_text("ATTACKS", Vector2(page.position.x + 14, y), Color(1, 0.6, 0.6), 13)
+	_panel.draw_multiline_string(_font, Vector2(page.position.x + 14, y + 18), ", ".join(names), HORIZONTAL_ALIGNMENT_LEFT, page.size.x - 28, 13, -1, Color.WHITE)
+	y += 64
+	_text("CAN CAUSE", Vector2(page.position.x + 14, y), Color(1, 0.6, 0.6), 13)
+	var debuff: Array = _effects().ENEMY_DEBUFFS.get(enemy.name, [])
+	if debuff.is_empty():
+		_text("Nothing.", Vector2(page.position.x + 14, y + 18), Color.WHITE, 13)
+	else:
+		var effect: Dictionary = _effects().EFFECTS[debuff[0]]
+		_text("%s  (%d%% of hits, %d turns)" % [debuff[0], roundi(float(debuff[1]) * 100.0), debuff[2]], Vector2(page.position.x + 14, y + 18), effect["color"], 13)
+		_panel.draw_multiline_string(_font, Vector2(page.position.x + 14, y + 36), effect["what"], HORIZONTAL_ALIGNMENT_LEFT, page.size.x - 28, 12, -1, Color(0.8, 0.8, 0.8))
+	y += 82
+	_text("ACTS", Vector2(page.position.x + 14, y), Color(1, 0.6, 0.6), 13)
+	var acts := ", ".join(enemy.act_names())
+	if enemy.spare_refusal != "":
+		acts += "   (Can't be spared.)"
+	_panel.draw_multiline_string(_font, Vector2(page.position.x + 14, y + 18), acts, HORIZONTAL_ALIGNMENT_LEFT, page.size.x - 28, 13, -1, Color.WHITE)
 
 
 ## The team screen: a card for each member with their picture, HP and stats, and

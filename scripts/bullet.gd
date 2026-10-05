@@ -61,6 +61,11 @@ var _swing_angle: float = 0.0
 var trail_length: int = 0
 ## Draws a soft glow around the bullet.
 var glow: bool = false
+## The enemy that fired it (for status effects a hit can cause).
+var source: Object
+## Everything about it runs this much slower or faster (Stravant's Lightning slows
+## an enemy's attacks down).
+var time_scale: float = 1.0
 
 ## The area the bullet lives in. Once it flies out, it disappears.
 var bounds: Rect2
@@ -76,6 +81,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	delta *= time_scale
 	_time += delta
 	if not is_armed():
 		# Still a warning: see-through and not moving yet. Beams flicker.
@@ -145,6 +151,8 @@ func _split() -> void:
 		var piece := Bullet.new()
 		piece.bounds = bounds
 		piece.damage = maxi(1, damage - 1)
+		piece.source = source
+		piece.time_scale = time_scale
 		piece.size = 5.0 if split_shape == "yolk" else 4.0
 		piece.color = split_color
 		piece.shape = split_shape

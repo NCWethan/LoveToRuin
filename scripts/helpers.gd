@@ -10,7 +10,9 @@ extends RefCounted
 ##             "food" (Eggo: whoever called him eats The-Eggo Benedict, +13 overheal),
 ##             "iframes" (Nassan: stays for the enemy turn; after each hit, the
 ##             SOUL is safe for twice as long), or "read" (Nat: +15% toward sparing
-##             an enemy, and he reads out what every enemy will do next turn)
+##             an enemy, and he reads out what every enemy will do next turn), or
+##             "lightning" (N.C. Wethan: damage, and STRAVANT on the enemy: its
+##             attacks are slower for 3 turns. Only below half HP)
 ##   cooldown  turns before they can be called again (default 3, the shared wait)
 ##   charges   how many times they can be called per battle (default: no limit)
 ## Members without a decided ability yet use a placeholder hit.
@@ -32,7 +34,10 @@ const HELPERS := {
 	# Nat reads up on an enemy: it's 15% closer to being spared, and he tells you
 	# what each enemy is going to do next turn (that's what they'll do). 1 charge.
 	"Nat": {"color": Color(0.45, 0.85, 0.5), "line": "Nat wanders in, book over his face.\n* \"...I'm reading.\"", "move": "FOOTNOTE", "kind": "read", "charges": 1},
-	"NCWethan": {"color": Color(0.45, 0.85, 1.0), "line": "N.C. Wethan bursts in! LIGHTNING TIME!!!", "move": "LIGHTNING"},
+	# N.C. Wethan floats up and lets loose Stravant's Lightning: real damage, and the
+	# enemy is STRAVANT for 3 turns (its attacks move slower). Only when whoever calls
+	# him is below half HP. 1 charge per battle.
+	"NCWethan": {"color": Color(0.45, 0.85, 1.0), "line": "N.C. Wethan bursts in! \"LIGHTNING TIME!!!\"", "move": "STRAVANT'S LIGHTNING", "kind": "lightning", "charges": 1, "low_hp": true},
 	"Ronin": {"color": Color(1.0, 0.55, 0.15), "line": "Ronin strolls in, guitar first!", "move": "FIRE CHORD"},
 	"Supreme": {"color": Color(0.8, 0.82, 0.9), "line": "Supreme arrives with a spreadsheet!", "move": "STATISTICAL STRIKE"},
 	"Crayola": {"color": Color(1.0, 0.55, 0.8), "line": "Crayola shyly steps in!", "move": "CARD FLICK"},
