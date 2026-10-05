@@ -610,6 +610,8 @@ const CALL_LENGTH := 1.6
 ## Eggo's The-Eggo Benedict: overheal HP per serving, and the most anyone can have.
 const BENEDICT_OVERHEAL := 13
 const MAX_OVERHEAL := 26
+## Nat's FOOTNOTE: how much closer the enemy gets to being spared.
+const NAT_MERCY := 15
 ## Nassan's plan: how much longer the SOUL is safe after a hit while he's here.
 const NASSAN_IFRAMES := 2.0
 ## Big Joe's shield: how much damage gets through while it's up.
@@ -629,6 +631,10 @@ var _call: Dictionary = {}
 var _shield_up: bool = false
 ## Nassan is staying for this enemy turn (longer invincibility after each hit).
 var _nassan_here: bool = false
+## Attacks Nat already read out: the enemies use these on their next turn.
+var _planned_patterns: Dictionary = {}
+## What Nat read out, shown after his move.
+var _nat_pages: Array[String] = []
 var _nassan_sprite: Texture2D
 
 
@@ -694,9 +700,16 @@ func _process_call(delta: float) -> void:
 	var shield: bool = info.get("kind", "hit") == "shield"
 	var food: bool = info.get("kind", "hit") == "food"
 	var stays: bool = info.get("kind", "hit") == "iframes"
+	var reads: bool = info.get("kind", "hit") == "read"
 	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
 		_call["landed"] = true
-		if stays:
+		if reads:
+			_nat_reads(target)
+			Game.play_sfx("spare")
+			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
+			if target.spare_refusal == "":
+				_add_popup("+%d%% MERCY" % NAT_MERCY, target.position + Vector2(0, -40), YELLOW, 18, true)
+		elif stays:
 			# Nassan takes his place beside the party for the coming turn.
 			_nassan_here = true
 			_nassan_sprite = _call["sprite"]
@@ -734,6 +747,11 @@ func _process_call(delta: float) -> void:
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
 	if shield:
 		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif reads:
+		if target.spare_refusal != "":
+			line = "* %s used %s!\n* (%s can't be talked down. Nat shrugs.)" % [helper_name, info["move"], target.name]
+		else:
+			line = "* %s used %s!\n* %s is %d%% closer to being spared." % [helper_name, info["move"], target.name, NAT_MERCY]
 	elif stays:
 		line = "* %s used %s!\n* This turn, every hit leaves you safe for twice as long." % [helper_name, info["move"]]
 	elif food:
@@ -743,7 +761,12 @@ func _process_call(delta: float) -> void:
 		line = "* %s used %s!\n* (%s is hanging on by a thread. They won't finish it.)" % [helper_name, info["move"], target.name]
 	_call = {}
 	var goodbye := "* %s stays by your side for this turn." % helper_name if stays else "* %s waved and ran off." % helper_name
-	_show_messages([line, goodbye], _run_next_action)
+	if reads:
+		goodbye = "* %s wandered off, still reading." % helper_name
+	var after: Array = [line]
+	after.append_array(_nat_pages)
+	after.append(goodbye)
+	_show_messages(after, _run_next_action)
 
 
 ## The helper running in from the left, doing their move, and running off. Most
@@ -808,6 +831,24 @@ func _draw_call() -> void:
 	for k in 12:
 		var dir := Vector2.from_angle(k * TAU / 12 + 0.2)
 		_overlay.draw_line(center + dir * (14.0 + since * 80.0), center + dir * (30.0 + since * 140.0), Color(info["color"], fade), 3.0)
+
+
+## Nat's FOOTNOTE: the target gets closer to being spared, and he looks up what
+## every enemy attacking next turn is going to do. Those attacks are locked in.
+func _nat_reads(target: Enemy) -> void:
+	if target.spare_refusal == "":
+		target.mercy = mini(target.mercy + NAT_MERCY, 100)
+	_nat_pages.clear()
+	_planned_patterns.clear()
+	var hints: Dictionary = _helpers().PAGE_HINTS
+	for enemy in _data.who_attacks(enemy_turn):
+		if not enemy.is_active():
+			continue
+		var pattern := _pick_pattern(enemy)
+		_planned_patterns[enemy] = pattern
+		_nat_pages.append("* (Page %d. %s's next attack:\n*  %s)" % [100 + randi() % 400, enemy.name, hints.get(pattern, "...the page is torn out.")])
+	if _nat_pages.is_empty():
+		_nat_pages.append("* (Nat flips through. \"Nothing's coming next turn.\")")
 
 
 ## Nassan, staying beside the party for the turn, with a little planning bubble,
@@ -1092,8 +1133,13 @@ func _start_enemy_turn() -> void:
 	for enemy in _attackers:
 		_spawn_timers[enemy] = 0.0
 		_spawn_steps[enemy] = 0
-		_turn_patterns[enemy] = _pick_pattern(enemy)
+		# (If Nat already read out what they'll do, that's what they do.)
+		if _planned_patterns.has(enemy):
+			_turn_patterns[enemy] = _planned_patterns[enemy]
+		else:
+			_turn_patterns[enemy] = _pick_pattern(enemy)
 		enemy.fury = enemy_turn - 1
+	_planned_patterns.clear()
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
 
