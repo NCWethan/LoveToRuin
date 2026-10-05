@@ -631,7 +631,11 @@ func _process_fight_anim(delta: float) -> void:
 		target.hp = maxi(target.hp - _anim_damage, 0)
 		target.shake = 0.5
 		target.flash = 0.25
-		Game.play_sfx("hit")
+		# Each way of attacking has its own sound when it connects.
+		match weapon:
+			"file": Game.play_sfx("file_hit")
+			"finger": Game.play_sfx("squeak")
+			_: Game.play_sfx("punch_hit" if member.name == "Hop" else "claw_hit")
 		var critical := _anim_accuracy >= CRITICAL
 		# The impact frame: a freeze, a flash, and the enemy as a silhouette.
 		_impact(target, 0.13 if critical else 0.08, critical)

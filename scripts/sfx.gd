@@ -38,6 +38,11 @@ static func make_all() -> Dictionary:
 		"alert": tone([784, 1175, 1568, 2093], 0.04, 0.24),
 		"shing": slide(2600, 3400, 0.09, 0.13),
 		"bonk": slide(520, 140, 0.16, 0.38),
+		# The sound a hit makes, by attack style.
+		"claw_hit": slide(2400, 450, 0.16, 0.26),
+		"punch_hit": slide(240, 50, 0.2, 0.42),
+		"file_hit": tone([2349, 3136, 2794], 0.05, 0.17),
+		"squeak": slide(800, 1600, 0.1, 0.18),
 	}
 
 
