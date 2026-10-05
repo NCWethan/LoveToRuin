@@ -191,6 +191,11 @@ func _update_run_sprite() -> bool:
 	return true
 
 
+## True while walking somewhere on its own (a cutscene walk or a patrol).
+func is_busy_moving() -> bool:
+	return not _patrol_points.is_empty() or (_walking and follow == null)
+
+
 ## Walks back and forth between two points forever. Stops in place (and stays
 ## stopped) whenever anyone is talking, so you can chat with someone mid-walk.
 func patrol(a: Vector2, b: Vector2, speed: float = 50.0) -> void:

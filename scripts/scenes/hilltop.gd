@@ -634,7 +634,10 @@ func _corps_spot(who: String) -> Vector2:
 ## Flashes the whole screen a color for a moment.
 func _flash(color: Color, time: float) -> void:
 	var before := _night.color
-	_night.color = color * 2.0
+	# (Gentler, and slower to fade, with Reduce flashing on.)
+	if Game.reduce_flashing():
+		time *= 2.0
+	_night.color = color * (1.2 if Game.reduce_flashing() else 2.0)
 	var tween := create_tween()
 	tween.tween_property(_night, "color", before, time)
 	await tween.finished

@@ -22,7 +22,7 @@ static var _portraits: Dictionary = {}
 
 
 static func make(who: String, is_solid: bool = true) -> Character:
-	var base := FOLDER + who.to_lower()
+	var base := FOLDER + Game.sprite_base(who)
 	var back: Texture2D = load(base + "_back.png") if ResourceLoader.exists(base + "_back.png") else null
 	var character := Character.new().setup(load(base + ".png"), back, is_solid)
 	if ResourceLoader.exists(base + "_side.png") and ResourceLoader.exists(base + "_side2.png"):
@@ -64,11 +64,11 @@ static func walk_frames(base: String) -> Array[Texture2D]:
 static func portrait(who: String, mood: String = "") -> Texture2D:
 	if who == "":
 		return null
-	var key := who + "/" + mood
+	var key := Game.sprite_base(who) + "/" + mood
 	if not _portraits.has(key):
 		var texture: Texture2D = null
-		var mood_path := PORTRAIT_FOLDER + who.to_lower() + "_" + mood + ".png"
-		var normal_path := FOLDER + who.to_lower() + ".png"
+		var mood_path := PORTRAIT_FOLDER + Game.sprite_base(who) + "_" + mood + ".png"
+		var normal_path := FOLDER + Game.sprite_base(who) + ".png"
 		if mood != "" and ResourceLoader.exists(mood_path):
 			texture = load(mood_path)
 		elif ResourceLoader.exists(normal_path):

@@ -83,6 +83,10 @@ func setup_area(default_spawn: Vector2) -> void:
 	# Music goes eerie near fragments (checked every frame).
 	get_tree().process_frame.connect(_check_fragment_music)
 
+	# On the Genocide path, the world changes with Elric.
+	if Game.dread() > 0:
+		_add_dread()
+
 
 ## N, E, S and W around a little dial.
 func _draw_compass(compass: Control) -> void:
@@ -268,10 +272,83 @@ func add_character(character: Character, at: Vector2) -> Character:
 ## Adds someone Elric can talk to. `talk` runs when Elric presses Z next to them.
 func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
 	var npc := Cast.make(who)
+	npc.add_to_group("npc")
+	npc.set_meta("home", at)
 	npc.on_interact = func() -> void:
 		npc.face(player.position - npc.position)
+		# On the Genocide path, people are afraid of Elric.
+		if Game.dread() >= 2:
+			var who_name := DialogueBox.display_name(who)
+			var line := "* (%s backs away from you.\n*  They won't look you in the eye.)" if Game.dread() >= 3 else "* (%s flinches when you get close.)"
+			await Game.dialogue.say([line % who_name])
 		await talk.call()
 	return add_character(npc, at)
+
+
+# --- Genocide: the world changes with Elric -------------------------------------
+# dread 1: the colors start to drain and the music drags a little.
+# dread 2: grayer, slower, and people back away from Elric and flinch.
+# dread 3: nearly gray, darker, the music slow and low; people keep their distance.
+
+const DREAD_COLOR_DRAIN := [0.0, 0.25, 0.5, 0.8]
+const DREAD_MUSIC_PITCH := [1.0, 0.95, 0.9, 0.82]
+## How close Elric can get before someone backs away, and how far they'll back off
+## from where they were standing (not too far: you can still reach them to talk).
+const AVOID_RADIUS := [0.0, 0.0, 56.0, 72.0]
+const AVOID_LEASH := 34.0
+
+const DRAIN_SHADER := """
+shader_type canvas_item;
+uniform sampler2D screen : hint_screen_texture, filter_nearest;
+uniform float amount = 0.0;
+void fragment() {
+	vec3 c = texture(screen, SCREEN_UV).rgb;
+	float gray = dot(c, vec3(0.3, 0.59, 0.11));
+	c = mix(c, vec3(gray * 1.05, gray * 0.92, gray * 0.94), amount);
+	c *= 1.0 - 0.28 * amount;
+	COLOR = vec4(c, 1.0);
+}
+"""
+
+
+func _add_dread() -> void:
+	var stage := Game.dread()
+	var layer := CanvasLayer.new()
+	layer.layer = 3
+	add_child(layer)
+	var drain := ColorRect.new()
+	drain.size = Vector2(640, 480)
+	drain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var material := ShaderMaterial.new()
+	material.shader = Shader.new()
+	material.shader.code = DRAIN_SHADER
+	material.set_shader_parameter("amount", DREAD_COLOR_DRAIN[stage])
+	drain.material = material
+	layer.add_child(drain)
+	Game.music_pitch = DREAD_MUSIC_PITCH[stage]
+	if AVOID_RADIUS[stage] > 0.0:
+		get_tree().process_frame.connect(_keep_away)
+
+
+## People back away from Elric when he comes near (but stay close to where they
+## were, so he can still talk to them).
+func _keep_away() -> void:
+	if Game.busy or Game.transitioning or player == null:
+		return
+	var radius: float = AVOID_RADIUS[Game.dread()]
+	var delta := get_process_delta_time()
+	for npc in get_tree().get_nodes_in_group("npc"):
+		if not is_instance_valid(npc) or not npc.visible or npc.follow != null or npc.is_busy_moving():
+			continue
+		var away: Vector2 = npc.position - player.position
+		if away.length() > radius or away.length() < 0.1:
+			continue
+		var home: Vector2 = npc.get_meta("home", npc.position)
+		var wanted: Vector2 = npc.position + away.normalized() * 70.0 * delta
+		if wanted.distance_to(home) <= AVOID_LEASH:
+			npc.position = wanted
+		# Turned away from him.
+		npc.face(away)
 
 
 ## The usual way to talk to someone: `first` the first time,

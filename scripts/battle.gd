@@ -8,7 +8,7 @@ extends Node2D
 ## The fighters and their lines come from tutorial_battle.gd.
 ## Controls: arrow keys to move, Enter to confirm, X / Shift to go back.
 
-enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, MERCY_MENU, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, EVENT, FLEEING, DONE }
+enum State { TEXT, MENU, TARGET_ENEMY, ACT_LIST, ITEM_LIST, TARGET_PARTY, MERCY_MENU, READY, FIGHT_BAR, FIGHT_ANIM, ENEMY_TURN, GAME_OVER, EVENT, FLEEING, CALL_LIST, CALLING, DONE }
 
 const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 
@@ -165,6 +165,13 @@ func _ready() -> void:
 		items = TutorialBattle.create_items()
 	# Which fight this is (the tutorial when testing with F6).
 	_data = Battles.create(Game.pending_battle if Game.pending_battle != "" else "tutorial")
+	# Elric looks how they look in the overworld (worse, the more they've killed).
+	for member in party:
+		var look := "res://art/sprites/%s.png" % Game.sprite_base(member.name)
+		if ResourceLoader.exists(look):
+			member.sprite = load(look)
+	# Battle music always plays at normal speed (the overworld slows down on Genocide).
+	Game.music_pitch = 1.0
 	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
@@ -198,8 +205,10 @@ func _process(delta: float) -> void:
 			_process_text()
 		State.MENU:
 			_process_menu()
-		State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU:
+		State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU, State.CALL_LIST:
 			_process_list()
+		State.CALLING:
+			_process_call(delta)
 		State.READY:
 			_process_ready()
 		State.FIGHT_BAR:
@@ -332,6 +341,8 @@ func _describe(action: Dictionary) -> String:
 			return "%s: SPARE %s" % [who, action["target"].name]
 		"DEFEND":
 			return "%s: DEFEND" % who
+		"CALL":
+			return "%s: CALL %s" % [who, DialogueBox.display_name(action["helper"])]
 	return who
 
 
@@ -375,7 +386,7 @@ func _process_menu() -> void:
 			"FIGHT", "ACT":
 				_open_list(State.TARGET_ENEMY, _active_enemies())
 			"MERCY":
-				_open_list(State.MERCY_MENU, ["Spare", "Flee"])
+				_open_list(State.MERCY_MENU, _mercy_options())
 			"ITEM":
 				var available := _available_items()
 				if not available.is_empty():
@@ -438,13 +449,19 @@ func _process_list() -> void:
 			_open_list(State.TARGET_ENEMY, _active_enemies())
 		elif state == State.TARGET_PARTY:
 			_open_list(State.ITEM_LIST, _available_items())
+		elif state == State.CALL_LIST:
+			_open_list(State.MERCY_MENU, _mercy_options())
 		elif state == State.TARGET_ENEMY and _pending == "MERCY":
-			_open_list(State.MERCY_MENU, ["Spare", "Flee"])
+			_open_list(State.MERCY_MENU, _mercy_options())
 		else:
 			_open_menu()
 		return
 
 	var area := box.get_inner_rect()
+	if state == State.CALL_LIST:
+		# Two columns of five.
+		soul.global_position = Vector2(area.position.x + 26 + (_cursor / CALL_ROWS) * CALL_COLUMN, _row_y(_cursor % CALL_ROWS) - 5)
+		return
 	soul.global_position = Vector2(area.position.x + 26, _row_y(_cursor) - 5)
 
 
@@ -467,8 +484,12 @@ func _confirm_list_choice() -> void:
 		State.MERCY_MENU:
 			if choice == "Spare":
 				_open_list(State.TARGET_ENEMY, _active_enemies())
+			elif choice == "Call":
+				_open_list(State.CALL_LIST, _callable_helpers())
 			else:
 				_try_flee()
+		State.CALL_LIST:
+			_choose({"type": "CALL", "helper": choice})
 
 
 # --- Player turn: running the actions -------------------------------------
@@ -509,6 +530,8 @@ func _run_next_action() -> void:
 			_use_item(member, action["item"], action["target"])
 		"MERCY":
 			_try_spare(member, action["target"])
+		"CALL":
+			_start_call(member, action["helper"])
 
 
 func _use_item(member: PartyMember, item: Dictionary, target: PartyMember) -> void:
@@ -556,6 +579,132 @@ func _after_actions() -> void:
 		_victory()
 	else:
 		_start_enemy_turn()
+
+
+# --- CALL: a friend jumps in (Pacifist route) ------------------------------------
+# MERCY > Call a friend, once per battle: a REVOLUTION Corps member who isn't in
+# the party runs in, does one move, and runs off again (see helpers.gd).
+
+const CALL_ROWS := 5
+const CALL_COLUMN := 250.0
+## When the helper's move lands, and when they're gone, in seconds.
+const CALL_HIT_TIME := 0.75
+const CALL_LENGTH := 1.6
+
+var _helpers_script: GDScript
+var _called_this_battle: bool = false
+## The call happening right now: who, how long they've been here, their target.
+var _call: Dictionary = {}
+
+
+func _helpers() -> GDScript:
+	if _helpers_script == null:
+		_helpers_script = load("res://scripts/helpers.gd")
+	return _helpers_script
+
+
+## Spare and Flee, and Call a friend when you can.
+func _mercy_options() -> Array:
+	var options: Array = ["Spare", "Flee"]
+	if _can_call():
+		options.append("Call")
+	return options
+
+
+## Only on the Pacifist route, once per battle, and only if someone's free to come.
+func _can_call() -> bool:
+	if Game.flags.get("route", "") != "pacifist" or _called_this_battle:
+		return false
+	if actions.any(func(a: Dictionary) -> bool: return a["type"] == "CALL"):
+		return false
+	return not _callable_helpers().is_empty()
+
+
+## Corps members who aren't already fighting.
+func _callable_helpers() -> Array:
+	var fighting := party.map(func(m: PartyMember) -> String: return m.name)
+	return _helpers().CORPS.filter(func(id: String) -> bool: return not DialogueBox.display_name(id) in fighting and not id in fighting)
+
+
+func _start_call(member: PartyMember, helper: String) -> void:
+	var targets := _active_enemies()
+	if targets.is_empty():
+		_run_next_action()
+		return
+	_called_this_battle = true
+	var info: Dictionary = _helpers().HELPERS[helper]
+	var sprite_path := "res://art/sprites/%s.png" % helper.to_lower()
+	_call = {"id": helper, "time": 0.0, "target": targets.pick_random(), "landed": false, "member": member,
+		"sprite": load(sprite_path) if ResourceLoader.exists(sprite_path) else null, "damage": 0}
+	_text = "* %s called for help!\n* %s" % [member.name, info["line"]]
+	_typed = _text.length()
+	soul.visible = false
+	Game.play_sfx("alert")
+	state = State.CALLING
+
+
+func _process_call(delta: float) -> void:
+	_call["time"] += delta
+	var target: Enemy = _call["target"]
+	var info: Dictionary = _helpers().HELPERS[_call["id"]]
+	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
+		_call["landed"] = true
+		var damage := 4 + Game.lv() * 2 + randi() % 4
+		# Pacifists don't finish anyone off.
+		damage = mini(damage, target.hp - 1)
+		_call["damage"] = maxi(damage, 0)
+		target.hp -= _call["damage"]
+		target.shake = 0.5
+		target.flash = 0.2
+		Game.play_sfx("punch_hit")
+		_impact(target, 0.07, false)
+		_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
+		_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
+	if _call["time"] < CALL_LENGTH:
+		return
+	var helper_name := DialogueBox.display_name(_call["id"])
+	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
+	if _call["damage"] == 0:
+		line = "* %s used %s!\n* (%s is hanging on by a thread. They won't finish it.)" % [helper_name, info["move"], target.name]
+	_call = {}
+	_show_messages([line, "* %s waved and ran off." % helper_name], _run_next_action)
+
+
+## The helper running in from the left, lunging at their target, and running off.
+func _draw_call() -> void:
+	if _call.is_empty() or _call["sprite"] == null:
+		return
+	var t: float = _call["time"]
+	var target: Enemy = _call["target"]
+	var info: Dictionary = _helpers().HELPERS[_call["id"]]
+	var texture: Texture2D = _call["sprite"]
+	# They strike from the open space between the party and the enemies.
+	var stop_x := 290.0
+	var x: float
+	var leaving := t > 1.1
+	if t < 0.45:
+		x = lerpf(-60.0, stop_x, 1.0 - pow(1.0 - t / 0.45, 2.0))
+	elif t < 1.1:
+		# A quick lunge at the target as the move lands.
+		var lunge := clampf((t - 0.6) / 0.15, 0.0, 1.0) * clampf((1.1 - t) / 0.25, 0.0, 1.0)
+		x = stop_x + 40.0 * lunge
+	else:
+		x = lerpf(stop_x, -80.0, (t - 1.1) / 0.5)
+	var bob := -absf(sin(t * 18.0)) * 6.0 if (t < 0.45 or leaving) else 0.0
+	var size := texture.get_size() * 3.0
+	var feet := Vector2(x, 180.0 + bob)
+	_overlay.draw_set_transform(feet, 0.0, Vector2(-1.0 if leaving else 1.0, 1.0))
+	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false)
+	_overlay.draw_set_transform(Vector2.ZERO)
+	# The move: a burst in their color around the target.
+	var since := t - CALL_HIT_TIME
+	if since >= 0.0 and since < 0.4:
+		var center := target.position + Vector2(0, -20)
+		var fade := 1.0 - since / 0.4
+		_overlay.draw_circle(center, 20.0 + since * 120.0, Color(info["color"], 0.25 * fade))
+		for k in 12:
+			var dir := Vector2.from_angle(k * TAU / 12 + 0.2)
+			_overlay.draw_line(center + dir * (14.0 + since * 80.0), center + dir * (30.0 + since * 140.0), Color(info["color"], fade), 3.0)
 
 
 # --- FIGHT bar ------------------------------------------------------------
@@ -1132,7 +1281,7 @@ func _try_flee() -> void:
 	Game.play_sfx("select")
 	for member in party:
 		member.defending = false
-		var base := "res://art/sprites/" + member.name.to_lower()
+		var base := "res://art/sprites/" + Game.sprite_base(member.name)
 		_side_frames[member] = [load(base + "_side.png"), load(base + "_side2.png")]
 	var names := party.filter(func(m: PartyMember) -> bool: return not m.is_down()).map(func(m: PartyMember) -> String: return m.name)
 	_text = "* %s ran away!" % " and ".join(names)
@@ -1185,15 +1334,20 @@ var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
 
-## The jumpscare: Hopkuna's face, laughing, right up against the screen.
+## The jumpscare: Hopkuna, laughing, right up against the screen.
 const JUMPSCARE_TIME := 2.9
-## How much light falls on his face: barely any. You know he's there, but all you
-## can really see are his eyes.
+## How much light falls on him: barely any. You know he's there, but all you can
+## really see are his eyes.
 const JUMPSCARE_LIGHT := 0.07
 ## When each "HA" of the laugh sound starts and how long it lasts (see Sfx.laugh),
 ## so his jaw can move with it.
 const LAUGH_SYLLABLES := [[0.0, 0.32], [0.5, 0.32], [1.0, 0.3], [1.45, 0.2], [1.7, 0.2], [1.95, 0.2], [2.2, 0.45]]
-var _face_script: GDScript
+var _hopkuna_sprite: Texture2D
+## Where things are on Hopkuna's sprite (in its pixels, counting the outline): the
+## point between his eyes, the two eye pixels, and his teeth.
+const HOPKUNA_EYES_MIDDLE := Vector2(13.0, 8.5)
+const HOPKUNA_EYE_PIXELS := [Vector2(11, 8), Vector2(14, 8)]
+const HOPKUNA_TEETH := [Vector2(11, 11), Vector2(13, 11), Vector2(15, 11)]
 
 ## The recorded laugh (audio/sfx/hopkuna_laugh, if it's there): where in the file the
 ## laughing starts, and how loud it is every 50th of a second from there (0 to 9),
@@ -1308,29 +1462,28 @@ func _laugh_jaw(time: float) -> float:
 	return open
 
 
-## The jumpscare, over black:
-##   SLAM    his face lunges in from huge to full-screen, with the scream
+## The jumpscare, over black. It's Hopkuna's own sprite, blown up huge, almost
+## entirely in the dark: just the shape of him, his two red eyes glowing, and a
+## glint off his teeth. He jerks with each burst of the laugh.
+##   SLAM    he lunges in from huge to filling the screen, with the scream
 ##   HOLD    for half a second, shaking, laughing
-##   FLICKER cutting between his face, a red ghosted copy, a tighter close-up, an
-##           even darker one, and black (never faster than about 8 times a second)
-## All of it in the dark: just the shape of him, and his eyes glowing.
+##   FLICKER cutting between him, a red ghosted copy, a tighter close-up, an even
+##           darker frame, and black with only the eyes (never faster than about 8
+##           cuts a second; with Reduce flashing on, it just holds on him)
 ##   LUNGE   one last rush at the screen, then black (the laugh carries on)
 func _draw_jumpscare(time: float) -> void:
-	if _face_script == null:
-		_face_script = load("res://scripts/hopkuna_face.gd")
-	var center := Vector2(320, 236)
+	var focus := Vector2(320, 210)
 	var laugh := _laugh_jaw(time)
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * (14.0 if time < 0.6 else 6.0)
-	var scale := 1.28 + time * 0.08
+	var size := 34.0 + time * 2.0
 	var mode := 0
 	if time < 0.14:
 		var slam := time / 0.14
-		scale = lerpf(2.6, 1.28, 1.0 - pow(1.0 - slam, 3.0))
+		size = lerpf(80.0, 34.0, 1.0 - pow(1.0 - slam, 3.0))
 	elif time > JUMPSCARE_TIME - 0.22:
 		var lunge := (time - (JUMPSCARE_TIME - 0.22)) / 0.22
-		scale = lerpf(1.5, 3.4, lunge * lunge)
-		center.y += lunge * 60.0
-	elif time > 0.6:
+		size = lerpf(40.0, 110.0, lunge * lunge)
+	elif time > 0.6 and not Game.reduce_flashing():
 		# A new cut every 0.13 seconds, chosen at random (but never two blacks in a row).
 		var cut := int((time - 0.6) / 0.13)
 		var rng := RandomNumberGenerator.new()
@@ -1340,41 +1493,65 @@ func _draw_jumpscare(time: float) -> void:
 			mode = 0
 	match mode:
 		2, 3:
-			# Black: only the eyes, glowing.
-			for side in [-1.0, 1.0]:
-				var eye := center + Vector2(side * 76, -52) * scale + shake
-				_overlay.draw_circle(eye, 40.0, Color(1.0, 0.1, 0.12, 0.25))
-				_overlay.draw_circle(eye, 12.0, Color(1.0, 0.15, 0.15))
-				_overlay.draw_circle(eye, 3.0, Color(0, 0, 0))
-			return
+			# Black: only the eyes.
+			_draw_hopkuna_in_dark(focus + shake, size, laugh, 0.0)
 		4:
-			# Even darker: his outline is gone, only the eyes and the glint of teeth.
-			_face_script.draw(_overlay, center + shake, scale * 1.15, laugh, time, Color.WHITE, false, 0.02)
+			_draw_hopkuna_in_dark(focus + shake, size * 1.15, laugh, JUMPSCARE_LIGHT * 0.4)
 		5, 6:
-			# A tight close-up on the grin.
-			_face_script.draw(_overlay, center + Vector2(0, -170) + shake, scale * 1.9, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
+			# A tight close-up on his eyes and grin.
+			_draw_hopkuna_in_dark(focus + Vector2(0, 40) + shake, size * 1.8, laugh, JUMPSCARE_LIGHT)
 		7:
-			# Ghosted: red and cyan copies split apart behind him.
-			_face_script.draw(_overlay, center + shake + Vector2(-16, 0), scale, laugh, time, Color(0.2, 1.0, 1.0, 0.5), false, JUMPSCARE_LIGHT)
-			_face_script.draw(_overlay, center + shake + Vector2(16, 0), scale, laugh, time, Color(1.0, 0.1, 0.1, 0.6), false, JUMPSCARE_LIGHT)
-			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
+			# Ghosted: a red copy split off to one side.
+			_draw_hopkuna_in_dark(focus + shake + Vector2(18, 0), size, laugh, JUMPSCARE_LIGHT, Color(1.0, 0.1, 0.1, 0.5))
+			_draw_hopkuna_in_dark(focus + shake, size, laugh, JUMPSCARE_LIGHT)
 		_:
-			_face_script.draw(_overlay, center + shake, scale, laugh, time, Color.WHITE, false, JUMPSCARE_LIGHT)
+			_draw_hopkuna_in_dark(focus + shake, size, laugh, JUMPSCARE_LIGHT)
 	_draw_jumpscare_grime(time)
 
 
-## The second scare, on the laugh's last burst: out of the dark, his face rushes in
-## even closer than before, then it's gone.
+## The second scare, on the laugh's last burst: out of the dark, he rushes in even
+## closer than before, then he's gone.
 func _draw_second_scare(time: float) -> void:
-	if _face_script == null:
-		_face_script = load("res://scripts/hopkuna_face.gd")
 	var rush := clampf(time / 0.08, 0.0, 1.0)
-	var scale := lerpf(3.4, 1.75, 1.0 - pow(1.0 - rush, 3.0)) + time * 0.6
+	var size := lerpf(110.0, 52.0, 1.0 - pow(1.0 - rush, 3.0)) + time * 20.0
 	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 18.0
-	var center := Vector2(320, 200) + shake
-	_face_script.draw(_overlay, center + Vector2(14, 0), scale, 1.0, time, Color(1.0, 0.1, 0.1, 0.6), false, JUMPSCARE_LIGHT)
-	_face_script.draw(_overlay, center, scale, 1.0, time, Color.WHITE, false, JUMPSCARE_LIGHT)
+	_draw_hopkuna_in_dark(Vector2(320, 200) + shake, size, 1.0, JUMPSCARE_LIGHT)
 	_draw_jumpscare_grime(time + 10.0)
+
+
+## Hopkuna's sprite, `size` screen pixels per sprite pixel, with the point between
+## his eyes at `focus`. `light` is how much of him you can see (0 = only the eyes).
+## His eyes glow at full strength no matter what, and his teeth catch a little light.
+func _draw_hopkuna_in_dark(focus: Vector2, size: float, laugh: float, light: float, tint: Color = Color.WHITE) -> void:
+	if _hopkuna_sprite == null:
+		_hopkuna_sprite = load("res://art/sprites/hopkuna.png")
+	# He jerks up and stretches a little with each burst of laughter.
+	var stretch := Vector2(1.0 - 0.03 * laugh, 1.0 + 0.06 * laugh)
+	var pixel := Vector2(size, size) * stretch
+	var origin := focus - HOPKUNA_EYES_MIDDLE * pixel - Vector2(0, laugh * size * 0.5)
+	var spot := func(texel: Vector2) -> Vector2: return origin + texel * pixel
+	if light > 0.0:
+		var dim := Color(light * 1.3, light, light, 1.0) * tint
+		_overlay.draw_texture_rect(_hopkuna_sprite, Rect2(origin, _hopkuna_sprite.get_size() * pixel), false, dim)
+		# The grin: his tooth pixels catch a little of the light.
+		for tooth in HOPKUNA_TEETH:
+			_overlay.draw_rect(Rect2(spot.call(tooth), pixel), Color(0.9, 0.85, 0.7, 0.12) * tint)
+	# The eyes: two glowing red pixels with soft light around them.
+	for eye in HOPKUNA_EYE_PIXELS:
+		var middle: Vector2 = spot.call(eye + Vector2(0.5, 0.5))
+		_soft_glow(middle, size * 3.2, Color(1.0, 0.08, 0.1, 0.32) * tint)
+		_soft_glow(middle, size * 1.3, Color(1.0, 0.15, 0.12, 0.6) * tint)
+		_overlay.draw_rect(Rect2(spot.call(eye), pixel), Color(1.0, 0.12, 0.12) * tint)
+		_overlay.draw_rect(Rect2(spot.call(eye) + pixel * 0.3, pixel * 0.4), Color(1.0, 0.75, 0.6) * tint)
+
+
+## A soft round glow that fades out to nothing at `radius`.
+func _soft_glow(center: Vector2, radius: float, color: Color) -> void:
+	var clear := Color(color, 0.0)
+	for k in 24:
+		var a := center + Vector2.from_angle(k * TAU / 24) * radius
+		var b := center + Vector2.from_angle((k + 1) * TAU / 24) * radius
+		_overlay.draw_polygon(PackedVector2Array([center, a, b]), PackedColorArray([color, clear, clear]))
 
 
 ## Over the face: a red vignette, scanlines, film grain, and torn glitch bars.
@@ -1388,7 +1565,7 @@ func _draw_jumpscare_grime(time: float) -> void:
 	for g in 300:
 		var spot := Vector2(rng.randf() * 640.0, rng.randf() * 480.0)
 		_overlay.draw_rect(Rect2(spot, Vector2(2, 2)), Color(1, 1, 1, rng.randf() * 0.12))
-	if time > 0.14:
+	if time > 0.14 and not Game.reduce_flashing():
 		for bar in rng.randi_range(0, 3):
 			var y := rng.randf() * 480.0
 			var height := rng.randf_range(3.0, 14.0)
@@ -1475,6 +1652,7 @@ func _draw_overlay() -> void:
 
 	_draw_aura()
 	_draw_party_sprites()
+	_draw_call()
 	_draw_enemies()
 	_draw_boss_bar()
 	_draw_soul_owner()
@@ -1527,6 +1705,9 @@ func _draw_impact() -> void:
 		return
 	if _impact_black:
 		_draw_black_flash_frames()
+		return
+	# Reduce flashing: keep the freeze and shake, skip the full-screen flash.
+	if Game.reduce_flashing():
 		return
 	var inverted := _impact_critical and _impact_time < _impact_length / 2
 	var background := Color.BLACK if inverted else Color(1, 1, 1, 0.92)
@@ -1614,10 +1795,13 @@ func _draw_black_flash_frames() -> void:
 	var enemy := _impact_target
 	var center := enemy.position + Vector2(0, -20)
 	var progress := 1.0 - _impact_time / _impact_length
-	var frame := int(progress * 7.0)
+	# Reduce flashing: one steady dark frame instead of flickering black and red.
+	var frame := 0 if Game.reduce_flashing() else int(progress * 7.0)
 	var red := Color(0.85, 0.02, 0.08)
 	var black := Color(0.02, 0.0, 0.0)
 	var background := black if frame % 2 == 0 else red
+	if Game.reduce_flashing():
+		background = Color(0, 0, 0, 0.55)
 	var ink := red if frame % 2 == 0 else black
 	_overlay.draw_rect(Rect2(-20, -20, 680, 520), background)
 	# Bolts crashing down from every direction into the hit.
@@ -2123,7 +2307,7 @@ var _pose_cache: Dictionary = {}
 func _pose(member: PartyMember, pose: String) -> Texture2D:
 	if pose == "":
 		return member.sprite
-	var path := "res://art/sprites/battle/%s_%s.png" % [member.name.to_lower(), pose]
+	var path := "res://art/sprites/battle/%s_%s.png" % [Game.sprite_base(member.name), pose]
 	if not _pose_cache.has(path):
 		_pose_cache[path] = load(path) if ResourceLoader.exists(path) else null
 	return _pose_cache[path] if _pose_cache[path] else member.sprite
@@ -2282,7 +2466,7 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 
 
 func _is_choosing(member_index: int) -> bool:
-	var picking := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU]
+	var picking := state in [State.MENU, State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU, State.CALL_LIST]
 	return picking and member_index == current_member
 
 
@@ -2359,7 +2543,7 @@ func _draw_button_icon(button: String, c: Vector2, color: Color) -> void:
 func _draw_box_contents() -> void:
 	var area := box.get_inner_rect()
 	match state:
-		State.TEXT, State.MENU, State.READY:
+		State.TEXT, State.MENU, State.READY, State.CALLING:
 			var visible_text := _text.substr(0, int(maxf(_typed, 0.0)))
 			var lines := visible_text.split("\n")
 			for i in lines.size():
@@ -2385,6 +2569,13 @@ func _draw_box_contents() -> void:
 			var anyone_spareable := _active_enemies().any(func(e: Enemy) -> bool: return e.can_spare())
 			_draw_row(0, "Spare", YELLOW if anyone_spareable else Color.WHITE)
 			_draw_row(1, "Flee", Color.WHITE)
+			if _list.size() > 2:
+				_draw_row(2, "Call a friend", Color(0.6, 0.9, 1.0))
+		State.CALL_LIST:
+			for i in _list.size():
+				var helper: Dictionary = _helpers().HELPERS[_list[i]]
+				var spot := Vector2(area.position.x + 50 + (i / CALL_ROWS) * CALL_COLUMN, _row_y(i % CALL_ROWS))
+				_overlay.draw_string(_font, spot, DialogueBox.display_name(_list[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, helper["color"])
 		State.FLEEING:
 			_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		State.FIGHT_BAR, State.FIGHT_ANIM:
@@ -2394,7 +2585,7 @@ func _draw_box_contents() -> void:
 	var hint := ""
 	if state == State.MENU:
 		hint = "ENTER: choose   X: back" if _can_go_back() else "ENTER: choose"
-	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU]:
+	elif state in [State.TARGET_ENEMY, State.ACT_LIST, State.ITEM_LIST, State.TARGET_PARTY, State.MERCY_MENU, State.CALL_LIST]:
 		hint = "ENTER: choose   X: back"
 	if hint != "":
 		var width := _font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
@@ -2954,7 +3145,7 @@ func _backdrop_black_flash(color: Color, beats: float) -> void:
 	var to := Vector2(x + rng.randf_range(-80.0, 80.0), BACKDROP.end.y)
 	var fade := 1.0 - into / 1.2
 	# A dark flicker over everything for the first instant.
-	if into < 0.25:
+	if into < 0.25 and not Game.reduce_flashing():
 		_backdrop.draw_rect(BACKDROP, Color(0, 0, 0, 0.35 * (1.0 - into / 0.25)))
 	var shape_seed := window * 31 + int(into * 6.0)
 	_draw_bolt(from, to, Color(color, 0.25 * fade), 12.0, shape_seed, _backdrop)

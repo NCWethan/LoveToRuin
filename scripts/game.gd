@@ -67,6 +67,13 @@ const MUSIC_VOLUME_DB := -6.0
 var _music_players: Array[AudioStreamPlayer] = []
 var _music_current: int = 0
 var _music_name: String = ""
+## How fast (and how low) the music plays: slowed down in the overworld on the
+## Genocide path (see Area). Battles set it back to 1.
+var music_pitch: float = 1.0:
+	set(value):
+		music_pitch = value
+		for player in _music_players:
+			player.pitch_scale = value
 
 
 func _ready() -> void:
@@ -130,7 +137,13 @@ const SETTINGS_PATH := "user://settings.cfg"
 const TEST_SETTINGS_PATH := "user://test_settings.cfg"
 var settings_path: String = SETTINGS_PATH
 ## music / sound: 0 to 1.  text_speed: 0 slow, 1 normal, 2 fast.
-var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "fullscreen": false}
+var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "fullscreen": false, "reduce_flashing": false}
+
+
+## "Reduce flashing" (in Settings): fewer, gentler flashes and no strobing, for
+## anyone sensitive to flashing lights.
+func reduce_flashing() -> bool:
+	return settings.get("reduce_flashing", false)
 
 ## Things that are remembered even after you RESET (kept with the settings, not
 ## the save). Hopkuna has DETERMINATION too: he notices.
@@ -343,6 +356,7 @@ func play_music(song: String, fade_time: float = 0.6) -> void:
 	_music_current = 1 - _music_current
 	var new := _music_players[_music_current]
 	new.stream = load(path)
+	new.pitch_scale = music_pitch
 	new.volume_db = -40.0
 	new.play()
 	_fade_music(new, MUSIC_VOLUME_DB, fade_time, false)
@@ -420,6 +434,8 @@ func change_scene(path: String, spawn = null) -> void:
 	transitioning = true
 	await fade_out()
 	spawn_position = spawn
+	# Normal-speed music unless the new scene says otherwise (see Area, Genocide).
+	music_pitch = 1.0
 	get_tree().change_scene_to_file(path)
 	# Whatever was going on in the old scene (a cutscene, a conversation) is gone
 	# now, and it can't finish to say so. Start the new scene free to move; its own
@@ -445,6 +461,31 @@ func start_battle(battle_id: String, from_scene: String, at: Vector2, random: bo
 	await change_scene(BATTLE_SCENE, at)
 
 
+## How far down the Genocide path Elric has gone, from 0 to 3, by how many enemies
+## they've defeated instead of sparing (or 3 once they've gone with Hop). It changes
+## how Elric looks (sprite_base), how the world looks (Area), and how people act.
+const DREAD_KILLS := [2, 6, 10]
+
+
+func dread() -> int:
+	if flags.get("route", "") == "genocide":
+		return 3
+	var kills := int(flags.get("kills", 0))
+	var stage := 0
+	for needed in DREAD_KILLS:
+		if kills >= needed:
+			stage += 1
+	return stage
+
+
+## The start of a character's picture file names: "hop" for Hop, and for Elric
+## "elric", or "elric_dread1" to "elric_dread3" as they get worse.
+func sprite_base(who: String) -> String:
+	if who == "Elric" and dread() > 0:
+		return "elric_dread%d" % dread()
+	return who.to_lower()
+
+
 ## Called by the battle when it's won. Adds the rewards and goes back to the overworld.
 func finish_battle(result: Dictionary) -> void:
 	battle_result = result
@@ -454,6 +495,10 @@ func finish_battle(result: Dictionary) -> void:
 	if not battle_random and not result.get("fled", false):
 		flags["beat_" + str(result.get("id", ""))] = true
 	battle_random = false
+	# Every enemy defeated instead of spared counts (see dread()).
+	# (Sparring with the training dummy doesn't count.)
+	if result.get("id", "") != "training":
+		flags["kills"] = int(flags.get("kills", 0)) + result.get("defeated", []).size()
 	bond += int(result.get("bond", 0))
 	exp_points += int(result.get("exp", 0))
 	money += int(result.get("money", 0))

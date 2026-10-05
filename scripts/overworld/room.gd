@@ -10,12 +10,14 @@ const TILE := 20
 enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
-	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE }
+	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE,
+	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
-	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE]
+	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE,
+	BUNKER_WALL, BUNKER_DOOR, PROP]
 
 var width: int = 0
 var height: int = 0
@@ -112,7 +114,7 @@ func _draw() -> void:
 
 ## Tiles that cast a shadow onto the ground below them (buildings, walls, lockers...).
 const SHADOW_CASTERS := [WALL, WINDOW, DOOR, STUCCO, GLASS, WOOD_WALL, RED_WALL,
-	INTERIOR_WALL, LOCKER, CHALKBOARD, BLEACHERS]
+	INTERIOR_WALL, LOCKER, CHALKBOARD, BLEACHERS, BUNKER_WALL, BUNKER_DOOR]
 
 
 ## A soft shadow along the ground at the foot of every wall, and a thinner one
@@ -273,6 +275,40 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			var light := (x + y) % 2 == 0
 			draw_rect(r, Color8(205, 205, 195) if light else Color8(185, 185, 178))
 			_specks(x, y, r, Color8(160, 160, 155), 2)
+		BUNKER_FLOOR, PROP:
+			# Poured concrete, in big slabs. (PROP is solid floor that furniture is
+			# drawn on top of.)
+			draw_rect(r, Color8(96, 97, 100))
+			if x % 3 == 0:
+				draw_rect(Rect2(p, Vector2(1, TILE)), Color8(80, 81, 85))
+			if y % 3 == 0:
+				draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(80, 81, 85))
+			_specks(x, y, r, Color8(84, 85, 88), 3)
+			if _hash(x, y, 9) % 23 == 0:
+				# A crack.
+				draw_line(p + Vector2(3, 5), p + Vector2(9, 11), Color8(70, 70, 74), 1.0)
+				draw_line(p + Vector2(9, 11), p + Vector2(15, 12), Color8(70, 70, 74), 1.0)
+		BUNKER_WALL:
+			# Concrete blocks, with mortar lines and a darker base.
+			draw_rect(r, Color8(74, 76, 82))
+			var offset := 10 if y % 2 == 0 else 0
+			draw_rect(Rect2(p + Vector2(0, 9), Vector2(TILE, 1)), Color8(58, 60, 65))
+			draw_rect(Rect2(p + Vector2(0, 19), Vector2(TILE, 1)), Color8(58, 60, 65))
+			draw_rect(Rect2(p + Vector2(offset, 0), Vector2(1, 9)), Color8(58, 60, 65))
+			draw_rect(Rect2(p + Vector2((offset + 10) % 20, 10), Vector2(1, 9)), Color8(58, 60, 65))
+			draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(90, 92, 98))
+			if get_tile(x, y + 1) != BUNKER_WALL:
+				draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(52, 54, 58))
+		BUNKER_DOOR:
+			# A heavy steel door: riveted panels, and a wheel handle on the left half.
+			draw_rect(r, Color8(112, 118, 126))
+			draw_rect(Rect2(p + Vector2(2, 2), Vector2(TILE - 4, TILE - 4)), Color8(98, 104, 112))
+			for rivet in [Vector2(3, 3), Vector2(16, 3), Vector2(3, 16), Vector2(16, 16)]:
+				draw_rect(Rect2(p + rivet, Vector2(1, 1)), Color8(150, 156, 164))
+			if get_tile(x + 1, y) == BUNKER_DOOR:
+				draw_arc(p + Vector2(15, 10), 4.0, 0.0, TAU, 12, Color8(60, 64, 70), 1.5)
+				draw_line(p + Vector2(11, 10), p + Vector2(19, 10), Color8(60, 64, 70), 1.0)
+			draw_rect(Rect2(p, Vector2(1, TILE)), Color8(60, 64, 70))
 		LOCKER:
 			draw_rect(r, Color8(70, 95, 130))
 			draw_rect(Rect2(p + Vector2(0, 0), Vector2(1, TILE)), Color8(45, 62, 88))

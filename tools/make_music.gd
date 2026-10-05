@@ -586,6 +586,54 @@ const SONGS := {
 		],
 	},
 
+	# The REVOLUTION Corps' bunker: warm and steady, a safe place underground.
+	# A gentle triangle melody over soft square arpeggios, a slow bass, and a
+	# quiet heartbeat of a drum, like the hum of the generators.
+	"bunker": {
+		"bpm": 92,
+		"lead_wave": "triangle",
+		"lead": [
+			"G4 . . . B4 . . . D5 . . . B4 . . .",
+			"C5 . . . . . B4 . A4 . . . G4 . . .",
+			"E4 . . . G4 . . . B4 . . . A4 . . .",
+			"F#4 . . . . . . . - - - - D4 . . .",
+			"G4 . . . B4 . . . D5 . . . G5 . . .",
+			"F#5 . . . E5 . . . D5 . . . B4 . . .",
+			"C5 . . . B4 . . . A4 . . . F#4 . . .",
+			"G4 . . . . . . . . . . . - - - -",
+		],
+		"harm": [
+			"G3 . B3 . D4 . B3 . G3 . B3 . D4 . B3 .",
+			"C3 . E3 . G3 . E3 . C3 . E3 . G3 . E3 .",
+			"E3 . G3 . B3 . G3 . E3 . G3 . B3 . G3 .",
+			"D3 . F#3 . A3 . F#3 . D3 . F#3 . A3 . F#3 .",
+			"G3 . B3 . D4 . B3 . G3 . B3 . D4 . B3 .",
+			"D3 . F#3 . A3 . F#3 . B2 . D3 . F#3 . D3 .",
+			"C3 . E3 . G3 . E3 . A2 . C3 . E3 . C3 .",
+			"G3 . B3 . D4 . B3 . G3 . B3 . D4 . B3 .",
+		],
+		"bass": [
+			"G2 . . . . . . . D2 . . . . . . .",
+			"C2 . . . . . . . G2 . . . . . . .",
+			"E2 . . . . . . . B1 . . . . . . .",
+			"D2 . . . . . . . A1 . . . . . . .",
+			"G2 . . . . . . . D2 . . . . . . .",
+			"D2 . . . . . . . B1 . . . . . . .",
+			"C2 . . . . . . . A1 . . . . . . .",
+			"G2 . . . . . . . . . . . . . . .",
+		],
+		"drums": [
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - K - - -",
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - - - - -",
+			"K - - - - - - - H - - - K - H -",
+		],
+	},
+
 	# Near a fragment. Almost silence: a low drone and a few notes that don't
 	# quite fit together.
 	"eerie": {

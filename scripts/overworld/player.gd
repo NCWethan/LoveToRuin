@@ -28,17 +28,18 @@ var trail: Array[Vector2] = []
 ## How far Elric has walked in this area, in pixels (used for random encounters).
 var distance_walked: float = 0.0
 
-var _front: Texture2D = load("res://art/sprites/elric.png")
-var _back: Texture2D = load("res://art/sprites/elric_back.png")
-## Two side-view frames (legs together / mid-step). Flipped when walking left.
-var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png"), load("res://art/sprites/elric_side3.png")]
+## Elric's pictures (loaded in _load_look: they get worse on the Genocide path).
+var _front: Texture2D
+var _back: Texture2D
+## Side-view frames (legs together / mid-step, each arm). Flipped when walking left.
+var _side: Array[Texture2D] = []
 ## Walking frames for the front and back views: one step with each leg.
-var _front_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric")
-var _back_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric_back")
+var _front_walk: Array[Texture2D] = []
+var _back_walk: Array[Texture2D] = []
 ## Running frames, for sprinting (see Cast.run_frames).
-var _front_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric")
-var _back_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric_back")
-var _side_run: Array[Texture2D] = Cast.run_frames("res://art/sprites/elric_side")
+var _front_run: Array[Texture2D] = []
+var _back_run: Array[Texture2D] = []
+var _side_run: Array[Texture2D] = []
 var _stamina_bar: CanvasLayer
 var _sprite: Sprite2D
 var _walk_time: float = 0.0
@@ -47,6 +48,7 @@ var _moving: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
+	_load_look()
 
 	# The node's position is Elric's feet; the picture sits above it.
 	_sprite = Sprite2D.new()
@@ -70,7 +72,22 @@ func _ready() -> void:
 	add_child(_stamina_bar)
 
 
+## Loads Elric's pictures: normal, or worse the further down the Genocide path.
+func _load_look() -> void:
+	var base := "res://art/sprites/" + Game.sprite_base("Elric")
+	_front = load(base + ".png")
+	_back = load(base + "_back.png")
+	_side.assign([load(base + "_side.png"), load(base + "_side2.png"), load(base + "_side3.png")])
+	_front_walk = Cast.walk_frames(base)
+	_back_walk = Cast.walk_frames(base + "_back")
+	_front_run = Cast.run_frames(base)
+	_back_run = Cast.run_frames(base + "_back")
+	_side_run = Cast.run_frames(base + "_side")
+
+
 func _physics_process(delta: float) -> void:
+	if Game.dread() >= 3:
+		queue_redraw()
 	_moving = false
 	if Game.busy or Game.transitioning:
 		sprinting = false
@@ -223,3 +240,12 @@ func _draw() -> void:
 	draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.32))
 	draw_circle(Vector2.ZERO, 11.0, Color(0, 0, 0, 0.28))
 	draw_set_transform(Vector2.ZERO)
+	# At the end of the Genocide path, a dark red haze clings to Elric, with wisps
+	# rising off them.
+	if Game.dread() >= 3:
+		var t := Time.get_ticks_msec() / 1000.0
+		draw_circle(Vector2(0, -16), 18.0 + sin(t * 3.0) * 1.5, Color(0.25, 0.0, 0.04, 0.22))
+		for w in 5:
+			var rise := fmod(t * 0.7 + w * 0.2, 1.0)
+			var wisp := Vector2(sin(t * 2.0 + w * 1.7) * 9.0, -4.0 - rise * 34.0)
+			draw_circle(wisp, 2.5 * (1.0 - rise), Color(0.35, 0.02, 0.06, 0.6 * (1.0 - rise)))

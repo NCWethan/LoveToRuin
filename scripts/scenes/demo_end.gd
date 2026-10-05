@@ -3,6 +3,10 @@ extends Node2D
 
 var _font: Font
 var _time: float = 0.0
+## Genocide only: after CONTINUE, a page saying the Corps' base is closed to you.
+var _sealed: bool = false
+
+const CORPS_BASE_SCENE := "res://scenes/corps_base.tscn"
 
 
 func _ready() -> void:
@@ -15,8 +19,22 @@ func _process(delta: float) -> void:
 	_time += delta
 	var wait := 2.5 if Game.flags.get("chapter1_done", false) else 1.5
 	if _time > wait and Input.is_action_just_pressed("confirm") and not Game.transitioning:
-		Game.change_scene(Game.TITLE_SCENE)
+		_continue()
 	queue_redraw()
+
+
+## After Chapter 1: CONTINUE goes down into the Corps' base (Chapter 2), unless
+## Elric went with Hop. Then the way is closed.
+func _continue() -> void:
+	if not Game.flags.get("chapter1_done", false) or _sealed:
+		Game.change_scene(Game.TITLE_SCENE)
+	elif Game.flags.get("route", "") == "genocide":
+		_sealed = true
+		_time = 0.0
+		Game.play_sfx("door")
+	else:
+		Game.play_music("", 1.0)
+		Game.change_scene(CORPS_BASE_SCENE)
 
 
 ## The route endings for Chapter 1: the name shown, its color, and a closing line.
@@ -29,6 +47,9 @@ const ROUTE_ENDINGS := {
 
 func _draw() -> void:
 	var alpha := clampf(_time / 1.0, 0.0, 1.0)
+	if _sealed:
+		_draw_sealed(alpha)
+		return
 	if Game.flags.get("chapter1_done", false):
 		_draw_chapter_complete(alpha)
 		return
@@ -68,6 +89,16 @@ func _draw_chapter_complete(alpha: float) -> void:
 	_centered("LV %d     BOND %d     EXP %d     $%d" % [Game.lv(), Game.bond, Game.exp_points, Game.money], 362, 16, Color(1, 1, 1, alpha))
 	if _time > 2.5:
 		_centered("Thank you for playing!", 410, 16, Color(1, 1, 0.6))
+		_centered("CONTINUE  (press ENTER)", 440, 14, Color(1, 1, 1, 0.55 + 0.45 * sin(_time * 3.0)))
+
+
+## Genocide: the Corps won't have you.
+func _draw_sealed(alpha: float) -> void:
+	_centered("The hatch to the Corps' base is bolted shut.", 190, 18, Color(0.8, 0.8, 0.8, alpha))
+	_centered("Somewhere in the dark, Hop is waiting.", 230, 18, Color(0.8, 0.8, 0.8, alpha))
+	_centered("So is someone else.", 270, 18, Color(1.0, 0.25, 0.3, alpha))
+	if _time > 1.5:
+		_centered("Chapter 2 is still being written.", 360, 14, Color(0.6, 0.6, 0.6))
 		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 

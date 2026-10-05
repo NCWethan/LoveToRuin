@@ -97,6 +97,16 @@ $palette[':'] = @(88, 52, 30)      # gravy
 $palette['@'] = @(45, 105, 75)     # green book cover
 $palette['~'] = @(98, 112, 72)     # olive tent fabric
 $palette['^'] = @(66, 78, 48)      # tent seams
+# Genocide (Elric getting worse)
+$palette['+'] = @(182, 160, 212)   # paler skin
+$palette['?'] = @(158, 146, 172)   # grayer skin
+$palette['&'] = @(124, 116, 134)   # dead-gray skin
+$palette['='] = @(92, 72, 108)     # dark circles
+$palette['!'] = @(108, 18, 26)     # blood stains
+$palette['<'] = @(24, 8, 12)       # black tears
+$palette[';'] = @(86, 62, 40)      # darkened tunic
+$palette[','] = @(58, 58, 40)      # darkened pants
+$palette['/'] = @(70, 44, 26)      # dark, greasy hair
 $outline = @(125, 125, 140)
 
 $sprites = @{
@@ -850,6 +860,43 @@ $sprites['hopkuna'] = @(
     ".......zzzzznzzzz.......",
     ".......DDDDD.DDDD.......",
     ".......DDDDD.DDDD......."
+)
+
+# A training dummy for the Corps' bunker: a straw body on a post, with a target
+# painted on its chest and button eyes.
+$sprites['training_dummy'] = @(
+    "........................",
+    "..........eeee..........",
+    ".........eeeeee.........",
+    ".........eKeeKe.........",
+    ".........eeeeee.........",
+    ".........eeKKee.........",
+    "..........eeee..........",
+    "...........hh...........",
+    "....eeeeeeeeeeeeeeee....",
+    "....eeeeeeeeeeeeeeee....",
+    "......eeeeeeeeeeee......",
+    "......eeeWWWWWWeee......",
+    "......eeWRRRRRRWee......",
+    "......eeWRWWWWRWee......",
+    "......eeWRWRRWRWee......",
+    "......eeWRWRRWRWee......",
+    "......eeWRWWWWRWee......",
+    "......eeWRRRRRRWee......",
+    "......eeeWWWWWWeee......",
+    "......eeeeeeeeeeee......",
+    ".......rrrrrrrrrr.......",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    "...........hh...........",
+    ".........hhhhhh.........",
+    "........DDDDDDDD........",
+    "........DDDDDDDD........"
 )
 
 # --- More Westview enemies, the tent, and Wally's empty costume -------------
@@ -1614,6 +1661,86 @@ foreach ($who in $sideUpper.Keys) {
     $runFrames["${who}_side_run3"] = Lean $pass $upper.Count
 }
 
+# --- Genocide: Elric, getting worse -------------------------------------------
+# The more Elric kills, the more horrid they look (see Game.dread()). Every Elric
+# picture (overworld, walking, running, battle poses, portraits) gets three
+# worse versions, saved with "elric" changed to "elric_dread1/2/3":
+#   1  paler skin, dark circles under the eyes
+#   2  grayer skin, glowing red eyes, blood stains on the clothes
+#   3  dead-gray skin, black tears, a wide toothy grin, more blood, darker
+#      clothes and hair
+$dreadSkin = @{ 1 = '+'; 2 = '?'; 3 = '&' }
+$stains2 = @(@(13, 9), @(16, 14), @(19, 7), @(24, 9))
+$stains3 = $stains2 + @(@(12, 15), @(14, 5), @(17, 11), @(18, 16), @(21, 13), @(26, 14), @(27, 8), @(15, 18), @(23, 12))
+$clothes = 'Tdtro;,'
+
+function Set-Pixel([string[]]$rows, [int]$y, [int]$x, [string]$ch) {
+    if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[$y].Length) { return }
+    $c = $rows[$y].ToCharArray(); $c[$x] = $ch; $rows[$y] = -join $c
+}
+function Get-Pixel([string[]]$rows, [int]$y, [int]$x) {
+    if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[$y].Length) { return '.' }
+    return [string]$rows[$y][$x]
+}
+
+function Dread-Rows([string[]]$rows, [int]$stage) {
+    $p = [string[]]$rows.Clone()
+    $xoff = [int](($p[0].Length - 24) / 2)
+    $skin = $dreadSkin[$stage]
+    # Find the eyes (black pixels in the face) before the skin changes.
+    $eyes = @()
+    for ($y = 6; $y -le 8; $y++) {
+        for ($x = 8 + $xoff; $x -le 15 + $xoff; $x++) {
+            if ((Get-Pixel $p $y $x) -eq 'K' -and ((Get-Pixel $p $y ($x - 1)) -eq 'L' -or (Get-Pixel $p $y ($x + 1)) -eq 'L')) { $eyes += , @($y, $x) }
+        }
+    }
+    # A wide black mouth with teeth (front views only, where the mouth is two black pixels).
+    $grin = $stage -ge 3 -and (Get-Pixel $p 9 (11 + $xoff)) -eq 'K' -and (Get-Pixel $p 9 (12 + $xoff)) -eq 'K'
+    for ($y = 0; $y -lt $p.Count; $y++) {
+        $c = $p[$y].ToCharArray()
+        for ($x = 0; $x -lt $c.Length; $x++) {
+            switch -CaseSensitive ([string]$c[$x]) {
+                'L' { $c[$x] = $skin }
+                'T' { if ($stage -ge 3) { $c[$x] = ';' } }
+                'O' { if ($stage -ge 3) { $c[$x] = ',' } }
+                'h' { if ($stage -ge 3) { $c[$x] = '/' } }
+            }
+        }
+        $p[$y] = -join $c
+    }
+    foreach ($eye in $eyes) {
+        $y = $eye[0]; $x = $eye[1]
+        if ($stage -ge 2) { Set-Pixel $p $y $x 'I' }
+        if ((Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
+        if ($stage -ge 3) {
+            for ($k = 1; $k -le 3; $k++) { if ((Get-Pixel $p ($y + $k) $x) -in @($skin, '=')) { Set-Pixel $p ($y + $k) $x '<' } }
+        }
+    }
+    if ($grin) {
+        Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
+        Set-Pixel $p 9 (11 + $xoff) 'W'; Set-Pixel $p 9 (12 + $xoff) 'W'
+        Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
+    }
+    $stains = if ($stage -ge 3) { $stains3 } elseif ($stage -ge 2) { $stains2 } else { @() }
+    foreach ($s in $stains) {
+        if ($clothes.Contains((Get-Pixel $p $s[0] ($s[1] + $xoff)))) { Set-Pixel $p $s[0] ($s[1] + $xoff) '!' }
+    }
+    return $p
+}
+
+$dreadSprites = [ordered]@{}
+$dreadPortraits = [ordered]@{}
+$dreadPoses = [ordered]@{}
+foreach ($stage in 1..3) {
+    foreach ($set in @(@($sprites, $dreadSprites), @($walkFrames, $dreadSprites), @($runFrames, $dreadSprites), @($portraits, $dreadPortraits), @($poses, $dreadPoses))) {
+        $from = $set[0]; $to = $set[1]
+        foreach ($name in @($from.Keys)) {
+            if (-not $name.StartsWith('elric')) { continue }
+            $to["elric_dread$stage" + $name.Substring(5)] = Dread-Rows $from[$name] $stage
+        }
+    }
+}
+
 $spriteDir = Join-Path $PSScriptRoot "..\art\sprites"
 $portraitDir = Join-Path $PSScriptRoot "..\art\portraits"
 New-Item -ItemType Directory -Force $spriteDir | Out-Null
@@ -1626,3 +1753,6 @@ New-Item -ItemType Directory -Force $battleDir | Out-Null
 foreach ($name in $poses.Keys) { Save-Sprite $name $poses[$name] $battleDir }
 foreach ($name in $walkFrames.Keys) { Save-Sprite $name $walkFrames[$name] $spriteDir }
 foreach ($name in $runFrames.Keys) { Save-Sprite $name $runFrames[$name] $spriteDir }
+foreach ($name in $dreadSprites.Keys) { Save-Sprite $name $dreadSprites[$name] $spriteDir }
+foreach ($name in $dreadPortraits.Keys) { Save-Sprite $name $dreadPortraits[$name] $portraitDir }
+foreach ($name in $dreadPoses.Keys) { Save-Sprite $name $dreadPoses[$name] $battleDir }

@@ -9,5 +9,7 @@ static func create(id: String) -> BattleData:
 			return HilltopBattles.create(id)
 		"pop_quiz", "hall_pass", "mystery_meat", "tardy_bell", "overdue_book", "tent", "wally":
 			return WestviewBattles.create(id)
+		"training":
+			return load("res://scripts/bunker_battles.gd").create(id)
 		_:
 			return TutorialBattle.create_data()
