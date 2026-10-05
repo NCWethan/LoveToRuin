@@ -610,6 +610,8 @@ const CALL_LENGTH := 1.6
 ## Eggo's The-Eggo Benedict: overheal HP per serving, and the most anyone can have.
 const BENEDICT_OVERHEAL := 13
 const MAX_OVERHEAL := 26
+## Nassan's plan: how much longer the SOUL is safe after a hit while he's here.
+const NASSAN_IFRAMES := 2.0
 ## Big Joe's shield: how much damage gets through while it's up.
 const SHIELD_LETS_THROUGH := 0.2
 
@@ -625,6 +627,9 @@ var _helper_uses: Dictionary = {}
 var _call: Dictionary = {}
 ## Big Joe's shield is up for this enemy turn (damage cut by 80%).
 var _shield_up: bool = false
+## Nassan is staying for this enemy turn (longer invincibility after each hit).
+var _nassan_here: bool = false
+var _nassan_sprite: Texture2D
 
 
 func _helpers() -> GDScript:
@@ -688,9 +693,17 @@ func _process_call(delta: float) -> void:
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
 	var food: bool = info.get("kind", "hit") == "food"
+	var stays: bool = info.get("kind", "hit") == "iframes"
 	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME:
 		_call["landed"] = true
-		if food:
+		if stays:
+			# Nassan takes his place beside the party for the coming turn.
+			_nassan_here = true
+			_nassan_sprite = _call["sprite"]
+			Game.play_sfx("select")
+			Game.play_sfx("ping")
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 18, true)
+		elif food:
 			# Whoever called him eats it: overheal HP, past their max.
 			var eater: PartyMember = _call["member"]
 			eater.overheal = mini(eater.overheal + BENEDICT_OVERHEAL, MAX_OVERHEAL)
@@ -721,13 +734,16 @@ func _process_call(delta: float) -> void:
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
 	if shield:
 		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif stays:
+		line = "* %s used %s!\n* This turn, every hit leaves you safe for twice as long." % [helper_name, info["move"]]
 	elif food:
 		var eater: PartyMember = _call["member"]
 		line = "* %s served %s The-Eggo Benedict!\n* %s gained %d overheal HP!" % [helper_name, eater.name, eater.name, BENEDICT_OVERHEAL]
 	elif _call["damage"] == 0:
 		line = "* %s used %s!\n* (%s is hanging on by a thread. They won't finish it.)" % [helper_name, info["move"], target.name]
 	_call = {}
-	_show_messages([line, "* %s waved and ran off." % helper_name], _run_next_action)
+	var goodbye := "* %s stays by your side for this turn." % helper_name if stays else "* %s waved and ran off." % helper_name
+	_show_messages([line, goodbye], _run_next_action)
 
 
 ## The helper running in from the left, doing their move, and running off. Most
@@ -740,6 +756,10 @@ func _draw_call() -> void:
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
 	var food: bool = info.get("kind", "hit") == "food"
+	var stays: bool = info.get("kind", "hit") == "iframes"
+	# Nassan doesn't run off: once he's in place, he's drawn by _draw_nassan.
+	if stays and _call["landed"]:
+		return
 	var texture: Texture2D = _call["sprite"]
 	# Attackers strike from the open space between the party and the enemies;
 	# Big Joe and Eggo come right up to the party.
@@ -788,6 +808,24 @@ func _draw_call() -> void:
 	for k in 12:
 		var dir := Vector2.from_angle(k * TAU / 12 + 0.2)
 		_overlay.draw_line(center + dir * (14.0 + since * 80.0), center + dir * (30.0 + since * 140.0), Color(info["color"], fade), 3.0)
+
+
+## Nassan, staying beside the party for the turn, with a little planning bubble,
+## and a note over the box during the enemy turn.
+func _draw_nassan() -> void:
+	if not _nassan_here or _nassan_sprite == null:
+		return
+	var size := _nassan_sprite.get_size() * 3.0
+	var feet := Vector2(255.0, 180.0 + sin(Time.get_ticks_msec() / 400.0) * 1.5)
+	_overlay.draw_texture_rect(_nassan_sprite, Rect2(feet - Vector2(size.x / 2, size.y), size), false)
+	var blue := Color(0.45, 0.65, 1.0)
+	var bubble := feet + Vector2(26, -size.y - 6)
+	_overlay.draw_circle(bubble, 9, Color(1, 1, 1, 0.9))
+	_overlay.draw_string(_font, bubble + Vector2(-4, 5), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, blue)
+	if state == State.ENEMY_TURN:
+		var frame := box.get_inner_rect()
+		_overlay.draw_string(_font, Vector2(frame.end.x + 12, frame.position.y + 52), "PLAN", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, blue)
+		_overlay.draw_string(_font, Vector2(frame.end.x + 12, frame.position.y + 68), "2x safe time", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, blue)
 
 
 ## Big Joe's shield, while it's up: a glowing golden wall in front of the party,
@@ -1204,15 +1242,17 @@ func _hurt_party(amount: int) -> void:
 	if damage > 0 or soaked == 0:
 		_add_popup(str(damage), _panel_position(member), Color.RED)
 	Game.play_sfx("hurt")
-	_invincible_timer = invincibility_time
+	# With Nassan here, the SOUL stays safe for longer after each hit.
+	_invincible_timer = invincibility_time * (NASSAN_IFRAMES if _nassan_here else 1.0)
 
 	if party.all(func(m: PartyMember) -> bool: return m.is_down()):
 		_game_over()
 
 
 func _end_enemy_turn() -> void:
-	# Big Joe's shield only lasts one turn.
+	# Big Joe's shield only lasts one turn, and Nassan heads off after his.
 	_shield_up = false
+	_nassan_here = false
 	# Back to the plain red cursor for the menus.
 	soul.fragmented = false
 	_clear_bullets()
@@ -1776,6 +1816,7 @@ func _draw_overlay() -> void:
 	_draw_aura()
 	_draw_party_sprites()
 	_draw_shield()
+	_draw_nassan()
 	_draw_call()
 	_draw_enemies()
 	_draw_boss_bar()
@@ -2617,18 +2658,32 @@ func _draw_party_panel() -> void:
 		var name_width := _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
 		_overlay.draw_string(_font, Vector2(x + name_width + 6, PANEL_Y - 1), "LV %d" % Game.lv(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.8, 0.8, 0.8))
 		_draw_bar(Rect2(x + 98, PANEL_Y - 13, 96, 14), float(member.hp) / member.max_hp, YELLOW)
-		# Overheal: the bar grows longer, with a blue piece joined onto the end.
+		# Overheal is blue. It first fills in the HP that's missing (any red still
+		# missing stays red), and whatever's left over makes the bar physically longer.
 		var extra := 0.0
+		var hp_text := "%d / %d" % [member.hp, member.max_hp]
 		if member.overheal > 0:
-			extra = minf(96.0 * member.overheal / member.max_hp, 36.0)
-			var blue := Rect2(x + 98 + 96, PANEL_Y - 13, extra, 14)
-			_overlay.draw_rect(blue.grow(1), Color(0.9, 0.9, 0.9))
-			_overlay.draw_rect(blue, Color(0.25, 0.55, 1.0))
-			_overlay.draw_rect(Rect2(blue.position, Vector2(blue.size.x, blue.size.y * 0.3)), Color(1, 1, 1, 0.3))
-			# Joined to the yellow: no border between them.
-			_overlay.draw_rect(Rect2(blue.position + Vector2(-1, 0), Vector2(2, 14)), Color(0.25, 0.55, 1.0) if member.hp >= member.max_hp else Color(0.45, 0.0, 0.0))
-			_overlay.draw_string(_font, blue.position + Vector2(2, 11), "+%d" % member.overheal, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
-		_overlay.draw_string(_font, Vector2(x + 200 + extra, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE if extra == 0.0 else 14, Color.WHITE)
+			var bar := Rect2(x + 98, PANEL_Y - 13, 96, 14)
+			var blue_color := Color(0.25, 0.55, 1.0)
+			var inside := mini(member.overheal, member.max_hp - member.hp)
+			var past := member.overheal - inside
+			if inside > 0:
+				var from := bar.size.x * member.hp / member.max_hp
+				var fill := Rect2(bar.position + Vector2(from, 0), Vector2(bar.size.x * inside / member.max_hp, bar.size.y))
+				_overlay.draw_rect(fill, blue_color)
+				_overlay.draw_rect(Rect2(fill.position, Vector2(fill.size.x, fill.size.y * 0.3)), Color(1, 1, 1, 0.3))
+			if past > 0:
+				extra = minf(96.0 * past / member.max_hp, 36.0)
+				var more := Rect2(bar.end.x, bar.position.y, extra, bar.size.y)
+				_overlay.draw_rect(more.grow(1), Color(0.9, 0.9, 0.9))
+				_overlay.draw_rect(more, blue_color)
+				_overlay.draw_rect(Rect2(more.position, Vector2(more.size.x, more.size.y * 0.3)), Color(1, 1, 1, 0.3))
+				# Joined straight onto the bar: no border in between.
+				_overlay.draw_rect(Rect2(more.position + Vector2(-1, 0), Vector2(2, 14)), blue_color)
+				# Past the natural limit: "30 / 43" (the max, then the new total).
+				hp_text = "%d / %d" % [member.max_hp, member.hp + member.overheal]
+			_overlay.draw_string(_font, bar.position + Vector2(bar.size.x * member.hp / member.max_hp + 2, 11), "+%d" % member.overheal, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		_overlay.draw_string(_font, Vector2(x + 200 + extra, PANEL_Y), hp_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE if extra == 0.0 else 14, Color.WHITE)
 		if member.defending:
 			_overlay.draw_string(_font, Vector2(x + 256, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
 

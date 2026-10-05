@@ -7,7 +7,9 @@ extends RefCounted
 ## Each entry: their color, what's said when they arrive, the move's name, and:
 ##   kind      what the move does: "hit" (the default: one hit on an enemy, which
 ##             never knocks it out), "shield" (Big Joe: -80% damage for a turn), or
-##             "food" (Eggo: whoever called him eats The-Eggo Benedict, +13 overheal)
+##             "food" (Eggo: whoever called him eats The-Eggo Benedict, +13 overheal),
+##             or "iframes" (Nassan: stays for the enemy turn; after each hit, the
+##             SOUL is safe for twice as long)
 ##   cooldown  turns before they can be called again (default 3, the shared wait)
 ##   charges   how many times they can be called per battle (default: no limit)
 ## Members without a decided ability yet use a placeholder hit.
@@ -22,7 +24,10 @@ const HELPERS := {
 	# Eggo serves whoever called him The-Eggo Benedict: 13 overheal HP, on top of
 	# their max (it stacks, up to 26). No extra wait; 2 charges per battle.
 	"Eggo": {"color": Color(1.0, 0.9, 0.35), "line": "Eggo strolls in carrying a plate. \"order up.\"", "move": "THE-EGGO BENEDICT", "kind": "food", "charges": 2},
-	"Nassan": {"color": Color(0.45, 0.65, 1.0), "line": "Nassan slides in with a plan!", "move": "CALCULATED HIT"},
+	# Nassan planned for this: he stays with the party through the next enemy turn,
+	# and after every hit the SOUL stays invincible twice as long. 4 turns between
+	# calls; no charge limit.
+	"Nassan": {"color": Color(0.45, 0.65, 1.0), "line": "Nassan slides in. \"I planned for this.\"", "move": "CONTINGENCY PLAN", "kind": "iframes", "cooldown": 4},
 	"Nat": {"color": Color(0.45, 0.85, 0.5), "line": "Nat runs in, book open!", "move": "PAGE SLAP"},
 	"NCWethan": {"color": Color(0.45, 0.85, 1.0), "line": "N.C. Wethan bursts in! LIGHTNING TIME!!!", "move": "LIGHTNING"},
 	"Ronin": {"color": Color(1.0, 0.55, 0.15), "line": "Ronin strolls in, guitar first!", "move": "FIRE CHORD"},
