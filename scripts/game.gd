@@ -56,6 +56,10 @@ var _fade: ColorRect
 var _objective_banner: CanvasLayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
+## Sounds that are recordings rather than made in code. To swap one, replace the file.
+## hopkuna_laugh: from Undertale (Omega Flowey's laugh), for private use only.
+## Replace it with a laugh you have the rights to before sharing the game publicly.
+const SOUND_FILES := {"hopkuna_laugh": "res://audio/sfx/hopkuna_laugh.mp3"}
 
 ## Music: two players, so one song can fade out while the next fades in.
 const MUSIC_FOLDER := "res://audio/music/"
@@ -75,6 +79,10 @@ func _ready() -> void:
 
 	_make_audio_buses()
 	_sounds = Sfx.make_all()
+	# Recorded sounds, from audio/sfx (most sounds are made in code, see sfx.gd).
+	for sound in SOUND_FILES:
+		if ResourceLoader.exists(SOUND_FILES[sound]):
+			_sounds[sound] = load(SOUND_FILES[sound])
 	for i in 2:
 		var music_player := AudioStreamPlayer.new()
 		music_player.volume_db = -80.0
@@ -372,15 +380,21 @@ func _fade_music(player: AudioStreamPlayer, to_db: float, time: float, stop_afte
 
 # --- Sounds ---------------------------------------------------------------
 
-func play_sfx(sound: String, pitch: float = 1.0) -> void:
+## Plays a sound. `start` skips into it (in seconds); `boost_db` makes it louder.
+func play_sfx(sound: String, pitch: float = 1.0, start: float = 0.0, boost_db: float = 0.0) -> void:
 	if not _sounds.has(sound):
 		return
 	for player in _sfx_players:
 		if not player.playing:
 			player.stream = _sounds[sound]
 			player.pitch_scale = pitch
-			player.play()
+			player.volume_db = boost_db
+			player.play(start)
 			return
+
+
+func has_sfx(sound: String) -> bool:
+	return _sounds.has(sound)
 
 
 # --- Scene changes --------------------------------------------------------

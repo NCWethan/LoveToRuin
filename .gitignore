@@ -12,3 +12,9 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Recorded sounds that are not ours to publish (the game falls back to made-up ones).
+audio/sfx/hopkuna_laugh.mp3
+audio/sfx/hopkuna_laugh.mp3.import
+# Demo recordings
+*_demo.gif

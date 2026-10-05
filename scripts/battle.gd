@@ -1192,6 +1192,21 @@ const JUMPSCARE_TIME := 2.9
 const LAUGH_SYLLABLES := [[0.0, 0.32], [0.5, 0.32], [1.0, 0.3], [1.45, 0.2], [1.7, 0.2], [1.95, 0.2], [2.2, 0.45]]
 var _face_script: GDScript
 
+## The recorded laugh (audio/sfx/hopkuna_laugh, if it's there): where in the file the
+## laughing starts, and how loud it is every 50th of a second from there (0 to 9),
+## measured from the recording. His jaw follows it.
+const LAUGH_FILE_START := 0.7
+const LAUGH_FILE_BOOST_DB := 6.0
+const LAUGH_ENVELOPE := "011111122233333444455545555556555656555557765565555455565555665454455555556656653334344545646554444455565555443333445555544333333445444433322345566666654433333445666665544333334678767666645455555555534567777654465565666554445566655444444456655554445677665444433345566655444433222334566777666543322222222334566554444443332222233334789754333455555432111111111"
+## The recording's last, loudest burst: his face comes back for a second scare.
+const SECOND_SCARE_AT := 6.52
+const SECOND_SCARE_TIME := 0.34
+
+
+## The recorded laugh if there is one, or the made-up one.
+func _recorded_laugh() -> bool:
+	return Game.has_sfx("hopkuna_laugh")
+
 
 ## The music cuts off. Nothing happens for a moment.
 func _tent_silence() -> void:
@@ -1220,9 +1235,15 @@ func _process_tent(delta: float) -> void:
 				_tent_phase = "laugh"
 				_tent_time = 0.0
 				Game.play_sfx("scream")
-				Game.play_sfx("laugh")
+				if _recorded_laugh():
+					Game.play_sfx("hopkuna_laugh", 1.0, LAUGH_FILE_START, LAUGH_FILE_BOOST_DB)
+				else:
+					Game.play_sfx("laugh")
 		"laugh":
-			if _tent_time >= TENT_LAUGH_TIME:
+			if _recorded_laugh() and _tent_time - delta < SECOND_SCARE_AT and _tent_time >= SECOND_SCARE_AT:
+				Game.play_sfx("scream", 0.85)
+			var laugh_length := LAUGH_ENVELOPE.length() * 0.02 + 0.3 if _recorded_laugh() else TENT_LAUGH_TIME
+			if _tent_time >= laugh_length:
 				_tent_phase = "done"
 				var result := {"id": _data.id, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
 				if Game.pending_battle != "":
@@ -1260,6 +1281,8 @@ func _draw_tent() -> void:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
 		if _tent_phase == "laugh" and _tent_time < JUMPSCARE_TIME:
 			_draw_jumpscare(_tent_time)
+		elif _tent_phase == "laugh" and _recorded_laugh() and _tent_time >= SECOND_SCARE_AT and _tent_time < SECOND_SCARE_AT + SECOND_SCARE_TIME:
+			_draw_second_scare(_tent_time - SECOND_SCARE_AT)
 
 
 ## How far open Hopkuna's jaw is at `time` into the laugh: wide open for the
@@ -1267,6 +1290,13 @@ func _draw_tent() -> void:
 func _laugh_jaw(time: float) -> float:
 	if time < 0.35:
 		return 1.0
+	if _recorded_laugh():
+		var index := clampi(int(time / 0.02), 0, LAUGH_ENVELOPE.length() - 1)
+		# Averaged with its neighbours, so the jaw doesn't rattle.
+		var level := 0.0
+		for k in range(index - 2, index + 3):
+			level += int(LAUGH_ENVELOPE[clampi(k, 0, LAUGH_ENVELOPE.length() - 1)])
+		return clampf((level / 5.0 - 2.0) / 6.0, 0.1, 1.0)
 	var open := 0.15
 	for syllable in LAUGH_SYLLABLES:
 		var into: float = time - syllable[0]
@@ -1327,6 +1357,20 @@ func _draw_jumpscare(time: float) -> void:
 		_:
 			_face_script.draw(_overlay, center + shake, scale, laugh, time)
 	_draw_jumpscare_grime(time)
+
+
+## The second scare, on the laugh's last burst: out of the dark, his face rushes in
+## even closer than before, then it's gone.
+func _draw_second_scare(time: float) -> void:
+	if _face_script == null:
+		_face_script = load("res://scripts/hopkuna_face.gd")
+	var rush := clampf(time / 0.08, 0.0, 1.0)
+	var scale := lerpf(3.4, 1.75, 1.0 - pow(1.0 - rush, 3.0)) + time * 0.6
+	var shake := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * 18.0
+	var center := Vector2(320, 200) + shake
+	_face_script.draw(_overlay, center + Vector2(14, 0), scale, 1.0, time, Color(1.0, 0.1, 0.1, 0.6))
+	_face_script.draw(_overlay, center, scale, 1.0, time)
+	_draw_jumpscare_grime(time + 10.0)
 
 
 ## Over the face: a red vignette, scanlines, film grain, and torn glitch bars.
