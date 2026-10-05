@@ -36,6 +36,7 @@ func drive_to(x: float, speed: float = 220.0) -> void:
 		return
 	direction = 1 if x > position.x else -1
 	_moving = true
+	_rumble()
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_method(_move_to, position.x, x, distance / speed)
@@ -96,3 +97,10 @@ func _draw() -> void:
 		draw_circle(center, 3, Color8(190, 190, 200))
 		var spoke := Vector2.from_angle(_wheel_turn) * (WHEEL - 2)
 		draw_line(center - spoke, center + spoke, Color8(190, 190, 200), 1.5)
+
+
+## The engine sound, repeated for as long as the car is moving.
+func _rumble() -> void:
+	while _moving and is_inside_tree():
+		Game.play_sfx("engine", randf_range(0.95, 1.05))
+		await get_tree().create_timer(1.4).timeout

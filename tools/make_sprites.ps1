@@ -1145,10 +1145,30 @@ $sideUpper = @{
 }
 $sideLegs = @{ 'elric' = @('O', 'D'); 'hop' = @('B', 'D'); 'eggo' = @('P', 'D'); 'bigjoe6' = @('J', 'D') }
 
+# The arm (a 3-pixel column in the middle of the body, columns 11-13) swings: on
+# one step it reaches forward a pixel, on the other it swings back.
+function Swing-Arm([string[]]$rows, [int]$dir) {
+    $out = [string[]]$rows.Clone()
+    for ($y = 17; $y -le 21; $y++) {
+        $c = $out[$y].ToCharArray()
+        if ($c[10] -eq '.' -or $c[14] -eq '.') { continue }
+        # The hand swings further than the elbow, so the arm angles.
+        $shift = if ($y -ge 19) { 2 } else { 1 }
+        $arm = $c[11..13]
+        $body = if ($dir -gt 0) { $c[10] } else { $c[14] }
+        for ($i = 11; $i -le 13; $i++) { $c[$i] = $body }
+        for ($i = 0; $i -lt 3; $i++) { $c[11 + $i + $shift * $dir] = $arm[$i] }
+        $out[$y] = -join $c
+    }
+    return $out
+}
+
 foreach ($who in $sideUpper.Keys) {
     $legs = $sideLegs[$who]
     $sprites["${who}_side"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $false)
-    $sprites["${who}_side2"] = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $true)
+    $step = $sideUpper[$who] + (Get-Legs $legs[0] $legs[1] $true)
+    $sprites["${who}_side2"] = Swing-Arm $step 1
+    $sprites["${who}_side3"] = Swing-Arm $step -1
 }
 
 # --- Limbs that aren't glued to the body ---------------------------------------
@@ -1473,6 +1493,23 @@ foreach ($who in $poseSkin.Keys) {
     $p = [string[]]$base.Clone()
     Stamp-Face $p $koFace $skin 'K'
     $poses["${who}_ko"] = $p
+
+    # Stance: ready to fight. Both fists up by the face, feet planted wide.
+    $p = [string[]]$base.Clone()
+    Clear-Arm $p $true
+    Clear-Arm $p $false
+    Draw-Arm $p $arm ($shoulderX) 14 0.3 -0.85 1 0
+    Draw-Arm $p $leftArm (2 + $PAD) 14 -0.3 -0.85 1 0
+    for ($y = 22; $y -le 31; $y++) {
+        $c = $p[$y].ToCharArray()
+        $left = $c[(7 + $PAD)..(11 + $PAD)]
+        $right = $c[(13 + $PAD)..(16 + $PAD)]
+        for ($x = 6 + $PAD; $x -le 17 + $PAD; $x++) { $c[$x] = '.' }
+        for ($i = 0; $i -lt 5; $i++) { $c[6 + $PAD + $i] = $left[$i] }
+        for ($i = 0; $i -lt 4; $i++) { $c[14 + $PAD + $i] = $right[$i] }
+        $p[$y] = -join $c
+    }
+    $poses["${who}_stance"] = $p
 }
 
 # --- Saving -------------------------------------------------------------------

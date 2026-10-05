@@ -26,6 +26,8 @@ var _choice: int = 0
 var _ready_for_input: bool = false
 var _done: bool = false
 var _played_chime: bool = false
+## True while the "erase your save?" question is up.
+var _resetting: bool = false
 
 
 func _ready() -> void:
@@ -44,11 +46,7 @@ func _ready() -> void:
 		if MAPPING[i] >= 0:
 			_ends[MAPPING[i]] = Vector2(target_left + i * LETTER_SPACING, TITLE_Y)
 
-	_options = ["Begin"]
-	if Game.has_save():
-		_options.append("Continue")
-		_choice = 1
-	_options.append("Settings")
+	_build_options()
 
 
 func _process(delta: float) -> void:
@@ -64,13 +62,16 @@ func _process(delta: float) -> void:
 		_time = HOLD_TIME + MOVE_TIME + 0.4
 		_played_chime = true
 		_ready_for_input = true
-	elif _ready_for_input and not _done and not Game.settings_menu.is_open() and Engine.get_process_frames() != Game.settings_menu.closed_frame:
+	elif _ready_for_input and not _done and not _resetting and not Game.busy and not Game.settings_menu.is_open() and Engine.get_process_frames() != Game.settings_menu.closed_frame:
 		if Input.is_action_just_pressed("ui_left") or Input.is_action_just_pressed("ui_right"):
 			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed("ui_right") else -1), 0, _options.size())
 			Game.play_sfx("move")
 		elif Input.is_action_just_pressed("confirm") and _options[_choice] == "Settings":
 			Game.play_sfx("select")
 			Game.settings_menu.open()
+		elif Input.is_action_just_pressed("confirm") and _options[_choice] == "Reset":
+			Game.play_sfx("select")
+			_confirm_reset()
 		elif Input.is_action_just_pressed("confirm"):
 			_done = true
 			Game.play_sfx("select")
@@ -81,6 +82,28 @@ func _process(delta: float) -> void:
 				Game.change_scene(INTRO_SCENE)
 
 	queue_redraw()
+
+
+## With a save file: Continue, Reset, Settings. Without one: Begin, Settings.
+func _build_options() -> void:
+	if Game.has_save():
+		_options = ["Continue", "Reset", "Settings"]
+	else:
+		_options = ["Begin", "Settings"]
+	_choice = 0
+
+
+## Asks twice-over before erasing the save, then starts fresh.
+func _confirm_reset() -> void:
+	_resetting = true
+	var choice := await Game.dialogue.ask("* (Erase your save file and start over?\n*  This can't be undone.)", ["Keep it", "Erase"])
+	if choice == 1:
+		Game.delete_save()
+		Game.play_sfx("shatter")
+		await Game.dialogue.say(["* (Your save file was erased.)"])
+		_build_options()
+	await get_tree().process_frame
+	_resetting = false
 
 
 const RED := Color(0.9, 0.12, 0.2)
@@ -98,6 +121,9 @@ func _draw() -> void:
 
 	_draw_glow(red_in, pulse)
 	_draw_embers(appear)
+	_draw_sparkles(appear)
+	_draw_shooting_shards(red_in)
+	_draw_crack_sparks(red_in)
 	_draw_fragments(red_in)
 
 	for i in SOURCE.length():
@@ -122,7 +148,7 @@ func _draw() -> void:
 			var color := Color(1, 1, 0, fade) if i == _choice else Color(1, 1, 1, fade)
 			_draw_centered(_options[i], Vector2(x, 330), 22, color)
 		var summary := Game.save_summary()
-		if summary != "" and _options[_choice] == "Continue":
+		if summary != "" and _options[_choice] in ["Continue", "Reset"]:
 			_draw_centered(summary, Vector2(320, 380), 14, Color(0.7, 0.7, 0.7, fade))
 		_draw_centered("Arrow keys to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
 
@@ -140,6 +166,53 @@ func _draw_glow(amount: float, pulse: float) -> void:
 
 
 ## Tiny red embers drifting up from the bottom of the screen.
+## Little four-pointed glints that pop in and out all over the screen.
+func _draw_sparkles(amount: float) -> void:
+	for i in 18:
+		var period := 2.2 + (i % 5) * 0.4
+		var life := fmod(_time + i * 0.73, period) / period
+		if life > 0.35:
+			continue
+		var twinkle := sin(life / 0.35 * PI)
+		var at := Vector2(fmod(i * 157.0 + floor((_time + i * 0.73) / period) * 211.0, 620.0) + 10.0,
+			fmod(i * 89.0 + floor((_time + i * 0.73) / period) * 137.0, 300.0) + 20.0)
+		var size := (3.0 + (i % 3) * 1.5) * twinkle
+		var color := Color(1.0, 0.85, 0.85, 0.8 * twinkle * amount)
+		draw_line(at - Vector2(size, 0), at + Vector2(size, 0), color, 1.0)
+		draw_line(at - Vector2(0, size), at + Vector2(0, size), color, 1.0)
+		draw_circle(at, 1.2 * twinkle, color)
+
+
+## Now and then a red shard streaks across the sky, trailing light.
+func _draw_shooting_shards(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	for i in 2:
+		var period := 5.5 + i * 2.3
+		var t := fmod(_time + i * 3.1, period)
+		if t > 1.1:
+			continue
+		var progress := t / 1.1
+		var start := Vector2(-40.0 + i * 260.0, 30.0 + i * 40.0)
+		var travel := Vector2(520, 130)
+		var head := start + travel * progress
+		for k in 10:
+			var back := head - travel.normalized() * k * 7.0
+			draw_circle(back, 2.5 - k * 0.2, Color(1.0, 0.35, 0.4, (0.8 - k * 0.08) * amount))
+		draw_circle(head, 3.0, Color(1.0, 0.85, 0.85, amount))
+
+
+## Sparks rising off the glowing crack under the title.
+func _draw_crack_sparks(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	for i in 14:
+		var life := fmod(_time * 0.9 + i * 0.37, 1.6) / 1.6
+		var x := 120.0 + fmod(i * 61.0, 400.0)
+		var at := Vector2(x + sin(life * 6.0 + i) * 6.0, TITLE_Y + 22 - life * 60.0)
+		draw_rect(Rect2(at, Vector2(2, 2)), Color(1.0, 0.55 + 0.3 * (1.0 - life), 0.4, (1.0 - life) * 0.8 * amount))
+
+
 func _draw_embers(amount: float) -> void:
 	for i in 26:
 		var speed := 14.0 + (i * 37 % 23)

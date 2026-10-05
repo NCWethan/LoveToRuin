@@ -28,6 +28,10 @@ const VONS_STOCK := [
 	{"name": "Soda", "heal": 10, "price": 5},
 	{"name": "Granola Bar", "heal": 18, "price": 10},
 	{"name": "Deli Sandwich", "heal": 25, "price": 15},
+	# Accessories: one for each slot.
+	{"name": "Nail File", "heal": 0, "slot": "weapon", "atk": 2, "def": 0, "price": 18},
+	{"name": "Hoodie", "heal": 0, "slot": "torso", "atk": 0, "def": 2, "price": 24},
+	{"name": "Sneakers", "heal": 0, "slot": "shoes", "atk": 0, "def": 1, "price": 14},
 ]
 const JACK_STOCK := [
 	{"name": "Two Tacos", "heal": 12, "price": 6},
@@ -295,7 +299,7 @@ func _use_save_point() -> void:
 	await Game.dialogue.say([
 		"* (The smell of curly fries drifts across the parking lot.)",
 		"* (It fills you with DETERMINATION.)",
-		"* (Everyone's HP was restored.)",
+		Game.restored_line(),
 	])
 	var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 	if choice == 0:

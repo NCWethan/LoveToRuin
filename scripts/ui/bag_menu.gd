@@ -137,8 +137,29 @@ func _do_action() -> void:
 			_show("* (You dropped the %s.)" % item["name"])
 
 
+## "USE" reads "EQUIP" for accessories.
+func _action_name(index: int) -> String:
+	if ACTIONS[index] == "USE" and not Game.items.is_empty() and _cursor < Game.items.size() and Items.is_accessory(Game.items[_cursor]):
+		return "EQUIP"
+	return ACTIONS[index]
+
+
+## Puts an accessory on someone (whatever they wore in that slot goes back in the bag).
+func _equip_on(member: PartyMember, item: Dictionary) -> void:
+	var old := Game.equip(member.name, item)
+	Game.play_sfx("item")
+	var who := "You" if member.name == "Elric" else member.name
+	var text := "* %s equipped the %s.\n* (%s)" % [who, item["name"], Items.stats_text(item)]
+	if not old.is_empty():
+		text += "\n* (The %s went back in the bag.)" % old["name"]
+	_show(text)
+
+
 func _use_on(member: PartyMember) -> void:
 	var item: Dictionary = Game.items[_cursor]
+	if Items.is_accessory(item):
+		_equip_on(member, item)
+		return
 	Game.items.remove_at(_cursor)
 	var healed := mini(int(item["heal"]), member.max_hp - member.hp)
 	member.hp += healed
@@ -180,15 +201,20 @@ func _draw_panel() -> void:
 
 	# The party and your money.
 	_box(STATS)
-	var y := STATS.position.y + 28
+	var left := STATS.position.x + 14
+	var y := STATS.position.y + 24
 	for member in Game.party:
-		_text(member.name.to_upper(), Vector2(STATS.position.x + 14, y), DialogueBox.SPEAKERS.get(member.name, {}).get("color", Color.WHITE))
-		_text("HP %d / %d" % [member.hp, member.max_hp], Vector2(STATS.position.x + 14, y + 20))
-		y += 50
-	_text("LV  %d" % Game.lv(), Vector2(STATS.position.x + 14, y))
-	_text("$%d" % Game.money, Vector2(STATS.position.x + 100, y), Color.YELLOW)
-	_text("BOND  %d" % Game.bond, Vector2(STATS.position.x + 14, y + 22), Color(0.7, 0.85, 1.0))
-	_text("Fragments: %d / 12" % int(Game.flags.get("fragments", 0)), Vector2(STATS.position.x + 14, y + 44), Color(1, 0.5, 0.55), 14)
+		_text(member.name.to_upper(), Vector2(left, y), DialogueBox.SPEAKERS.get(member.name, {}).get("color", Color.WHITE))
+		_text("HP %d/%d" % [member.hp, member.max_hp], Vector2(left + 76, y), Color.WHITE, 14)
+		_text("ATK %d   DEF %d" % [member.attack, member.defense], Vector2(left, y + 18), Color(0.75, 0.75, 0.75), 13)
+		y += 42
+	# Levels, and how far to the next one.
+	_text("LV %d" % Game.lv(), Vector2(left, y), Color.WHITE, 15)
+	_text(_progress(Game.exp_points, Game.next_lv_exp(), "EXP"), Vector2(left + 52, y), Color(1, 0.6, 0.6), 13)
+	_text("BOND LV %d" % Game.bond_level(), Vector2(left, y + 20), Color(0.7, 0.85, 1.0), 15)
+	_text(_progress(Game.bond, Game.next_bond(), ""), Vector2(left + 100, y + 20), Color(0.7, 0.85, 1.0), 13)
+	_text("$%d" % Game.money, Vector2(left, y + 42), Color.YELLOW, 15)
+	_text("Fragments: %d / 12" % int(Game.flags.get("fragments", 0)), Vector2(left + 52, y + 42), Color(1, 0.5, 0.55), 13)
 
 	# What you're doing right now.
 	if Game.objective() != "":
@@ -224,16 +250,23 @@ func _draw_panel() -> void:
 	if _step == Step.ACTIONS:
 		for i in ACTIONS.size():
 			var at := Vector2(LIST.position.x + 50 + i * 105, LIST.end.y - 16)
-			_text(ACTIONS[i], at, Color.YELLOW if i == _action else Color.WHITE)
+			_text(_action_name(i), at, Color.YELLOW if i == _action else Color.WHITE)
 			if i == _action:
 				_heart(at + Vector2(-16, -6))
 	elif _step == Step.TARGET:
 		_box(MESSAGE)
-		_text("* Give it to who?", MESSAGE.position + Vector2(16, 28))
+		var gear := Items.is_accessory(Game.items[_cursor])
+		_text("* Who wears it?" if gear else "* Give it to who?", MESSAGE.position + Vector2(16, 28))
 		for i in Game.party.size():
 			var member: PartyMember = Game.party[i]
 			var at := MESSAGE.position + Vector2(60 + i * 220, 64)
-			_text("%s  (%d/%d)" % [member.name, member.hp, member.max_hp], at, Color.YELLOW if i == _target else Color.WHITE)
+			var label := "%s  (%d/%d)" % [member.name, member.hp, member.max_hp]
+			if gear:
+				# Show what they're wearing in that slot now.
+				var slot: String = Game.items[_cursor]["slot"]
+				var current: Dictionary = Game.worn_by(member.name).get(slot, {})
+				label = "%s  (now: %s)" % [member.name, current.get("name", "nothing")]
+			_text(label, at, Color.YELLOW if i == _target else Color.WHITE)
 			if i == _target:
 				_heart(at + Vector2(-16, -6))
 
@@ -254,3 +287,9 @@ func _heart(center: Vector2) -> void:
 	_panel.draw_rect(Rect2(center + Vector2(-6, -2), Vector2(12, 3)), red)
 	_panel.draw_rect(Rect2(center + Vector2(-4, 1), Vector2(8, 2)), red)
 	_panel.draw_rect(Rect2(center + Vector2(-2, 3), Vector2(4, 2)), red)
+
+
+## "24 / 30" (how much you have / what the next level needs), or "MAX".
+func _progress(have: int, needed: int, label: String) -> String:
+	var text := ("%s %d / %d" % [label, have, needed]) if needed >= 0 else ("%s %d (MAX)" % [label, have])
+	return text.strip_edges()

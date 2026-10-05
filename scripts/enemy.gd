@@ -74,6 +74,14 @@ var shown_hp: float = -1.0
 ## Seconds since this enemy was knocked out (-1 if it hasn't been), for its KO animation.
 var ko_time: float = -1.0
 
+## How this enemy reacts if a partner is knocked out, by the partner's name:
+##   {"BigJoe6": {"line": "...", "mood": "sad", "taunts": [...], "attack": 1}}
+## "mood" changes their face for the rest of the fight (from art/portraits/),
+## "taunts" replaces what they say, "attack" is added to their attack.
+var partner_reactions: Dictionary = {}
+## Their current expression in battle ("" = normal).
+var mood: String = ""
+
 var _act_counts: Dictionary = {}
 var _last_act: String = ""
 

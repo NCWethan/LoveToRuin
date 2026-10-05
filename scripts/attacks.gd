@@ -99,7 +99,7 @@ static func _rain(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var x := randf_range(area.position.x + 4, area.end.x - 4)
 	var bullet := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
 	bullet.velocity = Vector2(0, enemy.bullet_speed)
-	return 0.42
+	return 0.3
 
 
 ## Eggo: big eggs drop and speed up as they fall, then crack into
@@ -112,8 +112,8 @@ static func _egg_drop(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	egg.color = Color(0.97, 0.95, 0.85)
 	egg.velocity = Vector2(0, 20)
 	egg.acceleration = Vector2(0, 170)
-	egg.splits_into = 4
-	return 0.85
+	egg.splits_into = 5
+	return 0.62
 
 
 ## Eggo: Eggo's bunny friend's... friends. They hop across the bottom of the box.
@@ -123,10 +123,10 @@ static func _bunny_hop(enemy: Enemy, parent: Node, area: Rect2, step: int) -> fl
 	var bunny := _bullet(enemy, parent, area, Vector2(x, area.end.y - 8))
 	bunny.shape = "bunny"
 	bunny.size = 9.0
-	bunny.velocity = Vector2(75 if from_left else -75, -170)
+	bunny.velocity = Vector2(95 if from_left else -95, -190)
 	bunny.acceleration = Vector2(0, 340)
 	bunny.bounce_speed = randf_range(150, 200)
-	return 0.9
+	return 0.68
 
 
 ## BigJoe6: fast pellets flying in from the left or right.
@@ -136,7 +136,7 @@ static func _lance(enemy: Enemy, parent: Node, area: Rect2) -> float:
 	var x := area.position.x + 3 if from_left else area.end.x - 3
 	var bullet := _bullet(enemy, parent, area, Vector2(x, y))
 	bullet.velocity = Vector2(enemy.bullet_speed if from_left else -enemy.bullet_speed, 0)
-	return 0.5
+	return 0.36
 
 
 ## BigJoe6: a whole wall of bullets sweeps across the box. Dodge through the gap!
@@ -146,12 +146,12 @@ static func _sweep(enemy: Enemy, parent: Node, area: Rect2, step: int) -> float:
 	var gap := randf_range(area.position.y + 22, area.end.y - 22)
 	var y := area.position.y + 4
 	while y < area.end.y - 2:
-		if absf(y - gap) > 18:
+		if absf(y - gap) > 15:
 			var bullet := _bullet(enemy, parent, area, Vector2(x, y))
-			bullet.velocity = Vector2(85 if from_left else -85, 0)
+			bullet.velocity = Vector2(105 if from_left else -105, 0)
 			bullet.color = Color(1.0, 0.75, 0.75)
 		y += 10
-	return 1.7
+	return 1.35
 
 
 ## BigJoe6: "Justice Strike!" Spinning stars launched right at where the SOUL is.
@@ -165,8 +165,8 @@ static func _aimed(enemy: Enemy, parent: Node, area: Rect2, soul_position: Vecto
 	star.shape = "star"
 	star.size = 9.0
 	star.color = Color(1.0, 0.45, 0.45)
-	star.velocity = (soul_position - start).normalized() * 125.0
-	return 0.65
+	star.velocity = (soul_position - start).normalized() * 150.0
+	return 0.48
 
 
 # --- Westview High School ---------------------------------------------------

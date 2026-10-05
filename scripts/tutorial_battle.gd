@@ -49,7 +49,7 @@ static func create_enemies() -> Array[Enemy]:
 		},
 	]
 	eggo.patterns = ["rain", "egg_drop", "bunny_hop"]
-	eggo.bullet_speed = 90.0
+	eggo.bullet_speed = 115.0
 	eggo.taunts = ["...", "Yolk's on you.", "Eggs-actly."]
 	eggo.spare_taunts = ["heh. good one."]
 
@@ -83,9 +83,22 @@ static func create_enemies() -> Array[Enemy]:
 		},
 	]
 	bigjoe.patterns = ["lance", "sweep", "aimed"]
-	bigjoe.bullet_speed = 140.0
+	bigjoe.bullet_speed = 170.0
 	bigjoe.taunts = ["Justice prevails!", "Hand it over!", "No mercy, lackey!"]
 	bigjoe.spare_taunts = ["...you're legit?"]
+
+	# If one of them goes down, the other takes it hard.
+	eggo.partner_reactions = {"BigJoe6": {
+		"line": "* Eggo: \"...joe? JOE.\"\n* Eggo stops joking. Eggo's hands are shaking.",
+		"mood": "sad",
+		"taunts": ["...get up, joe.", "not funny anymore.", "..."],
+	}}
+	bigjoe.partner_reactions = {"Eggo": {
+		"line": "* BigJoe6: \"EGGO!!\"\n* BigJoe6 is FURIOUS. His attacks get fiercer!",
+		"mood": "angry",
+		"taunts": ["YOU'LL PAY FOR THAT!", "NO MORE HOLDING BACK!", "FOR EGGO!"],
+		"attack": 1,
+	}}
 
 	var enemies: Array[Enemy] = [eggo, bigjoe]
 	return enemies

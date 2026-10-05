@@ -27,6 +27,9 @@ static func make(who: String, is_solid: bool = true) -> Character:
 	var character := Character.new().setup(load(base + ".png"), back, is_solid)
 	if ResourceLoader.exists(base + "_side.png") and ResourceLoader.exists(base + "_side2.png"):
 		character.with_side(load(base + "_side.png"), load(base + "_side2.png"))
+		# A third side frame swings the arm the other way, if there is one.
+		if ResourceLoader.exists(base + "_side3.png"):
+			character.side.append(load(base + "_side3.png"))
 	character.front_walk.assign(walk_frames(base))
 	character.back_walk.assign(walk_frames(base + "_back"))
 	return character

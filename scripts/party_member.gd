@@ -13,6 +13,8 @@ var color: Color
 var defending: bool = false
 ## The member's picture on the left side of the battle screen.
 var sprite: Texture2D
+## Subtracted from every hit this member takes. Only accessories raise it.
+var defense: int = 0
 ## Counts down after getting hit; the member shakes while it's above 0.
 var shake: float = 0.0
 ## Seconds since this member was knocked out (for the falling-over animation).

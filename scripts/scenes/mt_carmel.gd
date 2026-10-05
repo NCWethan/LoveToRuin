@@ -169,8 +169,22 @@ func inspect_tile(cell: Vector2i) -> void:
 		await _key_tree()
 	elif tile == Room.DOOR:
 		await _school_doors()
+	elif tile == Room.BLEACHERS and not _flag("got_cleats"):
+		await _find_cleats()
 	else:
 		await super(cell)
+
+
+## Someone left a pair of cleats under the bleachers.
+func _find_cleats() -> void:
+	await Game.dialogue.say(["* (The bleachers. Someone left a half-eaten\n*  sandwich up there.)", "* (...And a pair of cleats underneath.)"])
+	if Game.items.size() >= Game.MAX_ITEMS:
+		await Game.dialogue.say(["* (Your bag is full. You leave them for now.)"])
+		return
+	Game.flags["got_cleats"] = true
+	Game.items.append(Items.accessory("Cleats", "shoes", 1, 1))
+	Game.play_sfx("item")
+	await Game.dialogue.say(["* (You got the Cleats.)\n* (Shoes: ATK +1  DEF +1. EQUIP them from your bag.)"])
 
 
 ## The school's front doors lock themselves the moment Elric touches them.
@@ -405,7 +419,7 @@ func _use_save_point() -> void:
 	await Game.dialogue.say([
 		"* (The quiet school courtyard.\n*  A breeze rolls through the trees.)",
 		"* (It fills you with DETERMINATION.)",
-		"* (Everyone's HP was restored.)",
+		Game.restored_line(),
 	])
 	var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 	if choice == 0:
@@ -441,9 +455,12 @@ func _ambush() -> void:
 	bigjoe = _make_enemy_npc("BigJoe6", Vector2(ahead.x - 350, ahead.y + 10))
 
 	# BigJoe6 is still off-screen, so no portrait yet.
-	# Revolution's theme kicks in as BigJoe6 shouts.
-	Game.play_music("revolution", 0.3)
+	# The music cuts out with a dramatic sting as BigJoe6 shouts...
+	Game.stop_music(0.05)
+	Game.play_sfx("stinger")
 	await Game.dialogue.say([{"who": "BigJoe6", "tag": "???", "text": "HOLD IT!", "face": false}])
+	# ...and Revolution's theme kicks in as they come into view.
+	Game.play_music("revolution", 0.2)
 	# Both walk at once: start Eggo without waiting, then wait for BigJoe6.
 	eggo.walk_to(ahead + Vector2(-70, -24), 140.0)
 	await bigjoe.walk_to(ahead + Vector2(-60, 16), 160.0)
@@ -553,6 +570,7 @@ func _ride_home() -> void:
 	car.position = Vector2(stop_x - 640.0, CAR_LANE_Y)
 	world.add_child(car)
 	await car.drive_to(stop_x, 260.0)
+	Game.play_sfx("brakes")
 	Game.play_sfx("honk")
 	await get_tree().create_timer(0.3).timeout
 	await Game.dialogue.say([

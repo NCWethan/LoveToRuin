@@ -143,7 +143,11 @@ func _update_sprite() -> void:
 	# A four-step walk cycle: step, stand, other step, stand.
 	var phase := int(_time / WALK_STEP) % 4 if _walking else 1
 	if _facing.x != 0 and not side.is_empty():
-		_sprite.texture = side[1 if _walking and phase % 2 == 0 else 0]
+		# Stand, step (arm forward), stand, step (arm back).
+		var frame := 0
+		if _walking and phase % 2 == 0:
+			frame = 2 if phase == 2 and side.size() > 2 else 1
+		_sprite.texture = side[frame]
 		_sprite.flip_h = _facing.x < 0
 		_sprite.position.y = -1.0 if _walking and phase % 2 == 0 else 0.0
 	else:

@@ -32,6 +32,8 @@ var backdrop: Color = Color(0.5, 0.3, 0.85)
 ## Bosses get a big health bar across the top of the screen. "" = no boss bar.
 ## "wally" (gold, with claw marks) or "hopkuna" (red, with tattoo markings).
 var boss_style: String = ""
+## Which animated scene plays behind the fight (see battle.gd _draw_backdrop).
+var backdrop_style: String = "diamonds"
 ## Not a real fight: a scripted scare instead ("tent").
 var event: String = ""
 

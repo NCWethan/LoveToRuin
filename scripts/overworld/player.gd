@@ -15,7 +15,7 @@ var distance_walked: float = 0.0
 var _front: Texture2D = load("res://art/sprites/elric.png")
 var _back: Texture2D = load("res://art/sprites/elric_back.png")
 ## Two side-view frames (legs together / mid-step). Flipped when walking left.
-var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png")]
+var _side: Array[Texture2D] = [load("res://art/sprites/elric_side.png"), load("res://art/sprites/elric_side2.png"), load("res://art/sprites/elric_side3.png")]
 ## Walking frames for the front and back views: one step with each leg.
 var _front_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric")
 var _back_walk: Array[Texture2D] = Cast.walk_frames("res://art/sprites/elric_back")
@@ -80,7 +80,8 @@ func _update_sprite() -> void:
 	var phase := int(_walk_time / Character.WALK_STEP) % 4 if _moving else 1
 	var stepping := _moving and phase % 2 == 0
 	if facing.x != 0:
-		_sprite.texture = _side[1 if stepping else 0]
+		# Stand, step (arm forward), stand, step (arm back).
+		_sprite.texture = _side[(2 if phase == 2 else 1) if stepping else 0]
 		_sprite.flip_h = facing.x < 0
 	else:
 		var up := facing == Vector2.UP
@@ -139,7 +140,7 @@ func show_alert(on: bool) -> void:
 		add_child(alert)
 	alert.visible = on
 	if on:
-		Game.play_sfx("encounter")
+		Game.play_sfx("alert")
 
 
 ## A soft oval shadow on the ground under Elric (drawn underneath the picture).

@@ -541,6 +541,14 @@ Use the Eggo & BigJoe6 fight as the target: when it plays start to finish, the b
 - [x] **Flee**: MERCY opens Spare / Flee. Fleeing turns Elric and Hop around and they walk off the left side of the screen, then you're back in the overworld where the fight started. (Not allowed in boss, story or scripted fights.)
 - [x] The title screen: centered, with a red glow, twelve red fragments circling the title, rising embers and a glowing crack under "LOVE TO RUIN"
 - [x] People walking around stop when you talk to them
+- [x] **Levels:** LV (from EXP) and BOND level (from BOND) both raise max HP and attack for the whole party (LV: +3 HP +2 ATK; BOND: +4 HP +1 ATK). The bag shows progress to the next of each, and each member's ATK and DEF. Battle shows LV next to party names (not enemies). Level-ups are announced after a fight.
+- [x] **Accessories:** three slots per member (Weapon, Torso, Shoes), one item each. Only accessories raise defense. EQUIP them from the bag (whatever was worn goes back in). Vons sells a Nail File (ATK +2), Hoodie (DEF +2) and Sneakers (DEF +1); Cleats (ATK +1 DEF +1) are hidden under the Mt. Carmel bleachers; Wally's Foam Finger (ATK +3) is in his empty costume.
+- [x] Title screen: with a save, Continue / Reset / Settings (Reset asks first, then erases the save); without one, Begin / Settings. More particles: glints, shooting shards, sparks off the crack.
+- [x] The opening narration has Undertale-style sepia pictures: Elric on an endless road at sunset, at a bus stop in the rain, on a cliff over the ocean; the whispering city; a humming fragment; a shadow with red eyes.
+- [x] Side-view walking swings the arms. Battle stance: fists up.
+- [x] Each kind of battle has its own animated background: diamonds, graph paper, rushing hallway lines, bubbles, sound rings, stars, stadium spotlights, falling red shards, TV static.
+- [x] When Eggo or BigJoe6 is knocked out, the other reacts (Eggo goes quiet and sad; BigJoe6 gets furious and hits harder).
+- [x] "HOLD IT!" opens with a stinger; Revolution's theme starts as they walk in. Car engine and brake sounds. A sharp "!" sound for random encounters.
 - [x] Shading: every sprite is shaded (lit from the top-left), arms and legs have space between them, characters and objects cast soft shadows, walls and trees shade the ground, and the screen edges have a soft vignette
 - [x] Smoother walking: a four-step cycle (step, stand, other step, stand) with legs lifting and arms swinging, for everyone
 - [x] WASD works as well as the arrow keys

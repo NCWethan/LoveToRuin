@@ -370,7 +370,7 @@ func _process_menu() -> void:
 				else:
 					# Say so, instead of silently doing nothing.
 					Game.play_sfx("miss")
-					_text = "* (You don't have any items.)" if items.is_empty() else "* (Your teammate already picked the last item.)"
+					_text = "* (You don't have any items.)" if items.all(func(i: Dictionary) -> bool: return Items.is_accessory(i)) else "* (Your teammate already picked the last item.)"
 					_typed = _text.length()
 			"DEFEND":
 				party[current_member].defending = true
@@ -635,6 +635,17 @@ func _process_fight_anim(delta: float) -> void:
 		Game.play_sfx("thud")
 		exp_gained += target.exp_reward
 		lines.append("* %s was knocked out!" % target.name)
+		# Their partner reacts.
+		for other in _active_enemies():
+			var reaction: Dictionary = other.partner_reactions.get(target.name, {})
+			if reaction.is_empty():
+				continue
+			lines.append(reaction["line"])
+			other.mood = reaction.get("mood", "")
+			other.shake = 0.3
+			if reaction.has("taunts"):
+				other.taunts.assign(reaction["taunts"])
+			other.attack += int(reaction.get("attack", 0))
 	_show_messages(lines, _run_next_action)
 
 
@@ -734,7 +745,9 @@ func _hurt_party(amount: int) -> void:
 			break
 	if member == null:
 		return
-	var damage := ceili(amount / 2.0) if member.defending else amount
+	# Defense (from accessories) softens every hit; defending halves what's left.
+	var after_defense := maxi(1, amount - member.defense)
+	var damage := ceili(after_defense / 2.0) if member.defending else after_defense
 	member.hp = maxi(member.hp - damage, 0)
 	member.shake = 0.4
 	_add_popup(str(damage), _panel_position(member), Color.RED)
@@ -789,6 +802,11 @@ func _victory() -> void:
 	for enemy in enemies:
 		money += enemy.money_reward
 	lines.append("* You found $%d." % money)
+	# Growing a level (the rewards are added once the battle ends).
+	if Game.lv_for(Game.exp_points + exp_gained) > Game.lv():
+		lines.append("* Your LV increased to %d!\n* (Max HP and attack went up.)" % Game.lv_for(Game.exp_points + exp_gained))
+	if Game.bond_level_for(Game.bond + bond_gained) > Game.bond_level():
+		lines.append("* Your BOND grew to level %d!\n* (Max HP and attack went up.)" % Game.bond_level_for(Game.bond + bond_gained))
 
 	if Game.pending_battle != "":
 		# Tell the overworld how it went, so the story can react.
@@ -1067,7 +1085,8 @@ func _available_items() -> Array[Dictionary]:
 			# is_same() checks for this exact item, so two Trail Mixes count separately.
 			if is_same(action.get("item"), item):
 				taken = true
-		if not taken:
+		# Accessories are worn, not eaten: they stay out of the ITEM menu.
+		if not taken and not Items.is_accessory(item):
 			result.append(item)
 	return result
 
@@ -1263,8 +1282,9 @@ func _enemy_motion(enemy: Enemy) -> Array:
 		if k < 0.3:
 			offset.x = sin(k * 70.0) * 5.0
 		var fall := clampf((k - 0.3) / 0.4, 0.0, 1.0)
-		rot = PI / 2 * (1.0 - pow(1.0 - fall, 3)) * 0.92
-		offset.x += 14.0 * fall
+		# (They fall toward the middle of the screen, so they stay in view.)
+		rot = -PI / 2 * (1.0 - pow(1.0 - fall, 3)) * 0.92
+		offset.x -= 14.0 * fall
 		return [offset, rot, scale]
 	if not enemy.is_active() or _data.event != "":
 		return [offset, rot, scale]
@@ -1312,6 +1332,15 @@ func _enemy_hurt_picture(enemy: Enemy) -> Texture2D:
 	return _hurt_pictures[kind]
 
 
+## An enemy's face for their current mood (art/portraits/<kind>_<mood>.png), if they have one.
+func _enemy_mood_picture(enemy: Enemy) -> Texture2D:
+	var key := _enemy_kind(enemy) + "_" + enemy.mood
+	if not _hurt_pictures.has(key):
+		var path := "res://art/portraits/%s.png" % key
+		_hurt_pictures[key] = load(path) if ResourceLoader.exists(path) else enemy.sprite
+	return _hurt_pictures[key]
+
+
 ## Dust puffing up as a knocked-out enemy hits the ground.
 func _draw_enemy_ko_dust(enemy: Enemy, feet: Vector2) -> void:
 	if enemy.state != "defeated" or enemy.ko_time < 0.55 or enemy.ko_time > 1.3:
@@ -1354,6 +1383,8 @@ func _draw_enemies() -> void:
 			var picture := enemy.sprite
 			if enemy.shake > 0.2 and enemy.is_active():
 				picture = _enemy_hurt_picture(enemy)
+			elif enemy.mood != "":
+				picture = _enemy_mood_picture(enemy)
 			_overlay.draw_texture_rect(picture, feet_rect, false, tint)
 			# Flash white for a moment when hit.
 			if enemy.flash > 0.0:
@@ -1419,7 +1450,7 @@ func _draw_boss_bar() -> void:
 			for i in 3:
 				var from := Vector2(rect.end.x - 34 + i * 8, rect.position.y - 4)
 				_overlay.draw_line(from, from + Vector2(-8, rect.size.y + 8), Color(0.15, 0.08, 0.03), 2.0)
-			_draw_outlined("HP %d / %d" % [boss.hp, boss.max_hp], Vector2(22, rect.end.y + 15), 12, Color(1, 0.9, 0.6))
+			_draw_outlined("HP %d / %d" % [boss.hp, boss.max_hp], Vector2(rect.end.x - 74, rect.end.y + 15), 12, Color(1, 0.9, 0.6))
 		"hopkuna":
 			var pulse := 0.5 + 0.5 * sin(t * 4.0)
 			var red := Color(1.0, 0.15, 0.22)
@@ -1441,7 +1472,7 @@ func _draw_boss_bar() -> void:
 				up = not up
 			if points.size() > 1:
 				_overlay.draw_polyline(points, Color(0.05, 0.0, 0.0, 0.85), 2.0)
-			_draw_outlined("HP ??? / ???", Vector2(22, rect.end.y + 15), 12, Color(1, 0.5, 0.5))
+			_draw_outlined("HP ??? / ???", Vector2(rect.end.x - 74, rect.end.y + 15), 12, Color(1, 0.5, 0.5))
 
 
 ## Text with a black outline, so it reads over anything.
@@ -1605,6 +1636,8 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 	else:
 		var breath := sin(t * 2.4 + index * 1.3)
 		scale = Vector2(1.0 - 0.015 * breath, 1.0 + 0.025 * breath)
+		# Ready to fight: fists up, feet planted.
+		pose = "stance"
 		if _is_choosing(index):
 			offset.y -= absf(sin(t * 5.0)) * 3.0
 		if member.defending:
@@ -1714,10 +1747,13 @@ func _draw_party_panel() -> void:
 			_overlay.draw_rect(panel, member.color, false, 2.0)
 		var name_color := member.color if not member.is_down() else Color.DIM_GRAY
 		_overlay.draw_string(_font, Vector2(x, PANEL_Y), member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, name_color)
-		_draw_bar(Rect2(x + 64, PANEL_Y - 13, 110, 14), float(member.hp) / member.max_hp, YELLOW)
-		_overlay.draw_string(_font, Vector2(x + 182, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
+		# Their level, right next to their name.
+		var name_width := _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+		_overlay.draw_string(_font, Vector2(x + name_width + 6, PANEL_Y - 1), "LV %d" % Game.lv(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.8, 0.8, 0.8))
+		_draw_bar(Rect2(x + 98, PANEL_Y - 13, 96, 14), float(member.hp) / member.max_hp, YELLOW)
+		_overlay.draw_string(_font, Vector2(x + 200, PANEL_Y), "%d / %d" % [member.hp, member.max_hp], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		if member.defending:
-			_overlay.draw_string(_font, Vector2(x + 242, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
+			_overlay.draw_string(_font, Vector2(x + 256, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)
 
 
 func _draw_buttons() -> void:
@@ -1884,8 +1920,18 @@ func _draw_centered(text: String, center: Vector2, font_size: int, color: Color)
 const BACKDROP := Rect2(20, 20, 600, 215)
 const DIAMOND_SPACING := 36.0
 
-## A slowly drifting lattice of diamonds behind the fight, in the fight's color,
-## fading out toward the edges, with a few twinkling points.
+
+
+## The scene behind the fight. Each kind of battle has its own (see BattleData.backdrop_style):
+##   diamonds    a drifting lattice of diamonds with twinkling points
+##   grid        graph paper rolling toward you, like a test (Pop Quiz)
+##   stripes     hallway lines rushing past (Hall Pass)
+##   bubbles     bubbles rising and popping (Mystery Meat)
+##   rings       rings of sound pulsing out from the middle (Tardy Bell)
+##   stars       a slowly turning starfield with dust (Overdue Book)
+##   spotlights  stadium lights sweeping, with confetti (Wally)
+##   shards      red fragments falling past cracks of light (Hopkuna)
+##   static      a fuzzy, flickering screen (the tent)
 func _draw_backdrop() -> void:
 	if state == State.GAME_OVER or _data == null:
 		return
@@ -1895,18 +1941,176 @@ func _draw_backdrop() -> void:
 	if frozen:
 		color = color.darkened(0.6)
 	var t := Time.get_ticks_msec() / 1000.0 if not frozen else _frozen_at
+	match _data.backdrop_style:
+		"grid": _backdrop_grid(color, t)
+		"stripes": _backdrop_stripes(color, t)
+		"bubbles": _backdrop_bubbles(color, t)
+		"rings": _backdrop_rings(color, t)
+		"stars": _backdrop_stars(color, t)
+		"spotlights": _backdrop_spotlights(color, t)
+		"shards": _backdrop_shards(color, t)
+		"static": _backdrop_static(color, t)
+		_: _backdrop_diamonds(color, t)
+
+
+## How visible something is at `point`: full in the middle, fading out near the edges.
+func _edge_fade(point: Vector2) -> float:
+	var edge := minf(minf(point.x - BACKDROP.position.x, BACKDROP.end.x - point.x), minf(point.y - BACKDROP.position.y, BACKDROP.end.y - point.y))
+	return clampf((edge - 6.0) / 40.0, 0.0, 1.0)
+
+
+func _backdrop_diamonds(color: Color, t: float) -> void:
 	var drift := Vector2(fmod(t * 8.0, DIAMOND_SPACING), fmod(t * 4.0, DIAMOND_SPACING))
 	var columns := int(BACKDROP.size.x / DIAMOND_SPACING) + 2
 	var rows := int(BACKDROP.size.y / (DIAMOND_SPACING * 0.5)) + 3
 	for gx in range(-1, columns):
 		for gy in range(-2, rows):
 			var center := BACKDROP.position + drift + Vector2(gx * DIAMOND_SPACING + (DIAMOND_SPACING / 2 if gy % 2 != 0 else 0.0), gy * DIAMOND_SPACING * 0.5)
-			var edge := minf(minf(center.x - BACKDROP.position.x, BACKDROP.end.x - center.x), minf(center.y - BACKDROP.position.y, BACKDROP.end.y - center.y))
-			if edge < 10.0:
+			var alpha := _edge_fade(center) * 0.45
+			if alpha <= 0.0:
 				continue
-			var alpha := clampf((edge - 10.0) / 40.0, 0.0, 1.0) * 0.45
 			var r := 9.0
 			_backdrop.draw_polyline(PackedVector2Array([center + Vector2(0, -r), center + Vector2(r, 0), center + Vector2(0, r), center + Vector2(-r, 0), center + Vector2(0, -r)]), Color(color, alpha), 1.5)
 			if posmod(gx * 7 + gy * 13, 11) == 0:
 				var twinkle := 0.5 + 0.5 * sin(t * 3.0 + gx + gy)
 				_backdrop.draw_circle(center, 2.0, Color(color.lightened(0.5), alpha * twinkle * 1.6))
+
+
+## Graph paper on a floor, rolling toward you, with a horizon glow.
+func _backdrop_grid(color: Color, t: float) -> void:
+	var horizon := BACKDROP.position.y + 50.0
+	var center_x := BACKDROP.get_center().x
+	_backdrop.draw_rect(Rect2(BACKDROP.position.x, horizon - 2, BACKDROP.size.x, 3), Color(color, 0.35))
+	# Lines running toward the horizon.
+	for i in range(-12, 13):
+		var bottom := Vector2(center_x + i * 60.0, BACKDROP.end.y)
+		var top := Vector2(center_x + i * 6.0, horizon)
+		for k in 8:
+			var a := top.lerp(bottom, k / 8.0)
+			var b := top.lerp(bottom, (k + 1) / 8.0)
+			_backdrop.draw_line(a, b, Color(color, 0.4 * _edge_fade((a + b) / 2)), 1.0)
+	# Cross lines rolling forward, closer together near the horizon.
+	for k in 10:
+		var depth := fmod(k / 10.0 + t * 0.12, 1.0)
+		var y := horizon + (BACKDROP.end.y - horizon) * depth * depth
+		_backdrop.draw_line(Vector2(BACKDROP.position.x, y), Vector2(BACKDROP.end.x, y), Color(color, 0.45 * depth * _edge_fade(Vector2(center_x, y))), 1.0)
+	# A few faint answer bubbles floating in the sky.
+	for i in 6:
+		var at := Vector2(BACKDROP.position.x + 60 + i * 95, horizon - 22 + sin(t * 1.3 + i) * 6)
+		_backdrop.draw_arc(at, 6, 0, TAU, 12, Color(color, 0.3 * _edge_fade(at)), 1.5)
+
+
+## Lines of a hallway rushing past, left to right.
+func _backdrop_stripes(color: Color, t: float) -> void:
+	for i in 14:
+		var y := BACKDROP.position.y + 10 + i * 15.0
+		var speed := 120.0 + (i * 37 % 5) * 50.0
+		var length := 40.0 + (i * 13 % 4) * 30.0
+		for copy in 3:
+			var x := BACKDROP.position.x + fmod(t * speed + copy * 230.0 + i * 47.0, BACKDROP.size.x + length) - length
+			var a := Vector2(x, y)
+			var b := Vector2(x + length, y)
+			var alpha := 0.4 * minf(_edge_fade(a), _edge_fade(b)) + 0.05
+			_backdrop.draw_line(a, b, Color(color, alpha), 2.0 if i % 3 == 0 else 1.0)
+
+
+## Bubbles rising up and wobbling, popping near the top.
+func _backdrop_bubbles(color: Color, t: float) -> void:
+	for i in 28:
+		var speed := 18.0 + (i * 7 % 5) * 9.0
+		var life := fmod(t * speed / BACKDROP.size.y + i * 0.37, 1.0)
+		var x := BACKDROP.position.x + fmod(i * 83.0, BACKDROP.size.x) + sin(t * 2.0 + i) * 8.0
+		var at := Vector2(x, BACKDROP.end.y - life * BACKDROP.size.y)
+		var radius := 3.0 + (i % 4) * 2.5
+		var alpha := 0.45 * _edge_fade(at)
+		if life > 0.9:
+			# Pop: a little ring that grows and fades.
+			var pop := (life - 0.9) / 0.1
+			_backdrop.draw_arc(at, radius + pop * 6.0, 0, TAU, 12, Color(color, alpha * (1.0 - pop)), 1.0)
+		else:
+			_backdrop.draw_arc(at, radius, 0, TAU, 14, Color(color, alpha), 1.5)
+			_backdrop.draw_circle(at + Vector2(-radius * 0.35, -radius * 0.35), 1.2, Color(color.lightened(0.6), alpha))
+
+
+## Rings of sound pulsing outward from the middle, like a bell ringing.
+func _backdrop_rings(color: Color, t: float) -> void:
+	var center := BACKDROP.get_center()
+	for i in 7:
+		var r := fmod(t * 40.0 + i * 45.0, 315.0)
+		var points := PackedVector2Array()
+		for k in 64:
+			points.append(center + Vector2.from_angle(k * TAU / 63.0) * Vector2(r * 1.5, r * 0.75))
+		for k in 63:
+			var mid := (points[k] + points[k + 1]) / 2
+			var alpha := 0.4 * _edge_fade(mid) * (1.0 - r / 315.0)
+			if alpha > 0.01:
+				_backdrop.draw_line(points[k], points[k + 1], Color(color, alpha), 2.0)
+
+
+## A slowly turning field of stars.
+func _backdrop_stars(color: Color, t: float) -> void:
+	var center := BACKDROP.get_center()
+	for i in 60:
+		var radius := 20.0 + fmod(i * 47.0, 300.0)
+		var angle := i * 2.39996 + t * (0.05 + 0.02 * (i % 3))
+		var at := center + Vector2(cos(angle) * radius, sin(angle) * radius * 0.45)
+		var twinkle := 0.5 + 0.5 * sin(t * (1.5 + i % 4) + i)
+		var alpha := _edge_fade(at) * (0.25 + 0.4 * twinkle)
+		var size := 1.0 if i % 5 != 0 else 2.0
+		var light := color.lightened(0.4)
+		_backdrop.draw_rect(Rect2(at - Vector2(size, size) / 2, Vector2(size, size)), Color(light, alpha))
+		if i % 9 == 0:
+			_backdrop.draw_line(at - Vector2(4, 0), at + Vector2(4, 0), Color(light, alpha * 0.6), 1.0)
+			_backdrop.draw_line(at - Vector2(0, 4), at + Vector2(0, 4), Color(light, alpha * 0.6), 1.0)
+
+
+## Stadium spotlights sweeping back and forth, with confetti falling through them.
+func _backdrop_spotlights(color: Color, t: float) -> void:
+	var frame := PackedVector2Array([BACKDROP.position, Vector2(BACKDROP.end.x, BACKDROP.position.y), BACKDROP.end, Vector2(BACKDROP.position.x, BACKDROP.end.y)])
+	for i in 4:
+		var base := Vector2(BACKDROP.position.x + 75 + i * 150.0, BACKDROP.end.y + 10)
+		var dir := Vector2.from_angle(-PI / 2 + sin(t * (0.7 + i * 0.2) + i * 1.7) * 0.6)
+		var side := dir.orthogonal()
+		var far := base + dir * 260.0
+		var beam := PackedVector2Array([base - side * 6.0, base + side * 6.0, far + side * 46.0, far - side * 46.0])
+		for shape in Geometry2D.intersect_polygons(beam, frame):
+			_backdrop.draw_colored_polygon(shape, Color(color.lightened(0.3), 0.1))
+	var colors := [Color(1, 0.3, 0.3), Color(1, 0.85, 0.2), Color(0.3, 0.8, 1), Color(0.5, 1, 0.4), Color(1, 0.5, 1)]
+	for i in 34:
+		var fall := fmod(t * (30.0 + i % 4 * 12.0) + i * 41.0, BACKDROP.size.y)
+		var at := Vector2(BACKDROP.position.x + fmod(i * 71.0, BACKDROP.size.x) + sin(t * 3.0 + i) * 10.0, BACKDROP.position.y + fall)
+		var flip := absf(sin(t * 6.0 + i))
+		_backdrop.draw_rect(Rect2(at, Vector2(4 * flip + 1, 3)), Color(colors[i % colors.size()], 0.6 * _edge_fade(at)))
+
+
+## Red fragments tumbling down past jagged cracks of light (Hopkuna).
+func _backdrop_shards(color: Color, t: float) -> void:
+	for i in 5:
+		var start := Vector2(BACKDROP.position.x + 50 + i * 125.0, BACKDROP.position.y + 10)
+		var points := PackedVector2Array([start])
+		for k in 7:
+			points.append(points[-1] + Vector2(((i * 7 + k * 13) % 9 - 4) * 4.0, 28.0))
+		var flicker := 0.25 + 0.25 * absf(sin(t * 3.0 + i * 1.9))
+		_backdrop.draw_polyline(points, Color(color.lightened(0.3), flicker * 0.6), 1.5)
+	for i in 22:
+		var fall := fmod(t * (25.0 + i % 5 * 10.0) + i * 53.0, BACKDROP.size.y + 30.0) - 15.0
+		var at := Vector2(BACKDROP.position.x + fmod(i * 97.0, BACKDROP.size.x), BACKDROP.position.y + fall)
+		var spin := t * (1.0 + i % 3) + i
+		var size := 4.0 + (i % 3) * 2.0
+		var shard := PackedVector2Array([Vector2(0, -1.4), Vector2(0.7, -0.3), Vector2(0.4, 0.9), Vector2(-0.6, 0.2)])
+		for p in shard.size():
+			shard[p] = at + shard[p].rotated(spin) * size
+		_backdrop.draw_colored_polygon(shard, Color(color, 0.55 * _edge_fade(at)))
+
+
+## Fuzzy TV static (the tent).
+func _backdrop_static(color: Color, t: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(t * 20.0)
+	for i in 260:
+		var at := Vector2(BACKDROP.position.x + rng.randf() * BACKDROP.size.x, BACKDROP.position.y + rng.randf() * BACKDROP.size.y)
+		var bright := rng.randf()
+		_backdrop.draw_rect(Rect2(at, Vector2(2, 2)), Color(color.lerp(Color.WHITE, bright * 0.5), 0.25 * bright * _edge_fade(at)))
+	# A slow rolling band, like an old TV.
+	var band := BACKDROP.position.y + fmod(t * 30.0, BACKDROP.size.y)
+	_backdrop.draw_rect(Rect2(BACKDROP.position.x, band, BACKDROP.size.x, 6), Color(color, 0.08))

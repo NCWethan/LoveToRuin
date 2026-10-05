@@ -256,6 +256,16 @@ func _add_empty_costume() -> Character:
 	var costume := Character.new().setup(load("res://art/sprites/wally_slump.png"), null, false)
 	costume.on_interact = func() -> void:
 		await Game.dialogue.say(["* (Wally's costume. Empty and limp.)", "* (It smells like a gym bag.)"])
+		# His giant foam finger is still in there.
+		if not flag("got_foam_finger") and Game.items.size() < Game.MAX_ITEMS:
+			Game.flags["got_foam_finger"] = true
+			Game.items.append(Items.accessory("Foam Finger", "weapon", 3, 0))
+			Game.play_sfx("item")
+			await Game.dialogue.say([
+				"* (Something's poking out of the costume's paw.)",
+				"* (You got the Foam Finger.)\n* (Weapon: ATK +3. EQUIP it from your bag.)",
+				{"who": "Hop", "text": "We're number one. Allegedly.", "mood": "smug"},
+			])
 	return add_character(costume, MASCOT_SPOT + Vector2(-30, 0))
 
 
@@ -266,7 +276,7 @@ func _add_save_point(at: Vector2, lines: Array) -> void:
 	star.on_interact = func() -> void:
 		Game.play_sfx("heal")
 		Game.heal_party()
-		await Game.dialogue.say(lines + ["* (Everyone's HP was restored.)"])
+		await Game.dialogue.say(lines + [Game.restored_line()])
 		var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 		if choice == 0:
 			Game.save_game(SCENE, player.position)

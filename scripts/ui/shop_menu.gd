@@ -86,7 +86,9 @@ func _buy(item: Dictionary) -> void:
 		Game.play_sfx("miss")
 	else:
 		Game.money -= int(item["price"])
-		Game.items.append({"name": item["name"], "heal": int(item["heal"])})
+		var bought: Dictionary = item.duplicate()
+		bought.erase("price")
+		Game.items.append(bought)
 		_message = "* You bought the %s." % item["name"]
 		Game.play_sfx("item")
 
@@ -122,7 +124,7 @@ func _draw_panel() -> void:
 		if i < _stock.size():
 			var item: Dictionary = _stock[i]
 			label = item["name"]
-			detail = "$%d     +%d HP" % [item["price"], item["heal"]]
+			detail = "$%d     %s" % [item["price"], Items.stats_text(item) if Items.is_accessory(item) else "+%d HP" % item["heal"]]
 		var color := Color.YELLOW if i == _cursor else Color.WHITE
 		_panel.draw_string(_font, Vector2(left + 30, row_y), label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		_panel.draw_string(_font, Vector2(left + 260, row_y), detail, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)

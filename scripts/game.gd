@@ -189,11 +189,13 @@ func new_game() -> void:
 	exp_points = 0
 	money = 20
 	box_items.clear()
+	equipment = {}
 	flags = {}
 	busy = false
 	spawn_position = null
 	pending_battle = ""
 	battle_result = {}
+	update_stats()
 
 
 ## LOVE (LV), worked out from EXP like in Undertale.
@@ -203,6 +205,99 @@ func lv() -> int:
 		if exp_points >= LV_THRESHOLDS[i]:
 			level = i + 1
 	return level
+
+
+## LV for a given amount of EXP.
+func lv_for(exp_amount: int) -> int:
+	var level := 1
+	for i in LV_THRESHOLDS.size():
+		if exp_amount >= LV_THRESHOLDS[i]:
+			level = i + 1
+	return level
+
+
+# --- BOND level, stats and accessories -------------------------------------
+# Growing comes two ways. EXP (from fighting) raises your LV; BOND (from sparing)
+# raises your BOND level. Both make the whole party stronger: LV gives more attack,
+# BOND more HP. Neither raises defense: only accessories do.
+
+const BOND_THRESHOLDS := [0, 20, 50, 100, 170, 260, 380, 530, 720, 950]
+## Each member's starting max HP and attack.
+const BASE_STATS := {"Elric": [30, 6], "Hop": [35, 7]}
+## What each level adds, for every party member.
+const HP_PER_LV := 3
+const ATTACK_PER_LV := 2
+const HP_PER_BOND_LV := 4
+const ATTACK_PER_BOND_LV := 1
+
+## Accessory slots. Each member can wear one item in each.
+const SLOTS := ["weapon", "torso", "shoes"]
+const SLOT_NAMES := {"weapon": "Weapon", "torso": "Torso", "shoes": "Shoes"}
+## What everyone's wearing: {member name: {slot: item}}.
+var equipment: Dictionary = {}
+
+
+func bond_level_for(bond_amount: int) -> int:
+	var level := 1
+	for i in BOND_THRESHOLDS.size():
+		if bond_amount >= BOND_THRESHOLDS[i]:
+			level = i + 1
+	return level
+
+
+func bond_level() -> int:
+	return bond_level_for(bond)
+
+
+## The EXP needed for the next LV, or -1 at the top level.
+func next_lv_exp() -> int:
+	var level := lv()
+	return LV_THRESHOLDS[level] if level < LV_THRESHOLDS.size() else -1
+
+
+## The BOND needed for the next BOND level, or -1 at the top level.
+func next_bond() -> int:
+	var level := bond_level()
+	return BOND_THRESHOLDS[level] if level < BOND_THRESHOLDS.size() else -1
+
+
+## Works out everyone's max HP, attack and defense from their levels and what
+## they're wearing. Growing taller max HP also heals by the same amount.
+func update_stats() -> void:
+	for member in party:
+		var base: Array = BASE_STATS.get(member.name, [member.max_hp, member.attack])
+		var new_max: int = base[0] + HP_PER_LV * (lv() - 1) + HP_PER_BOND_LV * (bond_level() - 1)
+		var attack: int = base[1] + ATTACK_PER_LV * (lv() - 1) + ATTACK_PER_BOND_LV * (bond_level() - 1)
+		var defense := 0
+		for item in worn_by(member.name).values():
+			attack += int(item.get("atk", 0))
+			defense += int(item.get("def", 0))
+		if new_max > member.max_hp:
+			member.hp += new_max - member.max_hp
+		member.max_hp = new_max
+		member.hp = mini(member.hp, member.max_hp)
+		member.attack = attack
+		member.defense = defense
+
+
+## {slot: item} for everything one member is wearing.
+func worn_by(member_name: String) -> Dictionary:
+	return equipment.get(member_name, {})
+
+
+## Puts an accessory from the bag on a member. Whatever they had in that slot
+## goes back in the bag. Returns the item they took off (or an empty Dictionary).
+func equip(member_name: String, item: Dictionary) -> Dictionary:
+	var slot: String = item["slot"]
+	var worn := worn_by(member_name)
+	var old: Dictionary = worn.get(slot, {})
+	items.erase(item)
+	if not old.is_empty():
+		items.append(old)
+	worn[slot] = item
+	equipment[member_name] = worn
+	update_stats()
+	return old
 
 
 func heal_party() -> void:
@@ -287,6 +382,10 @@ func change_scene(path: String, spawn = null) -> void:
 	await fade_out()
 	spawn_position = spawn
 	get_tree().change_scene_to_file(path)
+	# Whatever was going on in the old scene (a cutscene, a conversation) is gone
+	# now, and it can't finish to say so. Start the new scene free to move; its own
+	# cutscenes only begin once the fade-in is done.
+	busy = false
 	# The new scene loads on the next frame; give it a moment to set itself up.
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -319,6 +418,8 @@ func finish_battle(result: Dictionary) -> void:
 	bond += int(result.get("bond", 0))
 	exp_points += int(result.get("exp", 0))
 	money += int(result.get("money", 0))
+	# More EXP or BOND can mean a new level: bigger max HP and attack.
+	update_stats()
 	pending_battle = ""
 	# Anyone knocked down gets back up with a little HP, like in Deltarune.
 	for member in party:
@@ -345,6 +446,13 @@ func has_save() -> bool:
 	return FileAccess.file_exists(save_path)
 
 
+## Erases the save file (the title screen's Reset). Settings are kept.
+func delete_save() -> void:
+	if has_save():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+	new_game()
+
+
 func save_game(scene_path: String, at: Vector2) -> void:
 	var data := {
 		"scene": scene_path,
@@ -356,6 +464,7 @@ func save_game(scene_path: String, at: Vector2) -> void:
 		"money": money,
 		"items": items,
 		"box_items": box_items,
+		"equipment": equipment,
 		"party": party.map(func(m: PartyMember) -> Dictionary: return {"name": m.name, "hp": m.hp}),
 	}
 	# Write to a temporary file first, then swap it in, so the old save is never
@@ -392,6 +501,13 @@ const AREA_NAMES := {
 }
 
 
+## What a SAVE point says about healing: just Elric when they're on their own
+## (before meeting Hop, or after going their own way), otherwise everyone.
+func restored_line() -> String:
+	var alone: bool = not flags.get("met_hop", false) or flags.get("route", "") == "neutral"
+	return "* (Your HP has been restored.)" if alone else "* (Everyone's HP was restored.)"
+
+
 ## What a SAVE point says after saving. The very first time, it also explains
 ## how saving works.
 func saved_lines() -> Array:
@@ -416,14 +532,22 @@ func load_game() -> void:
 	money = int(data.get("money", 0))
 	items.clear()
 	for item in data.get("items", []):
-		items.append({"name": item["name"], "heal": int(item["heal"])})
+		items.append(_item_from_save(item))
 	box_items.clear()
 	for item in data.get("box_items", []):
-		box_items.append({"name": item["name"], "heal": int(item["heal"])})
+		box_items.append(_item_from_save(item))
+	equipment = {}
+	var worn: Dictionary = data.get("equipment", {})
+	for member_name in worn:
+		equipment[member_name] = {}
+		for slot in worn[member_name]:
+			equipment[member_name][slot] = _item_from_save(worn[member_name][slot])
+	# Levels and accessories first, then the HP they had when they saved.
+	update_stats()
 	for saved in data.get("party", []):
 		for member in party:
 			if member.name == saved["name"]:
-				member.hp = int(saved["hp"])
+				member.hp = clampi(int(saved["hp"]), 0, member.max_hp)
 	var scene: String = data.get("scene", "")
 	if not ResourceLoader.exists(scene):
 		scene = "res://scenes/mt_carmel.tscn"
@@ -461,3 +585,14 @@ func _add_keys(action: String, keys: Array) -> void:
 		var event := InputEventKey.new()
 		event.physical_keycode = key
 		InputMap.action_add_event(action, event)
+
+
+## An item read back from the save file. JSON turns every number into a decimal,
+## so the stats are turned back into whole numbers.
+func _item_from_save(saved: Dictionary) -> Dictionary:
+	var item := {"name": str(saved.get("name", "???")), "heal": int(saved.get("heal", 0))}
+	if saved.has("slot"):
+		item["slot"] = str(saved["slot"])
+		item["atk"] = int(saved.get("atk", 0))
+		item["def"] = int(saved.get("def", 0))
+	return item

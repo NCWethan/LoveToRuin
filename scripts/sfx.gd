@@ -32,7 +32,55 @@ static func make_all() -> Dictionary:
 		"ping": slide(1400, 1100, 0.18, 0.12),
 		"zap": noise(0.18, 0.28),
 		"laugh": laugh(),
+		"stinger": stinger(),
+		"engine": engine(),
+		"brakes": slide(1900, 1500, 0.4, 0.07),
+		"alert": tone([784, 1175, 1568, 2093], 0.04, 0.24),
 	}
+
+
+## A dramatic hit, like a door slamming open: a low, buzzy chord that rings out,
+## with a crack of noise on top. (For "HOLD IT!")
+static func stinger() -> AudioStreamWAV:
+	var length := 1.1
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var notes := [82.4, 123.5, 164.8, 196.0, 246.9]   # E minor, low and wide
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var phases := [0.0, 0.0, 0.0, 0.0, 0.0]
+	for s in count:
+		var t := float(s) / RATE
+		var value := 0.0
+		for n in notes.size():
+			phases[n] = fmod(phases[n] + notes[n] / RATE, 1.0)
+			value += (phases[n] * 2.0 - 1.0) * 0.22 + (1.0 if phases[n] < 0.5 else -1.0) * 0.1
+		# The hit: a burst of noise right at the start.
+		if t < 0.08:
+			value += rng.randf_range(-1.0, 1.0) * (1.0 - t / 0.08) * 0.9
+		var envelope := minf(1.0, t / 0.004) * pow(1.0 - t / length, 1.6)
+		data.encode_s16(s * 2, int(clampf(value * envelope * 0.55, -1.0, 1.0) * 32767.0))
+	return _wav(data)
+
+
+## A car engine: a low, rumbling buzz that revs up and settles.
+static func engine() -> AudioStreamWAV:
+	var length := 1.6
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var phase := 0.0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9
+	for s in count:
+		var t := float(s) / count
+		var freq := 48.0 + 34.0 * sin(t * PI) + 4.0 * sin(t * 90.0)
+		phase = fmod(phase + freq / RATE, 1.0)
+		var value := (phase * 2.0 - 1.0) * 0.7 + rng.randf_range(-1.0, 1.0) * 0.15
+		var envelope := minf(1.0, t * 8.0) * minf(1.0, (1.0 - t) * 5.0)
+		data.encode_s16(s * 2, int(value * envelope * 0.28 * 32767.0))
+	return _wav(data)
 
 
 ## A slow, deep, distorted laugh: "HA... HA... HA... HA HA HA HA" sinking lower,

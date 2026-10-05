@@ -416,7 +416,7 @@ func _use_save_point() -> void:
 	await Game.dialogue.say([
 		"* (The wind moves through the empty field.)",
 		"* (Something is about to happen.\n*  It fills you with DETERMINATION.)",
-		"* (Everyone's HP was restored.)",
+		Game.restored_line(),
 	])
 	var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 	if choice == 0:

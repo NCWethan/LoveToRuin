@@ -16,28 +16,41 @@ static func create(id: String) -> BattleData:
 	match id:
 		"pop_quiz":
 			data.enemies.append(_pop_quiz())
+			data.backdrop_style = "grid"
+			data.backdrop = Color(0.35, 0.6, 0.95)
 			data.intro = ["* A Pop Quiz appears!", "* (Nobody studied for this.)"]
 		"hall_pass":
 			data.enemies.append(_hall_pass())
+			data.backdrop_style = "stripes"
+			data.backdrop = Color(0.95, 0.65, 0.25)
 			data.intro = ["* A Hall Pass sprints into you!", "* (It's late for something.)"]
 		"mystery_meat":
 			data.enemies.append(_mystery_meat())
+			data.backdrop_style = "bubbles"
+			data.backdrop = Color(0.6, 0.78, 0.3)
 			data.intro = ["* Mystery Meat slides off a lunch tray!", "* (Nobody knows what it is.\n*  Including Mystery Meat.)"]
 		"tardy_bell":
 			data.enemies.append(_tardy_bell())
+			data.backdrop_style = "rings"
+			data.backdrop = Color(0.95, 0.85, 0.35)
 			data.intro = ["* The Tardy Bell rings itself off the wall!", "* (RRRRRING!)"]
 		"overdue_book":
 			data.enemies.append(_overdue_book())
+			data.backdrop_style = "stars"
+			data.backdrop = Color(0.55, 0.85, 0.65)
 			data.intro = ["* An Overdue Book flaps out of the stacks!", "* (It's 47 years late.)"]
 		"tent":
 			data.event = "tent"
 			data.enemies.append(_tent())
+			data.backdrop_style = "static"
+			data.backdrop = Color(0.45, 0.5, 0.42)
 			data.intro = ["* A tent."]
 		"wally":
 			data.enemies.append(_wally())
 			data.music = "wally"
 			data.backdrop = Color(0.9, 0.62, 0.2)
 			data.boss_style = "wally"
+			data.backdrop_style = "spotlights"
 			data.intro = [
 				"* Wally Wolverine rises from center court!",
 				"* (Something inside the costume is glowing red.)",
