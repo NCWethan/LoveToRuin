@@ -1357,159 +1357,181 @@ foreach ($name in @($sprites.Keys)) {
 }
 
 # --- Battle poses (Elric and Hop) ---------------------------------------------
-# Built from each character's front view by moving the arm pixels around. The
-# canvas is 6 pixels wider on each side, so an outstretched arm fits. Poses:
-#   windup  the right arm drawn back and up, ready to strike
-#   strike  the right arm thrown straight out toward the enemy
-#   guard   both arms crossed over the chest
-#   raise   the right arm held straight up (ACT, ITEM, MERCY)
-#   hurt    a shocked face, arms flung out
-#   ko      X'd-out eyes (the game tips this one over)
+# In battle, Elric and Hop stand turned sideways toward the enemy (built from their
+# side views), each in their own fighting style:
+#   Hop    a boxer: upright, fists wrapped in white tape, lead fist out at chin
+#          height, rear fist guarding his face, feet staggered.
+#   Elric  a scrapper: low and loose, lead hand open and reaching with claws out,
+#          rear hand down by the hip, ready to swipe.
+# The painted-on arm is removed from the side view, and new arms are drawn for each
+# pose. The canvas is 6 pixels wider on each side so outstretched arms fit.
+# Poses: stance, windup, strike, guard, raise, hurt, ko.
 
-$poseSkin = @{ 'elric' = 'L'; 'hop' = 'N' }
 $PAD = 6
-
-function Pad-Rows([string[]]$rows) {
-    $edge = '.' * $PAD
-    return [string[]]($rows | ForEach-Object { $edge + $_ + $edge })
-}
-
-# A character's right arm (below the shoulder), top to bottom: 7 rows of 4 pixels.
-function Get-Arm([string[]]$rows, [bool]$right) {
-    $x = if ($right) { 18 + $PAD } else { 2 + $PAD }
-    $arm = @()
-    for ($y = 15; $y -le 21; $y++) { $arm += $rows[$y].Substring($x, 4) }
-    return $arm
-}
-
-function Clear-Arm([string[]]$rows, [bool]$right) {
-    $x = if ($right) { 18 + $PAD } else { 2 + $PAD }
-    for ($y = 15; $y -le 21; $y++) {
-        $c = $rows[$y].ToCharArray()
-        for ($i = 0; $i -lt 4; $i++) { $c[$x + $i] = '.' }
-        $rows[$y] = -join $c
-    }
+$poseStyle = @{
+    'elric' = @{ 'sleeve' = 't'; 'hand' = 'L'; 'claw' = 'W'; 'arm_rows' = 13 }
+    'hop'   = @{ 'sleeve' = 'l'; 'hand' = 'W'; 'claw' = ''; 'arm_rows' = 12 }
 }
 
 function Put([string[]]$rows, [int]$x, [int]$y, [string]$ch) {
-    if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[0].Length -or $ch -eq '.') { return }
+    if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[0].Length -or $ch -eq '' -or $ch -eq '.') { return }
     $c = $rows[$y].ToCharArray()
     $c[$x] = $ch
     $rows[$y] = -join $c
 }
 
-# Draws an arm (7 x 4, shoulder end first) from (x, y), stepping (dx, dy) per pixel
-# of length; the arm's width runs along (wx, wy).
-function Draw-Arm([string[]]$rows, [string[]]$arm, [int]$x, [int]$y, [double]$dx, [double]$dy, [int]$wx, [int]$wy) {
-    for ($k = 0; $k -lt $arm.Count; $k++) {
-        for ($w = 0; $w -lt 4; $w++) {
-            $px = [int][math]::Round($x + $k * $dx + $w * $wx)
-            $py = [int][math]::Round($y + $k * $dy + $w * $wy)
-            Put $rows $px $py ([string]$arm[$k][$w])
-        }
+# A thick line (an arm segment) from (x0, y0) to (x1, y1).
+function Draw-Limb([string[]]$rows, [double]$x0, [double]$y0, [double]$x1, [double]$y1, [string]$ch, [int]$thick = 2) {
+    $steps = [math]::Max(1, [int]([math]::Max([math]::Abs($x1 - $x0), [math]::Abs($y1 - $y0)) * 2))
+    for ($i = 0; $i -le $steps; $i++) {
+        $f = $i / $steps
+        $px = [int][math]::Round($x0 + ($x1 - $x0) * $f)
+        $py = [int][math]::Round($y0 + ($y1 - $y0) * $f)
+        for ($dx = 0; $dx -lt $thick; $dx++) { for ($dy = 0; $dy -lt $thick; $dy++) { Put $rows ($px + $dx) ($py + $dy) $ch } }
     }
 }
 
-function Stamp-Face([string[]]$rows, [string[]]$stamp, [string]$skin, [string]$feature) {
-    for ($r = 0; $r -lt $stamp.Count; $r++) {
-        $c = $rows[6 + $r].ToCharArray()
-        for ($k = 0; $k -lt 8; $k++) {
-            $s = $stamp[$r][$k]
-            if ($s -eq '.') { continue }
-            $c[$PAD + 8 + $k] = switch ($s) { 's' { $skin } 'K' { $feature } default { $s } }
-        }
-        $rows[6 + $r] = -join $c
-    }
+# A square fist (or open hand) at (x, y), `size` pixels.
+function Draw-Hand([string[]]$rows, [int]$x, [int]$y, [string]$ch, [int]$size = 3) {
+    for ($dx = 0; $dx -lt $size; $dx++) { for ($dy = 0; $dy -lt $size; $dy++) { Put $rows ($x + $dx) ($y + $dy) $ch } }
 }
 
-$koFace = @(
-    "........",
-    ".KsKKsK.",
-    "..Kss.K.",
-    ".KsKKsK.",
-    "........",
-    ".sKKKKs."
-)
+# The side view with no arm, padded, standing with feet apart.
+function New-SideBody([string]$who, [bool]$wide) {
+    $upper = [string[]]$sideUpper[$who].Clone()
+    $first = $poseStyle[$who]['arm_rows']
+    for ($y = $first; $y -lt $upper.Count; $y++) {
+        $c = $upper[$y].ToCharArray()
+        for ($x = 11; $x -le 13; $x++) { $c[$x] = $c[10] }
+        $upper[$y] = -join $c
+    }
+    $legs = $sideLegs[$who]
+    $rows = $upper + (Get-Legs $legs[0] $legs[1] $wide)
+    $edge = '.' * $PAD
+    return [string[]]($rows | ForEach-Object { $edge + $_ + $edge })
+}
+
+# The eye, shut tight (hurt) or X'd out (knocked out). The eye is the first dark
+# pixel on the face, near the front of the head.
+function Mark-Eye([string[]]$rows, [string]$who, [string]$how) {
+    $skin = if ($who -eq 'elric') { 'L' } else { 'N' }
+    for ($y = 5; $y -le 8; $y++) {
+        for ($x = 12 + $PAD; $x -le 16 + $PAD; $x++) {
+            if ($rows[$y][$x] -eq 'K') {
+                # Clear around it, then draw the mark.
+                for ($yy = $y - 1; $yy -le $y + 1; $yy++) { for ($xx = $x - 1; $xx -le $x + 1; $xx++) { if ($rows[$yy][$xx] -ne '.') { Put $rows $xx $yy $skin } } }
+                if ($how -eq 'x') {
+                    Put $rows ($x - 1) ($y - 1) 'K'; Put $rows ($x + 1) ($y - 1) 'K'; Put $rows $x $y 'K'
+                    Put $rows ($x - 1) ($y + 1) 'K'; Put $rows ($x + 1) ($y + 1) 'K'
+                } else {
+                    Put $rows ($x - 1) ($y - 1) 'K'; Put $rows $x $y 'K'; Put $rows ($x - 1) ($y + 1) 'K'
+                }
+                return
+            }
+        }
+    }
+}
 
 $poses = [ordered]@{}
-foreach ($who in $poseSkin.Keys) {
-    $base = Pad-Rows $sprites[$who]
-    $skin = $poseSkin[$who]
-    $arm = Get-Arm $base $true
-    $leftArm = Get-Arm $base $false
-    $shoulderX = 18 + $PAD
+foreach ($who in $poseStyle.Keys) {
+    $s = $poseStyle[$who]
+    $sleeve = $s['sleeve']; $hand = $s['hand']; $claw = $s['claw']
+    # Shoulders: the back one (behind the body) and the front one, in canvas pixels.
+    $backX = 15 + $PAD; $frontX = 17 + $PAD; $sy = 13
 
-    # Windup: the arm swings up and back over the shoulder, hand high.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Draw-Arm $p $arm ($shoulderX) 14 0.7 -1.0 1 0
-    if ($who -eq 'elric') {
-        # Nails catching the light.
-        Put $p ($shoulderX + 5) 6 'W'; Put $p ($shoulderX + 7) 6 'W'; Put $p ($shoulderX + 8) 7 'W'
-    }
-    $poses["${who}_windup"] = $p
+    if ($who -eq 'hop') {
+        # STANCE: fists up. Rear fist guarding the chin, lead fist out in front.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX + 1) 17 $sleeve; Draw-Limb $p ($backX + 1) 17 ($frontX + 1) 11 $sleeve
+        Draw-Hand $p ($frontX + 1) 9 $hand
+        Draw-Limb $p $frontX $sy ($frontX + 4) 16 $sleeve; Draw-Limb $p ($frontX + 4) 16 ($frontX + 7) 11 $sleeve
+        Draw-Hand $p ($frontX + 7) 9 $hand
+        $poses["hop_stance"] = $p
 
-    # Strike: the arm thrown straight out to the right.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Draw-Arm $p $arm ($shoulderX) 14 1 0 0 1
-    $tip = $shoulderX + $arm.Count
-    if ($who -eq 'elric') {
-        # Three claws.
-        Put $p $tip 14 'W'; Put $p ($tip + 1) 14 'W'
-        Put $p $tip 16 'W'; Put $p ($tip + 1) 16 'W'
-        Put $p $tip 18 'W'
+        # WINDUP: the rear fist cocked way back behind his head, lead fist still up.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX - 4) 15 $sleeve; Draw-Limb $p ($backX - 4) 15 ($backX - 6) 9 $sleeve
+        Draw-Hand $p ($backX - 8) 7 $hand 4
+        Draw-Limb $p $frontX $sy ($frontX + 4) 16 $sleeve; Draw-Limb $p ($frontX + 4) 16 ($frontX + 6) 11 $sleeve
+        Draw-Hand $p ($frontX + 6) 9 $hand
+        $poses["hop_windup"] = $p
+
+        # STRIKE: a straight punch, arm locked out, big wrapped fist.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX + 1) 17 $sleeve; Draw-Limb $p ($backX + 1) 17 ($frontX + 1) 11 $sleeve
+        Draw-Hand $p ($frontX + 1) 9 $hand
+        Draw-Limb $p $frontX $sy ($frontX + 11) 12 $sleeve
+        Draw-Hand $p ($frontX + 11) 10 $hand 4
+        Put $p ($frontX + 14) 11 'K'; Put $p ($frontX + 14) 13 'K'
+        $poses["hop_strike"] = $p
+
+        # GUARD: both forearms up in front of his face, fists high.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($frontX + 2) 16 $sleeve; Draw-Limb $p ($frontX + 2) 16 ($frontX + 3) 7 $sleeve
+        Draw-Limb $p $frontX $sy ($frontX + 4) 15 $sleeve; Draw-Limb $p ($frontX + 4) 15 ($frontX + 5) 8 $sleeve
+        Draw-Hand $p ($frontX + 2) 5 $hand; Draw-Hand $p ($frontX + 4) 6 $hand
+        $poses["hop_guard"] = $p
     } else {
-        # A big fist with knuckles.
-        for ($yy = 13; $yy -le 18; $yy++) { Put $p $tip $yy 'l'; Put $p ($tip + 1) $yy 'l' }
-        Put $p ($tip + 1) 14 'K'; Put $p ($tip + 1) 16 'K'
+        # STANCE: low and loose. Lead hand open, reaching forward with claws out;
+        # rear hand down by the hip.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX - 1) 17 $sleeve; Draw-Limb $p ($backX - 1) 17 ($backX - 3) 20 $sleeve
+        Draw-Hand $p ($backX - 4) 20 $hand 2
+        Put $p ($backX - 5) 22 $claw
+        Draw-Limb $p $frontX $sy ($frontX + 4) 16 $sleeve; Draw-Limb $p ($frontX + 4) 16 ($frontX + 8) 14 $sleeve
+        Draw-Hand $p ($frontX + 8) 13 $hand 2
+        Put $p ($frontX + 10) 12 $claw; Put $p ($frontX + 10) 14 $claw; Put $p ($frontX + 10) 16 $claw
+        $poses["elric_stance"] = $p
+
+        # WINDUP: the lead arm pulled up and back over the head, claws high.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX - 1) 17 $sleeve; Draw-Limb $p ($backX - 1) 17 ($backX - 3) 20 $sleeve
+        Draw-Hand $p ($backX - 4) 20 $hand 2
+        Draw-Limb $p $frontX $sy ($frontX - 1) 8 $sleeve; Draw-Limb $p ($frontX - 1) 8 ($frontX - 4) 4 $sleeve
+        Draw-Hand $p ($frontX - 5) 2 $hand 2
+        Put $p ($frontX - 6) 0 $claw; Put $p ($frontX - 4) 0 $claw; Put $p ($frontX - 2) 1 $claw
+        $poses["elric_windup"] = $p
+
+        # STRIKE: a big downward swipe, arm swung all the way through, claws raking.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($backX - 2) 16 $sleeve; Draw-Limb $p ($backX - 2) 16 ($backX - 5) 14 $sleeve
+        Draw-Hand $p ($backX - 6) 13 $hand 2
+        Draw-Limb $p $frontX $sy ($frontX + 10) 18 $sleeve
+        Draw-Hand $p ($frontX + 10) 18 $hand 2
+        Put $p ($frontX + 12) 17 $claw; Put $p ($frontX + 13) 18 $claw; Put $p ($frontX + 12) 20 $claw; Put $p ($frontX + 13) 21 $claw
+        $poses["elric_strike"] = $p
+
+        # GUARD: forearms crossed in front of the face.
+        $p = [string[]](New-SideBody $who $true)
+        Draw-Limb $p $backX $sy ($frontX + 4) 8 $sleeve
+        Draw-Limb $p $frontX $sy ($frontX + 1) 17 $sleeve; Draw-Limb $p ($frontX + 1) 17 ($frontX + 5) 9 $sleeve
+        Draw-Hand $p ($frontX + 4) 6 $hand 2; Draw-Hand $p ($frontX + 5) 8 $hand 2
+        $poses["elric_guard"] = $p
     }
-    $poses["${who}_strike"] = $p
 
-    # Guard: both arms folded across the chest.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Clear-Arm $p $false
-    Draw-Arm $p $leftArm (2 + $PAD) 15 1.3 0.35 0 1
-    Draw-Arm $p $arm ($shoulderX + 3) 17 -1.3 0.35 0 1
-    $poses["${who}_guard"] = $p
-
-    # Raise: the arm straight up, hand above the head.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Draw-Arm $p $arm ($shoulderX) 14 0 -1.4 1 0
+    # RAISE (ACT / ITEM / MERCY): the lead arm straight up, the other relaxed.
+    $p = [string[]](New-SideBody $who $false)
+    Draw-Limb $p $backX $sy $backX 20 $sleeve
+    Draw-Hand $p $backX 20 $hand 2
+    Draw-Limb $p $frontX $sy ($frontX + 2) 3 $sleeve
+    Draw-Hand $p ($frontX + 1) 1 $hand 3
     $poses["${who}_raise"] = $p
 
-    # Hurt: a shocked face, and both arms flung outward.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Clear-Arm $p $false
-    Draw-Arm $p $arm ($shoulderX) 14 0.75 0.7 1 0
-    Draw-Arm $p $leftArm (5 + $PAD) 14 -0.75 0.7 -1 0
-    Stamp-Face $p $moods['shocked'] $skin 'K'
+    # HURT: knocked back, arms flung behind, eye squeezed shut.
+    $p = [string[]](New-SideBody $who $true)
+    Draw-Limb $p $backX $sy ($backX - 5) 10 $sleeve
+    Draw-Hand $p ($backX - 7) 8 $hand 2
+    Draw-Limb $p $frontX $sy ($frontX - 4) 8 $sleeve
+    Draw-Hand $p ($frontX - 6) 6 $hand 2
+    Mark-Eye $p $who 'shut'
     $poses["${who}_hurt"] = $p
 
-    # Knocked out: X'd-out eyes.
-    $p = [string[]]$base.Clone()
-    Stamp-Face $p $koFace $skin 'K'
+    # KO: arms hanging limp, eye X'd out (the game tips this one over).
+    $p = [string[]](New-SideBody $who $false)
+    Draw-Limb $p $backX $sy ($backX + 1) 21 $sleeve
+    Draw-Limb $p $frontX $sy ($frontX + 1) 21 $sleeve
+    Mark-Eye $p $who 'x'
     $poses["${who}_ko"] = $p
-
-    # Stance: ready to fight. Both fists up by the face, feet planted wide.
-    $p = [string[]]$base.Clone()
-    Clear-Arm $p $true
-    Clear-Arm $p $false
-    Draw-Arm $p $arm ($shoulderX) 14 0.3 -0.85 1 0
-    Draw-Arm $p $leftArm (2 + $PAD) 14 -0.3 -0.85 1 0
-    for ($y = 22; $y -le 31; $y++) {
-        $c = $p[$y].ToCharArray()
-        $left = $c[(7 + $PAD)..(11 + $PAD)]
-        $right = $c[(13 + $PAD)..(16 + $PAD)]
-        for ($x = 6 + $PAD; $x -le 17 + $PAD; $x++) { $c[$x] = '.' }
-        for ($i = 0; $i -lt 5; $i++) { $c[6 + $PAD + $i] = $left[$i] }
-        for ($i = 0; $i -lt 4; $i++) { $c[14 + $PAD + $i] = $right[$i] }
-        $p[$y] = -join $c
-    }
-    $poses["${who}_stance"] = $p
 }
 
 # --- Saving -------------------------------------------------------------------

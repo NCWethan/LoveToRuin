@@ -1687,7 +1687,8 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 
 	# Effects around the pose.
 	if attacking and state == State.FIGHT_BAR:
-		var hand := feet + offset + (Vector2(40, -72) if not is_hop else Vector2(36, -64))
+		# Where the raised hand is in the windup pose (Elric's claws high, Hop's fist cocked back).
+		var hand := feet + offset + (Vector2(3, -90) if not is_hop else Vector2(-10, -74))
 		if is_hop:
 			# Energy gathering around his fist: rings closing in, getting redder.
 			var charge := clampf(1.0 - _bar_wait / FIGHT_WINDUP, 0.0, 1.0) if _bar_wait > 0.0 else 1.0
@@ -1709,7 +1710,7 @@ func _draw_member(member: PartyMember, index: int, feet: Vector2, _sprite_size: 
 			_overlay.draw_line(Vector2(feet.x + offset.x - 70, y), Vector2(feet.x + offset.x - 20, y), Color(1, 1, 1, 0.5), 2.0)
 	if member.is_down() and member.ko_time > 0.5:
 		# Little stars circling where their head ended up.
-		var head := feet + Vector2(-44, -14)
+		var head := feet + Vector2(-62, -12)
 		for s in 3:
 			var angle := t * 3.0 + s * TAU / 3
 			var star := head + Vector2(cos(angle) * 16.0, sin(angle) * 5.0)
@@ -1942,15 +1943,31 @@ func _draw_backdrop() -> void:
 		color = color.darkened(0.6)
 	var t := Time.get_ticks_msec() / 1000.0 if not frozen else _frozen_at
 	match _data.backdrop_style:
-		"grid": _backdrop_grid(color, t)
-		"stripes": _backdrop_stripes(color, t)
-		"bubbles": _backdrop_bubbles(color, t)
-		"rings": _backdrop_rings(color, t)
-		"stars": _backdrop_stars(color, t)
-		"spotlights": _backdrop_spotlights(color, t)
-		"shards": _backdrop_shards(color, t)
-		"static": _backdrop_static(color, t)
-		_: _backdrop_diamonds(color, t)
+		"grid":
+			_backdrop_grid(color, t)
+			_backdrop_pencils(color, t)
+		"stripes":
+			_backdrop_stripes(color, t)
+			_backdrop_lockers(color, t)
+		"bubbles":
+			_backdrop_bubbles(color, t)
+		"rings":
+			_backdrop_rings(color, t)
+			_backdrop_bell(color, t)
+		"stars":
+			_backdrop_stars(color, t)
+			_backdrop_books(color, t)
+		"spotlights":
+			_backdrop_spotlights(color, t)
+			_backdrop_crowd(color, t)
+		"shards":
+			_backdrop_heartbeat(color, t)
+			_backdrop_shards(color, t)
+		"static":
+			_backdrop_static(color, t)
+		_:
+			_backdrop_sigil(color, t)
+			_backdrop_diamonds(color, t)
 
 
 ## How visible something is at `point`: full in the middle, fading out near the edges.
@@ -2014,22 +2031,83 @@ func _backdrop_stripes(color: Color, t: float) -> void:
 			_backdrop.draw_line(a, b, Color(color, alpha), 2.0 if i % 3 == 0 else 1.0)
 
 
-## Bubbles rising up and wobbling, popping near the top.
+## The school cafeteria, gone wrong (Mystery Meat): flickering ceiling lights, a
+## checkered floor stretching back, a vat of bubbling stew along the bottom with
+## blobs splashing out of it, steam curling up, and trays drifting through the air.
 func _backdrop_bubbles(color: Color, t: float) -> void:
-	for i in 28:
-		var speed := 18.0 + (i * 7 % 5) * 9.0
-		var life := fmod(t * speed / BACKDROP.size.y + i * 0.37, 1.0)
-		var x := BACKDROP.position.x + fmod(i * 83.0, BACKDROP.size.x) + sin(t * 2.0 + i) * 8.0
-		var at := Vector2(x, BACKDROP.end.y - life * BACKDROP.size.y)
-		var radius := 3.0 + (i % 4) * 2.5
-		var alpha := 0.45 * _edge_fade(at)
-		if life > 0.9:
-			# Pop: a little ring that grows and fades.
-			var pop := (life - 0.9) / 0.1
-			_backdrop.draw_arc(at, radius + pop * 6.0, 0, TAU, 12, Color(color, alpha * (1.0 - pop)), 1.0)
+	var top := BACKDROP.position.y
+	var bottom := BACKDROP.end.y
+	var center_x := BACKDROP.get_center().x
+	# Fluorescent lights along the ceiling, one of them flickering.
+	for i in 5:
+		var at := Vector2(BACKDROP.position.x + 70 + i * 115.0, top + 14)
+		var flicker := 1.0 if i != 2 else (0.2 if fmod(t * 7.3, 1.0) < 0.15 or fmod(t * 2.1, 1.0) < 0.05 else 1.0)
+		_backdrop.draw_rect(Rect2(at - Vector2(26, 2), Vector2(52, 4)), Color(color.lightened(0.6), 0.55 * flicker * _edge_fade(at)))
+		var glow := PackedVector2Array([at + Vector2(-26, 2), at + Vector2(26, 2), at + Vector2(46, 50), at + Vector2(-46, 50)])
+		_backdrop.draw_colored_polygon(glow, Color(color.lightened(0.5), 0.05 * flicker))
+	# A checkered floor running back toward the far wall.
+	var horizon := top + 70.0
+	for row in 7:
+		var near := float(row + 1) / 7.0
+		var far := float(row) / 7.0
+		var y0 := horizon + (bottom - horizon) * far * far
+		var y1 := horizon + (bottom - horizon) * near * near
+		for col in range(-8, 8):
+			if (col + row) % 2 != 0:
+				continue
+			var x0 := center_x + col * 70.0 * lerpf(0.2, 1.0, far)
+			var x1 := center_x + (col + 1) * 70.0 * lerpf(0.2, 1.0, far)
+			var x2 := center_x + (col + 1) * 70.0 * lerpf(0.2, 1.0, near)
+			var x3 := center_x + col * 70.0 * lerpf(0.2, 1.0, near)
+			var tile := PackedVector2Array([Vector2(x0, y0), Vector2(x1, y0), Vector2(x2, y1), Vector2(x3, y1)])
+			_backdrop.draw_colored_polygon(tile, Color(color, 0.1 * _edge_fade(Vector2((x0 + x2) / 2, (y0 + y1) / 2))))
+	# Lunch trays drifting through the air, slowly spinning.
+	for i in 4:
+		var at := Vector2(BACKDROP.position.x + fmod(i * 157.0 + t * (14.0 + i * 5.0), BACKDROP.size.x + 60.0) - 30.0, top + 50 + i * 22 + sin(t * 1.4 + i) * 8)
+		var tilt := sin(t * 1.1 + i * 2.0) * 0.4
+		_backdrop.draw_set_transform(at, tilt, Vector2.ONE)
+		_backdrop.draw_rect(Rect2(-14, -6, 28, 12), Color(0.75, 0.75, 0.8, 0.25 * _edge_fade(at)), false, 1.5)
+		_backdrop.draw_rect(Rect2(-10, -3, 8, 6), Color(0.75, 0.75, 0.8, 0.15 * _edge_fade(at)), false, 1.0)
+		_backdrop.draw_set_transform(Vector2.ZERO)
+	# The stew: a wobbling surface along the bottom.
+	var surface := PackedVector2Array()
+	for k in 41:
+		var x := BACKDROP.position.x + k * BACKDROP.size.x / 40.0
+		surface.append(Vector2(x, bottom - 26 + sin(t * 2.4 + k * 0.6) * 3.0 + sin(t * 1.3 + k * 0.23) * 2.0))
+	var stew := surface.duplicate()
+	stew.append(Vector2(BACKDROP.end.x, bottom))
+	stew.append(Vector2(BACKDROP.position.x, bottom))
+	_backdrop.draw_colored_polygon(stew, Color(color.darkened(0.35), 0.45))
+	_backdrop.draw_polyline(surface, Color(color.lightened(0.2), 0.7), 2.0)
+	# Bubbles rising out of it and popping.
+	for i in 16:
+		var life := fmod(t * (0.5 + (i % 4) * 0.15) + i * 0.37, 1.0)
+		var x := BACKDROP.position.x + fmod(i * 83.0, BACKDROP.size.x)
+		var at := Vector2(x + sin(t * 2.0 + i) * 4.0, bottom - 22 - life * 30.0)
+		var radius := 2.5 + (i % 3) * 1.5
+		var alpha := 0.6 * _edge_fade(at)
+		if life > 0.85:
+			var pop := (life - 0.85) / 0.15
+			_backdrop.draw_arc(at, radius + pop * 5.0, 0, TAU, 10, Color(color, alpha * (1.0 - pop)), 1.0)
 		else:
-			_backdrop.draw_arc(at, radius, 0, TAU, 14, Color(color, alpha), 1.5)
-			_backdrop.draw_circle(at + Vector2(-radius * 0.35, -radius * 0.35), 1.2, Color(color.lightened(0.6), alpha))
+			_backdrop.draw_arc(at, radius, 0, TAU, 10, Color(color.lightened(0.3), alpha), 1.5)
+	# Blobs of stew splashing up and falling back.
+	for i in 3:
+		var period := 1.8 + i * 0.5
+		var hop := fmod(t + i * 0.9, period) / period
+		var base := Vector2(BACKDROP.position.x + 120 + i * 180.0, bottom - 26)
+		var at := base + Vector2(hop * 26.0, -sin(hop * PI) * 60.0)
+		_backdrop.draw_circle(at, 4.0, Color(color.lightened(0.1), 0.7 * _edge_fade(at)))
+		_backdrop.draw_circle(at + Vector2(-5, 3), 2.0, Color(color.lightened(0.1), 0.5 * _edge_fade(at)))
+	# Steam curling up.
+	for i in 6:
+		var life := fmod(t * 0.3 + i * 0.17, 1.0)
+		var base := Vector2(BACKDROP.position.x + 50 + i * 100.0, bottom - 30)
+		var points := PackedVector2Array()
+		for k in 6:
+			var rise := life * 60.0 + k * 8.0
+			points.append(base + Vector2(sin(t * 2.0 + k * 0.9 + i) * 6.0, -rise))
+		_backdrop.draw_polyline(points, Color(1, 1, 1, 0.12 * (1.0 - life)), 3.0)
 
 
 ## Rings of sound pulsing outward from the middle, like a bell ringing.
@@ -2114,3 +2192,137 @@ func _backdrop_static(color: Color, t: float) -> void:
 	# A slow rolling band, like an old TV.
 	var band := BACKDROP.position.y + fmod(t * 30.0, BACKDROP.size.y)
 	_backdrop.draw_rect(Rect2(BACKDROP.position.x, band, BACKDROP.size.x, 6), Color(color, 0.08))
+
+
+# --- Extra layers for the backgrounds ------------------------------------------
+
+## A huge eight-pointed star slowly turning behind the diamonds, glowing, with
+## sparks drifting up (the tutorial).
+func _backdrop_sigil(color: Color, t: float) -> void:
+	var center := BACKDROP.get_center()
+	for layer in 2:
+		var spin := t * (0.15 if layer == 0 else -0.1)
+		var size := 90.0 - layer * 30.0
+		for square in 2:
+			var points := PackedVector2Array()
+			for k in 5:
+				points.append(center + Vector2.from_angle(spin + square * PI / 4 + k * PI / 2) * Vector2(size * 1.6, size))
+			_backdrop.draw_polyline(points, Color(color, 0.18 - layer * 0.05), 2.0)
+	_backdrop.draw_circle(center, 30.0 + sin(t * 2.0) * 4.0, Color(color, 0.06))
+	for i in 18:
+		var life := fmod(t * 0.25 + i * 0.13, 1.0)
+		var at := Vector2(BACKDROP.position.x + fmod(i * 67.0, BACKDROP.size.x), BACKDROP.end.y - life * BACKDROP.size.y)
+		_backdrop.draw_rect(Rect2(at, Vector2(2, 2)), Color(color.lightened(0.5), 0.6 * (1.0 - life) * _edge_fade(at)))
+
+
+## Pencils tumbling down, and red marks (checks and crosses) popping up (Pop Quiz).
+func _backdrop_pencils(color: Color, t: float) -> void:
+	for i in 7:
+		var fall := fmod(t * (22.0 + i * 4.0) + i * 47.0, BACKDROP.size.y + 40.0) - 20.0
+		var at := Vector2(BACKDROP.position.x + 40 + fmod(i * 89.0, BACKDROP.size.x - 80), BACKDROP.position.y + fall)
+		var dir := Vector2.from_angle(t * (1.0 + i % 3) + i)
+		var alpha := 0.55 * _edge_fade(at)
+		_backdrop.draw_line(at - dir * 10, at + dir * 6, Color(0.95, 0.8, 0.25, alpha), 3.0)
+		_backdrop.draw_line(at + dir * 6, at + dir * 10, Color(0.3, 0.25, 0.2, alpha), 2.0)
+		_backdrop.draw_line(at - dir * 10, at - dir * 7, Color(1.0, 0.6, 0.7, alpha), 3.0)
+	for i in 5:
+		var life := fmod(t * 0.4 + i * 0.21, 1.0)
+		var at := Vector2(BACKDROP.position.x + 60 + i * 120.0, BACKDROP.position.y + 40 + (i * 37) % 90)
+		var alpha := sin(life * PI) * 0.6 * _edge_fade(at)
+		var red := Color(1.0, 0.25, 0.25, alpha)
+		if i % 2 == 0:
+			_backdrop.draw_polyline(PackedVector2Array([at + Vector2(-6, 0), at + Vector2(-2, 5), at + Vector2(7, -6)]), red, 2.0)
+		else:
+			_backdrop.draw_line(at + Vector2(-5, -5), at + Vector2(5, 5), red, 2.0)
+			_backdrop.draw_line(at + Vector2(5, -5), at + Vector2(-5, 5), red, 2.0)
+
+
+## Rows of lockers rushing past along the top and bottom, and a wall clock whose
+## hands spin way too fast (Hall Pass).
+func _backdrop_lockers(color: Color, t: float) -> void:
+	for band in 2:
+		var y := BACKDROP.position.y + 8.0 if band == 0 else BACKDROP.end.y - 34.0
+		var speed := 160.0 if band == 0 else 260.0
+		for i in 14:
+			var x := BACKDROP.position.x + fmod(i * 48.0 + t * speed, BACKDROP.size.x + 48.0) - 48.0
+			var locker := Rect2(x, y, 44, 26)
+			var alpha := 0.35 * _edge_fade(locker.get_center())
+			_backdrop.draw_rect(locker, Color(color, alpha * 0.5))
+			_backdrop.draw_rect(locker, Color(color, alpha), false, 1.0)
+			for vent in 3:
+				_backdrop.draw_line(Vector2(x + 8, y + 5 + vent * 3), Vector2(x + 22, y + 5 + vent * 3), Color(color, alpha), 1.0)
+	var clock := Vector2(BACKDROP.get_center().x, BACKDROP.position.y + 100)
+	_backdrop.draw_circle(clock, 22, Color(color, 0.08))
+	_backdrop.draw_arc(clock, 22, 0, TAU, 24, Color(color, 0.4), 2.0)
+	_backdrop.draw_line(clock, clock + Vector2.from_angle(t * 6.0) * 16, Color(color, 0.6), 2.0)
+	_backdrop.draw_line(clock, clock + Vector2.from_angle(t * 0.5) * 10, Color(color, 0.6), 3.0)
+
+
+## A giant bell swinging in the middle, and music notes floating off it (Tardy Bell).
+func _backdrop_bell(color: Color, t: float) -> void:
+	var pivot := Vector2(BACKDROP.get_center().x, BACKDROP.position.y + 20)
+	var swing := sin(t * 2.2) * 0.35
+	_backdrop.draw_set_transform(pivot, swing, Vector2.ONE)
+	var bell := PackedVector2Array([Vector2(-12, 10), Vector2(12, 10), Vector2(22, 60), Vector2(34, 72), Vector2(-34, 72), Vector2(-22, 60)])
+	_backdrop.draw_colored_polygon(bell, Color(color, 0.12))
+	_backdrop.draw_polyline(bell + PackedVector2Array([bell[0]]), Color(color, 0.4), 2.0)
+	_backdrop.draw_circle(Vector2(sin(t * 4.4) * 10, 80), 7, Color(color, 0.35))
+	_backdrop.draw_set_transform(Vector2.ZERO)
+	for i in 8:
+		var life := fmod(t * 0.35 + i * 0.125, 1.0)
+		var side := -1.0 if i % 2 == 0 else 1.0
+		var at := pivot + Vector2(side * (40 + life * 200.0), 70 - life * 50.0 + sin(t * 3 + i) * 8)
+		var alpha := 0.6 * sin(life * PI) * _edge_fade(at)
+		_backdrop.draw_circle(at, 3.5, Color(color.lightened(0.3), alpha))
+		_backdrop.draw_line(at + Vector2(3, 0), at + Vector2(3, -12), Color(color.lightened(0.3), alpha), 1.5)
+		_backdrop.draw_line(at + Vector2(3, -12), at + Vector2(8, -9), Color(color.lightened(0.3), alpha), 1.5)
+
+
+## Books flapping across like birds, and loose pages drifting (Overdue Book).
+func _backdrop_books(color: Color, t: float) -> void:
+	for i in 6:
+		var x := BACKDROP.position.x + fmod(i * 131.0 + t * (30.0 + i * 6.0), BACKDROP.size.x + 60.0) - 30.0
+		var at := Vector2(x, BACKDROP.position.y + 30 + i * 28 + sin(t * 2.0 + i) * 10)
+		var flap := sin(t * 9.0 + i) * 7.0
+		var alpha := 0.5 * _edge_fade(at)
+		var light := color.lightened(0.3)
+		_backdrop.draw_colored_polygon(PackedVector2Array([at, at + Vector2(-12, -flap - 2), at + Vector2(-12, -flap + 5), at + Vector2(0, 6)]), Color(light, alpha * 0.6))
+		_backdrop.draw_colored_polygon(PackedVector2Array([at, at + Vector2(12, -flap - 2), at + Vector2(12, -flap + 5), at + Vector2(0, 6)]), Color(light, alpha * 0.6))
+		_backdrop.draw_line(at, at + Vector2(0, 6), Color(light, alpha), 1.5)
+	for i in 8:
+		var fall := fmod(t * 15.0 + i * 37.0, BACKDROP.size.y + 20.0) - 10.0
+		var at := Vector2(BACKDROP.position.x + fmod(i * 73.0, BACKDROP.size.x) + sin(t * 1.5 + i) * 20.0, BACKDROP.position.y + fall)
+		_backdrop.draw_set_transform(at, sin(t * 2.0 + i) * 0.8, Vector2.ONE)
+		_backdrop.draw_rect(Rect2(-4, -5, 8, 10), Color(0.95, 0.92, 0.82, 0.3 * _edge_fade(at)))
+		_backdrop.draw_set_transform(Vector2.ZERO)
+
+
+## A crowd of silhouettes along the bottom, bouncing and waving (Wally's game).
+func _backdrop_crowd(color: Color, t: float) -> void:
+	for i in 26:
+		var x := BACKDROP.position.x + 12 + i * 23.0
+		var bounce := absf(sin(t * (4.0 + i % 3) + i * 0.7)) * 6.0
+		var at := Vector2(x, BACKDROP.end.y - 8 - bounce)
+		var shade := Color(0.05, 0.04, 0.03, 0.75 * _edge_fade(Vector2(x, BACKDROP.end.y - 30)))
+		_backdrop.draw_circle(at + Vector2(0, -16), 5, shade)
+		_backdrop.draw_rect(Rect2(at + Vector2(-7, -11), Vector2(14, 14)), shade)
+		if i % 4 == 0:
+			# Someone waving a pennant.
+			var wave := sin(t * 6.0 + i) * 0.5
+			var hand := at + Vector2(6, -20)
+			var tip := hand + Vector2.from_angle(-PI / 2 + wave) * 14
+			_backdrop.draw_line(at + Vector2(5, -8), hand, shade, 2.0)
+			_backdrop.draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(8, 3), tip + Vector2(0, 6)]), Color(color, 0.7))
+
+
+## A slow red heartbeat pulsing in from the edges (Hopkuna).
+func _backdrop_heartbeat(color: Color, t: float) -> void:
+	var beat := fmod(t, 1.1)
+	var pulse := maxf(0.0, 1.0 - beat / 0.25) + maxf(0.0, 1.0 - absf(beat - 0.3) / 0.2) * 0.6
+	for i in 6:
+		var inset := i * 10.0
+		_backdrop.draw_rect(BACKDROP.grow(-inset), Color(color, (0.07 - i * 0.01) * (0.4 + pulse)), false, 10.0)
+	var center := BACKDROP.get_center()
+	for side in [-1, 1]:
+		var eye := center + Vector2(side * 30, -10)
+		_backdrop.draw_circle(eye, 10.0 + pulse * 4.0, Color(color, 0.05 + 0.08 * pulse))
