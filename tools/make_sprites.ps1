@@ -2625,9 +2625,9 @@ foreach ($who in $sideUpper.Keys) {
 # The more Elric kills, the more they become someone else (see Game.dread()).
 # Every Elric picture (overworld, walking, running, battle poses, portraits) gets
 # three versions, saved with "elric" changed to "elric_dread1/2/3":
-#   1  Nothing's wrong. Elric just smiles.
-#   2  Halfway: grayer skin, dark circles, darker hair, glowing green eyes, deep
-#      green stains, and a wider smile.
+#   1  Nothing else is wrong yet: just Relic's green eyes.
+#   2  Halfway: grayer skin, dark circles, darker hair, deep green stains, and a
+#      wide smile.
 #   3  RELIC, in the flesh: ash-pale skin, black hair, Relic's green hoodie (the
 #      hem scorched black, from the fire), dark jeans, the curly-fry token on a
 #      cord around their neck, green eyes, and the same wide smile.
@@ -2685,19 +2685,14 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
     }
     foreach ($eye in $eyes) {
         $y = $eye[0]; $x = $eye[1]
-        if ($stage -ge 2) { Set-Pixel $p $y $x '>' }
+        Set-Pixel $p $y $x '>'
         if ($stage -eq 2 -and (Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
     }
-    if ($front) {
-        if ($stage -eq 1) {
-            # Just a smile.
-            Set-Pixel $p 8 (10 + $xoff) 'K'; Set-Pixel $p 8 (13 + $xoff) 'K'
-        } else {
-            # A wide, thin, closed smile, dipping a row lower.
-            Set-Pixel $p 9 (11 + $xoff) $skin; Set-Pixel $p 9 (12 + $xoff) $skin
-            Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
-            Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
-        }
+    if ($front -and $stage -ge 2) {
+        # A wide, thin, closed smile, dipping a row lower.
+        Set-Pixel $p 9 (11 + $xoff) $skin; Set-Pixel $p 9 (12 + $xoff) $skin
+        Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
+        Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
     }
     if ($stage -eq 2) {
         foreach ($s in $stains2) {
