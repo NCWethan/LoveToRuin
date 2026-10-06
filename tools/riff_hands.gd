@@ -15,7 +15,7 @@ extends SceneTree
 ## Writes scripts/ronin_hands.gd. Run with (the video's audio as a WAV):
 ##   godot --headless --path . --script tools/riff_hands.gd -- <video audio.wav>
 
-const RIFF := "res://audio/sfx/ronin_riff.wav"
+const RIFF := "res://audio/sfx/ronin_riff_original.wav"
 const OUT := "res://scripts/ronin_hands.gd"
 const STEP := 0.05
 const VIDEO_STEP := 0.25

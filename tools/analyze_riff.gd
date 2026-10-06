@@ -1,12 +1,13 @@
 extends SceneTree
-## Listens to Ronin's riff (audio/sfx/ronin_riff.wav) and writes scripts/ronin_riff.gd:
+## Listens to Ronin's riff (the original recording, ronin_riff_original.wav) and
+## writes scripts/ronin_riff.gd:
 ## for every 20th of a second, how loud it is, whether a new note was picked, and
 ## roughly how high the note is. His battle animation follows these, so his hands
 ## do what the music does.
 ##
 ## Run with:  godot --headless --path . --script tools/analyze_riff.gd
 
-const SOURCE := "res://audio/sfx/ronin_riff.wav"
+const SOURCE := "res://audio/sfx/ronin_riff_original.wav"
 const OUT := "res://scripts/ronin_riff.gd"
 const STEP := 0.05
 
