@@ -1933,7 +1933,7 @@ const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
 ## eyes stay as long as the wind blows).
 const TENT_SILENCE := 1.6
 ## The last line appears one word at a time (a new word every TENT_WORD_GAP
-## seconds, each fading in), then stays a moment before the black.
+## seconds, appearing all at once), then stays a moment before the black.
 const TENT_WORD_GAP := 0.7
 const TENT_SCREAM_TIME := 6.0
 ## (A long, silent black, so you think it's over...)
@@ -2024,9 +2024,9 @@ func _draw_tent() -> void:
 		var x := 320.0 - _font.get_string_size(TENT_SCREAM, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x / 2.0
 		for k in words.size():
 			var word: String = words[k]
-			var appear := clampf((_tent_time - 0.6 - k * TENT_WORD_GAP) / 0.45, 0.0, 1.0)
-			if appear > 0.0:
-				_overlay.draw_string(_font, Vector2(x, 192), word, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(RELIC_GREEN, appear))
+			# Each word just appears (no fade), one after another.
+			if _tent_time >= 0.6 + k * TENT_WORD_GAP:
+				_overlay.draw_string(_font, Vector2(x, 192), word, HORIZONTAL_ALIGNMENT_LEFT, -1, size, RELIC_GREEN)
 			x += _font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + gap
 	elif _tent_phase in ["black", "wind", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
