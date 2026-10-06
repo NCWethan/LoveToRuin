@@ -45,8 +45,9 @@ static func make_all() -> Dictionary:
 		"file_hit": tone([2349, 3136, 2794], 0.05, 0.17),
 		"squeak": slide(800, 1600, 0.1, 0.18),
 		"black_flash": black_flash(),
-		# The tent: a high, ringing note (as long as the eyes stay; see battle.gd).
-		"ringing": ringing(3100.0, 5.0, 0.16),
+		# The tent: wind over an empty field, made in code (only used if the
+		# recording, audio/sfx/relic_wind.mp3, isn't there).
+		"wind": wind(6.0, 0.35),
 	}
 
 
@@ -147,18 +148,22 @@ static func tone(notes: Array, note_length: float, volume: float) -> AudioStream
 	return _wav(data)
 
 
-## One high, ringing note, like your ears ringing after something far too loud.
-## It's two pure tones a hair apart, so it slowly swims and pulses against itself:
-## not scary, just disorienting. It fades in fast and stops clean at the end.
-static func ringing(freq: float, length: float, volume: float) -> AudioStreamWAV:
+## Wind over an open field: soft, low noise that swells and dies away in slow
+## gusts. It fades in and out.
+static func wind(length: float, volume: float) -> AudioStreamWAV:
 	var count := int(length * RATE)
 	var data := PackedByteArray()
 	data.resize(count * 2)
+	var low := 0.0
+	var lower := 0.0
 	for s in count:
 		var t := float(s) / RATE
-		var value := (sin(TAU * freq * t) + sin(TAU * (freq + 3.0) * t)) * 0.5
-		var fade := minf(1.0, t / 0.04) * minf(1.0, (length - t) / 0.05)
-		data.encode_s16(s * 2, int(value * volume * fade * 32767.0))
+		# Noise, smoothed twice so it's a whoosh rather than a hiss.
+		low += (randf_range(-1.0, 1.0) - low) * 0.08
+		lower += (low - lower) * 0.12
+		var gust := 0.55 + 0.3 * sin(t * 0.9) + 0.15 * sin(t * 2.3 + 1.0)
+		var fade := minf(1.0, t / 0.6) * minf(1.0, (length - t) / 1.2)
+		data.encode_s16(s * 2, int(clampf(lower * 3.0 * gust * volume * fade, -1.0, 1.0) * 32767.0))
 	return _wav(data)
 
 

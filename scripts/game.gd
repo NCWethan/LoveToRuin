@@ -57,7 +57,9 @@ var _objective_banner: CanvasLayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
 ## Sounds that are recordings rather than made in code. To swap one, replace the file.
-const SOUND_FILES := {"ronin_riff": "res://audio/sfx/ronin_riff.wav"}
+## relic_wind: a wind recording ("No Copyright" sound effect), kept out of the public
+## repo until its license is confirmed. Without it, the tent uses wind made in code.
+const SOUND_FILES := {"ronin_riff": "res://audio/sfx/ronin_riff.wav", "relic_wind": "res://audio/sfx/relic_wind.mp3"}
 
 ## Music: two players, so one song can fade out while the next fades in.
 const MUSIC_FOLDER := "res://audio/music/"

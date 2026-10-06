@@ -14,6 +14,9 @@ desktop.ini
 .DS_Store
 
 # Recorded sounds that are not ours to publish (the game falls back to made-up ones).
+# The wind in the tent (license not confirmed yet; the game makes its own without it)
+audio/sfx/relic_wind.mp3
+audio/sfx/relic_wind.mp3.import
 # Demo recordings
 *_demo.gif
 ronin_demo.gif

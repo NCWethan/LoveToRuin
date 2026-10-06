@@ -1929,21 +1929,29 @@ const TENT_LINES := [
 	"* We remember.",
 ]
 const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
-## How long each part lasts: silence, the scream, black, and the ring (the eyes
-## stay as long as the ringing note does: 5 seconds, see sfx.gd).
+## How long each part lasts: silence, the scream, black, and the wind (the green
+## eyes stay as long as the wind blows).
 const TENT_SILENCE := 1.6
 const TENT_SCREAM_TIME := 3.0
 ## (A long, silent black, so you think it's over...)
 const TENT_BLACK_TIME := 1.4
-const TENT_RING_TIME := 5.0
+const TENT_WIND_TIME := 6.0
+## Where in the wind recording to start (its steadiest, strongest stretch), how
+## much louder to play it, and how long its last fade takes.
+const WIND_FILE_START := 40.0
+const WIND_BOOST_DB := 7.0
+const WIND_FADE := 1.2
 
-## "silence", "scream", "black" or "ring".
+## "silence", "scream", "black" or "wind".
 var _tent_phase: String = ""
 var _tent_time: float = 0.0
 ## The color of the text in the box (red for the tent).
 var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
+## How open the three pairs of eyes are (0 to 1). They open with "Three of us."
+## and stay open until the screen goes black.
+var _three_eyes: float = 0.0
 
 ## The jumpscare: two glowing red eyes in the dark.
 ## The eyes, in their own pixels: each one an oval this many pixels across and
@@ -1960,6 +1968,7 @@ func _tent_silence() -> void:
 	state = State.EVENT
 	_tent_phase = "silence"
 	_tent_time = 0.0
+	_three_eyes = 0.0
 
 
 func _process_tent(delta: float) -> void:
@@ -1973,15 +1982,14 @@ func _process_tent(delta: float) -> void:
 			if _tent_time >= TENT_SCREAM_TIME:
 				_tent_phase = "black"
 				_tent_time = 0.0
-				# (Silence. The only sound from here on is the ringing.)
+				# (Silence. The only sound from here on is the wind.)
 		"black":
 			if _tent_time >= TENT_BLACK_TIME:
-				_tent_phase = "ring"
+				_tent_phase = "wind"
 				_tent_time = 0.0
-				# One high note that rings the whole time, and nothing else.
-				Game.play_sfx("ringing")
-		"ring":
-			if _tent_time >= TENT_RING_TIME:
+				_start_wind()
+		"wind":
+			if _tent_time >= TENT_WIND_TIME:
 				_tent_phase = "done"
 				var result := {"id": _data.id, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
 				if Game.pending_battle != "":
@@ -2003,6 +2011,8 @@ func _draw_tent() -> void:
 	if _tent_phase == "scream":
 		# Everything darkens, and the words shake like they're trying to get out.
 		_overlay.draw_rect(Rect2(0, 0, 640, 480), Color(0, 0, 0, clampf(_tent_time * 0.6, 0.0, 0.85)))
+		# The three pairs of eyes are still there, watching, in the dark.
+		_draw_three_of_us(_three_eyes)
 		var size := 28
 		var shown := mini(TENT_SCREAM.length(), int(_tent_time * 40.0))
 		# Each letter gets the same width, so they can shake on their own.
@@ -2015,28 +2025,52 @@ func _draw_tent() -> void:
 			_overlay.draw_string(_font, at + Vector2(2, 2), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.3, 0, 0))
 			_overlay.draw_string(_font, at, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.95, 0.05, 0.1))
 			x += step
-	elif _tent_phase in ["black", "ring", "done"]:
+	elif _tent_phase in ["black", "wind", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
-		if _tent_phase == "ring":
+		if _tent_phase == "wind":
 			_draw_jumpscare(_tent_time)
-	elif _tent_phase == "silence" and _text.begins_with("* Three of us"):
-		_draw_three_of_us()
+	elif _tent_phase == "silence":
+		# They open as "Three of us." types out, and stay open after it.
+		if _text.begins_with("* Three of us"):
+			_three_eyes = maxf(_three_eyes, clampf(_typed / maxf(_text.length(), 1.0), 0.0, 1.0))
+		if _three_eyes > 0.0:
+			_draw_three_of_us(_three_eyes)
 
 
-## The jumpscare, over black: two glowing red eyes, huge, right in the middle of
-## the screen. They just appear, and they stay, perfectly still and steady, for as
-## long as the note rings.
+## The end, over black: two glowing green eyes (Relic's), huge, right in the
+## middle of the screen. They just appear, and they stay, perfectly still, for as
+## long as the wind blows.
 func _draw_jumpscare(_time: float) -> void:
-	_draw_eyes(Vector2(320, 220), 12.0, 1.0)
+	_draw_eyes(Vector2(320, 220), 12.0, 1.0, Color(0.5, 1.0, 0.6), Color(0.05, 0.55, 0.2))
 
 
-## "Three of us.": three pairs of eyes open in the dark above the text, one after
-## another: the red ones in front, and a blue pair and a yellow pair behind them.
-func _draw_three_of_us() -> void:
-	var shown := clampf(_typed / maxf(_text.length(), 1.0), 0.0, 1.0)
-	_draw_eyes(Vector2(290, 60), 4.5, 0.55 * shown, Color(0.35, 0.65, 1.0), Color(0.05, 0.15, 0.7))
-	_draw_eyes(Vector2(440, 60), 4.5, 0.55 * shown, Color(1.0, 0.9, 0.35), Color(0.75, 0.55, 0.0))
-	_draw_eyes(Vector2(365, 82), 6.0, shown)
+## The only sound at the end of the tent: wind, the wind over the field where
+## Relic died (the first hint of how). It fades out as the eyes go.
+func _start_wind() -> void:
+	var player := AudioStreamPlayer.new()
+	player.bus = "SFX"
+	var start := 0.0
+	if Game.has_sfx("relic_wind"):
+		player.stream = load(Game.SOUND_FILES["relic_wind"])
+		start = WIND_FILE_START
+		player.volume_db = WIND_BOOST_DB
+	else:
+		player.stream = Sfx.wind(TENT_WIND_TIME, 0.35)
+	add_child(player)
+	player.play(start)
+	var fade := create_tween()
+	fade.tween_interval(TENT_WIND_TIME - WIND_FADE)
+	fade.tween_property(player, "volume_db", -60.0, WIND_FADE)
+	fade.tween_callback(player.stop)
+
+
+## "Three of us.": three pairs of eyes open in the dark above the text. In front,
+## green: Relic. Behind, red (Hopkuna) and purple (Elric, the color of their skin).
+## `shown` is how open they are (0 to 1).
+func _draw_three_of_us(shown: float) -> void:
+	_draw_eyes(Vector2(290, 60), 4.5, 0.55 * shown)
+	_draw_eyes(Vector2(440, 60), 4.5, 0.55 * shown, Color(0.85, 0.6, 1.0), Color(0.45, 0.15, 0.75))
+	_draw_eyes(Vector2(365, 82), 6.0, shown, Color(0.5, 1.0, 0.6), Color(0.05, 0.55, 0.2))
 
 
 ## Two tall oval eyes, glowing, made of chunky square pixels (`cell` screen pixels

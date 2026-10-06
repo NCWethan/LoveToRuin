@@ -92,9 +92,11 @@ Each shopkeeper has their own things to talk about (some only after something ha
 
 **Relic is to Elric what Chara is to Frisk.** (RELIC is an anagram of ELRIC.) Relic's color is **green** (Hopkuna's is red), so the two are never confused.
 
+Pronouns: they/them
+
 **Who Relic was**
 - **Hop's best friend**, years ago. A wanderer with nowhere to be, like Elric.
-- One night they were both in real danger, and Hop let **Hopkuna** out for the very first time. Hopkuna saved Hop's body. **Relic didn't survive.**
+- One night, on **Westview Field**, they were both in real danger, and Hop let **Hopkuna** out for the very first time. Hopkuna saved Hop's body. **Relic didn't survive.** (It's the same field where Hopkuna comes out again at the end of Chapter 1.)
 - With their last strength, Relic tore Hopkuna's power out of Hop and **shattered it into the 12 fragments**. What was left of Relic went with them. That's why Hop treats Hopkuna as a last resort, and why he goes still whenever the old story comes up.
 
 **Relic and Elric**
@@ -111,7 +113,8 @@ Each shopkeeper has their own things to talk about (some only after something ha
 - Arriving at Westview, Hop slips: "Rel-- Elric. Stay close, okay?" (and blames the late hour).
 - Nat's story: "Somebody gave everything to break it apart. The book doesn't say who."
 - After Hopkuna leaves, Hop: "The last time I let him out, I lost somebody. I swore it would never happen again."
-- Hopkuna on Westview Field: "The last time was years ago. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
+- The tent's ending: Relic's green eyes in the dark, and the wind of the field they died on (the first sign of how they died).
+- Hopkuna on Westview Field: "The last time was years ago. Right here, on this field. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
 - The first dream (resting on the bunk at the base, Pacifist or Neutral): the voice in the dark, with different words for each route.
 - Rooster's mirror at the base: the first time, "(For a second, the reflection looks like someone else.)" (Rooster is not happy you're using it.)
 - The trophy case in Westview's hallway (set into the wall): "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do; with a lot (10+ kills in Chapter 1), it smiles while you don't. On the Genocide route: "It's me, RELIC."
@@ -431,7 +434,7 @@ Elric is a traveling adventurer with no fixed home.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **Big Joe** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
-4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time in years** (the first time since the night Relic died; see [Relic](#relic)) — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
+4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time in years** (the first time since the night Relic died, on this same field; see [Relic](#relic)) — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
    - **The 3rd fragment erupts:** when Elric and Hop uncover it under the big field, its unstable power lashes out — straight at Elric.
    - **Hop takes the hit:** **Hop jumps in front of it** and is badly hurt.
    - **Hopkuna erupts:** tattoos spread and the red tint washes over Hop's body. Hopkuna came out to save Hop's body — and, technically, **Elric's life**.
@@ -650,7 +653,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
   - **Mystery Meat** (cafeteria): gravy blobs that splatter, spinning lunch trays, a spread of peas. ACT: Compliment, Add Salt, Take a Bite (don't).
   - **Tardy Bell** (all sound): rolling sound waves with a gap, SONAR rings that pulse out with a quiet gap to slip through, the CLAPPER swinging across the box like a pendulum, a ring of notes, and the alarm. ACT: Cover Ears, Be On Time.
   - **Overdue Book** (47 years late): fluttering pages, bookmarks aimed at you, a sliding bookshelf with a gap. ACT: Read It, Return It, Shush.
-  - **The tent** (very rare, ~1%): a three-person tent. The music cuts off. Red text crawls into the box ("We were here, too." "Three of us." "We remember."), then **DID YOU THINK WE WOULD FORGET?** shakes across the screen, everything goes black, and after a long, silent black, **two glowing red eyes** appear: nothing else, just a pair of tall oval eyes made of chunky red pixels with a blocky glow, close together in the dark. They don't move; they stay there, perfectly still, for five seconds, and then you're put back where you were. The only sound is **one high, ringing note** for the whole time the eyes are up, like your ears ringing after something far too loud: two pure tones a hair apart (3100 and 3103 Hz), so it slowly swims and pulses against itself. It isn't meant to be scary so much as disorienting. (Made in code: Sfx.ringing.) Earlier, during "Three of us.", the red eyes open in the dark above the text, with a blue pair and a yellow pair behind them.
+  - **The tent** (very rare, ~1%): a three-person tent. The music cuts off. Red text crawls into the box ("We were here, too." "Three of us." "We remember."), then **DID YOU THINK WE WOULD FORGET?** shakes across the screen, everything goes black, and after a long, silent black, **two glowing green eyes** appear (Relic's): nothing else, just a pair of tall oval eyes made of chunky green pixels with a blocky glow, close together in the dark. They don't move; they stay there, perfectly still, for six seconds, and then you're put back where you were. The only sound is **wind**: the wind over the field where Relic died, the first sign of how they died. It fades out as the eyes go. (audio/sfx/relic_wind.mp3, kept out of the public repo until its license is confirmed; without it, the game makes its own wind: Sfx.wind.) Earlier, during "Three of us.", three pairs of eyes open in the dark above the text: **green** in front (Relic), with **red** (Hopkuna) and **purple** (Elric, the color of their skin) behind. They stay open through "We remember." and the scream, until the screen goes black.
 - **Wally is a miniboss** with **his own upbeat fight song** ("wally"), a dance in battle (hopping to the beat, swaying, spinning every eighth beat), a gold boss health bar with claw marks, **350 HP**, faster attacks that speed up again below half health, and three extra attacks (rising bleachers, a mascot spin that flings claws in a spiral, and FRENZY: claws and dodgeballs at once). Sparing him is a challenge: four ACTs (Cheer, Look Inside, Paw Five, The Wave) worth a little each, and he gets bored if the same ACT is used twice in a row, even by different party members.
 - **Afterwards** — Wally's costume slumps to the floor (it stays there, empty), and fragment 2 floats up out of it and **hangs in the air**. Elric has to walk over to take it. Hop reaches for it, his shadow looks *wrong* for a moment, and he slips: *"Two down, huh?"* Elric asks if he's okay. The emergency exit leads on toward Westview Field.
 

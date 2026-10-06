@@ -491,10 +491,10 @@ func _bunks() -> void:
 
 
 ## The first dream: the voice that came with the fragments. It doesn't know Elric
-## yet, only that Elric is carrying it. (It's Relic: Hop's friend, who died the
-## first night Hopkuna came out, and broke his power into the twelve fragments.
-## What's left of them is in the fragments, and rides along with whoever carries
-## them.) What it wants depends on the route.
+## yet, only that Elric is carrying it. (It's Relic: Hop's friend, who died on
+## Westview Field the first night Hopkuna came out, and broke Hopkuna's power
+## into the twelve fragments. What's left of them is in the fragments, and rides
+## along with whoever carries them.) What it wants depends on the route.
 const DREAM_START := [
 	"* (You close your eyes.)",
 	"* (...)",

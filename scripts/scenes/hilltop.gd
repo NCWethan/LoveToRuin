@@ -697,7 +697,7 @@ func _eruption() -> void:
 	Game.save_settings()
 	await Game.dialogue.say([
 		{"who": "Hopkuna", "text": "He was always so careful.\nOnly let me out when he had no other choice."},
-		{"who": "Hopkuna", "text": "The last time was years ago.\nHe had a friend back then, too."},
+		{"who": "Hopkuna", "text": "The last time was years ago. Right here,\non this field. He had a friend back then, too."},
 		{"who": "Hopkuna", "text": "...Hm. You have the same look.\nNowhere to go, and walking anyway."},
 		{"who": "Hopkuna", "text": "I know that look.\nI killed the last one who had it."},
 		"* (Something in the fragments goes cold.)",
