@@ -36,7 +36,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 ### Shops
 
-Going into a shop fades to a whole different screen, like Undertale: the shop itself at the top, with the shopkeeper big behind the counter and everything they sell drawn on the shelves, menu boards and display case behind them (pixel pictures in `scripts/ui/shop_art.gd`); what they say in the box at the bottom left (typed out in their voice, with their face changing); and **Buy / Sell / Talk / Exit** at the bottom right, with your money and how full your bag is. Browsing shows what each thing does in a little panel; buying asks first, and the shopkeeper reacts (some things get their own line). Each shop has its **own song**. Everything a shop sells and says is in `scripts/shops.gd`.
+The door chimes as you go in and out. Going into a shop fades to a whole different screen, like Undertale: the shop itself at the top, with the shopkeeper big behind the counter and everything they sell drawn on the shelves, menu boards and display case behind them (pixel pictures in `scripts/ui/shop_art.gd`); what they say in the box at the bottom left (typed out in their voice, with their face changing); and **Buy / Sell / Talk / Exit** at the bottom right, with your money and how full your bag is. Browsing shows what each thing does in a little panel; buying asks first, and the shopkeeper reacts (some things get their own line). Each shop has its **own song**. Everything a shop sells and says is in `scripts/shops.gd`.
 
 | Shop | Shopkeeper | Sells | Song |
 |---|---|---|---|
@@ -45,7 +45,7 @@ Going into a shop fades to a whole different screen, like Undertale: the shop it
 | **Knotty Barrel** | **Big Lou**, the chef: tall hat, huge beard, yells everything. | Clam Chowder, Fish & Chips, Salmon Burger | A sea shanty |
 | **Games & Cards** | **Old Man Pip**, back from getting a sandwich (it's been years). Opens in the afternoon. The only one who **buys** things: $2 each, flat rate, since 1987. | Card Pack Gum, Candy Dice, five **cards** (see below), and the **Divergent Glove** from his glass case of oddities | An old ragtime music box |
 
-Each shopkeeper has their own things to talk about (some only after something has happened, like Rock Paper Scissors or Nat's story), their own reasons not to buy your stuff, and their own goodbye. If Elric has been killing things, they're nervous when you come in.
+Each shopkeeper has their own things to talk about (some only after something has happened, like Rock Paper Scissors or Nat's story), marked NEW until you've asked, their own reasons not to buy your stuff, and their own goodbye. If Elric has been killing things, they're nervous when you come in.
 
 **On the Genocide route (once everyone has gone; it starts after Chapter 1, so this is for coming back to the mall later):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it. At Vons, Gloria's CLOSED sign is on top, and under it Nassan's note: to Elric, personally, five pages of receipt paper (LEFT / RIGHT flips them): the plan on his wall with Elric's name on it, Hop coming by every day to talk about Elric, looking for the step where he could have stopped it.
 

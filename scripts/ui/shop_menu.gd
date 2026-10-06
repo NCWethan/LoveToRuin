@@ -340,7 +340,13 @@ func _pick_row() -> void:
 			_reply_with("Sell the\n%s for $%d?" % [Game.items[_cursor]["name"], _shop["buys"]])
 			_reply_typed = 99.0
 		Mode.TALK:
+			Game.flags[_topic_flag(_shop["talk"][_cursor])] = true
 			_say_lines(_shop["talk"][_cursor]["lines"], Mode.TALK)
+
+
+## The flag remembering that a talk topic has been heard (per shopkeeper).
+func _topic_flag(topic: Dictionary) -> String:
+	return "heard_%s_%s" % [_shop["sprite"], str(topic["topic"]).to_lower().replace(" ", "_")]
 
 
 ## Gear (weapons and things to wear) is one of a kind: once bought, it's SOLD OUT.
@@ -433,6 +439,10 @@ func _draw_left() -> void:
 				color = Color.YELLOW if rows[i] != "SOLD OUT" else Color(1.0, 0.55, 0.55)
 				_draw_heart(Vector2(at.x + 6, y - 6))
 			_panel.draw_string(_font, Vector2(at.x + 24, y), rows[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+			# Topics you haven't asked about yet are marked NEW.
+			if _mode == Mode.TALK and i < _list().size() and not Game.flags.get(_topic_flag(_list()[i]), false):
+				var w := _font.get_string_size(rows[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+				_panel.draw_string(_font, Vector2(at.x + 32 + w, y - 1), "NEW", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1.0, 0.85, 0.3))
 		return
 	if _mode == Mode.READING:
 		_draw_note(_pages[_page])
