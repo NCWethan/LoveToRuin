@@ -40,7 +40,7 @@ Going into a shop fades to a whole different screen, like Undertale: the shop it
 
 | Shop | Shopkeeper | Sells | Song |
 |---|---|---|---|
-| **Vons** | **Gloria**, the manager (22 years, a stopwatch, gray bun, glasses). Once Elric has met Nassan, **Nassan** works the register: he got hired *recently* (Tuesday). | Groceries (Trail Mix, Soda, Granola Bar, Deli Sandwich); from the health & beauty and seasonal aisles, a Nail File, Rain Poncho and Flip-Flops | Grocery-store muzak |
+| **Vons** | **Gloria**, the manager (22 years, a stopwatch, gray bun, glasses). In the evening she's out front locking up (and proud of her new hire). Once Elric has met Nassan, **Nassan** works the register: he got hired *recently* (Tuesday). | Groceries (Trail Mix, Soda, Granola Bar, Deli Sandwich); from the health & beauty and seasonal aisles, a Nail File, Rain Poncho and Flip-Flops | Grocery-store muzak |
 | **Jack in the Box** | **Dex**, 16, headset, permanently unimpressed. Open late; different greeting at night. | Two Tacos, Egg Rolls, Curly Fries, Burger (the shake machine is OUT OF ORDER) | A bouncy fast-food jingle |
 | **Knotty Barrel** | **Big Lou**, the chef: tall hat, huge beard, yells everything. | Clam Chowder, Fish & Chips, Salmon Burger | A sea shanty |
 | **Games & Cards** | **Old Man Pip**, back from getting a sandwich (it's been years). Opens in the afternoon. The only one who **buys** things: $2 each, flat rate, since 1987. | Card Pack Gum, Candy Dice, five **cards** (see below), and the **Divergent Glove** from his glass case of oddities | An old ragtime music box |

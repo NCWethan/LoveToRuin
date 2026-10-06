@@ -52,6 +52,8 @@ const SPOTS := {
 		"MuffinMage": Vector2(600, 236), "Rooster": Vector2(430, 528), "Sansworth": Vector2(330, 330),
 		"Nat": Vector2(910, 298), "Nassan": Vector2(640, 400),
 		"Agent": Vector2(690, 400),
+		# Gloria, out front, locking up Vons.
+		"Gloria": Vector2(222, 172),
 	},
 	"night": {
 		"NCWethan": Vector2(700, 470), "Ronin": Vector2(740, 470), "Nat": Vector2(910, 298),
@@ -887,6 +889,14 @@ const LATER_LINES := {
 		],
 	},
 	"evening": {
+		"Gloria": [
+			[
+				{"who": "Gloria", "text": "We're closed, hon. Come back tomorrow."},
+				{"who": "Gloria", "text": "Your friend Nassan bags faster than anyone\nI've trained in twenty-two years.", "mood": "happy"},
+				{"who": "Gloria", "text": "Don't tell him I said that.\nHe'll make a chart.", "mood": "smug"},
+			],
+			[{"who": "Gloria", "text": "Go home, hon. It's getting dark.\nNothing good happens around here after dark.", "mood": "sad"}],
+		],
 		"Crayola": [
 			[{"who": "Crayola", "text": "Nat said I could sit here if I was quiet.", "mood": "happy"}, {"who": "Nat", "text": "You're doing great.", "mood": "smug"}, {"who": "Crayola", "text": "...Thanks.", "mood": "happy"}],
 		],
