@@ -322,15 +322,18 @@ func _arrival() -> void:
 
 ## A voice with no face explains what Elric is here to do, and how the game works,
 ## then asks how they plan to do it. (It's Hopkuna. Nobody knows that yet.)
+## He has DETERMINATION too: if you've RESET, he knows (see _reset_greeting).
 func _the_voice() -> void:
 	var voice := func(text: String) -> Dictionary:
 		return {"who": "Hopkuna", "tag": "???", "face": false, "text": text}
 	Game.stop_music(1.0)
 	await get_tree().create_timer(0.8).timeout
-	await Game.dialogue.say([
+	var lines: Array = [
 		"* (...)",
 		"* (Something speaks.\n*  You can't tell where it's coming from.)",
-		voice.call("...Oh? A wanderer.\nHaven't seen one of you in a while."),
+	]
+	lines.append_array(_reset_greeting(voice))
+	lines.append_array([
 		voice.call("You feel it, don't you? Something pulling at you.\nThat's the FRAGMENTS."),
 		voice.call("Twelve of them. Scattered all over this city.\nLittle pieces of something very old."),
 		voice.call("Here is your OBJECTIVE, little wanderer:\nfind them. All twelve."),
@@ -344,8 +347,19 @@ func _the_voice() -> void:
 		voice.call("So."),
 		voice.call("Here is your objective.\nHow will you do it?"),
 	])
+	await Game.dialogue.say(lines)
 	var choice := await Game.dialogue.ask("* (How will you do it?)", ["Talk it out", "Fight my way", "...I don't know"])
-	Game.flags["first_answer"] = ["talk", "fight", "unsure"][choice]
+	var answer: String = ["talk", "fight", "unsure"][choice]
+	Game.flags["first_answer"] = answer
+	# If he remembers what you said last time, he notices whether it changed.
+	var previous := Game.last_answer
+	Game.last_answer = answer
+	Game.save_settings()
+	if Game.met_hopkuna and Game.resets > 0 and previous != "":
+		if previous == answer:
+			await Game.dialogue.say([voice.call("Same answer as last time.\nOf course it is.")])
+		else:
+			await Game.dialogue.say([voice.call("That's not what you said last time.\nChanging your story already?")])
 	match choice:
 		0:
 			await Game.dialogue.say([
@@ -369,6 +383,32 @@ func _the_voice() -> void:
 	Game.play_music("mt_carmel", 1.0)
 	Game.set_objective("Find the 12 FRAGMENTS.")
 	await get_tree().create_timer(0.6).timeout
+
+
+## How the voice greets you. The first time: a wanderer it hasn't seen in a while.
+## After a RESET, before you ever reached him: it can't place why you're
+## familiar. After a RESET once you have: it knows exactly what you did.
+func _reset_greeting(voice: Callable) -> Array:
+	if Game.resets == 0:
+		return [voice.call("...Oh? A wanderer.\nHaven't seen one of you in a while.")]
+	if not Game.met_hopkuna:
+		return [
+			voice.call("...Oh? A wanderer.\nHaven't seen one of you in a wh-"),
+			voice.call("..."),
+			voice.call("No. That's not right.\nI HAVE seen you."),
+			voice.call("Recently.\n...How strange."),
+		]
+	var lines: Array = [
+		voice.call("..."),
+		voice.call("...Oh. It's you."),
+		voice.call("Back at the very beginning, are we?"),
+		voice.call("The road. The school. That little club.\nThey've all forgotten you already."),
+		voice.call("Not me."),
+	]
+	if Game.resets > 1:
+		lines.append(voice.call("That's %d times now, little wanderer.\nI've been counting." % Game.resets))
+	lines.append(voice.call("Fine. I'll explain it all again.\nI'm very patient."))
+	return lines
 
 
 func _talk_to_hop() -> void:

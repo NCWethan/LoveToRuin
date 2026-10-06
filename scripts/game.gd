@@ -152,8 +152,11 @@ func reduce_flashing() -> bool:
 ## the save). Hopkuna has DETERMINATION too: he notices.
 ## resets: how many times a save file has been erased.
 ## met_hopkuna: whether you've ever seen him wake up.
+## last_answer: how you told him you'd do it, the last time ("talk", "fight",
+##   "unsure", or "" if you never got that far).
 var resets: int = 0
 var met_hopkuna: bool = false
+var last_answer: String = ""
 
 
 ## Two audio buses, "Music" and "SFX", so each can have its own volume.
@@ -173,6 +176,7 @@ func load_settings() -> void:
 			settings[key] = file.get_value("settings", key, settings[key])
 		resets = file.get_value("memory", "resets", 0)
 		met_hopkuna = file.get_value("memory", "met_hopkuna", false)
+		last_answer = file.get_value("memory", "last_answer", "")
 	apply_settings()
 
 
@@ -182,6 +186,7 @@ func save_settings() -> void:
 		file.set_value("settings", key, settings[key])
 	file.set_value("memory", "resets", resets)
 	file.set_value("memory", "met_hopkuna", met_hopkuna)
+	file.set_value("memory", "last_answer", last_answer)
 	file.save(settings_path)
 
 
