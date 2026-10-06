@@ -105,7 +105,17 @@ func _process(_delta: float) -> void:
 		Step.LIST:
 			# Under the items: "Team" (once you've met Hop), "Encyclopedia", "Settings".
 			var rows := Game.items.size() + (3 if _team_shown() else 2)
-			if up or down:
+			var bottom := Game.items.size()
+			if _cursor >= bottom and (left or right):
+				# The bottom row is side by side: left and right (A and D) move along it.
+				_cursor = bottom + wrapi(_cursor - bottom + (1 if right else -1), 0, rows - bottom)
+				Game.play_sfx("move")
+			elif _cursor >= bottom and (up or down):
+				# Up goes back to the items (down wraps to the top).
+				if bottom > 0:
+					_cursor = bottom - 1 if up else 0
+					Game.play_sfx("move")
+			elif up or down:
 				_cursor = wrapi(_cursor + (1 if down else -1), 0, rows)
 				Game.play_sfx("move")
 			elif confirm:

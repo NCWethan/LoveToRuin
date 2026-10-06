@@ -275,18 +275,24 @@ func add_npc(who: String, at: Vector2, talk: Callable, label: String = "") -> Ch
 	var npc := Cast.make(who)
 	npc.add_to_group("npc")
 	npc.set_meta("home", at)
+	npc.set_meta("who", who)
 	npc.on_interact = func() -> void:
 		npc.face(player.position - npc.position)
-		# On the Genocide path, people are afraid of Elric.
-		if Game.dread() >= 2:
+		# With dread, people are afraid of Elric: now and then at first, more and
+		# more often after. Whoever flinches is nervous the whole conversation.
+		var stage := Game.dread()
+		var flinched: bool = stage > 0 and not who in STAY_PUT and randf() < FLINCH_CHANCE[stage]
+		if flinched:
 			var who_name := label if label != "" else DialogueBox.display_name(who)
 			var line := "* (%s flinches when you get close.)"
 			if Game.on_genocide_route():
 				line = "* %s backs away from us.\n* Smart."
-			elif Game.dread() >= 3:
+			elif stage >= 3:
 				line = "* (%s backs away from you.\n*  They won't look you in the eye.)"
 			await Game.dialogue.say([line % who_name])
+		Game.dialogue.nervous = flinched
 		await talk.call()
+		Game.dialogue.nervous = false
 	return add_character(npc, at)
 
 
@@ -347,22 +353,31 @@ func handle_person_return() -> bool:
 # --- Genocide: the world changes with Elric -------------------------------------
 # The colors stay the same. But something's wrong: every so often a red vignette
 # creeps in around the edges of the screen, pulsing like a heartbeat, then fades.
-# dread 1: now and then, faintly; the music drags a little.
-# dread 2: more often; slower music; people back away from Elric and flinch.
-# dread 3: often, and strong; the music is replaced by the Genocide song (the
-#          fragment music, slowed down and drowned in reverb); people keep away.
+# dread 1: now and then, faintly; the music drags a little; once in a while
+#          someone flinches.
+# dread 2: more often; slower music; people back away from Elric.
+# dread 3: often; people run when Elric gets close.
+# dread 4: (Relic) strong; the Genocide song (the fragment music, slowed down and
+#          drowned in reverb); people run and hide, and peek out at Elric.
+# (On the Genocide route, the Genocide song plays from the start.)
 
-const DREAD_MUSIC_PITCH := [1.0, 0.95, 0.9, 1.0]
+const DREAD_MUSIC_PITCH := [1.0, 0.95, 0.9, 0.86, 1.0]
 ## How strong the red vignette gets, and the wait between times it appears
 ## (a random number of seconds in this range).
-const DREAD_VIGNETTE := [0.0, 0.3, 0.45, 0.62]
-const DREAD_VIGNETTE_GAP := [Vector2.ZERO, Vector2(18, 30), Vector2(10, 20), Vector2(5, 12)]
+const DREAD_VIGNETTE := [0.0, 0.25, 0.38, 0.5, 0.62]
+const DREAD_VIGNETTE_GAP := [Vector2.ZERO, Vector2(22, 36), Vector2(14, 26), Vector2(9, 18), Vector2(5, 12)]
 ## How long the vignette lasts each time, in seconds.
 const VIGNETTE_LENGTH := 3.4
-## How close Elric can get before someone backs away, and how far they'll back off
-## from where they were standing (not too far: you can still reach them to talk).
-const AVOID_RADIUS := [0.0, 0.0, 56.0, 72.0]
-const AVOID_LEASH := 34.0
+## How close Elric can get before someone backs away, how far they'll go from
+## where they were standing, and how fast. At 2 they back off a little (you can
+## still reach them to talk); at 3 they run; at 4 they run and hide.
+const AVOID_RADIUS := [0.0, 0.0, 56.0, 96.0, 150.0]
+const AVOID_LEASH := [0.0, 0.0, 34.0, 80.0, 170.0]
+const AVOID_SPEED := [0.0, 0.0, 70.0, 150.0, 175.0]
+## How likely someone is to flinch when Elric talks to them.
+const FLINCH_CHANCE := [0.0, 0.15, 0.35, 0.65, 1.0]
+## People who never budge (busy with their game at the board).
+const STAY_PUT := ["NCWethan", "Ronin"]
 
 var _vignette: TextureRect
 ## Seconds until the vignette next appears, and how far into it we are (-1: not showing).
@@ -398,7 +413,7 @@ func _add_dread() -> void:
 	_vignette_wait = randf_range(3.0, DREAD_VIGNETTE_GAP[stage].x)
 	get_tree().process_frame.connect(_update_vignette)
 	Game.music_pitch = DREAD_MUSIC_PITCH[stage]
-	if stage >= 3 or Game.on_genocide_route():
+	if stage >= 4 or Game.on_genocide_route():
 		Game.music_override = "genocide"
 	if AVOID_RADIUS[stage] > 0.0:
 		get_tree().process_frame.connect(_keep_away)
@@ -436,20 +451,53 @@ func _update_vignette() -> void:
 func _keep_away() -> void:
 	if Game.busy or Game.transitioning or player == null:
 		return
-	var radius: float = AVOID_RADIUS[Game.dread()]
+	var stage := Game.dread()
+	var radius: float = AVOID_RADIUS[stage]
 	var delta := get_process_delta_time()
+	var t := Time.get_ticks_msec() / 1000.0
 	for npc in get_tree().get_nodes_in_group("npc"):
 		if not is_instance_valid(npc) or not npc.visible or npc.follow != null or npc.is_busy_moving():
 			continue
-		var away: Vector2 = npc.position - player.position
-		if away.length() > radius or away.length() < 0.1:
+		if npc.get_meta("who", "") in STAY_PUT:
 			continue
+		var away: Vector2 = npc.position - player.position
 		var home: Vector2 = npc.get_meta("home", npc.position)
-		var wanted: Vector2 = npc.position + away.normalized() * 70.0 * delta
-		if wanted.distance_to(home) <= AVOID_LEASH:
+		if away.length() > radius or away.length() < 0.1:
+			# Far enough away: at the end, they peek out at Elric now and then from
+			# wherever they ran to, then duck back.
+			if stage >= 4 and npc.position.distance_to(home) > 20.0 and away.length() < 320.0:
+				var peek := fmod(t + npc.get_instance_id() % 7, 3.0) < 0.6
+				npc.face(-away if peek else away)
+			continue
+		var direction := away.normalized()
+		# Running and hiding: they head for the nearest wall (out of sight, around a
+		# corner) rather than straight back.
+		var wanted: Vector2 = npc.position + direction * AVOID_SPEED[stage] * delta
+		if wanted.distance_to(home) <= AVOID_LEASH[stage] and _can_stand(npc, wanted):
 			npc.position = wanted
+		else:
+			# Blocked (a wall, or as far as they'll go): try sliding sideways instead.
+			for side in [direction.orthogonal(), -direction.orthogonal()]:
+				var slide: Vector2 = npc.position + side * AVOID_SPEED[stage] * 0.7 * delta
+				if side.dot(away) >= -0.2 and slide.distance_to(home) <= AVOID_LEASH[stage] and _can_stand(npc, slide):
+					npc.position = slide
+					break
 		# Turned away from Elric.
 		npc.face(away)
+
+
+## Whether someone could stand at `at` without being inside a wall, a tree,
+## furniture or another person (so nobody backs away through a wall).
+func _can_stand(npc: Character, at: Vector2) -> bool:
+	var params := PhysicsShapeQueryParameters2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(12, 6)
+	params.shape = shape
+	params.transform = Transform2D(0.0, at + Vector2(0, -4))
+	params.collision_mask = 1
+	if npc._body:
+		params.exclude = [npc._body.get_rid()]
+	return get_world_2d().direct_space_state.intersect_shape(params, 1).is_empty()
 
 
 ## The usual way to talk to someone: `first` the first time,

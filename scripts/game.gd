@@ -223,7 +223,9 @@ func set_objective(text: String) -> void:
 
 ## Resets everything to the very start of the game.
 func new_game() -> void:
+	# Just Elric, until they meet Hop (see _build_partner).
 	party = TutorialBattle.create_party()
+	party.resize(1)
 	items = TutorialBattle.create_items()
 	bond = 0
 	exp_points = 0
@@ -372,6 +374,12 @@ func set_partner(id: String) -> void:
 
 ## Puts the partner into the party (after Elric), with their stats.
 func _build_partner() -> void:
+	# Nobody comes along until Elric meets Hop.
+	if not flags.get("met_hop", false):
+		if party.size() > 1:
+			party.resize(1)
+		update_stats()
+		return
 	var id := partner()
 	if party.size() > 1 and party[1].id == id:
 		return
@@ -575,7 +583,7 @@ func start_battle(battle_id: String, from_scene: String, at: Vector2, random: bo
 ## How far down the Genocide path Elric has gone, from 0 to 3, by how many enemies
 ## they've defeated instead of sparing (or 3 once they've gone with Hop). It changes
 ## how Elric looks (sprite_base), how the world looks (Area), and how people act.
-const DREAD_KILLS := [2, 6, 10]
+const DREAD_KILLS := [8, 20, 40, 75]
 
 
 ## Elric chose to go with Hop (Hopkuna) at the end of Chapter 1. Killing a lot
@@ -585,7 +593,7 @@ func on_genocide_route() -> bool:
 	return flags.get("route", "") == "genocide"
 
 
-## (1: Elric just smiles. 2: halfway. 3: Relic, in the flesh.) The Genocide route
+## (1: green eyes. 2: halfway. 3: nearly gone. 4: Relic, in the flesh.) The Genocide route
 ## starts halfway; only the very end of the killing makes Elric into Relic.
 func dread() -> int:
 	var kills := int(flags.get("kills", 0))
@@ -599,7 +607,7 @@ func dread() -> int:
 
 
 ## The start of a character's picture file names: "hop" for Hop, and for Elric
-## "elric", or "elric_dread1" to "elric_dread3" as they get worse.
+## "elric", or "elric_dread1" to "elric_dread4" (Relic) as they get worse.
 func sprite_base(who: String) -> String:
 	if who == "Elric" and dread() > 0:
 		return "elric_dread%d" % dread()

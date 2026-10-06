@@ -323,6 +323,9 @@ func _arrival() -> void:
 
 
 func _head_east() -> void:
+	if flag("mall_done"):
+		await Game.change_scene(WESTVIEW_SCENE)
+		return
 	if not flag("heard_westview"):
 		await Game.dialogue.say([
 			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first.\nSomebody here has to know something.", "mood": "shocked"},

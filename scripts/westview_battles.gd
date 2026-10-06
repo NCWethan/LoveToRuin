@@ -294,8 +294,8 @@ static func _tent() -> Enemy:
 static func _wally() -> Enemy:
 	var e := Enemy.new()
 	e.name = "Wally Wolverine"
-	e.max_hp = 350
-	e.hp = 350
+	e.max_hp = 500
+	e.hp = 500
 	e.dance = true
 	e.attack = 5
 	e.defense = 2

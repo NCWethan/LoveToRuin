@@ -93,7 +93,7 @@ func _load_look() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if Game.dread() >= 3:
+	if Game.dread() >= 4:
 		queue_redraw()
 	_moving = false
 	if Game.busy or Game.transitioning:
@@ -203,17 +203,24 @@ func _record_trail() -> void:
 
 ## Talks to / inspects the nearest interactable thing just in front of Elric.
 func _interact() -> void:
-	var probe := global_position + facing * 16 + Vector2(0, -6)
+	# A few spots in front of Elric, from right up close to an arm's length away,
+	# so things are in reach whether Elric is pressed up against them or not.
 	var best: Node2D = null
 	var best_distance := 24.0
-	for node in get_tree().get_nodes_in_group("interactable"):
-		var distance := (node as Node2D).global_position.distance_to(probe)
-		if distance < best_distance:
-			best = node
-			best_distance = distance
+	for reach in [4.0, 10.0, 16.0, 24.0]:
+		var probe: Vector2 = global_position + facing * reach + Vector2(0, -6)
+		for node in get_tree().get_nodes_in_group("interactable"):
+			var distance := (node as Node2D).global_position.distance_to(probe)
+			if distance < best_distance:
+				best = node
+				best_distance = distance
 	if best:
 		Game.busy = true
-		await best.interact()
+		# (Call the action itself, not best.interact(): if the thing removes itself
+		# (a fragment picked up, a person gone), waiting on it would never finish.)
+		var action: Callable = best.get("on_interact")
+		if action.is_valid():
+			await action.call()
 		Game.busy = false
 		return
 	# Nobody there: look at the scenery in front instead (trees, walls, doors...).
@@ -248,9 +255,9 @@ func _draw() -> void:
 	draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.32))
 	draw_circle(Vector2.ZERO, 11.0, Color(0, 0, 0, 0.28))
 	draw_set_transform(Vector2.ZERO)
-	# At the end of the Genocide path, a deep green haze clings to Elric, with wisps
+	# At the end (Relic), a deep green haze clings to Elric, with wisps
 	# rising off them.
-	if Game.dread() >= 3:
+	if Game.dread() >= 4:
 		var t := Time.get_ticks_msec() / 1000.0
 		draw_circle(Vector2(0, -16), 18.0 + sin(t * 3.0) * 1.5, Color(0.0, 0.2, 0.07, 0.24))
 		for w in 5:

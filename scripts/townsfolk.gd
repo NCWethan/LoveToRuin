@@ -27,9 +27,9 @@ const PEOPLE := {
 			"answers": [["shocked", "A TREE? Why would they be in a-\n...They're in a tree, aren't they."], ["happy", "Now THAT'S hustle!\nYou've got the spirit, kid."]],
 		},
 		"talk_later": {
-			"lines": [["sad", "Found my keys. In a tree. AGAIN.\nI'm starting to think the tree does it on purpose."]],
-			"options": ["Maybe it does.", "Get a lanyard."],
-			"answers": [["shocked", "...Don't say that. I have to walk past it every day."], ["happy", "A lanyard! Thirty years of coaching,\nand THAT never occurred to me."]],
+			"lines": [["shocked", "Hey! Those are my keys!\n...You got them out of the tree, didn't you."], ["happy", "Keep 'em. I've got eleven spare sets.\nThe tree's got the other ten."], ["smug", "Just don't lose them.\n...I'm aware of how that sounds."]],
+			"options": ["Are you sure?", "Thanks, Coach."],
+			"answers": [["happy", "Kid, I lose a set a week.\nConsider it a scholarship."], ["happy", "Don't thank me. Thank the tree.\n...Actually, don't. It doesn't deserve it."]],
 		},
 		"challenged": ["smug", "You want to go a round with ME? Ha!\nAlright, kid. Warm-up's over."],
 		"spared": ["happy", "...Good hustle. Real good hustle.\nNow hit the showers. ...Wait, you don't go here."],

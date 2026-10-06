@@ -17,6 +17,12 @@ extends Area
 
 const SCENE := "res://scenes/westview.tscn"
 const HILLTOP_SCENE := "res://scenes/hilltop.tscn"
+const MALL_SCENE := "res://scenes/pq_mall.tscn"
+const NEIGHBORHOOD_SCENE := "res://scenes/hop_house.tscn"
+## Where Elric arrives on Westview's street, coming back from the neighborhood.
+const FROM_NEIGHBORHOOD := Vector2(32 * T - 30, 370)
+## Where Elric arrives at the PQ Mall coming from Westview (by the east exit).
+const MALL_FROM_WESTVIEW := Vector2(1030, 535)
 const T := Room.TILE
 
 # The four rooms, in tiles: Rect2(x, y, width, height). Each is at least one
@@ -90,6 +96,7 @@ func _ready() -> void:
 		add_child(night)
 
 	_add_decor()
+	_add_marquee_block()
 	_place_people()
 	_place_hotspots()
 	fit_camera_to_room()
@@ -289,6 +296,19 @@ func _draw_decor() -> void:
 	_decor.draw_string(_font, banner_center + Vector2(-motto_width / 2, 5), motto, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, gold)
 
 
+## The GO WOLVERINES marquee on the lawn (drawn in _add_decor) is solid: you
+## walk around it, not through it. (Just its lower part, so you can stand behind it.)
+func _add_marquee_block() -> void:
+	var body := StaticBody2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(92, 26)
+	var box := CollisionShape2D.new()
+	box.shape = shape
+	box.position = Vector2(22 * T + 46, 12 * T + 29)
+	body.add_child(box)
+	add_child(body)
+
+
 # --- People and things ----------------------------------------------------
 
 func _place_people() -> void:
@@ -421,6 +441,15 @@ func _physics_process(_delta: float) -> void:
 	check_roamers(SCENE)
 	check_random_encounter(SCENE)
 
+	# The ends of the street out front.
+	if _px(OUTSIDE).has_point(player.position):
+		if player.position.x < 8.0:
+			run_cutscene(func() -> void: await Game.change_scene(MALL_SCENE, MALL_FROM_WESTVIEW))
+			return
+		if player.position.x > OUTSIDE.end.x * T - 8.0:
+			run_cutscene(func() -> void: await Game.change_scene(NEIGHBORHOOD_SCENE, null))
+			return
+
 	# The endless hallway.
 	if not flag("loop_broken") and _px(HALLWAY).has_point(player.position) and player.position.x > LOOP_X:
 		run_cutscene(_loop_back)
@@ -517,7 +546,7 @@ func _trophy_case() -> void:
 	# killing just makes the reflection... wrong.)
 	if Game.on_genocide_route():
 		lines.append("* It's me, RELIC.")
-	elif Game.dread() >= 3:
+	elif Game.dread() >= 4:
 		lines.append("* (In the glass: someone in a scorched\n*  green hoodie.)")
 		lines.append("* (...It smiles.)\n* (You can't tell if you are.)")
 	elif Game.dread() > 0:

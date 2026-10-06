@@ -434,6 +434,9 @@ func _talk_to_hop() -> void:
 		"* (Hop is now following you.)",
 	])
 	Game.flags["met_hop"] = true
+	# Hop joins the party (in battle and in the bag).
+	Game._build_partner()
+	Game.party[1].hp = Game.party[1].max_hp
 	Game.set_objective("Check out the glow by the bleachers.")
 	hop.on_interact = Callable()
 	hop.remove_from_group("interactable")

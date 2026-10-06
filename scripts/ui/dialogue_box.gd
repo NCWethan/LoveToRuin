@@ -76,6 +76,9 @@ var _shown_frame: int = -1
 var _who: String = ""
 var _show_face: bool = true
 var _mood: String = ""
+## Set while talking to someone who just flinched at Elric: they look scared,
+## and stumble over their first word.
+var nervous: bool = false
 var _tag: String = ""
 var _text: String = ""
 var _typed: float = 0.0
@@ -151,6 +154,10 @@ func _show(line) -> void:
 		_tag = line.get("tag", display_name(_who))
 		# "mood" picks a facial expression: happy, angry, sad, shocked or smug.
 		_mood = line.get("mood", "")
+		if nervous and not _who in ["", "Elric", "Hop", "Hopkuna"]:
+			_mood = "shocked"
+			if _text.length() > 1 and _text[0] == _text[0].to_upper() and _text[0] != _text[0].to_lower():
+				_text = _text[0] + "-" + _text
 	else:
 		_who = ""
 		_text = str(line)

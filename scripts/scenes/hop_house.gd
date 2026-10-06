@@ -30,6 +30,8 @@ const FRONT_DOOR := Vector2(42 * T, 9 * T + 6)
 const HOUSE_ENTRY := Vector2(10 * T, 47 * T)
 ## The couch (where Elric sleeps), and where Hop stands at night / in the morning.
 const COUCH := Vector2(5 * T, 43 * T + 10)
+## Where Elric gets up in the morning: just in front of the couch (not on it).
+const WAKE_SPOT := Vector2(5 * T, 46 * T + 14)
 const HOP_NIGHT := Vector2(14 * T, 39 * T)
 const HOP_MORNING := Vector2(15 * T, 35 * T + 10)
 
@@ -43,12 +45,29 @@ func _morning() -> bool:
 	return flag("hh_slept")
 
 
+## Just walking through the neighborhood (not the night of going with Hop, or
+## after it on the Genocide route).
+func _visiting() -> bool:
+	return not Game.flags.get("route", "") in ["with_hop", "genocide"]
+
+
+const WESTVIEW_SCENE := "res://scenes/westview.tscn"
+## Coming back from here, Elric arrives at the east end of Westview's street.
+const WESTVIEW_FROM_HERE := Vector2(32 * T - 30, 370)
+
+
 func _ready() -> void:
 	rooms.assign([_px(STREET), _px(HOUSE)])
 	setup_area(ENTRY)
 	_font = ThemeDB.fallback_font
 	# Night on the street; warm lamplight inside; plain daylight in the morning.
-	if not _morning():
+	if _visiting():
+		if not Game.daytime():
+			var dusk := CanvasModulate.new()
+			dusk.color = Color(0.5, 0.52, 0.76)
+			add_child(dusk)
+		Game.play_music("mt_carmel" if Game.daytime() else "mall_night")
+	elif not _morning():
 		var tint := CanvasModulate.new()
 		tint.color = Color(0.5, 0.52, 0.76) if not _px(HOUSE).has_point(player.position) else Color(0.82, 0.74, 0.66)
 		tint.name = "Tint"
@@ -211,6 +230,13 @@ func _add_streetlights() -> void:
 # --- People and things ----------------------------------------------------------
 
 func _place_people() -> void:
+	if _visiting():
+		# Whoever's coming along follows Elric (nobody, if they're on their own).
+		if Game.flags.get("met_hop", false) and not Game.walking_alone():
+			hop = Cast.make(Game.partner())
+			add_character(hop, player.position + Vector2(-20, -4))
+			hop.follow = player
+		return
 	hop = Cast.make("Hop")
 	if _px(HOUSE).has_point(player.position):
 		add_character(hop, HOP_MORNING if _morning() else HOP_NIGHT)
@@ -254,6 +280,12 @@ func _start() -> void:
 	await wait_for_fade()
 	if not is_inside_tree():
 		return
+	if _visiting():
+		if not flag("nb_arrived"):
+			Game.flags["nb_arrived"] = true
+			await run_cutscene(func() -> void:
+				await Game.dialogue.say(["* (A quiet neighborhood. Little houses,\n*  porch lights, sprinklers ticking.)"]))
+		return
 	if Game.battle_result.get("id", "") == "glowbug":
 		Game.battle_result = {}
 		await run_cutscene(_after_glowbug)
@@ -265,6 +297,10 @@ func _start() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if is_blocked():
+		return
+	if _visiting():
+		if _px(STREET).has_point(player.position) and player.position.x < 10.0:
+			run_cutscene(func() -> void: await Game.change_scene(WESTVIEW_SCENE, WESTVIEW_FROM_HERE))
 		return
 	if not flag("glowbug_done") and _px(STREET).has_point(player.position) and player.position.x > GLOWBUG_AT_X:
 		run_cutscene(_glowbug)
@@ -316,6 +352,12 @@ func _after_glowbug() -> void:
 
 
 func _front_door() -> void:
+	if _visiting():
+		if hop and Game.partner() == "Hop":
+			await Game.dialogue.say([{"who": "Hop", "text": "That's my place. It's a mess.\n...Maybe some other time.", "mood": "sad"}])
+		else:
+			await Game.dialogue.say(["* (The smallest house on the street.\n*  The door's locked. Nobody answers.)"])
+		return
 	if not flag("glowbug_done"):
 		return
 	if not flag("hh_inside"):
@@ -367,7 +409,16 @@ func _couch() -> void:
 	if sleep != 0:
 		return
 	Game.flags["hh_slept"] = true
-	await Game.fade_out(1.2)
+	# Dark, but under the text box (Game.fade_out covers the text box too).
+	var night := CanvasLayer.new()
+	night.layer = 45
+	var black := ColorRect.new()
+	black.color = Color.BLACK
+	black.size = Vector2(640, 480)
+	black.modulate.a = 0.0
+	night.add_child(black)
+	add_child(night)
+	await create_tween().tween_property(black, "modulate:a", 1.0, 1.2).finished
 	Game.stop_music(1.0)
 	await Game.dialogue.say([
 		"* (You lie down on Hop's couch.)",
@@ -375,8 +426,8 @@ func _couch() -> void:
 		"* (You don't dream.)",
 	])
 	Game.heal_party()
-	Game.save_game(SCENE, COUCH + Vector2(0, 30))
-	await Game.change_scene(SCENE, COUCH + Vector2(0, 30))
+	Game.save_game(SCENE, WAKE_SPOT)
+	await Game.change_scene(SCENE, WAKE_SPOT)
 
 
 func _wake_up() -> void:

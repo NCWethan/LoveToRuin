@@ -466,6 +466,13 @@ func _open_list(list_state: State, list: Array) -> void:
 
 
 func _process_list() -> void:
+	# The CALL list has columns: left and right jump between them.
+	if state == State.CALL_LIST and (_pressed("ui_left") or _pressed("ui_right")):
+		var to := _cursor + (CALL_ROWS if _pressed("ui_right") else -CALL_ROWS)
+		if to >= 0 and to < _list.size():
+			_cursor = to
+			Game.play_sfx("move")
+		return
 	if _pressed("ui_up"):
 		_cursor = wrapi(_cursor - 1, 0, _list.size())
 		Game.play_sfx("move")
@@ -491,8 +498,8 @@ func _process_list() -> void:
 
 	var area := box.get_inner_rect()
 	if state == State.CALL_LIST:
-		# Two columns of five.
-		soul.global_position = Vector2(area.position.x + 26 + (_cursor / CALL_ROWS) * CALL_COLUMN, _row_y(_cursor % CALL_ROWS) - 5)
+		# Columns of four.
+		soul.global_position = Vector2(area.position.x + 22 + (_cursor / CALL_ROWS) * CALL_COLUMN, _row_y(_cursor % CALL_ROWS) - 5)
 		return
 	soul.global_position = Vector2(area.position.x + 26, _row_y(_cursor) - 5)
 
@@ -630,8 +637,10 @@ func _after_actions() -> void:
 # turns, and each friend has their own wait (`cooldown`) and a number of `charges`
 # per battle.
 
-const CALL_ROWS := 5
-const CALL_COLUMN := 250.0
+const CALL_ROWS := 4
+const CALL_COLUMN := 182.0
+## The CALL list is a little smaller than other text, so every name fits.
+const CALL_FONT_SIZE := 15
 ## Turns before anyone can be called again.
 const CALL_COOLDOWN := 3
 ## When the helper's move lands, and when they're gone, in seconds.
@@ -689,7 +698,10 @@ func _mercy_options() -> Array:
 ## Corps members who aren't already fighting.
 func _callable_helpers() -> Array:
 	var fighting := party.map(func(m: PartyMember) -> String: return m.id)
-	return _helpers().CORPS.filter(func(id: String) -> bool: return not id in fighting)
+	var ids: Array = _helpers().CORPS.filter(func(id: String) -> bool: return not id in fighting)
+	# In alphabetical order.
+	ids.sort_custom(func(a: String, b: String) -> bool: return DialogueBox.display_name(a).naturalnocasecmp_to(DialogueBox.display_name(b)) < 0)
+	return ids
 
 
 ## Turns until anyone can be called (0 = now).
@@ -895,7 +907,7 @@ func _draw_call() -> void:
 	if food:
 		# The plate: two eggs Benedict, steaming, then a sparkle as it's eaten.
 		# Over the head of whoever called him.
-		var plate := Vector2(80.0 + party.find(_call["member"]) * 100.0, 62.0)
+		var plate := Vector2(_slot_x(party.find(_call["member"])), 62.0)
 		_overlay.draw_set_transform(plate, 0.0, Vector2(1.0, 0.4))
 		_overlay.draw_circle(Vector2.ZERO, 22.0, Color(0.95, 0.95, 0.95, fade))
 		_overlay.draw_set_transform(Vector2.ZERO)
@@ -2869,6 +2881,12 @@ func _draw_aura() -> void:
 
 
 ## Draws Elric's party on the left side of the screen, facing the enemies.
+## Where party member `i` stands, across the screen: Elric (first in the party)
+## is always at the front, closest to the enemies.
+func _slot_x(i: int) -> float:
+	return 80.0 + (party.size() - 1 - i) * 100.0
+
+
 func _draw_party_sprites() -> void:
 	# Someone watching from behind the party (never fights): scared.
 	if _data.watcher != "":
@@ -2881,7 +2899,7 @@ func _draw_party_sprites() -> void:
 		var member := party[i]
 		if member.sprite == null:
 			continue
-		var pos := Vector2(80 + i * 100, 140)
+		var pos := Vector2(_slot_x(i), 140)
 		if member.shake > 0.0:
 			pos.x += sin(member.shake * 60.0) * 4.0
 		var sprite_size := member.sprite.get_size() * 3.0
@@ -3272,18 +3290,18 @@ func _draw_box_contents() -> void:
 			for i in _list.size():
 				var id: String = _list[i]
 				var helper: Dictionary = _helpers().HELPERS[id]
-				var spot := Vector2(area.position.x + 50 + (i / CALL_ROWS) * CALL_COLUMN, _row_y(i % CALL_ROWS))
+				var spot := Vector2(area.position.x + 40 + (i / CALL_ROWS) * CALL_COLUMN, _row_y(i % CALL_ROWS))
 				var wait := _helper_wait(id)
 				var label := DialogueBox.display_name(id)
 				if wait == -1:
-					label += "  (no charges)"
+					label += "  (used up)"
 				elif wait == -2:
-					label += "  (below 1/2 HP)"
+					label += "  (low HP)"
 				elif wait > 0:
 					label += "  (%d turn%s)" % [wait, "" if wait == 1 else "s"]
 				elif helper.get("charges", -1) >= 0:
 					label += "  (%d left)" % (int(helper["charges"]) - int(_helper_uses.get(id, 0)))
-				_overlay.draw_string(_font, spot, label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, helper["color"] if wait == 0 else Color(0.45, 0.45, 0.45))
+				_overlay.draw_string(_font, spot, label, HORIZONTAL_ALIGNMENT_LEFT, CALL_COLUMN - 12, CALL_FONT_SIZE, helper["color"] if wait == 0 else Color(0.45, 0.45, 0.45))
 		State.FLEEING:
 			_overlay.draw_string(_font, Vector2(area.position.x + 14, _row_y(0)), _text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 		State.FIGHT_BAR, State.FIGHT_ANIM:
