@@ -1932,7 +1932,10 @@ const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
 ## How long each part lasts: silence, the scream, black, and the wind (the green
 ## eyes stay as long as the wind blows).
 const TENT_SILENCE := 1.6
-const TENT_SCREAM_TIME := 3.0
+## The last line appears one word at a time (a new word every TENT_WORD_GAP
+## seconds, each fading in), then stays a moment before the black.
+const TENT_WORD_GAP := 0.7
+const TENT_SCREAM_TIME := 6.0
 ## (A long, silent black, so you think it's over...)
 const TENT_BLACK_TIME := 1.4
 const TENT_WIND_TIME := 6.0
@@ -1949,6 +1952,8 @@ var _tent_time: float = 0.0
 var _text_color: Color = Color.WHITE
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
+## Relic's color (the tent's words are theirs).
+const RELIC_GREEN := Color(0.45, 0.95, 0.55)
 ## How open the three pairs of eyes are (0 to 1). They open with "Three of us."
 ## and stay open until the screen goes black.
 var _three_eyes: float = 0.0
@@ -1976,7 +1981,8 @@ func _process_tent(delta: float) -> void:
 	match _tent_phase:
 		"silence":
 			if _tent_time >= TENT_SILENCE:
-				_text_color = Color(0.85, 0.05, 0.08)
+				# Green: it's Relic talking.
+				_text_color = RELIC_GREEN
 				_show_messages(TENT_LINES, _tent_scream)
 		"scream":
 			if _tent_time >= TENT_SCREAM_TIME:
@@ -2003,28 +2009,25 @@ func _tent_scream() -> void:
 	state = State.EVENT
 	_tent_phase = "scream"
 	_tent_time = 0.0
-	Game.play_sfx("hurt", 0.5)
 
 
-## Big shaking red letters, then black.
+## The last line, one word at a time, then black.
 func _draw_tent() -> void:
 	if _tent_phase == "scream":
-		# Everything darkens, and the words shake like they're trying to get out.
+		# Everything darkens, and the words appear, slowly, one by one. Silently.
 		_overlay.draw_rect(Rect2(0, 0, 640, 480), Color(0, 0, 0, clampf(_tent_time * 0.6, 0.0, 0.85)))
 		# The three pairs of eyes are still there, watching, in the dark.
 		_draw_three_of_us(_three_eyes)
 		var size := 28
-		var shown := mini(TENT_SCREAM.length(), int(_tent_time * 40.0))
-		# Each letter gets the same width, so they can shake on their own.
-		var step := 18.0
-		var x := 320.0 - step * TENT_SCREAM.length() / 2.0
-		for i in shown:
-			var letter := TENT_SCREAM[i]
-			var letter_width := _font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-			var at := Vector2(x + (step - letter_width) / 2, 190) + Vector2(randf_range(-2.5, 2.5), randf_range(-2.5, 2.5))
-			_overlay.draw_string(_font, at + Vector2(2, 2), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.3, 0, 0))
-			_overlay.draw_string(_font, at, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.95, 0.05, 0.1))
-			x += step
+		var words := TENT_SCREAM.split(" ")
+		var gap := _font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		var x := 320.0 - _font.get_string_size(TENT_SCREAM, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x / 2.0
+		for k in words.size():
+			var word: String = words[k]
+			var appear := clampf((_tent_time - 0.6 - k * TENT_WORD_GAP) / 0.45, 0.0, 1.0)
+			if appear > 0.0:
+				_overlay.draw_string(_font, Vector2(x, 192), word, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(RELIC_GREEN, appear))
+			x += _font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + gap
 	elif _tent_phase in ["black", "wind", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
 		if _tent_phase == "wind":
