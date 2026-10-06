@@ -1784,6 +1784,58 @@ foreach ($stage in 1..3) {
     }
 }
 
+# --- Ronin's electric guitar and amp ------------------------------------------
+# Based on Ronin's real guitar: a black superstrat with a quilted top, white
+# binding, a black fretboard with white shark-fin inlays, two black humbuckers,
+# and a pointy black headstock with a white logo stripe. Drawn lying sideways,
+# headstock on the left. Plus a little black combo amp.
+
+function New-Canvas([int]$w, [int]$h) {
+    $rows = @()
+    for ($y = 0; $y -lt $h; $y++) { $rows += ('.' * $w) }
+    return [string[]]$rows
+}
+
+$g = [string[]](New-Canvas 42 15)
+# The body: a rounded slab with two horns reaching toward the neck.
+for ($y = 0; $y -lt 15; $y++) {
+    for ($x = 22; $x -lt 42; $x++) {
+        $dx = ($x - 32.5) / 8.2; $dy = ($y - 7.0) / 7.2
+        if ($dx * $dx + $dy * $dy -le 1.0) { Set-Pixel $g $y $x 'K' }
+    }
+}
+foreach ($y in 1..3) { foreach ($x in (24 - $y)..26) { Set-Pixel $g $y $x 'K' } }
+foreach ($y in 11..13) { foreach ($x in (22 + ($y - 11))..26) { Set-Pixel $g $y $x 'K' } }
+# The quilted top: dark gray swirls in the black.
+foreach ($spot in @(@(3, 28), @(4, 33), @(5, 30), @(9, 29), @(10, 34), @(11, 31), @(4, 37), @(10, 38), @(7, 39), @(12, 35))) {
+    Set-Pixel $g $spot[0] $spot[1] '7'; Set-Pixel $g $spot[0] ($spot[1] + 1) '7'
+}
+# The neck: white binding top and bottom, a dark fretboard, white shark fins.
+foreach ($x in 6..25) { Set-Pixel $g 5 $x 'W'; Set-Pixel $g 6 $x 'C'; Set-Pixel $g 7 $x 'C'; Set-Pixel $g 8 $x 'C'; Set-Pixel $g 9 $x 'W' }
+foreach ($x in @(9, 13, 17, 21)) { Set-Pixel $g 8 $x 'W'; Set-Pixel $g 8 ($x + 1) 'W'; Set-Pixel $g 7 ($x + 1) 'W' }
+# The pointy headstock, with tuners along the top and the white logo stripe.
+foreach ($x in 0..5) { Set-Pixel $g 7 $x 'K' }
+foreach ($x in 1..5) { Set-Pixel $g 6 $x 'K'; Set-Pixel $g 8 $x 'K' }
+foreach ($x in 3..5) { Set-Pixel $g 5 $x 'K'; Set-Pixel $g 9 $x 'K' }
+foreach ($x in 2..5) { Set-Pixel $g 7 $x 'W' }
+foreach ($x in @(1, 3, 5)) { Set-Pixel $g 4 $x 'K' }
+# Two humbuckers with silver pole pieces, the bridge, and the knobs.
+foreach ($px in @(28, 32)) { foreach ($y in 5..9) { Set-Pixel $g $y $px 'K'; Set-Pixel $g $y ($px + 1) 'K' }; foreach ($y in @(6, 8)) { Set-Pixel $g $y $px 'G' } }
+foreach ($y in 5..9) { Set-Pixel $g $y 35 'G' }
+Set-Pixel $g 11 37 'G'; Set-Pixel $g 12 39 'G'
+$sprites['ronin_guitar'] = $g
+
+$a = [string[]](New-Canvas 20 18)
+foreach ($y in 0..17) { foreach ($x in 0..19) { Set-Pixel $a $y $x 'K' } }
+# Control panel with knobs, and a little red power light.
+foreach ($x in 1..18) { Set-Pixel $a 1 $x 'D'; Set-Pixel $a 2 $x 'D' }
+foreach ($x in @(3, 6, 9, 12, 15)) { Set-Pixel $a 1 $x 'G'; Set-Pixel $a 2 $x 'G' }
+Set-Pixel $a 2 17 'R'
+# The grille: crosshatched cloth, with a logo plate.
+foreach ($y in 4..16) { foreach ($x in 1..18) { Set-Pixel $a $y $x $(if ((($x + $y) % 2) -eq 0) { 'C' } else { '7' }) } }
+foreach ($x in 3..8) { Set-Pixel $a 5 $x 'W' }
+$sprites['amp'] = $a
+
 $spriteDir = Join-Path $PSScriptRoot "..\art\sprites"
 $portraitDir = Join-Path $PSScriptRoot "..\art\portraits"
 New-Item -ItemType Directory -Force $spriteDir | Out-Null

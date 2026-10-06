@@ -15,6 +15,8 @@ const EFFECTS := {
 	"DIZZY": {"color": Color(0.8, 0.5, 1.0), "what": "Seeing stars: the FIGHT bar moves faster."},
 	"QUEASY": {"color": Color(0.6, 0.85, 0.3), "what": "Stomach's upset: food heals half as much."},
 	"BURN": {"color": Color(1.0, 0.45, 0.15), "what": "On fire: lose 2 HP at the end of every enemy turn."},
+	# Good ones, from friends.
+	"AMPED": {"color": Color(0.75, 0.45, 1.0), "what": "Pumped up by Ronin's riff: the SOUL moves 30% faster."},
 }
 
 ## What each enemy can do to you: [effect, chance per hit (0 to 1), turns].

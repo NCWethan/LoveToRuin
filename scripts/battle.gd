@@ -179,6 +179,7 @@ func _ready() -> void:
 	# Overheal only lasts for the battle it was given in.
 	for member in party:
 		member.overheal = 0
+		member.overheal_purple = 0
 	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
@@ -618,7 +619,9 @@ const CALL_LENGTH := 1.6
 ## Eggo's The-Eggo Benedict: overheal HP per serving, and the most anyone can have.
 const BENEDICT_OVERHEAL := 13
 const MAX_OVERHEAL := 26
-## N.C. Wethan's Stravant's Lightning: how many turns the enemy is slowed.
+## N.C. Wethan's Stravant's Lightning: how many turns the enemy is slowed, and how
+## long the beam lasts.
+const BEAM_TIME := 0.75
 const STRAVANT_TURNS := 3
 ## Nat's FOOTNOTE: how much closer the enemy gets to being spared.
 const NAT_MERCY := 15
@@ -717,9 +720,29 @@ func _process_call(delta: float) -> void:
 	var stays: bool = info.get("kind", "hit") == "iframes"
 	var reads: bool = info.get("kind", "hit") == "read"
 	var lightning: bool = info.get("kind", "hit") == "lightning"
-	if not _call["landed"] and _call["time"] >= CALL_HIT_TIME + (0.35 if lightning else 0.0):
+	var riff: bool = info.get("kind", "hit") == "riff"
+	var land_at := CALL_HIT_TIME + (0.35 if lightning else 0.0)
+	if riff:
+		land_at = RIFF_START + _riff_length()
+		# He plugs in and starts playing; the battle music steps aside.
+		if not _call.has("playing") and _call["time"] >= RIFF_START:
+			_call["playing"] = true
+			Game.duck_music(true)
+			Game.play_sfx("ronin_riff")
+	if not _call["landed"] and _call["time"] >= land_at:
 		_call["landed"] = true
-		if lightning:
+		if riff:
+			# Only now, with the riff over: purple overheal and AMPED for everyone.
+			Game.duck_music(false)
+			Game.play_sfx("heal")
+			for member in party:
+				if member.is_down():
+					continue
+				member.overheal_purple = mini(member.overheal_purple + RIFF_OVERHEAL, MAX_PURPLE)
+				member.statuses["AMPED"] = AMPED_TURNS
+				_add_popup("+%d" % RIFF_OVERHEAL, _panel_position(member) + Vector2(60, 0), Color(0.75, 0.45, 1.0), 22, true)
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 18, true)
+		elif lightning:
 			var damage := 10 + Game.lv() * 3 + randi() % 4
 			# (Friends never knock anyone out.)
 			_call["damage"] = maxi(mini(damage, target.hp - 1), 0)
@@ -770,12 +793,17 @@ func _process_call(delta: float) -> void:
 			_impact(target, 0.07, false)
 			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
 			_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
-	if _call["time"] < CALL_LENGTH + (0.5 if lightning else 0.0):
+	var call_length := CALL_LENGTH + (0.9 if lightning else 0.0)
+	if riff:
+		call_length = land_at + 0.9
+	if _call["time"] < call_length:
 		return
 	var helper_name := DialogueBox.display_name(_call["id"])
 	var line := "* %s used %s!\n* %s took %d damage." % [helper_name, info["move"], target.name, _call["damage"]]
 	if shield:
 		line = "* %s used %s!\n* All damage is cut by 80%% this turn!" % [helper_name, info["move"]]
+	elif riff:
+		line = "* %s played %s!\n* Everyone gained %d overheal, and is AMPED:\n*  the SOUL moves faster for %d turns." % [helper_name, info["move"], RIFF_OVERHEAL, AMPED_TURNS]
 	elif lightning:
 		line = "* %s used %s!\n* %s took %d damage, and its attacks are slowed\n*  for %d turns." % [helper_name, info["move"], target.name, _call["damage"], STRAVANT_TURNS]
 	elif reads:
@@ -812,6 +840,9 @@ func _draw_call() -> void:
 	var food: bool = info.get("kind", "hit") == "food"
 	if info.get("kind", "hit") == "lightning":
 		_draw_stravant(t, target, _call["sprite"])
+		return
+	if info.get("kind", "hit") == "riff":
+		_draw_ronin_riff(t, _call["sprite"])
 		return
 	var stays: bool = info.get("kind", "hit") == "iframes"
 	# Nassan doesn't run off: once he's in place, he's drawn by _draw_nassan.
@@ -885,24 +916,200 @@ func _nat_reads(target: Enemy) -> void:
 		_nat_pages.append("* (Nat flips through. \"Nothing's coming next turn.\")")
 
 
+## Ronin's POWER RIFF: he runs in, plugs into his amp, and plays the whole riff (the
+## recording). His hands follow the music (see tools/analyze_riff.gd for how it's
+## measured): his picking hand strikes on each new note and blurs when he shreds,
+## his fretting hand slides along the neck with the notes, and on a held note he
+## raises the neck, lifts his picking hand off, and shakes the note with vibrato.
+## Music notes fly out of the amp and circle the team. Only when the riff is over:
+## everyone gets 5 purple overheal, and AMPED (the SOUL moves faster).
+const RIFF_START := 0.6
+const RIFF_OVERHEAL := 5
+const MAX_PURPLE := 15
+const AMPED_TURNS := 2
+var _riff_script: GDScript
+var _guitar_sprite: Texture2D
+var _amp_sprite: Texture2D
+
+
+func _riff() -> GDScript:
+	if _riff_script == null:
+		_riff_script = load("res://scripts/ronin_riff.gd")
+	return _riff_script
+
+
+## How long until the riff's last sound (the recording ends with a little silence).
+func _riff_length() -> float:
+	var loud: String = _riff().LOUD
+	var last := loud.length() - 1
+	while last > 0 and loud[last] == "0":
+		last -= 1
+	return (last + 1) * float(_riff().STEP)
+
+
+## The riff, measured at `time` seconds in: how loud (0 to 9), how long since the
+## last picked note, how high the note is (0 to 9), and whether he's holding a note.
+func _riff_moment(time: float) -> Dictionary:
+	var loud: String = _riff().LOUD
+	var onsets: String = _riff().ONSETS
+	var pitch: String = _riff().PITCH
+	var step: float = _riff().STEP
+	var f := clampi(int(time / step), 0, loud.length() - 1)
+	var level := int(loud[f])
+	# A new note: the analysis heard a pick, or it got louder right after a dip.
+	var picked := func(k: int) -> bool:
+		if k < 2:
+			return false
+		return onsets[k] == "1" or int(loud[k]) - mini(int(loud[k - 1]), int(loud[k - 2])) >= 2
+	var since := 99.0
+	var recent := 0
+	for back in range(0, 24):
+		var k := f - back
+		if k < 2:
+			break
+		if picked.call(k):
+			if since == 99.0:
+				since = back * step + fmod(time, step)
+			if back < 10:
+				recent += 1
+	# The note's height: the middle value of the readings around now (the
+	# distortion makes single readings jumpy).
+	var readings: Array = []
+	for k in range(f - 3, f + 4):
+		if k >= 0 and k < pitch.length() and pitch[k] != "-":
+			readings.append(int(pitch[k]))
+	readings.sort()
+	var height: float = readings[readings.size() / 2] if not readings.is_empty() else 4.0
+	var rising := level - int(loud[maxi(f - 8, 0)])
+	return {"loud": level, "since": since, "shred": recent >= 3 and level >= 6, "height": height,
+		"hold": since > 0.4 and level >= 6, "swell": rising >= 2}
+
+
+func _draw_ronin_riff(t: float, texture: Texture2D) -> void:
+	if _guitar_sprite == null:
+		_guitar_sprite = load("res://art/sprites/ronin_guitar.png")
+		_amp_sprite = load("res://art/sprites/amp.png")
+	var riff_end := RIFF_START + _riff_length()
+	var spot := 290.0
+	var leaving := t > riff_end + 0.4
+	var x: float
+	if t < 0.45:
+		x = lerpf(-60.0, spot, 1.0 - pow(1.0 - t / 0.45, 2.0))
+	elif not leaving:
+		x = spot
+	else:
+		x = lerpf(spot, -80.0, (t - riff_end - 0.4) / 0.5)
+	var feet := Vector2(x, 180.0)
+	var playing := t >= RIFF_START and t < riff_end
+	var moment := _riff_moment(t - RIFF_START) if playing else {"loud": 0, "since": 99.0, "shred": false, "height": 4.0, "hold": false, "swell": false}
+	var level: int = moment["loud"]
+	# The amp, just behind him on his other side, its speaker thumping with the music.
+	if not leaving:
+		var amp_at := Vector2(spot + 52.0, 172.0)
+		var amp_size := _amp_sprite.get_size() * 2.6
+		var amp_rect := Rect2(amp_at - Vector2(amp_size.x / 2, amp_size.y), amp_size)
+		_overlay.draw_texture_rect(_amp_sprite, amp_rect, false)
+		var cone := amp_rect.position + Vector2(amp_size.x / 2, amp_size.y * 0.62)
+		_overlay.draw_circle(cone, 9.0 + level * 0.9, Color(0.1, 0.1, 0.12, 0.8))
+		_overlay.draw_arc(cone, 9.0 + level * 0.9, 0, TAU, 16, Color(0.4, 0.4, 0.45), 1.5)
+		# Sound coming off it.
+		if playing:
+			for ring in 3:
+				var grow := fmod(t * 1.6 + ring / 3.0, 1.0)
+				_overlay.draw_arc(cone, 20.0 + grow * 50.0, -0.9, 0.9, 12, Color(0.85, 0.6, 1.0, (1.0 - grow) * level / 12.0), 2.0)
+		# The cable, from the amp to the guitar.
+		var plug := feet + Vector2(-14, -34)
+		var cable := PackedVector2Array()
+		for k in 9:
+			var f := k / 8.0
+			cable.append(cone.lerp(plug, f) + Vector2(0, sin(f * PI) * 18.0))
+		_overlay.draw_polyline(cable, Color(0.55, 0.3, 0.9), 2.0)
+	# Ronin. On a held note, he leans back.
+	var lean := -0.08 if moment["hold"] else 0.0
+	var size := texture.get_size() * 3.0
+	_overlay.draw_set_transform(feet, lean, Vector2(-1.0 if leaving else 1.0, 1.0))
+	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false)
+	_overlay.draw_set_transform(Vector2.ZERO)
+	if leaving or t < 0.45:
+		return
+	# The guitar, across his body: body at his hip, neck up to the right. Raised
+	# higher on a held or swelling note.
+	var neck_up: float = -0.32 - (0.3 if moment["hold"] or moment["swell"] else 0.0)
+	var pivot := feet + Vector2(-8, -38)
+	var scale := 2.0
+	_overlay.draw_set_transform(pivot, neck_up + lean, Vector2(-scale, scale))
+	_overlay.draw_texture_rect(_guitar_sprite, Rect2(Vector2(-33, -8), _guitar_sprite.get_size()), false)
+	var skin := Color8(228, 222, 215)
+	# Fretting hand: along the neck (low notes up by the headstock, high ones by the
+	# body). On a held note, it stays put and shakes: vibrato.
+	var fret: float = lerpf(-24.0, -13.0, float(moment["height"]) / 9.0)
+	if moment["hold"]:
+		fret += sin(t * 32.0) * 0.6
+	var outline := Color(0.12, 0.08, 0.08)
+	_overlay.draw_rect(Rect2(Vector2(fret - 0.5, -3.5), Vector2(4.0, 6.0)), outline)
+	_overlay.draw_rect(Rect2(Vector2(fret, -3.0), Vector2(3.0, 5.0)), skin)
+	# Picking hand, over the pickups: a quick stroke on each new note, a blur when
+	# he shreds, lifted off after a held note.
+	var pick_y := 0.0
+	if moment["hold"]:
+		pick_y = -7.0
+	elif moment["shred"]:
+		pick_y = sin(t * 70.0) * 2.5
+	elif moment["since"] < 0.12:
+		pick_y = lerpf(-3.0, 3.0, moment["since"] / 0.12)
+	_overlay.draw_rect(Rect2(Vector2(-4.5, pick_y - 2.5), Vector2(5.0, 5.0)), outline)
+	_overlay.draw_rect(Rect2(Vector2(-4, pick_y - 2), Vector2(4, 4)), skin)
+	if moment["shred"]:
+		_overlay.draw_rect(Rect2(Vector2(-3, -3), Vector2(3, 6)), Color(skin, 0.35))
+	_overlay.draw_set_transform(Vector2.ZERO)
+	if playing:
+		_draw_riff_notes(t - RIFF_START, feet, level)
+
+
+## Music notes: they pop out of the guitar and fly in loops around the team.
+func _draw_riff_notes(time: float, feet: Vector2, level: int) -> void:
+	var team := Vector2(130, 115)
+	var colors := [Color(1.0, 0.5, 0.2), Color(0.85, 0.55, 1.0), Color(1.0, 0.85, 0.3), Color(0.45, 0.85, 1.0)]
+	for i in 14:
+		var life := fmod(time - i * 0.45, 6.3)
+		if time < i * 0.45 or life > 6.0:
+			continue
+		var start := feet + Vector2(-20, -50)
+		var at: Vector2
+		if life < 0.8:
+			# Flying from the guitar over to the team.
+			at = start.lerp(team, life / 0.8) + Vector2(0, -sin(life / 0.8 * PI) * 50.0)
+		else:
+			# Circling them.
+			var a := (life - 0.8) * 1.8 + i
+			at = team + Vector2(cos(a) * 95.0, sin(a) * 38.0 + sin(life * 4.0 + i) * 6.0)
+		var fade := clampf(life / 0.2, 0.0, 1.0) * clampf((6.0 - life) / 0.5, 0.0, 1.0)
+		var color: Color = colors[i % colors.size()]
+		var big := 1.0 + level / 18.0
+		# An eighth note: a head, a stem, and a flag.
+		_overlay.draw_circle(at, 4.0 * big, Color(color, fade))
+		_overlay.draw_line(at + Vector2(3.5, 0) * big, at + Vector2(3.5, -12) * big, Color(color, fade), 2.0)
+		_overlay.draw_line(at + Vector2(3.5, -12) * big, at + Vector2(8, -8) * big, Color(color, fade), 2.0)
+
+
 ## N.C. Wethan's Stravant's Lightning: he runs in, floats up as glowing blue rune
 ## ribbons spiral around him, then a dark blue bolt cracks into the enemy, trailing
 ## cyan sparks. Then he drifts down and runs off.
 func _draw_stravant(t: float, target: Enemy, texture: Texture2D) -> void:
 	var spot := 280.0
 	var x: float
-	var leaving := t > 1.6
+	var leaving := t > 1.95
 	if t < 0.45:
 		x = lerpf(-60.0, spot, 1.0 - pow(1.0 - t / 0.45, 2.0))
 	elif not leaving:
 		x = spot
 	else:
-		x = lerpf(spot, -80.0, (t - 1.6) / 0.5)
+		x = lerpf(spot, -80.0, (t - 1.95) / 0.5)
 	# Floating: up off the ground, bobbing.
-	var rise := clampf((t - 0.45) / 0.3, 0.0, 1.0) * clampf((1.75 - t) / 0.25, 0.0, 1.0)
+	var rise := clampf((t - 0.45) / 0.3, 0.0, 1.0) * clampf((2.05 - t) / 0.25, 0.0, 1.0)
 	var feet := Vector2(x, 180.0 - rise * (34.0 + sin(t * 6.0) * 4.0))
 	var blue := Color(0.45, 0.75, 1.0)
-	var ribbons := clampf((t - 0.4) / 0.2, 0.0, 1.0) * clampf((1.7 - t) / 0.3, 0.0, 1.0)
+	var ribbons := clampf((t - 0.4) / 0.2, 0.0, 1.0) * clampf((2.0 - t) / 0.3, 0.0, 1.0)
 	# The rune ribbons: rings around him at three heights, behind and in front.
 	for front in [false, true]:
 		if front:
@@ -928,23 +1135,52 @@ func _draw_stravant(t: float, target: Enemy, texture: Texture2D) -> void:
 				_overlay.draw_line(p + Vector2(2, -2), p + Vector2(-1, 1), Color(0.1, 0.2, 0.5, 0.8 * ribbons), 1.5)
 	# The bolt: a thick, jagged dark-blue zigzag, with cyan sparks at both ends.
 	var strike := t - (CALL_HIT_TIME + 0.35)
-	if strike >= -0.05 and strike < 0.45:
-		var fade := clampf(1.0 - strike / 0.45, 0.0, 1.0)
-		var from := feet + Vector2(16, -40)
-		var to := target.position + Vector2(0, -20)
-		var points := PackedVector2Array([from])
-		var side := (to - from).orthogonal().normalized()
-		for k in range(1, 4):
-			points.append(from.lerp(to, k / 4.0) + side * (24.0 if k % 2 == 1 else -24.0))
-		points.append(to)
-		_overlay.draw_polyline(points, Color(0.3, 0.6, 1.0, 0.35 * fade), 18.0)
-		_overlay.draw_polyline(points, Color(0.08, 0.15, 0.85, fade), 9.0)
-		_overlay.draw_polyline(points, Color(0.6, 0.85, 1.0, fade), 2.0)
-		var rng := RandomNumberGenerator.new()
-		rng.seed = int(strike * 30.0)
-		for s in 24:
-			var at := to + Vector2(rng.randf_range(-30, 30), rng.randf_range(-30, 30))
-			_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(0.4, 0.95, 1.0, fade * rng.randf()))
+	if strike >= -0.05 and strike < BEAM_TIME:
+		_draw_stravant_beam(feet + Vector2(16, -40), target.position + Vector2(0, -20), strike)
+
+
+## Stravant's Lightning itself: a huge beam from N.C. Wethan to the enemy. It
+## swells and throbs the whole time, its edges crackling in and out, with bright
+## bands racing along it and a pulsing burst where it hits.
+func _draw_stravant_beam(from: Vector2, to: Vector2, strike: float) -> void:
+	var fade := clampf((strike + 0.05) / 0.08, 0.0, 1.0) * clampf((BEAM_TIME - strike) / 0.2, 0.0, 1.0)
+	var along := (to - from).normalized()
+	var side := along.orthogonal()
+	var length := from.distance_to(to)
+	# The width throbs (two speeds at once, so it never settles).
+	var width := 34.0 + 10.0 * sin(strike * 45.0) + 5.0 * sin(strike * 71.0)
+	var layers := [[1.9, Color(0.35, 0.65, 1.0, 0.22)], [1.0, Color(0.1, 0.2, 0.9, 0.95)], [0.5, Color(0.55, 0.85, 1.0, 1.0)], [0.16, Color(1, 1, 1, 1.0)]]
+	for layer in layers:
+		var top := PackedVector2Array()
+		var bottom := PackedVector2Array()
+		for k in 25:
+			var f := k / 24.0
+			# Crackling edges: each point wobbles in and out on its own.
+			var wobble := sin(k * 1.7 + strike * 60.0) * 4.0 + sin(k * 3.1 - strike * 47.0) * 3.0
+			var half: float = (width * 0.5 + wobble) * layer[0]
+			# A little thinner where it leaves his hands.
+			half *= lerpf(0.55, 1.0, minf(f * 4.0, 1.0))
+			var spot := from + along * length * f
+			top.append(spot + side * half)
+			bottom.append(spot - side * half)
+		bottom.reverse()
+		var color: Color = layer[1]
+		_overlay.draw_colored_polygon(top + bottom, Color(color, color.a * fade))
+	# Bright bands racing along it toward the enemy.
+	for band in 4:
+		var f := fmod(strike * 3.0 + band / 4.0, 1.0)
+		var spot := from + along * length * f
+		_overlay.draw_line(spot + side * width * 0.7, spot - side * width * 0.7, Color(0.8, 0.95, 1.0, 0.6 * fade), 3.0)
+	# Where it hits: a burst that pulses with it, and cyan sparks.
+	var burst := width * (1.1 + 0.25 * sin(strike * 30.0))
+	_overlay.draw_circle(to, burst, Color(0.35, 0.65, 1.0, 0.3 * fade))
+	_overlay.draw_circle(to, burst * 0.55, Color(0.75, 0.92, 1.0, 0.8 * fade))
+	_overlay.draw_circle(from, width * 0.4, Color(0.75, 0.92, 1.0, 0.8 * fade))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(strike * 30.0)
+	for s in 30:
+		var at := to + Vector2(rng.randf_range(-45, 45), rng.randf_range(-45, 45))
+		_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(0.4, 0.95, 1.0, fade * rng.randf()))
 
 
 ## Nassan, staying beside the party for the turn, with a little planning bubble,
@@ -1290,7 +1526,9 @@ func _process_enemy_turn(delta: float) -> void:
 				_last_spawn[enemy] = ENEMY_TURN_TIME - _enemy_timer
 
 	# STICKY slows the SOUL down.
-	soul.speed = SOUL_SPEED * (0.7 if _soul_member().statuses.has("STICKY") else 1.0)
+	# (STICKY slows it down; AMPED, from Ronin's riff, speeds it up.)
+	var owner_effects := _soul_member().statuses
+	soul.speed = SOUL_SPEED * (0.7 if owner_effects.has("STICKY") else 1.0) * (1.3 if owner_effects.has("AMPED") else 1.0)
 
 	if _invincible_timer > 0.0:
 		# Just got hit: make the SOUL blink until the invincibility wears off.
@@ -1384,10 +1622,12 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 	var damage := ceili(after_defense / 2.0) if member.defending else after_defense
 	if _shield_up:
 		damage = roundi(damage * SHIELD_LETS_THROUGH)
-	# Overheal soaks up the hit first.
-	var soaked := mini(damage, member.overheal)
+	# Overheal soaks up the hit first: Ronin's purple, then Eggo's blue.
+	var soaked := mini(damage, member.overheal_purple + member.overheal)
 	if soaked > 0:
-		member.overheal -= soaked
+		var from_purple := mini(soaked, member.overheal_purple)
+		member.overheal_purple -= from_purple
+		member.overheal -= soaked - from_purple
 		damage -= soaked
 		_add_popup(str(soaked), _panel_position(member) + Vector2(60, 0), Color(0.4, 0.7, 1.0))
 	member.hp = maxi(member.hp - damage, 0)
@@ -2748,27 +2988,40 @@ func _draw_party_panel() -> void:
 		# missing stays red), and whatever's left over makes the bar physically longer.
 		var extra := 0.0
 		var hp_text := "%d / %d" % [member.hp, member.max_hp]
-		if member.overheal > 0:
+		var total_over := member.overheal + member.overheal_purple
+		if total_over > 0:
 			var bar := Rect2(x + 98, PANEL_Y - 13, 96, 14)
-			var blue_color := Color(0.25, 0.55, 1.0)
-			var inside := mini(member.overheal, member.max_hp - member.hp)
-			var past := member.overheal - inside
-			if inside > 0:
-				var from := bar.size.x * member.hp / member.max_hp
-				var fill := Rect2(bar.position + Vector2(from, 0), Vector2(bar.size.x * inside / member.max_hp, bar.size.y))
-				_overlay.draw_rect(fill, blue_color)
-				_overlay.draw_rect(Rect2(fill.position, Vector2(fill.size.x, fill.size.y * 0.3)), Color(1, 1, 1, 0.3))
-			if past > 0:
-				extra = minf(96.0 * past / member.max_hp, 36.0)
-				var more := Rect2(bar.end.x, bar.position.y, extra, bar.size.y)
-				_overlay.draw_rect(more.grow(1), Color(0.9, 0.9, 0.9))
-				_overlay.draw_rect(more, blue_color)
-				_overlay.draw_rect(Rect2(more.position, Vector2(more.size.x, more.size.y * 0.3)), Color(1, 1, 1, 0.3))
-				# Joined straight onto the bar: no border in between.
-				_overlay.draw_rect(Rect2(more.position + Vector2(-1, 0), Vector2(2, 14)), blue_color)
+			# Eggo's blue first, then Ronin's purple after it.
+			var pieces := [[member.overheal, Color(0.25, 0.55, 1.0)], [member.overheal_purple, Color(0.65, 0.35, 1.0)]]
+			var filled := member.hp
+			var extra_hp := 0
+			for piece in pieces:
+				var amount: int = piece[0]
+				var piece_color: Color = piece[1]
+				if amount <= 0:
+					continue
+				var inside := mini(amount, member.max_hp - filled)
+				if inside > 0:
+					var fill := Rect2(bar.position + Vector2(bar.size.x * filled / member.max_hp, 0), Vector2(bar.size.x * inside / member.max_hp, bar.size.y))
+					_overlay.draw_rect(fill, piece_color)
+					_overlay.draw_rect(Rect2(fill.position, Vector2(fill.size.x, fill.size.y * 0.3)), Color(1, 1, 1, 0.3))
+					filled += inside
+				var past := amount - inside
+				if past > 0:
+					var width := minf(96.0 * past / member.max_hp, 36.0 - extra)
+					if width > 0.0:
+						var more := Rect2(bar.end.x + extra, bar.position.y, width, bar.size.y)
+						_overlay.draw_rect(Rect2(more.position + Vector2(0, -1), Vector2(more.size.x + 1, more.size.y + 2)), Color(0.9, 0.9, 0.9))
+						_overlay.draw_rect(more, piece_color)
+						_overlay.draw_rect(Rect2(more.position, Vector2(more.size.x, more.size.y * 0.3)), Color(1, 1, 1, 0.3))
+						# Joined straight onto what's before it: no border in between.
+						_overlay.draw_rect(Rect2(more.position + Vector2(-1, 0), Vector2(2, 14)), piece_color)
+						extra += width
+					extra_hp += past
+			if extra_hp > 0:
 				# Past the natural limit: "30 / 43" (the max, then the new total).
-				hp_text = "%d / %d" % [member.max_hp, member.hp + member.overheal]
-			_overlay.draw_string(_font, bar.position + Vector2(bar.size.x * member.hp / member.max_hp + 2, 11), "+%d" % member.overheal, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+				hp_text = "%d / %d" % [member.max_hp, member.hp + total_over]
+			_overlay.draw_string(_font, bar.position + Vector2(bar.size.x * member.hp / member.max_hp + 2, 11), "+%d" % total_over, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
 		_overlay.draw_string(_font, Vector2(x + 200 + extra, PANEL_Y), hp_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE if extra == 0.0 else 14, Color.WHITE)
 		if member.defending:
 			_overlay.draw_string(_font, Vector2(x + 256, PANEL_Y - 1), "DEF", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.SKY_BLUE)

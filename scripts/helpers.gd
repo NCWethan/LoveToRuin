@@ -12,7 +12,9 @@ extends RefCounted
 ##             SOUL is safe for twice as long), or "read" (Nat: +15% toward sparing
 ##             an enemy, and he reads out what every enemy will do next turn), or
 ##             "lightning" (N.C. Wethan: damage, and STRAVANT on the enemy: its
-##             attacks are slower for 3 turns. Only below half HP)
+##             attacks are slower for 3 turns. Only below half HP), or "riff"
+##             (Ronin: plays his guitar; after the riff, everyone gets 5 purple
+##             overheal and AMPED, a faster SOUL)
 ##   cooldown  turns before they can be called again (default 3, the shared wait)
 ##   charges   how many times they can be called per battle (default: no limit)
 ## Members without a decided ability yet use a placeholder hit.
@@ -38,7 +40,9 @@ const HELPERS := {
 	# enemy is STRAVANT for 3 turns (its attacks move slower). Only when whoever calls
 	# him is below half HP. 1 charge per battle.
 	"NCWethan": {"color": Color(0.45, 0.85, 1.0), "line": "N.C. Wethan bursts in! \"LIGHTNING TIME!!!\"", "move": "STRAVANT'S LIGHTNING", "kind": "lightning", "charges": 1, "low_hp": true},
-	"Ronin": {"color": Color(1.0, 0.55, 0.15), "line": "Ronin strolls in, guitar first!", "move": "FIRE CHORD"},
+	# Ronin plugs in and plays his riff (the whole thing). When it's over, everyone
+	# gets 5 overheal (purple; it stacks with Eggo's blue) and is AMPED for 2 turns.
+	"Ronin": {"color": Color(1.0, 0.55, 0.15), "line": "Ronin plugs in. \"THIS ONE'S FOR YOU GUYS!!\"", "move": "POWER RIFF", "kind": "riff"},
 	"Supreme": {"color": Color(0.8, 0.82, 0.9), "line": "Supreme arrives with a spreadsheet!", "move": "STATISTICAL STRIKE"},
 	"Crayola": {"color": Color(1.0, 0.55, 0.8), "line": "Crayola shyly steps in!", "move": "CARD FLICK"},
 	"Rooster": {"color": Color(1.0, 0.3, 0.3), "line": "Rooster struts in!", "move": "ROAST"},

@@ -16,6 +16,8 @@ var color: Color
 ## Extra HP on top of the max (from The-Eggo Benedict). Hits use it up first. It
 ## only lasts for the battle it was given in.
 var overheal: int = 0
+## More of it, from Ronin's riff: drawn purple, used up before the blue.
+var overheal_purple: int = 0
 ## True while this member is defending this turn (takes half damage).
 var defending: bool = false
 ## The member's picture on the left side of the battle screen.

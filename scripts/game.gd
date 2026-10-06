@@ -59,7 +59,7 @@ var _sounds: Dictionary = {}
 ## Sounds that are recordings rather than made in code. To swap one, replace the file.
 ## hopkuna_laugh: from Undertale (Omega Flowey's laugh), for private use only.
 ## Replace it with a laugh you have the rights to before sharing the game publicly.
-const SOUND_FILES := {"hopkuna_laugh": "res://audio/sfx/hopkuna_laugh.mp3"}
+const SOUND_FILES := {"hopkuna_laugh": "res://audio/sfx/hopkuna_laugh.mp3", "ronin_riff": "res://audio/sfx/ronin_riff.wav"}
 
 ## Music: two players, so one song can fade out while the next fades in.
 const MUSIC_FOLDER := "res://audio/music/"
@@ -445,6 +445,11 @@ func music_time() -> float:
 	return player.get_playback_position() + AudioServer.get_time_since_last_mix()
 
 
+## Turns the music way down (or back up), e.g. while Ronin plays his riff.
+func duck_music(on: bool) -> void:
+	_fade_music(_music_players[_music_current], MUSIC_VOLUME_DB - (30.0 if on else 0.0), 0.5, false)
+
+
 func stop_music(fade_time: float = 0.6) -> void:
 	play_music("", fade_time)
 
@@ -579,6 +584,7 @@ func finish_battle(result: Dictionary) -> void:
 	# (And overheal from the fight wears off.)
 	for member in party:
 		member.overheal = 0
+		member.overheal_purple = 0
 		if member.is_down():
 			member.hp = maxi(1, member.max_hp / 4)
 	busy = false
