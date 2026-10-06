@@ -398,7 +398,7 @@ func _add_dread() -> void:
 	_vignette_wait = randf_range(3.0, DREAD_VIGNETTE_GAP[stage].x)
 	get_tree().process_frame.connect(_update_vignette)
 	Game.music_pitch = DREAD_MUSIC_PITCH[stage]
-	if stage >= 3:
+	if stage >= 3 or Game.on_genocide_route():
 		Game.music_override = "genocide"
 	if AVOID_RADIUS[stage] > 0.0:
 		get_tree().process_frame.connect(_keep_away)

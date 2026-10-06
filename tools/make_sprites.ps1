@@ -98,15 +98,17 @@ $palette['@'] = @(45, 105, 75)     # green book cover
 $palette['~'] = @(98, 112, 72)     # olive tent fabric
 $palette['^'] = @(66, 78, 48)      # tent seams
 # Genocide (Elric getting worse)
-$palette['+'] = @(182, 160, 212)   # paler skin
+$palette['+'] = @(30, 32, 30)      # Relic: black hair
 $palette['?'] = @(158, 146, 172)   # grayer skin
-$palette['&'] = @(124, 116, 134)   # dead-gray skin
+$palette['&'] = @(206, 200, 188)   # Relic: ash-pale skin
+$palette['|'] = @(52, 112, 64)     # Relic: green hoodie
+$palette['$'] = @(52, 58, 78)      # Relic: dark jeans
 $palette['='] = @(92, 72, 108)     # dark circles
 $palette['!'] = @(22, 84, 40)      # stains (deep green: Relic's)
 $palette['>'] = @(40, 200, 90)     # glowing green eyes (Relic's; Hopkuna's stay red)
-$palette['<'] = @(24, 8, 12)       # black tears
-$palette[';'] = @(86, 62, 40)      # darkened tunic
-$palette[','] = @(58, 58, 40)      # darkened pants
+$palette['<'] = @(20, 16, 14)      # scorch marks, the token's cord
+$palette[';'] = @(34, 74, 44)      # Relic: hoodie shadows and pocket
+$palette[','] = @(38, 42, 58)      # Relic: line between the legs
 $palette['/'] = @(70, 44, 26)      # dark, greasy hair
 $outline = @(125, 125, 140)
 
@@ -2620,18 +2622,19 @@ foreach ($who in $sideUpper.Keys) {
 }
 
 # --- Genocide: Elric, getting worse -------------------------------------------
-# The more Elric kills, the more horrid they look (see Game.dread()). Every Elric
-# picture (overworld, walking, running, battle poses, portraits) gets three
-# worse versions, saved with "elric" changed to "elric_dread1/2/3":
-#   1  paler skin, dark circles under the eyes
-#   2  grayer skin, glowing red eyes, blood stains on the clothes
-#   3  dead-gray skin, black tears, more blood, darker clothes and hair
-# And as dread grows, Elric slowly starts to smile (never showing teeth): one
-# corner of the mouth at 1, a small smile at 2, a wide one at 3.
-$dreadSkin = @{ 1 = '+'; 2 = '?'; 3 = '&' }
+# The more Elric kills, the more they become someone else (see Game.dread()).
+# Every Elric picture (overworld, walking, running, battle poses, portraits) gets
+# three versions, saved with "elric" changed to "elric_dread1/2/3":
+#   1  Nothing's wrong. Elric just smiles.
+#   2  Halfway: grayer skin, dark circles, darker hair, glowing green eyes, deep
+#      green stains, and a wider smile.
+#   3  RELIC, in the flesh: ash-pale skin, black hair, Relic's green hoodie (the
+#      hem scorched black, from the fire), dark jeans, the curly-fry token on a
+#      cord around their neck, green eyes, and the same wide smile.
+# Never red: red is Hopkuna's. The smile never shows teeth.
+$dreadSkin = @{ 1 = 'L'; 2 = '?'; 3 = '&' }
 $stains2 = @(@(13, 9), @(16, 14), @(19, 7), @(24, 9))
-$stains3 = $stains2 + @(@(12, 15), @(14, 5), @(17, 11), @(18, 16), @(21, 13), @(26, 14), @(27, 8), @(15, 18), @(23, 12))
-$clothes = 'Tdtro;,'
+$clothes = 'Tdtro'
 
 function Set-Pixel([string[]]$rows, [int]$y, [int]$x, [string]$ch) {
     if ($y -lt 0 -or $y -ge $rows.Count -or $x -lt 0 -or $x -ge $rows[$y].Length) { return }
@@ -2653,16 +2656,29 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
             if ((Get-Pixel $p $y $x) -eq 'K' -and ((Get-Pixel $p $y ($x - 1)) -eq 'L' -or (Get-Pixel $p $y ($x + 1)) -eq 'L')) { $eyes += , @($y, $x) }
         }
     }
-    # The smile (front views only, where the mouth is two black pixels).
+    # Front views only (where the mouth is two black pixels): the smile, and Relic's token.
     $front = (Get-Pixel $p 9 (11 + $xoff)) -eq 'K' -and (Get-Pixel $p 9 (12 + $xoff)) -eq 'K'
     for ($y = 0; $y -lt $p.Count; $y++) {
         $c = $p[$y].ToCharArray()
         for ($x = 0; $x -lt $c.Length; $x++) {
-            switch -CaseSensitive ([string]$c[$x]) {
-                'L' { $c[$x] = $skin }
-                'T' { if ($stage -ge 3) { $c[$x] = ';' } }
-                'O' { if ($stage -ge 3) { $c[$x] = ',' } }
-                'h' { if ($stage -ge 3) { $c[$x] = '/' } }
+            $ch = [string]$c[$x]
+            if ($stage -eq 2) {
+                switch -CaseSensitive ($ch) {
+                    'L' { $c[$x] = $skin }
+                    'h' { $c[$x] = '/' }
+                }
+            } elseif ($stage -ge 3) {
+                # Relic: every one of Elric's colors becomes one of theirs.
+                switch -CaseSensitive ($ch) {
+                    'L' { $c[$x] = '&' }
+                    'h' { $c[$x] = '+' }
+                    'T' { $c[$x] = '|' }
+                    'd' { $c[$x] = ';' }
+                    't' { $c[$x] = ';' }
+                    'r' { $c[$x] = ';' }
+                    'O' { $c[$x] = '$' }
+                    'o' { $c[$x] = ',' }
+                }
             }
         }
         $p[$y] = -join $c
@@ -2670,30 +2686,43 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
     foreach ($eye in $eyes) {
         $y = $eye[0]; $x = $eye[1]
         if ($stage -ge 2) { Set-Pixel $p $y $x '>' }
-        if ((Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
-        if ($stage -ge 3) {
-            # (Only one drop: longer tracks would run into the smile.)
-            for ($k = 1; $k -le 1; $k++) { if ((Get-Pixel $p ($y + $k) $x) -in @($skin, '=')) { Set-Pixel $p ($y + $k) $x '<' } }
-        }
+        if ($stage -eq 2 -and (Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
     }
     if ($front) {
         if ($stage -eq 1) {
-            # One corner curls up.
-            Set-Pixel $p 8 (13 + $xoff) 'K'
-        } elseif ($stage -eq 2) {
-            # Both corners: a small, quiet smile.
+            # Just a smile.
             Set-Pixel $p 8 (10 + $xoff) 'K'; Set-Pixel $p 8 (13 + $xoff) 'K'
         } else {
-            # A wide, thin, closed smile: dipping a row lower, its corners
-            # curling all the way up to the tears under the eyes.
+            # A wide, thin, closed smile, dipping a row lower.
             Set-Pixel $p 9 (11 + $xoff) $skin; Set-Pixel $p 9 (12 + $xoff) $skin
             Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
             Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
         }
     }
-    $stains = if ($stage -ge 3) { $stains3 } elseif ($stage -ge 2) { $stains2 } else { @() }
-    foreach ($s in $stains) {
-        if ($clothes.Contains((Get-Pixel $p $s[0] ($s[1] + $xoff)))) { Set-Pixel $p $s[0] ($s[1] + $xoff) '!' }
+    if ($stage -eq 2) {
+        foreach ($s in $stains2) {
+            if ($clothes.Contains((Get-Pixel $p $s[0] ($s[1] + $xoff)))) { Set-Pixel $p $s[0] ($s[1] + $xoff) '!' }
+        }
+    }
+    if ($stage -ge 3) {
+        # The hoodie's hem, scorched black.
+        $hem = -1
+        for ($y = 0; $y -lt $p.Count; $y++) {
+            $run = ([regex]::Matches($p[$y], '\|')).Count
+            if ($run -ge 6) { $hem = $y }
+        }
+        if ($hem -ge 0) {
+            for ($x = 0; $x -lt $p[$hem].Length; $x++) {
+                if ((Get-Pixel $p $hem $x) -eq '|' -and (($x * 7 + $hem) % 3) -ne 0) { Set-Pixel $p $hem $x '<' }
+                if ((Get-Pixel $p ($hem - 1) $x) -eq '|' -and (($x * 5 + $hem) % 4) -eq 0) { Set-Pixel $p ($hem - 1) $x '<' }
+            }
+        }
+        # The curly-fry token (the last thing in the collection) on a cord.
+        if ($front -and (Get-Pixel $p 14 (11 + $xoff)) -eq '|') {
+            Set-Pixel $p 12 (10 + $xoff) '<'; Set-Pixel $p 12 (13 + $xoff) '<'
+            Set-Pixel $p 13 (11 + $xoff) '<'; Set-Pixel $p 13 (12 + $xoff) '<'
+            Set-Pixel $p 14 (11 + $xoff) '*'; Set-Pixel $p 14 (12 + $xoff) '*'
+        }
     }
     return $p
 }

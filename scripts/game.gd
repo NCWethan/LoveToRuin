@@ -585,14 +585,16 @@ func on_genocide_route() -> bool:
 	return flags.get("route", "") == "genocide"
 
 
+## (1: Elric just smiles. 2: halfway. 3: Relic, in the flesh.) The Genocide route
+## starts halfway; only the very end of the killing makes Elric into Relic.
 func dread() -> int:
-	if flags.get("route", "") == "genocide":
-		return 3
 	var kills := int(flags.get("kills", 0))
 	var stage := 0
 	for needed in DREAD_KILLS:
 		if kills >= needed:
 			stage += 1
+	if flags.get("route", "") == "genocide":
+		stage = maxi(stage, 2)
 	return stage
 
 

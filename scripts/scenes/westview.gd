@@ -518,8 +518,8 @@ func _trophy_case() -> void:
 	if Game.on_genocide_route():
 		lines.append("* It's me, RELIC.")
 	elif Game.dread() >= 3:
-		lines.append("* (In the glass: it's you.)")
-		lines.append("* (...It smiles.)\n* (You aren't smiling.)")
+		lines.append("* (In the glass: someone in a scorched\n*  green hoodie.)")
+		lines.append("* (...It smiles.)\n* (You can't tell if you are.)")
 	elif Game.dread() > 0:
 		lines.append("* (In the glass: it's you.)")
 		lines.append("* (...Your reflection looks away a moment\n*  before you do.)")
