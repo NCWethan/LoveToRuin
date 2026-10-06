@@ -136,6 +136,8 @@ func _build_hallway() -> void:
 	# A long corridor: wall and lockers along the top, floor, wall along the bottom.
 	room.fill(40, 7, 80, 1, Room.INTERIOR_WALL)
 	room.fill(40, 8, 80, 1, Room.LOCKER)
+	# The trophy case, built into the wall where two lockers would be.
+	room.fill(65, 8, 2, 1, Room.INTERIOR_WALL)
 	room.fill(40, 9, 80, 6, Room.HALL_FLOOR)
 	room.fill(40, 15, 80, 1, Room.INTERIOR_WALL)
 	room.fill(40, 8, 1, 7, Room.INTERIOR_WALL)
@@ -241,13 +243,18 @@ func _draw_decor() -> void:
 		_decor.draw_rect(r, Color8(235, 225, 160))
 		_decor.draw_string(_font, r.position + Vector2(3, 11), poster_text, HORIZONTAL_ALIGNMENT_LEFT, 50, 8, Color8(150, 30, 30))
 
-	# The trophy case between the posters, its glass dark as a mirror.
-	var case_rect := Rect2(65 * T - 14, 6 * T + 4, 48, 26)
-	_decor.draw_rect(case_rect, Color8(150, 120, 60))
+	# The trophy case, set into the wall between the posters (two tiles wide, from
+	# the top of the wall down to the floor), its glass dark as a mirror.
+	var case_rect := Rect2(65 * T + 1, 7 * T + 1, 2 * T - 2, 2 * T - 2)
+	_decor.draw_rect(case_rect, Color8(120, 90, 50))
 	_decor.draw_rect(case_rect.grow(-3), Color8(28, 34, 48))
+	_decor.draw_rect(Rect2(case_rect.position + Vector2(3, 18), Vector2(case_rect.size.x - 6, 2)), Color8(120, 90, 50))
 	for k in 3:
-		_decor.draw_rect(Rect2(case_rect.position + Vector2(8 + k * 12, 12 - k * 2), Vector2(6, 8 + k * 2)), Color8(200, 170, 70))
-	_decor.draw_line(case_rect.position + Vector2(6, 4), case_rect.position + Vector2(16, 20), Color(1, 1, 1, 0.25), 1.0)
+		var cup := case_rect.position + Vector2(7 + k * 10, 8 - (k % 2) * 2)
+		_decor.draw_rect(Rect2(cup, Vector2(6, 6 + (k % 2) * 2)), Color8(210, 175, 70))
+		_decor.draw_rect(Rect2(cup + Vector2(2, 8 + (k % 2) * 2), Vector2(2, 2)), Color8(210, 175, 70))
+	_decor.draw_rect(Rect2(case_rect.position + Vector2(9, 25), Vector2(20, 7)), Color8(190, 190, 200))
+	_decor.draw_line(case_rect.position + Vector2(5, 4), case_rect.position + Vector2(14, 30), Color(1, 1, 1, 0.22), 1.0)
 
 	# The humming locker glows faintly red until it's been opened.
 	if not flag("loop_broken"):
@@ -370,7 +377,7 @@ func _place_hotspots() -> void:
 		[Vector2(55 * T + 10, 7 * T + 10), _read_poster],
 		[Vector2(75 * T + 10, 7 * T + 10), _read_poster],
 		[Vector2(95 * T + 10, 7 * T + 10), _read_poster],
-		[Vector2(65 * T + 10, 7 * T + 10), _trophy_case],
+		[Vector2(66 * T, 8 * T + 10), _trophy_case],
 		[Vector2(53 * T, 36 * T - 4), _read_chalkboard],
 		[Vector2(47 * T, 49 * T - 4), _back_to_hallway],
 		[Vector2(67 * T - 4, 42 * T), _gym_door],
@@ -499,14 +506,18 @@ func _loop_back() -> void:
 ## The trophy case: its dark glass shows Elric's reflection. Mostly.
 func _trophy_case() -> void:
 	var lines: Array = ["* (A trophy case. Third place, 1998 regional\n*  spelling bee. The glass is dark.)"]
-	match Game.dread():
-		0:
-			lines.append("* (In the glass: it's you.)")
-		1, 2:
-			lines.append("* (In the glass: it's you.)")
-			lines.append("* (...Your reflection looks away a moment\n*  before you do.)")
-		_:
-			lines.append("* It's me, RELIC.")
+	# (Relic only says their name on the Genocide route. Before then, a lot of
+	# killing just makes the reflection... wrong.)
+	if Game.on_genocide_route():
+		lines.append("* It's me, RELIC.")
+	elif Game.dread() >= 3:
+		lines.append("* (In the glass: it's you.)")
+		lines.append("* (...It smiles.)\n* (You aren't smiling.)")
+	elif Game.dread() > 0:
+		lines.append("* (In the glass: it's you.)")
+		lines.append("* (...Your reflection looks away a moment\n*  before you do.)")
+	else:
+		lines.append("* (In the glass: it's you.)")
 	await Game.dialogue.say(lines)
 
 

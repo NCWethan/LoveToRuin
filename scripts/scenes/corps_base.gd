@@ -497,7 +497,6 @@ const DREAM_START := [
 	"* (...)",
 	"* (Somewhere, something is humming.)",
 	{"who": "Relic", "tag": "???", "face": false, "text": "...You're carrying them."},
-	{"who": "Relic", "tag": "???", "face": false, "text": "The pieces. I can feel every one of them.\nThree now."},
 	{"who": "Relic", "tag": "???", "face": false, "text": "I don't know who you are. But you walk like I used to.\nLike there's nowhere you're allowed to stop."},
 ]
 const DREAM_PACIFIST := [
@@ -520,7 +519,8 @@ func _dream() -> void:
 	Game.flags["dreamed_relic"] = true
 	await Game.fade_out(1.2)
 	Game.stop_music(1.0)
-	# The dark, with a faint red glow breathing in it, under the text box.
+	# The dark, with a faint green glow breathing in it (Relic's color; red is
+	# Hopkuna's), under the text box.
 	var dark := CanvasLayer.new()
 	dark.layer = 45
 	var screen := Control.new()
@@ -530,7 +530,7 @@ func _dream() -> void:
 		screen.draw_rect(Rect2(0, 0, 640, 480), Color.BLACK)
 		var glow := 0.18 + 0.08 * sin(clock[0] * 1.6)
 		for ring in 6:
-			screen.draw_circle(Vector2(320, 180), 90.0 - ring * 14.0, Color(0.6, 0.05, 0.12, glow * 0.25))
+			screen.draw_circle(Vector2(320, 180), 90.0 - ring * 14.0, Color(0.1, 0.6, 0.25, glow * 0.25))
 	)
 	# (A timer keeps the glow breathing; it goes away with the dream.)
 	var timer := Timer.new()
@@ -545,6 +545,10 @@ func _dream() -> void:
 	add_child(dark)
 	await Game.fade_in(1.2)
 	var lines: Array = DREAM_START.duplicate()
+	# How many fragments Elric is carrying right now.
+	var count := int(Game.flags.get("fragments", 3))
+	var said: String = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"][clampi(count, 0, 12)]
+	lines.insert(4, {"who": "Relic", "tag": "???", "face": false, "text": "The pieces. I can feel every one of them.\n%s now." % said})
 	lines.append_array(DREAM_PACIFIST if Game.flags.get("route", "") == "pacifist" else DREAM_NEUTRAL)
 	await Game.dialogue.say(lines)
 	await Game.fade_out(1.2)

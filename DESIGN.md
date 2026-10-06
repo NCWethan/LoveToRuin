@@ -47,7 +47,7 @@ Going into a shop fades to a whole different screen, like Undertale: the shop it
 
 Each shopkeeper has their own things to talk about (some only after something has happened, like Rock Paper Scissors or Nat's story), their own reasons not to buy your stuff, and their own goodbye. If Elric has been killing things, they're nervous when you come in.
 
-**On Genocide (once everyone has gone):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it. Nassan's is to Elric, personally, and goes on for five pages of receipt paper (LEFT / RIGHT flips them): the plan on his wall with Elric's name on it, Hop coming by every day to talk about Elric, looking for the step where he could have stopped it.
+**On the Genocide route (once everyone has gone; it starts after Chapter 1, so this is for coming back to the mall later):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it. At Vons, Gloria's CLOSED sign is on top, and under it Nassan's note: to Elric, personally, five pages of receipt paper (LEFT / RIGHT flips them): the plan on his wall with Elric's name on it, Hop coming by every day to talk about Elric, looking for the step where he could have stopped it.
 
 **Cards** (Games & Cards) go in their own **Card** slot, one per person, and each has a picture and a power instead of stats: **Lucky Card** (1 in 6 FIGHT hits are LUCKY, 2x damage), **Heart Card** (survive one knockout a battle at 1 HP), **Clover Card** (+50% money from battles), **Snack Card** (food heals 50% more), **Clock Card** (enemy attacks move 15% slower).
 
@@ -90,7 +90,7 @@ Each shopkeeper has their own things to talk about (some only after something ha
 
 ### Relic
 
-**Relic is to Elric what Chara is to Frisk.** (RELIC is an anagram of ELRIC.)
+**Relic is to Elric what Chara is to Frisk.** (RELIC is an anagram of ELRIC.) Relic's color is **green** (Hopkuna's is red), so the two are never confused.
 
 **Who Relic was**
 - **Hop's best friend**, years ago. A wanderer with nowhere to be, like Elric.
@@ -104,7 +104,7 @@ Each shopkeeper has their own things to talk about (some only after something ha
   - **Dreams:** when Elric sleeps (the bunk at the Corps' base), Relic speaks to them directly. At first Relic doesn't know who Elric is, only that Elric is carrying them.
   - **Pacifist:** Relic wants Hop freed. Destroying the fragments frees Relic too, and Relic says goodbye to Hop through Elric.
   - **Neutral:** Relic stays restless and keeps pulling Elric onward: the endless wandering.
-  - **Genocide:** Relic's grief turns to rage at everyone who let it happen. The narration drops the parentheses and says **"we"**; the reflection in Westview's trophy case says **"It's me, RELIC."** In the end, Relic turns on Hopkuna, then on everything.
+  - **Genocide:** Relic's grief turns to rage at everyone who let it happen. The narration drops the parentheses and says **"we"**; a mirror says **"It's me, RELIC."** (Relic only ever says their name on the Genocide route itself, which starts after Chapter 1.) In the end, Relic turns on Hopkuna, then on everything.
 
 **Hints in Chapter 1 (built)**
 - Meeting Elric, Hop: "Elric. ...Huh. Sorry. You just remind me of someone."
@@ -112,8 +112,10 @@ Each shopkeeper has their own things to talk about (some only after something ha
 - Nat's story: "Somebody gave everything to break it apart. The book doesn't say who."
 - Hopkuna on Westview Field: "The last time was years ago. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
 - The first dream (resting on the bunk at the base, Pacifist or Neutral): the voice in the dark, with different words for each route.
-- The trophy case in Westview's hallway: "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do. At full dread: "It's me, RELIC."
-- On Genocide, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
+- The trophy case in Westview's hallway (set into the wall): "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do; with a lot (10+ kills in Chapter 1), it smiles while you don't. On the Genocide route: "It's me, RELIC."
+- On the Genocide route, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
+
+**Continuity:** the Genocide route only starts at the end of Chapter 1 (Go with Hop), and right now it goes straight to the demo end, so its content (empty shops, "we", the RELIC mirror) is ready for when Genocide reaches those places in later chapters. During Chapter 1, killing only raises dread: Elric looks worse, people flinch and back away, shopkeepers are nervous, and the reflection goes wrong. Nobody leaves and Relic doesn't say their name yet.
 
 ## 4. The cast
 

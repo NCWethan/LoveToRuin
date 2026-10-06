@@ -35,8 +35,10 @@ static func _scared() -> bool:
 
 ## Genocide: everyone has gone. The shops are empty, the shopkeepers have left
 ## notes on the counter, and nobody is there to stop Elric from taking things.
+## (Only on the Genocide route itself, which starts after Chapter 1. Killing a lot
+## before then just makes the shopkeepers nervous.)
 static func gone() -> bool:
-	return Game.dread() >= 3
+	return Game.on_genocide_route()
 
 
 ## The note each shopkeeper leaves behind (by their sprite name).
@@ -54,6 +56,16 @@ const NOTES := {
 	"lou": "Kitchen's closed. First time in\nthirty years.\nMuffinMage never came in for his\nsalmon burger today.\nI kept it warm until midnight.\nI think you know why.\n\n- Lou",
 	"pip": "BACK IN 5 MINUTES\n\nI always said that. I always came\nback. Not this time.\nThe cards were for kids who laughed.\nThere aren't any left.\nWe're all better off without you.\n\n- Pip",
 }
+
+## The pages of the note on the counter. At Vons, Gloria's sign comes first, and
+## Nassan's pages are under it (he worked there by the time everyone left).
+static func note_pages(sprite: String) -> Array:
+	var note = NOTES.get(sprite, "...")
+	var pages: Array = note.duplicate() if note is Array else [note]
+	if sprite == "nassan_vons":
+		pages.push_front(NOTES["gloria"])
+	return pages
+
 
 ## How much money is left in each register, for taking.
 const REGISTERS := {"gloria": 46, "nassan_vons": 46, "dex": 23, "lou": 31, "pip": 9}

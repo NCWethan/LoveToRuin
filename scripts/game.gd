@@ -557,6 +557,13 @@ func start_battle(battle_id: String, from_scene: String, at: Vector2, random: bo
 const DREAD_KILLS := [2, 6, 10]
 
 
+## Elric chose to go with Hop (Hopkuna) at the end of Chapter 1. Killing a lot
+## before then raises dread() too, but things that only happen once everyone
+## has turned away (empty shops, Relic saying "we") wait for the route itself.
+func on_genocide_route() -> bool:
+	return flags.get("route", "") == "genocide"
+
+
 func dread() -> int:
 	if flags.get("route", "") == "genocide":
 		return 3

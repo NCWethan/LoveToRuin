@@ -263,8 +263,7 @@ func _choose(option: String) -> void:
 				Game.play_sfx("item")
 				_say_lines(["* We open the register.\n* We take $%d." % cash, "* Nobody stops us.\n* Nobody can."], Mode.MAIN)
 		"Read":
-			var note = Shops.NOTES.get(_shop["sprite"], "...")
-			_pages = note if note is Array else [note]
+			_pages = Shops.note_pages(_shop["sprite"])
 			_page = 0
 			_reading = true
 			_mode = Mode.READING

@@ -57,7 +57,7 @@ const SPEAKERS := {
 	"Wally": {"color": Color(0.75, 0.5, 0.3), "pitch": 0.55},
 	"Hopkuna": {"color": Color(1.0, 0.25, 0.3), "pitch": 0.5},
 	# The voice in the fragments.
-	"Relic": {"color": Color(0.95, 0.4, 0.45), "pitch": 0.8},
+	"Relic": {"color": Color(0.45, 0.95, 0.55), "pitch": 0.8},
 	# Shopkeepers.
 	"Gloria": {"color": Color(0.9, 0.35, 0.35), "pitch": 1.05},
 	"Dex": {"color": Color(0.95, 0.3, 0.3), "pitch": 0.95},
