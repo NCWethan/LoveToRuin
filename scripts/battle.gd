@@ -932,6 +932,7 @@ var _riff_script: GDScript
 var _hands_script: GDScript
 var _guitar_sprite: Texture2D
 var _amp_sprite: Texture2D
+var _ronin_zone: Texture2D
 
 
 func _hands() -> GDScript:
@@ -1000,6 +1001,7 @@ func _draw_ronin_riff(t: float, texture: Texture2D) -> void:
 	if _guitar_sprite == null:
 		_guitar_sprite = load("res://art/sprites/ronin_guitar.png")
 		_amp_sprite = load("res://art/sprites/amp.png")
+		_ronin_zone = load("res://art/portraits/ronin_happy.png")
 	var riff_end := RIFF_START + _riff_length()
 	var spot := 290.0
 	var leaving := t > riff_end + 0.4
@@ -1035,11 +1037,19 @@ func _draw_ronin_riff(t: float, texture: Texture2D) -> void:
 			var f := k / 8.0
 			cable.append(cone.lerp(plug, f) + Vector2(0, sin(f * PI) * 18.0))
 		_overlay.draw_polyline(cable, Color(0.55, 0.3, 0.9), 2.0)
-	# Ronin. On a held note, he leans back.
+	# Ronin. While he plays he's in the zone: eyes shut, grinning, bobbing his head
+	# down on every note (and nodding along in between). On a held note, he leans
+	# back into it.
 	var lean := -0.08 if moment["hold"] else 0.0
+	var bob := 0.0
+	if playing:
+		texture = _ronin_zone
+		bob = maxf(0.0, 1.0 - moment["since"] / 0.15) * 4.0 + (sin(t * 9.0) * 0.5 + 0.5) * 1.5
+		if not moment["hold"]:
+			lean += sin(t * 4.5) * 0.04
 	var size := texture.get_size() * 3.0
 	_overlay.draw_set_transform(feet, lean, Vector2(-1.0 if leaving else 1.0, 1.0))
-	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false)
+	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y + bob), Vector2(size.x, size.y - bob)), false)
 	_overlay.draw_set_transform(Vector2.ZERO)
 	if leaving or t < 0.45:
 		return
