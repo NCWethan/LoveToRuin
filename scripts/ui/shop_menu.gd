@@ -26,7 +26,7 @@ const TYPE_SPEED := 40.0
 const KEEPER_SCALE := 8.0
 const COUNTER_Y := 196.0
 
-enum Mode { MAIN, BUY, CONFIRM, SELL, SELL_CONFIRM, TALK, SAYING, LEAVING }
+enum Mode { MAIN, BUY, CONFIRM, SELL, SELL_CONFIRM, TALK, SAYING, LEAVING, READING }
 
 var _panel: Control
 var _font: Font
@@ -54,6 +54,9 @@ var _reply: String = ""
 var _reply_typed: float = 0.0
 ## The line typed in the left box is the note (drawn on paper instead).
 var _reading: bool = false
+## The note being read (some go on for pages), and which page is showing.
+var _pages: Array = []
+var _page: int = 0
 
 
 func _ready() -> void:
@@ -191,6 +194,21 @@ func _process(delta: float) -> void:
 					_buy(_list()[_cursor])
 				else:
 					_sell(_cursor)
+		Mode.READING:
+			# Left and Right flip the pages; ENTER turns to the next one, and puts
+			# the note down after the last.
+			var flip := 0
+			if Input.is_action_just_pressed("ui_right") or confirm:
+				flip = 1
+			elif Input.is_action_just_pressed("ui_left"):
+				flip = -1
+			if cancel or (flip == 1 and _page == _pages.size() - 1):
+				_reading = false
+				Game.play_sfx("select")
+				_back_to_main()
+			elif flip != 0 and _page + flip >= 0:
+				_page += flip
+				Game.play_sfx("move", 0.8)
 		Mode.SAYING, Mode.LEAVING:
 			if confirm or cancel:
 				if _typing():
@@ -245,8 +263,11 @@ func _choose(option: String) -> void:
 				Game.play_sfx("item")
 				_say_lines(["* (You open the register.)\n* (You took $%d.)" % cash, "* (Nobody stops you.)"], Mode.MAIN)
 		"Read":
+			var note = Shops.NOTES.get(_shop["sprite"], "...")
+			_pages = note if note is Array else [note]
+			_page = 0
 			_reading = true
-			_say_lines([Shops.NOTES.get(_shop["sprite"], "...")], Mode.MAIN)
+			_mode = Mode.READING
 		"Exit":
 			_mode = Mode.LEAVING
 			_queue = []
@@ -411,10 +432,10 @@ func _draw_left() -> void:
 				_draw_heart(Vector2(at.x + 6, y - 6))
 			_panel.draw_string(_font, Vector2(at.x + 24, y), rows[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		return
-	var shown := _text.substr(0, mini(int(_typed), _text.length()))
-	if _reading:
-		_draw_note(shown)
+	if _mode == Mode.READING:
+		_draw_note(_pages[_page])
 		return
+	var shown := _text.substr(0, mini(int(_typed), _text.length()))
 	_text_at(at, shown)
 
 
@@ -436,6 +457,8 @@ func _draw_right() -> void:
 			_panel.draw_string(_font, Vector2(at.x + 24, y), ["Yes", "No"][i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.YELLOW if chosen else Color.WHITE)
 			if chosen:
 				_draw_heart(Vector2(at.x + 6, y - 6))
+	elif _mode == Mode.READING and _pages.size() > 1:
+		_text_at(at, "LEFT / RIGHT:\n  flip pages\nENTER: next page\nX: put it down", Color(0.6, 0.6, 0.6), SMALL, 18.0)
 	elif _mode in [Mode.BUY, Mode.SELL]:
 		var shown := _reply.substr(0, mini(int(_reply_typed), _reply.length()))
 		_text_at(at, shown, Color.WHITE, SMALL, 18.0)
@@ -488,6 +511,11 @@ func _draw_note(shown: String) -> void:
 	for i in 9:
 		_panel.draw_line(Vector2(paper.position.x + 6, paper.position.y + 26 + i * 20), Vector2(paper.end.x - 6, paper.position.y + 26 + i * 20), Color8(190, 200, 225), 1.0)
 	_text_at(paper.position + Vector2(16, 22), shown, Color8(40, 30, 30), FONT_SIZE, 20.0)
+	# Which page, on notes with more than one.
+	if _pages.size() > 1:
+		var marker := "%s %d / %d %s" % ["<" if _page > 0 else " ", _page + 1, _pages.size(), ">" if _page < _pages.size() - 1 else " "]
+		var w := _font.get_string_size(marker, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		_panel.draw_string(_font, Vector2(paper.end.x - w - 10, paper.end.y - 6), marker, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color8(120, 100, 100))
 
 
 func _draw_keeper() -> void:

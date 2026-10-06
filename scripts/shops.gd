@@ -42,7 +42,14 @@ static func gone() -> bool:
 ## The note each shopkeeper leaves behind (by their sprite name).
 const NOTES := {
 	"gloria": "CLOSED.\nTwenty-two years I kept these lights\non. Fires. Floods. Cart 14.\nI turned them off because of you.\nThe kids who shopped here had names.\nYou never asked any of them.\n\n- Gloria",
-	"nassan_vons": "Elric,\nI told you not to carry it alone.\nI never thought you'd choose to.\nHop used to stop by my register\nevery day. He doesn't anymore.\nI planned for everything.\nI never planned for you.\nI'm sorry I believed in you. - Nassan",
+	# Nassan's goes on for pages, on the back of receipts. It's to Elric.
+	"nassan_vons": [
+		"Elric,\nI told you not to carry it alone.\nI never thought you'd choose to.\n\nI'm writing this on receipt paper.\nIt's all I have left here.\nGloria won't be needing it.\n                              (over)",
+		"I made a plan for you, you know.\nIt's still on my wall. Red string\nand everything. Westview first.\nThen the Corps. A bunk by the wall,\nyour name on the door.\nHop picked the color. Purple.\nHe said you'd like it.",
+		"Hop came by my register every day.\nOne soda. An hour of talking.\nAll of it about you.\n\"Elric's gonna be fine,\" he said.\n\"They're just figuring it out.\"\n\nHe doesn't come by anymore.",
+		"I planned for everything.\nMonsters. Fragments. Hopkuna.\nI never planned for you.\n\nI keep running it back, looking for\nthe step where I could have stopped\nthis. There isn't one.\nYou chose it. Every time.",
+		"Take whatever you want.\nThe register's open. It doesn't\nmatter now.\n\nJust don't come looking for me.\nI don't want to be the next\nthing you finish.\n\nI'm sorry I believed in you.  - Nassan",
+	],
 	"dex": "Took the night off. First one in a\nyear. I was saving up for college.\nThe fries are still warm.\nTake them. You take everything.\n\nStay away from us.\n\n- Dex",
 	"lou": "Kitchen's closed. First time in\nthirty years.\nMuffinMage never came in for his\nsalmon burger today.\nI kept it warm until midnight.\nI think you know why.\n\n- Lou",
 	"pip": "BACK IN 5 MINUTES\n\nI always said that. I always came\nback. Not this time.\nThe cards were for kids who laughed.\nThere aren't any left.\nWe're all better off without you.\n\n- Pip",

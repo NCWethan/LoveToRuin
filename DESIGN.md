@@ -47,7 +47,7 @@ Going into a shop fades to a whole different screen, like Undertale: the shop it
 
 Each shopkeeper has their own things to talk about (some only after something has happened, like Rock Paper Scissors or Nat's story), their own reasons not to buy your stuff, and their own goodbye. If Elric has been killing things, they're nervous when you come in.
 
-**On Genocide (once everyone has gone):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it; Nassan's is to Elric, personally.
+**On Genocide (once everyone has gone):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it. Nassan's is to Elric, personally, and goes on for five pages of receipt paper (LEFT / RIGHT flips them): the plan on his wall with Elric's name on it, Hop coming by every day to talk about Elric, looking for the step where he could have stopped it.
 
 **Cards** (Games & Cards) go in their own **Card** slot, one per person, and each has a picture and a power instead of stats: **Lucky Card** (1 in 6 FIGHT hits are LUCKY, 2x damage), **Heart Card** (survive one knockout a battle at 1 HP), **Clover Card** (+50% money from battles), **Snack Card** (food heals 50% more), **Clock Card** (enemy attacks move 15% slower).
 
