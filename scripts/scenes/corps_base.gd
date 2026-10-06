@@ -269,6 +269,9 @@ func _place_hotspots() -> void:
 	]
 	for spot in spots:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	# Rooster's mirror, in his room (room 8).
+	var rooster_room := room_rect(8)
+	world.add_child(Hotspot.create(Vector2((rooster_room.position.x + 27) * T, (rooster_room.position.y + 6) * T - 4), _rooster_mirror))
 	# Each member's door: ENTER in front of it (or just walk up into it).
 	for i in DOOR_XS.size():
 		var door_middle := Vector2((DOOR_XS[i] + 1) * T, WALK_TOP * T - 8)
@@ -295,7 +298,7 @@ func _start() -> void:
 				{"who": "Nassan", "text": "The offer stood. And here you are."},
 				{"who": "BigJoe6", "text": "...Fine. But you're on dish duty.", "mood": "angry"},
 				{"who": "Hop", "text": "ELRIC! You came back!", "mood": "happy"},
-				{"who": "Nassan", "text": "There's a spare bunk by the wall.\nEveryone's room is down the hall. Their names are on the doors."},
+				{"who": "Nassan", "text": "There's a spare bunk by the wall.\nEveryone's room is down the hall.\nTheir names are on the doors."},
 			])
 		else:
 			await Game.dialogue.say([
@@ -378,7 +381,7 @@ const ROOM_TALK := {
 	],
 	"Nassan": [
 		[["", "Ah, Elric. Come in."], ["", "This wall is everything we know about the fragments.\nEvery report. Every sighting."], ["", "Twelve fragments. Three in our hands now.\nThe red string goes... well. Everywhere."], ["", "Rest while you can.\nPlanning is my job. Surviving is yours."]],
-		[[["", "Nine left. I'm already working on where to look next."]], [["", "When it's time, you'll be the first to know."]]],
+		[[["", "Nine left. I'm already working on where to look next."]], [["", "When it's time, you'll be the first to know."]], [["smug", "Gloria gave me Sundays off. For planning."], ["", "She thinks it's a book club.\nI didn't correct her."]]],
 		"I hoped you'd come back. I planned for it, actually.",
 	],
 	"Nat": [
@@ -556,6 +559,24 @@ func _dream() -> void:
 	Game.play_music("bunker")
 	await Game.fade_in(1.0)
 	await Game.dialogue.say(DREAM_END)
+
+
+## Rooster's mirror. The first time, the reflection isn't quite Elric for a second
+## (Relic, riding along). With dread, it looks away before Elric does.
+func _rooster_mirror() -> void:
+	var lines: Array = [
+		"* (Rooster's mirror. There's a sticky note on it:\n*  \"LOOKING GOOD, KING.\")",
+		"* (In the glass: it's you.)",
+	]
+	if Game.dread() > 0:
+		lines.append("* (...Your reflection looks away a moment\n*  before you do.)")
+	elif not flag("mirror_relic"):
+		Game.flags["mirror_relic"] = true
+		lines.append("* (For a second, the reflection looks like\n*  someone else.)")
+		lines.append("* (Then it's just you again.)")
+	lines.append({"who": "Rooster", "text": "Hey! HEY. That's MY mirror.", "mood": "angry"})
+	lines.append({"who": "Rooster", "text": "...Fine. You can borrow it.\nYou look like you need it.", "mood": "smug"})
+	await Game.dialogue.say(lines)
 
 
 func _kitchen() -> void:

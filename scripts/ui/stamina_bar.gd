@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## The stamina bar in the bottom-right corner of the screen. It slides in when
-## Elric starts sprinting, drains as he runs, and fades away once it's full again.
+## Elric starts sprinting, drains as they run, and fades away once it's full again.
 ## It turns from green to yellow to red as it runs low, and flashes red with
 ## "WINDED" when it's been run all the way down.
 

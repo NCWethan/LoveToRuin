@@ -34,7 +34,7 @@ const ENEMY_DEBUFFS := {
 
 ## Every attack's name, for the Encyclopedia.
 const ATTACK_NAMES := {
-	"rain": "Yolk Rain", "straw": "Straw Rain", "egg_drop": "Egg Drop", "bunny_hop": "Bunny Hop",
+	"rain": "Yolk Rain", "straw": "Straw Rain", "bullseye": "Bullseye", "egg_drop": "Egg Drop", "bunny_hop": "Bunny Hop",
 	"lance": "Lance Thrust", "sweep": "Shield Wall", "aimed": "Justice Stars",
 	"pencils": "Pencil Rain", "bubbles": "Answer Bubbles", "scantron": "Scantron",
 	"papers": "Fluttering Passes", "zoom": "Zoom", "tardy_slips": "Tardy Slips",

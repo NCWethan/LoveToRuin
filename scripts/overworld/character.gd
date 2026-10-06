@@ -12,7 +12,7 @@ var back: Texture2D
 ## Walking frames for the front and back views (optional): one step with each leg.
 var front_walk: Array[Texture2D] = []
 var back_walk: Array[Texture2D] = []
-## Running frames (optional), used when following Elric while he sprints.
+## Running frames (optional), used when following Elric while they sprint.
 ## Side runs have three: stride, stride (other arm), knee up.
 var front_run: Array[Texture2D] = []
 var back_run: Array[Texture2D] = []

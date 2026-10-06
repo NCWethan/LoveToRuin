@@ -112,6 +112,7 @@ Each shopkeeper has their own things to talk about (some only after something ha
 - Nat's story: "Somebody gave everything to break it apart. The book doesn't say who."
 - Hopkuna on Westview Field: "The last time was years ago. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
 - The first dream (resting on the bunk at the base, Pacifist or Neutral): the voice in the dark, with different words for each route.
+- Rooster's mirror at the base: the first time, "(For a second, the reflection looks like someone else.)" (Rooster is not happy you're using it.)
 - The trophy case in Westview's hallway (set into the wall): "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do; with a lot (10+ kills in Chapter 1), it smiles while you don't. On the Genocide route: "It's me, RELIC."
 - On the Genocide route, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
 

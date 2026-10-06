@@ -51,6 +51,7 @@ const HELPERS := {
 
 ## What Nat reads out about each attack ("its next attack: ...").
 const PAGE_HINTS := {
+	"straw": "straw, shaken out of its stuffing. It drifts.", "bullseye": "target rings, from the middle. Find the gap.",
 	"rain": "yolk, raining down. Lots of it.", "egg_drop": "big eggs, dropped from above. They crack.",
 	"bunny_hop": "bunnies. Hopping. They jump as high as you are.", "lance": "lances, from the sides. Watch your row.",
 	"sweep": "a wall of shields with one gap.", "aimed": "gold stars, thrown right at you.",

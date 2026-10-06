@@ -16,6 +16,7 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	match pattern:
 		"rain": return _rain(enemy, parent, area, s, step)
 		"straw": return _straw(enemy, parent, area, s, step)
+		"bullseye": return _bullseye(enemy, parent, area, s, step)
 		"egg_drop": return _egg_drop(enemy, parent, area, s, step)
 		"bunny_hop": return _bunny_hop(enemy, parent, area, s, step)
 		"lance": return _lance(enemy, parent, area, s, step)
@@ -117,6 +118,20 @@ static func _straw(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step:
 	tuft.color = Color(0.92, 0.8, 0.42)
 	tuft.velocity = Vector2(randf_range(-18.0, 18.0), enemy.bullet_speed * 0.9)
 	return 0.3
+
+
+## The training dummy: BULLSEYE. Target rings, red then white, spread out from
+## the middle of the box like the target painted on its chest. Each has a gap.
+static func _bullseye(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var ring := _bullet(enemy, parent, area, area.get_center())
+	ring.shape = "ring"
+	ring.size = 4.0
+	ring.color = Color(0.95, 0.3, 0.3) if step % 2 == 0 else Color(0.95, 0.95, 0.95)
+	ring.delay = 0.2
+	ring.ring_speed = 60.0
+	ring.gap_angle = (soul - area.get_center()).angle() + randf_range(0.5, 1.2) * (1.0 if step % 2 == 0 else -1.0)
+	ring.gap_width = 0.7
+	return 0.7
 
 
 ## Eggo: big shaded eggs drop and speed up as they fall, then crack into a splash

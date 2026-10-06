@@ -764,7 +764,7 @@ func _process_call(delta: float) -> void:
 			Game.play_sfx("spare")
 			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 18)
 			if target.spare_refusal == "":
-				_add_popup("+%d%% MERCY" % NAT_MERCY, target.position + Vector2(0, -40), YELLOW, 18, true)
+				_add_popup("+%d%% MERCY" % NAT_MERCY, target.position + Vector2(70, 10), YELLOW, 18, true)
 		elif stays:
 			# Nassan takes his place beside the party for the coming turn.
 			_nassan_here = true
@@ -920,12 +920,11 @@ func _nat_reads(target: Enemy) -> void:
 		_nat_pages.append("* (Nat flips through. \"Nothing's coming next turn.\")")
 
 
-## Ronin's POWER RIFF: he runs in, plugs into his amp, and plays the whole riff (the
-## recording). His hands follow the music: his picking hand strikes on each new note
-## and blurs when he shreds (from the recording; see tools/analyze_riff.gd), his
-## fretting hand goes where the real player's did in a video of the riff (see
-## tools/riff_hands.gd), and on a held note he
-## raises the neck, lifts his picking hand off, and shakes the note with vibrato.
+## Ronin's POWER RIFF: he runs in, plugs into his amp, and plays the whole riff
+## (written note by note in tools/make_riff.gd, which also writes what his hands
+## do, in scripts/ronin_riff.gd). His picking hand strikes on each note and blurs
+## through the solo, his fretting hand climbs the neck with the notes, and on a
+## held note he raises the neck, lifts his picking hand off, and shakes the note with vibrato.
 ## Music notes fly out of the amp and circle the team. Only when the riff is over:
 ## everyone gets 5 purple overheal, and AMPED (the SOUL moves faster).
 const RIFF_START := 0.6

@@ -298,7 +298,7 @@ func _arrival() -> void:
 func _head_east() -> void:
 	if not flag("heard_westview"):
 		await Game.dialogue.say([
-			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first. Somebody here has to know something.", "mood": "shocked"},
+			{"who": "Hop", "text": "Whoa, where are we even going?\nMaybe ask around first.\nSomebody here has to know something.", "mood": "shocked"},
 		])
 		await push_player(Vector2(-30, 0))
 		return
@@ -343,6 +343,13 @@ func _shop_vons() -> void:
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (Through the glass, someone is mopping the floor.)"])
 		return
 	await Game.shop.open(Shops.vons())
+	# The first time out of Vons with Nassan working there, Hop has thoughts.
+	if flag("heard_westview") and not flag("hop_saw_apron") and not Shops.gone():
+		Game.flags["hop_saw_apron"] = true
+		await Game.dialogue.say([
+			{"who": "Hop", "text": "Nassan. In an apron.\nWith a NAME TAG.", "mood": "shocked"},
+			{"who": "Hop", "text": "I'm never letting him live this down.\nThis is the best day of my life.", "mood": "happy"},
+		])
 
 
 func _shop_jack() -> void:
@@ -382,7 +389,7 @@ func _talk_supreme() -> void:
 	]
 	match Game.flags.get("tutorial_path", ""):
 		"spared":
-			first.append({"who": "Supreme", "text": "Word travels fast. You talked down two Revolution guys\nwithout throwing a punch. The odds of that? Basically zero.", "mood": "shocked"})
+			first.append({"who": "Supreme", "text": "Word travels fast. You talked down two\nRevolution guys without throwing a punch.\nThe odds of that? Basically zero.", "mood": "shocked"})
 		"fought":
 			first.append({"who": "Supreme", "text": "Word travels fast. You beat two Revolution guys.\nI'm updating my threat assessment spreadsheet.", "mood": "shocked"})
 	first.append({"who": "Supreme", "text": "Fun fact: Trail Mix heals 15 HP for $8.\nThat's 1.875 HP per dollar. Best value in the mall."})
@@ -823,8 +830,8 @@ func _nightfall() -> void:
 	await Game.dialogue.say([
 		{"who": "Nassan", "text": "There you are. I just clocked out.\nGloria says I bag faster than anyone she's trained.", "mood": "smug"},
 		{"who": "Nassan", "text": "Anyway. The sun's almost down."},
-		{"who": "Nassan", "text": "Everyone's heading home. You two are heading to Westview."},
-		{"who": "Nassan", "text": "Remember: the fragment's somewhere inside. If something\nfeels wrong in there... it probably is."},
+		{"who": "Nassan", "text": "Everyone's heading home.\nYou two are heading to Westview."},
+		{"who": "Nassan", "text": "Remember: the fragment's somewhere inside.\nIf something feels wrong in there...\nit probably is."},
 		{"who": "Hop", "text": "Great pep talk. Really. Ten out of ten.", "mood": "sad"},
 		{"who": "Nassan", "text": "I'll be at the road. Go when you're ready.", "mood": "smug"},
 		"* (The last bit of sunlight slips away.)",
