@@ -57,9 +57,7 @@ var _objective_banner: CanvasLayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
 ## Sounds that are recordings rather than made in code. To swap one, replace the file.
-## hopkuna_laugh: from Undertale (Omega Flowey's laugh), for private use only.
-## Replace it with a laugh you have the rights to before sharing the game publicly.
-const SOUND_FILES := {"hopkuna_laugh": "res://audio/sfx/hopkuna_laugh.mp3", "ronin_riff": "res://audio/sfx/ronin_riff.wav"}
+const SOUND_FILES := {"ronin_riff": "res://audio/sfx/ronin_riff.wav"}
 
 ## Music: two players, so one song can fade out while the next fades in.
 const MUSIC_FOLDER := "res://audio/music/"

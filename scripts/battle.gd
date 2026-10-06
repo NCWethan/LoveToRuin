@@ -1929,15 +1929,15 @@ const TENT_LINES := [
 	"* We remember.",
 ]
 const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
-## How long each part lasts: silence, the scream, black, and the laugh (the
-## jumpscare plays over the start of the laugh).
+## How long each part lasts: silence, the scream, black, and the ring (the eyes
+## stay as long as the ringing note does: 5 seconds, see sfx.gd).
 const TENT_SILENCE := 1.6
 const TENT_SCREAM_TIME := 3.0
 ## (A long, silent black, so you think it's over...)
 const TENT_BLACK_TIME := 1.4
-const TENT_LAUGH_TIME := 3.8
+const TENT_RING_TIME := 5.0
 
-## "silence", "scream", "black" or "laugh".
+## "silence", "scream", "black" or "ring".
 var _tent_phase: String = ""
 var _tent_time: float = 0.0
 ## The color of the text in the box (red for the tent).
@@ -1951,19 +1951,6 @@ var _frozen_at: float = 0.0
 const EYE_HALF_WIDTH := 2.5
 const EYE_HALF_HEIGHT := 4.2
 const EYE_SPACING := 3.6
-
-## The recorded laugh (audio/sfx/hopkuna_laugh): where in the file the laughing
-## starts, and how loud it is every 50th of a second from there (0 to 9), measured
-## from the recording. The eyes glow brighter with it.
-const LAUGH_FILE_START := 0.7
-const LAUGH_FILE_BOOST_DB := 6.0
-const LAUGH_ENVELOPE := "011111122233333444455545555556555656555557765565555455565555665454455555556656653334344545646554444455565555443333445555544333333445444433322345566666654433333445666665544333334678767666645455555555534567777654465565666554445566655444444456655554445677665444433345566655444433222334566777666543322222222334566554444443332222233334789754333455555432111111111"
-
-
-## Is the laugh recording there? (If not, the jumpscare is silent but for the scream.)
-func _recorded_laugh() -> bool:
-	return Game.has_sfx("hopkuna_laugh")
-
 
 ## The music cuts off. Nothing happens for a moment.
 func _tent_silence() -> void:
@@ -1986,17 +1973,15 @@ func _process_tent(delta: float) -> void:
 			if _tent_time >= TENT_SCREAM_TIME:
 				_tent_phase = "black"
 				_tent_time = 0.0
-				# (Silence. The only sound from here on is the laugh.)
+				# (Silence. The only sound from here on is the ringing.)
 		"black":
 			if _tent_time >= TENT_BLACK_TIME:
-				_tent_phase = "laugh"
+				_tent_phase = "ring"
 				_tent_time = 0.0
-				# Only the recorded laugh (and silence if it isn't there).
-				if _recorded_laugh():
-					Game.play_sfx("hopkuna_laugh", 1.0, LAUGH_FILE_START, LAUGH_FILE_BOOST_DB)
-		"laugh":
-			var laugh_length := LAUGH_ENVELOPE.length() * 0.02 + 0.3 if _recorded_laugh() else TENT_LAUGH_TIME
-			if _tent_time >= laugh_length:
+				# One high note that rings the whole time, and nothing else.
+				Game.play_sfx("ringing")
+		"ring":
+			if _tent_time >= TENT_RING_TIME:
 				_tent_phase = "done"
 				var result := {"id": _data.id, "spared": [], "defeated": [], "bond": 0, "exp": 0, "money": 0}
 				if Game.pending_battle != "":
@@ -2030,35 +2015,19 @@ func _draw_tent() -> void:
 			_overlay.draw_string(_font, at + Vector2(2, 2), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.3, 0, 0))
 			_overlay.draw_string(_font, at, letter, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(0.95, 0.05, 0.1))
 			x += step
-	elif _tent_phase in ["black", "laugh", "done"]:
+	elif _tent_phase in ["black", "ring", "done"]:
 		_overlay.draw_rect(Rect2(-20, -20, 680, 520), Color.BLACK)
-		if _tent_phase == "laugh":
+		if _tent_phase == "ring":
 			_draw_jumpscare(_tent_time)
 	elif _tent_phase == "silence" and _text.begins_with("* Three of us"):
 		_draw_three_of_us()
 
 
-## How hard the laugh is going at `time` into it (0 to 1): full for the scream,
-## then following the recording's loudness.
-func _laugh_strength(time: float) -> float:
-	if time < 0.35:
-		return 1.0
-	if not _recorded_laugh():
-		return 0.2
-	var index := clampi(int(time / 0.02), 0, LAUGH_ENVELOPE.length() - 1)
-	# Averaged with its neighbours, so the eyes don't rattle.
-	var level := 0.0
-	for k in range(index - 2, index + 3):
-		level += int(LAUGH_ENVELOPE[clampi(k, 0, LAUGH_ENVELOPE.length() - 1)])
-	return clampf((level / 5.0 - 2.0) / 6.0, 0.1, 1.0)
-
-
 ## The jumpscare, over black: two glowing red eyes, huge, right in the middle of
-## the screen. They just appear, and they stay, perfectly still, until the laugh
-## is over. They glow a little brighter on the loudest parts of the laugh.
-func _draw_jumpscare(time: float) -> void:
-	var glow := 0.85 + 0.15 * _laugh_strength(time)
-	_draw_eyes(Vector2(320, 220), 12.0, glow)
+## the screen. They just appear, and they stay, perfectly still and steady, for as
+## long as the note rings.
+func _draw_jumpscare(_time: float) -> void:
+	_draw_eyes(Vector2(320, 220), 12.0, 1.0)
 
 
 ## "Three of us.": three pairs of eyes open in the dark above the text, one after
