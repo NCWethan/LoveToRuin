@@ -2800,9 +2800,9 @@ func _draw_aura() -> void:
 
 ## Draws Elric's party on the left side of the screen, facing the enemies.
 func _draw_party_sprites() -> void:
-	# Someone watching from behind the party (never fights): worried.
+	# Someone watching from behind the party (never fights): scared.
 	if _data.watcher != "":
-		var look := Cast.portrait(_data.watcher, "sad")
+		var look := Cast.portrait(_data.watcher, "shocked")
 		if look:
 			var size := look.get_size() * 3.0
 			var feet := Vector2(38, 174 + sin(Time.get_ticks_msec() / 650.0) * 1.0)
@@ -3106,6 +3106,9 @@ func _draw_buttons() -> void:
 		var color := YELLOW if selected else ORANGE
 		if locked:
 			color = Color(0.55, 0.55, 0.55) if selected else Color(0.32, 0.32, 0.34)
+		elif not _data.locked_buttons.is_empty():
+			# The one button left is in Relic's green.
+			color = RELIC_GREEN.lightened(0.25) if selected else RELIC_GREEN
 		_overlay.draw_rect(rect, color, false, 2.0)
 		_overlay.draw_string(_font, rect.position + Vector2(32, 22), BUTTONS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		# The SOUL sits where the icon is on the selected button (like Undertale).

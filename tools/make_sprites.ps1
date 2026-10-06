@@ -2624,8 +2624,9 @@ foreach ($who in $sideUpper.Keys) {
 # worse versions, saved with "elric" changed to "elric_dread1/2/3":
 #   1  paler skin, dark circles under the eyes
 #   2  grayer skin, glowing red eyes, blood stains on the clothes
-#   3  dead-gray skin, black tears, a wide toothy grin, more blood, darker
-#      clothes and hair
+#   3  dead-gray skin, black tears, more blood, darker clothes and hair
+# And as dread grows, Elric slowly starts to smile (never showing teeth): one
+# corner of the mouth at 1, a small smile at 2, a wide one at 3.
 $dreadSkin = @{ 1 = '+'; 2 = '?'; 3 = '&' }
 $stains2 = @(@(13, 9), @(16, 14), @(19, 7), @(24, 9))
 $stains3 = $stains2 + @(@(12, 15), @(14, 5), @(17, 11), @(18, 16), @(21, 13), @(26, 14), @(27, 8), @(15, 18), @(23, 12))
@@ -2651,8 +2652,8 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
             if ((Get-Pixel $p $y $x) -eq 'K' -and ((Get-Pixel $p $y ($x - 1)) -eq 'L' -or (Get-Pixel $p $y ($x + 1)) -eq 'L')) { $eyes += , @($y, $x) }
         }
     }
-    # A wide black mouth with teeth (front views only, where the mouth is two black pixels).
-    $grin = $stage -ge 3 -and (Get-Pixel $p 9 (11 + $xoff)) -eq 'K' -and (Get-Pixel $p 9 (12 + $xoff)) -eq 'K'
+    # The smile (front views only, where the mouth is two black pixels).
+    $front = (Get-Pixel $p 9 (11 + $xoff)) -eq 'K' -and (Get-Pixel $p 9 (12 + $xoff)) -eq 'K'
     for ($y = 0; $y -lt $p.Count; $y++) {
         $c = $p[$y].ToCharArray()
         for ($x = 0; $x -lt $c.Length; $x++) {
@@ -2670,13 +2671,24 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
         if ($stage -ge 2) { Set-Pixel $p $y $x 'I' }
         if ((Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
         if ($stage -ge 3) {
-            for ($k = 1; $k -le 3; $k++) { if ((Get-Pixel $p ($y + $k) $x) -in @($skin, '=')) { Set-Pixel $p ($y + $k) $x '<' } }
+            # (Only one drop: longer tracks would run into the smile.)
+            for ($k = 1; $k -le 1; $k++) { if ((Get-Pixel $p ($y + $k) $x) -in @($skin, '=')) { Set-Pixel $p ($y + $k) $x '<' } }
         }
     }
-    if ($grin) {
-        Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
-        Set-Pixel $p 9 (11 + $xoff) 'W'; Set-Pixel $p 9 (12 + $xoff) 'W'
-        Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
+    if ($front) {
+        if ($stage -eq 1) {
+            # One corner curls up.
+            Set-Pixel $p 8 (13 + $xoff) 'K'
+        } elseif ($stage -eq 2) {
+            # Both corners: a small, quiet smile.
+            Set-Pixel $p 8 (10 + $xoff) 'K'; Set-Pixel $p 8 (13 + $xoff) 'K'
+        } else {
+            # A wide, thin, closed smile: dipping a row lower, its corners
+            # curling all the way up to the tears under the eyes.
+            Set-Pixel $p 9 (11 + $xoff) $skin; Set-Pixel $p 9 (12 + $xoff) $skin
+            Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
+            Set-Pixel $p 9 (10 + $xoff) 'K'; Set-Pixel $p 9 (13 + $xoff) 'K'
+        }
     }
     $stains = if ($stage -ge 3) { $stains3 } elseif ($stage -ge 2) { $stains2 } else { @() }
     foreach ($s in $stains) {
