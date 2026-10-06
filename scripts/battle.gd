@@ -1382,6 +1382,9 @@ func _start_attack_anim(damage: int, accuracy: float) -> void:
 	_lucky = not _black_flash and Game.card_of(member.name) == "Lucky Card" and randf() < Items.LUCKY_CHANCE
 	if _lucky:
 		damage *= 2
+	# The glowbug: far, far more than it takes. 18-5-12-9-3: R-E-L-I-C.
+	if _data.id == "glowbug":
+		damage = 1851293
 	_anim_damage = damage
 	_anim_accuracy = accuracy
 	_anim_time = 0.0
