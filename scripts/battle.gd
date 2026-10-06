@@ -1367,6 +1367,13 @@ func _resolve_hit(accuracy: float) -> void:
 	_start_attack_anim(damage, accuracy)
 
 
+## From the glowbug on (and for the rest of the Genocide route), Elric doesn't
+## attack alone: the slashes are Relic's. Green, doubled, and the numbers won't
+## hold still.
+func _relic_strike(member: PartyMember) -> bool:
+	return member != null and member.name == "Elric" and (_data.id == "glowbug" or Game.on_genocide_route())
+
+
 ## Hop, wearing the Divergent Glove? Then every hit has a chance to be a BLACK FLASH.
 func _can_black_flash(member: PartyMember) -> bool:
 	return member.name == "Hop" and Game.worn_by("Hop").get("weapon", {}).get("name", "") == "Divergent Glove"
@@ -1414,7 +1421,7 @@ func _process_fight_anim(delta: float) -> void:
 				Game.play_sfx("shing", randf_range(0.9, 1.2))
 				target.shake = 0.12
 				var share := roundi(_anim_damage / float(_file_hit_count()))
-				_add_popup(str(share), target.position + Vector2(-34 + i * 34, -60 - i * 8), Color(0.85, 0.88, 0.95), 16)
+				_add_popup(str(share), target.position + Vector2(-34 + i * 34, -60 - i * 8), RELIC_GREEN if _relic_strike(member) else Color(0.85, 0.88, 0.95), 16)
 	elif weapon == "finger":
 		if before < 0.02 and _anim_time >= 0.02:
 			Game.play_sfx("slash", 0.6)
@@ -1434,6 +1441,7 @@ func _process_fight_anim(delta: float) -> void:
 		match weapon:
 			"file": Game.play_sfx("file_hit")
 			"finger": Game.play_sfx("squeak")
+			_ when _relic_strike(member): Game.play_sfx("claw_hit", 0.7)
 			_: Game.play_sfx("punch_hit" if member.name == "Hop" else "claw_hit")
 		var critical := _anim_accuracy >= CRITICAL
 		# The impact frame: a freeze, a flash, and the enemy as a silhouette.
@@ -1450,9 +1458,15 @@ func _process_fight_anim(delta: float) -> void:
 			_squash_enemy = target
 			_squash_time = 0.45
 			_add_popup("BONK!", target.position + Vector2(-40, -90), Color(1.0, 0.85, 0.2), 24, true)
-		_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
-		if critical and not _black_flash:
-			_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
+		if _relic_strike(member):
+			_add_popup(str(_anim_damage), target.position + Vector2(0, -30), RELIC_GREEN, 32 if critical else 26, true)
+			_popups[-1]["glitch"] = true
+			if critical:
+				_add_popup("CRITICAL!", target.position + Vector2(0, -70), RELIC_GREEN, 18)
+		else:
+			_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
+			if critical and not _black_flash:
+				_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
 		if _lucky:
 			Game.play_sfx("item", 1.5)
 			_add_popup("LUCKY!", target.position + Vector2(0, -92), Color(0.5, 1.0, 0.5), 20, true)
@@ -2220,9 +2234,18 @@ func _draw_overlay() -> void:
 	for popup in _popups:
 		# A dark outline behind the text keeps numbers readable over anything.
 		var size: int = popup["size"]
+		var text: String = popup["text"]
+		var at: Vector2 = popup["position"]
+		if popup.get("glitch", false):
+			at += Vector2(randf_range(-2, 2), randf_range(-1, 1))
+			if randf() < 0.3:
+				var k := randi() % text.length()
+				text = text.substr(0, k) + str(randi() % 10) + text.substr(k + 1)
+			_draw_centered(text, at + Vector2(-3, 0), size, Color(1, 0.15, 0.2, 0.35))
+			_draw_centered(text, at + Vector2(3, 0), size, Color(0.7, 0.3, 1, 0.35))
 		for offset in [Vector2(-2, 0), Vector2(2, 0), Vector2(0, -2), Vector2(0, 2)]:
-			_draw_centered(popup["text"], popup["position"] + offset, size, Color(0, 0, 0, 0.8))
-		_draw_centered(popup["text"], popup["position"], size, popup["color"])
+			_draw_centered(text, at + offset, size, Color(0, 0, 0, 0.8))
+		_draw_centered(text, at, size, popup["color"])
 
 	if _data and _data.event == "tent":
 		_draw_tent()
@@ -2267,6 +2290,10 @@ func _draw_impact() -> void:
 		return
 	var inverted := _impact_critical and _impact_time < _impact_length / 2
 	var background := Color.BLACK if inverted else Color(1, 1, 1, 0.92)
+	# Relic's strike: the flash is a pale green, and the inverted lines are green too.
+	var relic := state == State.FIGHT_ANIM and _relic_strike(_bar_member)
+	if relic and not inverted:
+		background = Color(0.86, 1.0, 0.88, 0.92)
 	var ink := Color.WHITE if inverted else Color.BLACK
 	_overlay.draw_rect(Rect2(-20, -20, 680, 520), background)
 	# Speed lines bursting out from the hit.
@@ -2279,7 +2306,10 @@ func _draw_impact() -> void:
 		var from := center + dir * rng.randf_range(50, 90)
 		var to := center + dir * 700
 		var width := rng.randf_range(1.0, 5.0)
-		_overlay.draw_line(from, to, Color(1.0, 0.15, 0.2) if inverted else ink, width)
+		var streak := ink
+		if inverted:
+			streak = RELIC_GREEN if relic else Color(1.0, 0.15, 0.2)
+		_overlay.draw_line(from, to, streak, width)
 	# The enemy, as a solid silhouette.
 	var enemy := _impact_target
 	if enemy.sprite:
@@ -2439,6 +2469,9 @@ func _draw_foam_finger() -> void:
 func _draw_slash() -> void:
 	if state != State.FIGHT_ANIM or _bar_target == null:
 		return
+	if _relic_strike(_bar_member):
+		_draw_relic_strike()
+		return
 	match _weapon_style(_bar_member):
 		"file":
 			_draw_file_strike()
@@ -2469,6 +2502,40 @@ func _draw_slash() -> void:
 		for i in 10:
 			var dir := Vector2.from_angle(i * TAU / 10 + 0.3)
 			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(color, fade), 2.0)
+
+
+## Relic's strike: three green slashes, and a fainter second set a beat behind
+## (two of them swinging, not one). Where it lands, green embers drift up, like
+## the field the night of the fire.
+func _draw_relic_strike() -> void:
+	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.6, 0.0, 1.0)
+	var center := _bar_target.position + Vector2(0, -20)
+	for pass_i in 2:
+		var lag := 0.07 * pass_i
+		var progress := clampf((_anim_time - lag) / ATTACK_SLASH_TIME, 0.0, 1.0)
+		var alpha := fade * (1.0 if pass_i == 0 else 0.45)
+		if progress <= 0.0 or alpha <= 0.0:
+			continue
+		var shift := Vector2(7, -3) * pass_i
+		for i in 3:
+			var offset := Vector2(-16 + i * 16, -6 + i * 6) + shift
+			var from := center + offset + Vector2(38, -42)
+			var to := center + offset + Vector2(-38, 42)
+			var tip := from.lerp(to, progress)
+			# Every so often the slash jumps sideways for a frame, like a bad signal.
+			if pass_i == 0 and randf() < 0.12:
+				var jolt := Vector2(randf_range(-5, 5), 0)
+				from += jolt; tip += jolt
+			_overlay.draw_line(from, tip, Color(RELIC_GREEN, 0.3 * alpha), 10.0)
+			_overlay.draw_line(from, tip, Color(RELIC_GREEN, alpha), 4.0)
+			_overlay.draw_line(from, tip, Color(0.85, 1, 0.88, alpha), 1.5)
+	if _anim_landed:
+		var age := _anim_time - ATTACK_SLASH_TIME
+		var ember_fade := clampf(1.0 - age / 0.9, 0.0, 1.0)
+		for i in 12:
+			var drift := Vector2(sin(i * 2.3 + age * 4.0) * (10 + i % 4 * 6), -age * (50 + (i * 37) % 40))
+			var at := center + Vector2(-30 + (i * 53) % 60, 10 - (i * 29) % 30) + drift
+			_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(RELIC_GREEN, ember_fade))
 
 
 ## Wally's dance, in time with his song (152 beats per minute): a hop on every beat

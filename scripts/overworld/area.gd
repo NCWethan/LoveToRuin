@@ -376,9 +376,10 @@ func _add_dread() -> void:
 	layer.layer = 3
 	add_child(layer)
 	var gradient := Gradient.new()
-	gradient.set_color(0, Color(0.6, 0.0, 0.04, 0.0))
-	gradient.set_color(1, Color(0.6, 0.0, 0.04, 1.0))
-	gradient.add_point(0.55, Color(0.6, 0.0, 0.04, 0.0))
+	# (Deep green: Relic's color, not red. Red is Hopkuna's.)
+	gradient.set_color(0, Color(0.02, 0.36, 0.12, 0.0))
+	gradient.set_color(1, Color(0.02, 0.36, 0.12, 1.0))
+	gradient.add_point(0.55, Color(0.02, 0.36, 0.12, 0.0))
 	var shade := GradientTexture2D.new()
 	shade.gradient = gradient
 	shade.fill = GradientTexture2D.FILL_RADIAL
@@ -403,7 +404,7 @@ func _add_dread() -> void:
 		get_tree().process_frame.connect(_keep_away)
 
 
-## The red vignette: waits, then fades in, pulses twice like a heartbeat, and fades out.
+## The green vignette: waits, then fades in, pulses twice like a heartbeat, and fades out.
 func _update_vignette() -> void:
 	if _vignette == null or not is_instance_valid(_vignette):
 		return

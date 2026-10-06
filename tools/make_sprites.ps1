@@ -102,7 +102,8 @@ $palette['+'] = @(182, 160, 212)   # paler skin
 $palette['?'] = @(158, 146, 172)   # grayer skin
 $palette['&'] = @(124, 116, 134)   # dead-gray skin
 $palette['='] = @(92, 72, 108)     # dark circles
-$palette['!'] = @(108, 18, 26)     # blood stains
+$palette['!'] = @(22, 84, 40)      # stains (deep green: Relic's)
+$palette['>'] = @(40, 200, 90)     # glowing green eyes (Relic's; Hopkuna's stay red)
 $palette['<'] = @(24, 8, 12)       # black tears
 $palette[';'] = @(86, 62, 40)      # darkened tunic
 $palette[','] = @(58, 58, 40)      # darkened pants
@@ -2668,7 +2669,7 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
     }
     foreach ($eye in $eyes) {
         $y = $eye[0]; $x = $eye[1]
-        if ($stage -ge 2) { Set-Pixel $p $y $x 'I' }
+        if ($stage -ge 2) { Set-Pixel $p $y $x '>' }
         if ((Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
         if ($stage -ge 3) {
             # (Only one drop: longer tracks would run into the smile.)

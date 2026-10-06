@@ -248,12 +248,12 @@ func _draw() -> void:
 	draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.32))
 	draw_circle(Vector2.ZERO, 11.0, Color(0, 0, 0, 0.28))
 	draw_set_transform(Vector2.ZERO)
-	# At the end of the Genocide path, a dark red haze clings to Elric, with wisps
+	# At the end of the Genocide path, a deep green haze clings to Elric, with wisps
 	# rising off them.
 	if Game.dread() >= 3:
 		var t := Time.get_ticks_msec() / 1000.0
-		draw_circle(Vector2(0, -16), 18.0 + sin(t * 3.0) * 1.5, Color(0.25, 0.0, 0.04, 0.22))
+		draw_circle(Vector2(0, -16), 18.0 + sin(t * 3.0) * 1.5, Color(0.0, 0.2, 0.07, 0.24))
 		for w in 5:
 			var rise := fmod(t * 0.7 + w * 0.2, 1.0)
 			var wisp := Vector2(sin(t * 2.0 + w * 1.7) * 9.0, -4.0 - rise * 34.0)
-			draw_circle(wisp, 2.5 * (1.0 - rise), Color(0.35, 0.02, 0.06, 0.6 * (1.0 - rise)))
+			draw_circle(wisp, 2.5 * (1.0 - rise), Color(0.05, 0.4, 0.15, 0.6 * (1.0 - rise)))

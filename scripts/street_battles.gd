@@ -2,8 +2,8 @@ extends RefCounted
 ## On the way to Hop's house, after going with him from Westview Field.
 ##
 ## The glowbug: a tiny, lost, glowing bug that can't fight back. It's the fight that
-## starts the Genocide route. No music. Hop stands behind Elric, worried, and never
-## gets a turn. MERCY, ACT, ITEM and DEFEND are chained shut; trying them, a voice
+## starts the Genocide route. No music. Hop isn't in the fight at all: Elric is
+## alone with it, already somewhere Hop can't follow. MERCY, ACT, ITEM and DEFEND are chained shut; trying them, a voice
 ## in green (Relic) says no. The only way out is to FIGHT it. (Killing it sets the
 ## route: see Game.finish_battle.)
 
@@ -26,7 +26,6 @@ static func create(id: String) -> BattleData:
 	data.aura = Color(1.0, 0.85, 0.35, 0.0)
 	data.intro = ["* A little glowbug blinks at you."]
 	data.party_only.assign(["Elric"])
-	data.watcher = "Hop"
 	data.silent = true
 	data.locked_buttons.assign(["ACT", "ITEM", "MERCY", "DEFEND"])
 	data.locked_lines.assign(RELIC_LINES)
@@ -49,7 +48,7 @@ static func _glowbug() -> Enemy:
 		"* The glowbug's light flickers.",
 		"* It's looking for its family.",
 		"* It isn't going to hurt you.",
-		"* Behind you, Hop doesn't move.",
+		"* You can't hear Hop anymore.",
 	])
 	e.exp_reward = 10
 	e.bond_reward = 0
