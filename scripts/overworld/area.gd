@@ -365,6 +365,9 @@ func _update_vignette() -> void:
 	var strength := clampf(t / 0.9, 0.0, 1.0) * clampf((VIGNETTE_LENGTH - t) / 1.2, 0.0, 1.0)
 	var beat := fmod(t, 0.9)
 	var pulse := 0.75 + 0.25 * (maxf(0.0, 1.0 - beat / 0.15) + maxf(0.0, 1.0 - absf(beat - 0.25) / 0.12))
+	# (With Reduce flashing on, it glows steadily instead of beating.)
+	if Game.reduce_flashing():
+		pulse = 0.85
 	_vignette.modulate.a = DREAD_VIGNETTE[stage] * strength * pulse
 	if t >= VIGNETTE_LENGTH:
 		_vignette_time = -1.0

@@ -1154,8 +1154,11 @@ func _draw_stravant_beam(from: Vector2, to: Vector2, strike: float) -> void:
 	var along := (to - from).normalized()
 	var side := along.orthogonal()
 	var length := from.distance_to(to)
-	# The width throbs (two speeds at once, so it never settles).
-	var width := 34.0 + 10.0 * sin(strike * 45.0) + 5.0 * sin(strike * 71.0)
+	# The width throbs (two speeds at once, so it never settles). With Reduce
+	# flashing on, it throbs slowly and gently instead.
+	var calm := Game.reduce_flashing()
+	var wave := strike * (0.25 if calm else 1.0)
+	var width := 34.0 + (4.0 if calm else 10.0) * sin(wave * 45.0) + (2.0 if calm else 5.0) * sin(wave * 71.0)
 	var layers := [[1.9, Color(0.35, 0.65, 1.0, 0.22)], [1.0, Color(0.1, 0.2, 0.9, 0.95)], [0.5, Color(0.55, 0.85, 1.0, 1.0)], [0.16, Color(1, 1, 1, 1.0)]]
 	for layer in layers:
 		var top := PackedVector2Array()
@@ -1163,7 +1166,7 @@ func _draw_stravant_beam(from: Vector2, to: Vector2, strike: float) -> void:
 		for k in 25:
 			var f := k / 24.0
 			# Crackling edges: each point wobbles in and out on its own.
-			var wobble := sin(k * 1.7 + strike * 60.0) * 4.0 + sin(k * 3.1 - strike * 47.0) * 3.0
+			var wobble := sin(k * 1.7 + wave * 60.0) * 4.0 + sin(k * 3.1 - wave * 47.0) * 3.0
 			var half: float = (width * 0.5 + wobble) * layer[0]
 			# A little thinner where it leaves his hands.
 			half *= lerpf(0.55, 1.0, minf(f * 4.0, 1.0))
@@ -1179,7 +1182,7 @@ func _draw_stravant_beam(from: Vector2, to: Vector2, strike: float) -> void:
 		var spot := from + along * length * f
 		_overlay.draw_line(spot + side * width * 0.7, spot - side * width * 0.7, Color(0.8, 0.95, 1.0, 0.6 * fade), 3.0)
 	# Where it hits: a burst that pulses with it, and cyan sparks.
-	var burst := width * (1.1 + 0.25 * sin(strike * 30.0))
+	var burst := width * (1.1 + 0.25 * sin(wave * 30.0))
 	_overlay.draw_circle(to, burst, Color(0.35, 0.65, 1.0, 0.3 * fade))
 	_overlay.draw_circle(to, burst * 0.55, Color(0.75, 0.92, 1.0, 0.8 * fade))
 	_overlay.draw_circle(from, width * 0.4, Color(0.75, 0.92, 1.0, 0.8 * fade))
