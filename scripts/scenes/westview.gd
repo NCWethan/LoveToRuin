@@ -241,6 +241,14 @@ func _draw_decor() -> void:
 		_decor.draw_rect(r, Color8(235, 225, 160))
 		_decor.draw_string(_font, r.position + Vector2(3, 11), poster_text, HORIZONTAL_ALIGNMENT_LEFT, 50, 8, Color8(150, 30, 30))
 
+	# The trophy case between the posters, its glass dark as a mirror.
+	var case_rect := Rect2(65 * T - 14, 6 * T + 4, 48, 26)
+	_decor.draw_rect(case_rect, Color8(150, 120, 60))
+	_decor.draw_rect(case_rect.grow(-3), Color8(28, 34, 48))
+	for k in 3:
+		_decor.draw_rect(Rect2(case_rect.position + Vector2(8 + k * 12, 12 - k * 2), Vector2(6, 8 + k * 2)), Color8(200, 170, 70))
+	_decor.draw_line(case_rect.position + Vector2(6, 4), case_rect.position + Vector2(16, 20), Color(1, 1, 1, 0.25), 1.0)
+
 	# The humming locker glows faintly red until it's been opened.
 	if not flag("loop_broken"):
 		var pulse := 0.25 + 0.2 * sin(_glow_time * 3.0)
@@ -362,6 +370,7 @@ func _place_hotspots() -> void:
 		[Vector2(55 * T + 10, 7 * T + 10), _read_poster],
 		[Vector2(75 * T + 10, 7 * T + 10), _read_poster],
 		[Vector2(95 * T + 10, 7 * T + 10), _read_poster],
+		[Vector2(65 * T + 10, 7 * T + 10), _trophy_case],
 		[Vector2(53 * T, 36 * T - 4), _read_chalkboard],
 		[Vector2(47 * T, 49 * T - 4), _back_to_hallway],
 		[Vector2(67 * T - 4, 42 * T), _gym_door],
@@ -435,6 +444,9 @@ func _arrival() -> void:
 		"* (Every window is dark. Then one flickers on.\n*  Then off.)",
 		{"who": "Hop", "text": "...Did you see that? Tell me you saw that.", "mood": "shocked"},
 		{"who": "Hop", "text": "Let's find the fragment and get OUT.\nFast. Like, speedrun it.", "mood": "sad"},
+		{"who": "Hop", "text": "Rel-- Elric. Stay close, okay?", "mood": "sad"},
+		"* (Hop looks away for a second.)",
+		{"who": "Hop", "text": "...Wrong name. It's late.\nMy brain's on airplane mode.", "mood": "smug"},
 	])
 	Game.flags["ww_arrived"] = true
 	Game.set_objective("Find the fragment inside Westview High.")
@@ -482,6 +494,20 @@ func _loop_back() -> void:
 				{"who": "Hop", "text": "I'm starting to think this hallway\ndoesn't want us to leave.", "mood": "sad"},
 				{"who": "Hop", "text": "...Maybe check that humming locker?", "mood": "sad"},
 			])
+
+
+## The trophy case: its dark glass shows Elric's reflection. Mostly.
+func _trophy_case() -> void:
+	var lines: Array = ["* (A trophy case. Third place, 1998 regional\n*  spelling bee. The glass is dark.)"]
+	match Game.dread():
+		0:
+			lines.append("* (In the glass: it's you.)")
+		1, 2:
+			lines.append("* (In the glass: it's you.)")
+			lines.append("* (...Your reflection looks away a moment\n*  before you do.)")
+		_:
+			lines.append("* It's me, RELIC.")
+	await Game.dialogue.say(lines)
 
 
 func _read_poster() -> void:

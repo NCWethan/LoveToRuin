@@ -83,7 +83,7 @@ func open(shop: Dictionary) -> void:
 	_reading = false
 	_queue = []
 	if _empty:
-		_say("* (Nobody's here.)\n* (There's a note on the counter.)")
+		_say("* Nobody's here.\n* They left a note. For us.")
 	else:
 		_say(_line(shop["greeting"]))
 	_opened_frame = Engine.get_process_frames()
@@ -255,13 +255,13 @@ func _choose(option: String) -> void:
 		"Register":
 			var key: String = "robbed_" + _shop["sprite"]
 			if Game.flags.get(key, false):
-				_say_lines(["* (The register is empty.)\n* (You already made sure of that.)"], Mode.MAIN)
+				_say_lines(["* Empty.\n* We made sure of that."], Mode.MAIN)
 			else:
 				var cash: int = Shops.REGISTERS.get(_shop["sprite"], 10)
 				Game.flags[key] = true
 				Game.money += cash
 				Game.play_sfx("item")
-				_say_lines(["* (You open the register.)\n* (You took $%d.)" % cash, "* (Nobody stops you.)"], Mode.MAIN)
+				_say_lines(["* We open the register.\n* We take $%d." % cash, "* Nobody stops us.\n* Nobody can."], Mode.MAIN)
 		"Read":
 			var note = Shops.NOTES.get(_shop["sprite"], "...")
 			_pages = note if note is Array else [note]
@@ -272,7 +272,7 @@ func _choose(option: String) -> void:
 			_mode = Mode.LEAVING
 			_queue = []
 			if _empty:
-				_say("* (You leave.)\n* (The door doesn't chime.)")
+				_say("* We leave.\n* The door doesn't chime.")
 			else:
 				_say(_line(_shop["exit"]))
 
@@ -281,7 +281,7 @@ func _back_to_main() -> void:
 	_mode = Mode.MAIN
 	_reply_with("")
 	if _empty:
-		_say("* (It's quiet.)")
+		_say("* It's quiet. Good.")
 	else:
 		_say(_line(_shop["back"]))
 
@@ -350,7 +350,7 @@ func _buy(item: Dictionary) -> void:
 	_mode = Mode.BUY
 	if Game.items.size() >= Game.MAX_ITEMS:
 		Game.play_sfx("miss")
-		_reply_with("* (Your bag is\n  full.)" if _empty else _shop["full"])
+		_reply_with("* Our hands are\n  full." if _empty else _shop["full"])
 		return
 	if not _empty and Game.money < int(item["price"]):
 		Game.play_sfx("miss")
@@ -365,7 +365,7 @@ func _buy(item: Dictionary) -> void:
 		Game.flags["bought_" + str(item["name"])] = true
 	Game.play_sfx("item")
 	if _empty:
-		_reply_with("* (You took the\n  %s.)" % item["name"])
+		_reply_with("* We took the\n  %s." % item["name"])
 	else:
 		var special: Dictionary = _shop.get("bought_special", {})
 		var lines: Array = _shop["bought"]

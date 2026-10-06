@@ -616,6 +616,7 @@ func _talk_nat() -> void:
 		{"who": "Nat", "text": "I'm reading with my eyes closed.\nIt's advanced.", "mood": "smug"},
 		{"who": "Nat", "text": "...That shard you're carrying. It's a fragment."},
 		{"who": "Nat", "text": "There's an old story. Twelve pieces of something\nthat shouldn't exist, scattered so it could never wake up."},
+		{"who": "Nat", "text": "Somebody gave everything to break it apart.\nThe book doesn't say who."},
 		{"who": "Nat", "text": "The story calls it Hopkuna."},
 		"* (Hop goes still.)",
 		{"who": "Nat", "text": "Whoever gathers all twelve... well.\nThe book doesn't say. The last page is torn out."},

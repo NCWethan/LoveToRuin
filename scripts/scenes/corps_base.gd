@@ -478,7 +478,80 @@ func _couch() -> void:
 
 func _bunks() -> void:
 	var line := "* (Your bunk. Someone put a little sign on it:\n*  \"ELRIC\". The E is backwards.)" if Game.flags.get("route", "") == "pacifist" else "* (A spare bunk. Hop's jacket is on the top one.)"
+	if flag("dreamed_relic"):
+		await Game.dialogue.say([line])
+		return
 	await Game.dialogue.say([line])
+	var rest: int = await Game.dialogue.ask("* (Lie down for a while?)", ["Rest", "Not now"])
+	if rest == 0:
+		await _dream()
+
+
+## The first dream: the voice that came with the fragments. It doesn't know Elric
+## yet, only that Elric is carrying it. (It's Relic: Hop's friend, who died the
+## first night Hopkuna came out, and broke his power into the twelve fragments.
+## What's left of them is in the fragments, and rides along with whoever carries
+## them.) What it wants depends on the route.
+const DREAM_START := [
+	"* (You close your eyes.)",
+	"* (...)",
+	"* (Somewhere, something is humming.)",
+	{"who": "Relic", "tag": "???", "face": false, "text": "...You're carrying them."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "The pieces. I can feel every one of them.\nThree now."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "I don't know who you are. But you walk like I used to.\nLike there's nowhere you're allowed to stop."},
+]
+const DREAM_PACIFIST := [
+	{"who": "Relic", "tag": "???", "face": false, "text": "He's close, isn't he. Hop."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "He saved me once. Or he tried.\nIt wasn't his fault. Tell him that. Someday."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "And when you find the rest of me...\nbreak it. All of it. It's the only way he gets to be free."},
+]
+const DREAM_NEUTRAL := [
+	{"who": "Relic", "tag": "???", "face": false, "text": "You keep walking away from people. I did that too."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "It doesn't stop the pull.\nIt just makes you lonely while it pulls."},
+	{"who": "Relic", "tag": "???", "face": false, "text": "Don't stop. Not yet.\nThere's more of me out there."},
+]
+const DREAM_END := [
+	"* (You wake up.)",
+	"* (Your hand is closed tight around nothing.)",
+]
+
+
+func _dream() -> void:
+	Game.flags["dreamed_relic"] = true
+	await Game.fade_out(1.2)
+	Game.stop_music(1.0)
+	# The dark, with a faint red glow breathing in it, under the text box.
+	var dark := CanvasLayer.new()
+	dark.layer = 45
+	var screen := Control.new()
+	screen.size = Vector2(640, 480)
+	var clock := [0.0]
+	screen.draw.connect(func() -> void:
+		screen.draw_rect(Rect2(0, 0, 640, 480), Color.BLACK)
+		var glow := 0.18 + 0.08 * sin(clock[0] * 1.6)
+		for ring in 6:
+			screen.draw_circle(Vector2(320, 180), 90.0 - ring * 14.0, Color(0.6, 0.05, 0.12, glow * 0.25))
+	)
+	# (A timer keeps the glow breathing; it goes away with the dream.)
+	var timer := Timer.new()
+	timer.wait_time = 0.05
+	timer.autostart = true
+	timer.timeout.connect(func() -> void:
+		clock[0] += 0.05
+		screen.queue_redraw()
+	)
+	dark.add_child(timer)
+	dark.add_child(screen)
+	add_child(dark)
+	await Game.fade_in(1.2)
+	var lines: Array = DREAM_START.duplicate()
+	lines.append_array(DREAM_PACIFIST if Game.flags.get("route", "") == "pacifist" else DREAM_NEUTRAL)
+	await Game.dialogue.say(lines)
+	await Game.fade_out(1.2)
+	dark.queue_free()
+	Game.play_music("bunker")
+	await Game.fade_in(1.0)
+	await Game.dialogue.say(DREAM_END)
 
 
 func _kitchen() -> void:

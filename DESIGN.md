@@ -88,6 +88,33 @@ Each shopkeeper has their own things to talk about (some only after something ha
 - Dirty, scruffy clothing (fits a life on the road) — a patched brown tunic with a rope belt and olive pants in the current sprite.
 - Soft, almost pastel **purple skin**.
 
+### Relic
+
+**Relic is to Elric what Chara is to Frisk.** (RELIC is an anagram of ELRIC.)
+
+**Who Relic was**
+- **Hop's best friend**, years ago. A wanderer with nowhere to be, like Elric.
+- One night they were both in real danger, and Hop let **Hopkuna** out for the very first time. Hopkuna saved Hop's body. **Relic didn't survive.**
+- With their last strength, Relic tore Hopkuna's power out of Hop and **shattered it into the 12 fragments**. What was left of Relic went with them. That's why Hop treats Hopkuna as a last resort, and why he goes still whenever the old story comes up.
+
+**Relic and Elric**
+- When Elric picks up the first fragment, Relic **wakes up and rides along** with them. It's why Elric always wandered without knowing why: the fragments were calling.
+- Relic is **present on every route**, and the route decides what Relic becomes:
+  - **The narrator:** the "* (...)" narration is quietly Relic's voice (never said outright).
+  - **Dreams:** when Elric sleeps (the bunk at the Corps' base), Relic speaks to them directly. At first Relic doesn't know who Elric is, only that Elric is carrying them.
+  - **Pacifist:** Relic wants Hop freed. Destroying the fragments frees Relic too, and Relic says goodbye to Hop through Elric.
+  - **Neutral:** Relic stays restless and keeps pulling Elric onward: the endless wandering.
+  - **Genocide:** Relic's grief turns to rage at everyone who let it happen. The narration drops the parentheses and says **"we"**; the reflection in Westview's trophy case says **"It's me, RELIC."** In the end, Relic turns on Hopkuna, then on everything.
+
+**Hints in Chapter 1 (built)**
+- Meeting Elric, Hop: "Elric. ...Huh. Sorry. You just remind me of someone."
+- Arriving at Westview, Hop slips: "Rel-- Elric. Stay close, okay?" (and blames the late hour).
+- Nat's story: "Somebody gave everything to break it apart. The book doesn't say who."
+- Hopkuna on Westview Field: "The last time was years ago. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
+- The first dream (resting on the bunk at the base, Pacifist or Neutral): the voice in the dark, with different words for each route.
+- The trophy case in Westview's hallway: "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do. At full dread: "It's me, RELIC."
+- On Genocide, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
+
 ## 4. The cast
 
 | Character | Notes |
@@ -398,7 +425,7 @@ Elric is a traveling adventurer with no fixed home.
 1. **Hop first.** Elric arrives in the area and meets **Hop** before anyone else. Hop seems friendly, if a little strange, and the two become friends. The player has no idea that Hop and Hopkuna are the same person.
 2. **The first fragment.** Elric picks up one of Hopkuna's fragments.
 3. **Mistaken for an enemy.** **Eggo** and **Big Joe** catch Elric holding the fragment, assume Elric works for Hopkuna, and attack. This is the **tutorial fight** (see below).
-4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time** — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
+4. **The reveal at the Chapter 1 climax.** Hop gets into **genuine danger**, and as a last resort, **Hopkuna comes out for the first time in years** (the first time since the night Relic died; see [Relic](#relic)) — right in front of Elric. The friendship built over Chapter 1 makes the twist hit hard.
    - **The 3rd fragment erupts:** when Elric and Hop uncover it under the big field, its unstable power lashes out — straight at Elric.
    - **Hop takes the hit:** **Hop jumps in front of it** and is badly hurt.
    - **Hopkuna erupts:** tattoos spread and the red tint washes over Hop's body. Hopkuna came out to save Hop's body — and, technically, **Elric's life**.

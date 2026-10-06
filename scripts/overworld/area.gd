@@ -279,7 +279,7 @@ func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
 		# On the Genocide path, people are afraid of Elric.
 		if Game.dread() >= 2:
 			var who_name := DialogueBox.display_name(who)
-			var line := "* (%s backs away from you.\n*  They won't look you in the eye.)" if Game.dread() >= 3 else "* (%s flinches when you get close.)"
+			var line := "* %s backs away from us.\n* Smart." if Game.dread() >= 3 else "* (%s flinches when you get close.)"
 			await Game.dialogue.say([line % who_name])
 		await talk.call()
 	return add_character(npc, at)
