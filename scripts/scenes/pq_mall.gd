@@ -20,6 +20,10 @@ const ENTRY := Vector2(50, 535)
 const EAST_EXIT_X := 1075.0
 const WEST_EXIT_X := 15.0
 const ROAD_Y := 500.0
+## The sidewalk path running up the right side of the lot, past Jack in the Box.
+const SIDE_PATH_X := 870.0
+## The patio table by MuffinMage (Knotty Barrel), with his salmon burger on it.
+const MUFFIN_TABLE := Vector2(30 * 20 + 10, 10 * 20 + 6)
 
 # (What the shops sell, and what their shopkeepers say, is in shops.gd.)
 
@@ -91,6 +95,7 @@ func _ready() -> void:
 	tint.color = TINTS[_time_of_day()]
 	add_child(tint)
 	_add_signs()
+	_add_muffin_burger()
 	_place_people()
 	_place_hotspots()
 	_start.call_deferred()
@@ -171,6 +176,16 @@ func build_map() -> void:
 
 
 ## Store names on the roofs.
+## A salmon burger on MuffinMage's table on the Knotty Barrel patio.
+func _add_muffin_burger() -> void:
+	var plate := Node2D.new()
+	plate.z_index = 1
+	plate.draw.connect(func() -> void:
+		plate.draw_circle(MUFFIN_TABLE + Vector2(0, 2), 8.0, Color(0.95, 0.95, 0.95))
+		ShopArt.draw_centered(plate, "Salmon Burger", MUFFIN_TABLE, 1.0))
+	add_child(plate)
+
+
 func _add_signs() -> void:
 	var signs := Node2D.new()
 	add_child(signs)
@@ -708,7 +723,10 @@ func _talk_nassan() -> void:
 	# Off to work: across the parking lot and in through the Vons doors.
 	var nassan: Character = people.get("Nassan")
 	if nassan:
-		await nassan.walk_to(Vector2(nassan.position.x, 275), 130.0)
+		# Along the road, up the path beside Jack in the Box (not through it),
+		# across the lot, and in.
+		await nassan.walk_to(Vector2(SIDE_PATH_X, nassan.position.y), 130.0)
+		await nassan.walk_to(Vector2(SIDE_PATH_X, 275), 130.0)
 		await nassan.walk_to(Vector2(180, 275), 130.0)
 		await nassan.walk_to(Vector2(180, 150), 130.0)
 		# Gone inside. (Hidden rather than deleted: this conversation is still

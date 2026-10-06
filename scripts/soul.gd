@@ -16,6 +16,7 @@ var can_move: bool = true
 func _ready() -> void:
 	# Always draw the heart on top of the box.
 	z_index = 1
+	dread = Game.dread()
 	# Start in the middle of the box.
 	if box:
 		global_position = box.get_inner_rect().get_center()
@@ -26,10 +27,21 @@ func _ready() -> void:
 var fragmented: bool = false:
 	set(value):
 		fragmented = value
-		if _red_heart == null:
-			_red_heart = texture
-		texture = null if value else _red_heart
-		queue_redraw()
+		_update_texture()
+
+## Elric's dread (Game.dread()): 0 is the plain red heart. With each stage it's
+## more warped and cracked with green; at 4 (Relic), twisted and dark green.
+var dread: int = 0:
+	set(value):
+		dread = value
+		_update_texture()
+
+
+func _update_texture() -> void:
+	if _red_heart == null:
+		_red_heart = texture
+	texture = null if fragmented or dread > 0 else _red_heart
+	queue_redraw()
 var _red_heart: Texture2D
 var _time: float = 0.0
 
@@ -39,6 +51,9 @@ const HEART := [Vector2(0, -3), Vector2(3, -7), Vector2(6, -7), Vector2(8, -5), 
 
 
 func _draw() -> void:
+	if dread > 0 and not fragmented:
+		_draw_dread_heart()
+		return
 	if not fragmented:
 		return
 	var heart := PackedVector2Array(HEART)
@@ -66,9 +81,55 @@ func _draw() -> void:
 			draw_polyline(moved + PackedVector2Array([moved[0]]), Color(0.45, 0.47, 0.55), 1.0)
 
 
+## The heart's outline with more points along each edge, so it can bend.
+func _smooth_heart() -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in HEART.size():
+		var a: Vector2 = HEART[i]
+		var b: Vector2 = HEART[(i + 1) % HEART.size()]
+		for k in 4:
+			points.append(a.lerp(b, k / 4.0))
+	return points
+
+
+## Cracks across the heart (in heart coordinates), added one by one with dread.
+const CRACKS := [
+	[Vector2(-2, -6), Vector2(0, -2), Vector2(-2, 1), Vector2(0, 4)],
+	[Vector2(5, -6), Vector2(3, -3), Vector2(5, -1)],
+	[Vector2(-6, -4), Vector2(-3, -2), Vector2(-4, 1)],
+	[Vector2(2, 1), Vector2(4, 2), Vector2(3, 4)],
+	[Vector2(-7, -2), Vector2(-4, 0), Vector2(-1, 0), Vector2(1, -1)],
+	[Vector2(7, -3), Vector2(4, 0), Vector2(1, 3)],
+]
+
+
+func _draw_dread_heart() -> void:
+	var stage := clampi(dread, 1, 4)
+	var warp: float = [0.0, 0.35, 0.8, 1.3, 2.0][stage]
+	var heart := PackedVector2Array()
+	for p in _smooth_heart():
+		# Bent out of shape: a slow writhe, and at the end a twist.
+		var bent: Vector2 = p + Vector2(sin(p.y * 0.9 + _time * 1.7), cos(p.x * 0.8 + _time * 1.3) * 0.6) * warp
+		if stage >= 4:
+			bent = bent.rotated(p.y * 0.05 * sin(_time * 0.9))
+		heart.append(bent)
+	var body: Color = [Color(1, 0, 0), Color(0.92, 0.05, 0.1), Color(0.7, 0.12, 0.12), Color(0.35, 0.3, 0.12), Color(0.06, 0.28, 0.12)][stage]
+	draw_colored_polygon(heart, body)
+	if stage >= 4:
+		draw_polyline(heart + PackedVector2Array([heart[0]]), Color(0.02, 0.12, 0.05), 1.0)
+	var glow := 0.6 + 0.4 * sin(_time * 4.0)
+	var crack_color := Color(0.25, 1.0, 0.45, glow) if stage < 4 else Color(0.2, 0.75, 0.35, glow)
+	var count: int = [0, 2, 3, 5, 6][stage]
+	for c in count:
+		var line := PackedVector2Array()
+		for p in CRACKS[c]:
+			line.append(p + Vector2(sin(p.y * 0.9 + _time * 1.7), 0) * warp)
+		draw_polyline(line, crack_color, 1.0)
+
+
 func _process(delta: float) -> void:
 	_time += delta
-	if fragmented:
+	if fragmented or dread > 0:
 		queue_redraw()
 	if not can_move:
 		return

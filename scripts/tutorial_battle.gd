@@ -142,21 +142,43 @@ static func flavor_text(turn: int, enemies: Array[Enemy]) -> String:
 		1:
 			return "* Hop: \"Don't just stand there - hit 'em!\"\n* (Pick FIGHT. Press ENTER when the bar is\n*  in the middle.)"
 		2:
-			return "* Eggo: \"...you could also just talk to us.\"\n* (Try ACT. CHECK shows an enemy's stats.)"
+			# (Whoever's still standing says it. Nobody knocked out talks.)
+			var up := _standing(enemies)
+			var talker: String = "Eggo" if "Eggo" in up else ("Big Joe" if "Big Joe" in up else "")
+			if talker != "":
+				return "* %s: \"...you could also just talk to us.\"\n* (Try ACT. CHECK shows an enemy's stats.)" % talker
+			return "* (Try ACT. CHECK shows an enemy's stats.)"
 		3:
-			return "* (Every enemy has their own ACT options.\n*  Tell Eggo a pun, or tell Big Joe the truth.)"
+			var up := _standing(enemies)
+			if "Eggo" in up and "Big Joe" in up:
+				return "* (Every enemy has their own ACT options.\n*  Tell Eggo a pun, or tell Big Joe the truth.)"
+			return "* (Every enemy has their own ACT options.)"
 		4:
 			return "* (Party members take turns too.\n*  Hop can FIGHT, ACT, use ITEMs or DEFEND.)"
 		5:
 			return "* (Low on HP? ITEM heals.\n*  DEFEND halves the damage you take.)"
 		_:
-			return "* Eggo and Big Joe stand their ground."
+			var up := _standing(enemies)
+			if up.size() == 2:
+				return "* Eggo and Big Joe stand their ground."
+			return "* %s stands their ground." % (up[0] if not up.is_empty() else "Nobody")
+
+
+## The names of enemies still fighting.
+static func _standing(enemies: Array[Enemy]) -> Array:
+	var names: Array = []
+	for enemy in enemies:
+		if enemy.is_active():
+			names.append(enemy.name)
+	return names
 
 
 ## The tutorial fight as BattleData (enemies attack first, scripted hints each turn).
 static func create_data() -> BattleData:
 	var data := BattleData.new()
 	data.id = "tutorial"
+	# Eggo and Big Joe have their own theme.
+	data.music = "eggo_joe"
 	data.enemies = create_enemies()
 	data.intro = INTRO
 	data.player_first = false

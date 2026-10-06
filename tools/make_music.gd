@@ -23,6 +23,91 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# Relic's theme. Lonely and gentle, in A minor: a soft triangle melody that keeps
+	# reaching up and settling back down, like someone looking for someone. (Slowed
+	# and drowned in reverb, it's the battle music once Elric has become Relic: see
+	# "relic_slow" below.)
+	"relic": {
+		"bpm": 80,
+		"lead_wave": "triangle",
+		"lead": [
+			"E5 . . . D5 . C5 . . . . . A4 . . .",
+			"B4 . . . C5 . D5 . . . . . E5 . . .",
+			"E5 . . . D5 . C5 . . . . . A4 . . .",
+			"G#4 . . . . . . . B4 . . . . . . .",
+			"C5 . . . B4 . A4 . . . . . E4 . . .",
+			"F4 . . . G4 . A4 . . . . . C5 . . .",
+			"B4 . . . A4 . G#4 . . . . . E4 . . .",
+			"A4 . . . . . . . . . . . - - - -",
+		],
+		"harm": [
+			"A3 . E4 . A4 . E4 . A3 . E4 . A4 . E4 .",
+			"G3 . D4 . G4 . D4 . G3 . D4 . G4 . D4 .",
+			"F3 . C4 . F4 . C4 . F3 . C4 . F4 . C4 .",
+			"E3 . B3 . E4 . B3 . E3 . G#3 . B3 . G#3 .",
+			"A3 . E4 . A4 . E4 . A3 . E4 . A4 . E4 .",
+			"F3 . C4 . F4 . C4 . F3 . C4 . F4 . C4 .",
+			"E3 . B3 . E4 . B3 . E3 . G#3 . B3 . G#3 .",
+			"A3 . E4 . A4 . E4 . A3 . . . - - - -",
+		],
+		"bass": [
+			"A2 . . . . . . . A2 . . . . . . .",
+			"G2 . . . . . . . G2 . . . . . . .",
+			"F2 . . . . . . . F2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"A2 . . . . . . . A2 . . . . . . .",
+			"F2 . . . . . . . F2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"A2 . . . . . . . . . . . - - - -",
+		],
+	},
+
+	# Eggo and Big Joe's fight (the tutorial). A goofy little march in C: Eggo's
+	# bouncy, hopping melody up top, Big Joe's big stomping bass underneath.
+	"eggo_joe": {
+		"bpm": 140,
+		"lead": [
+			"C5 - E5 - G5 - E5 - C5 - E5 - G5 . . -",
+			"F5 - E5 - D5 - C5 - D5 . . . - - - -",
+			"C5 - E5 - G5 - E5 - C5 - E5 - A5 . . -",
+			"G5 - F5 - E5 - D5 - C5 . . . - - - -",
+			"E5 . E5 - D5 . C5 - D5 . D5 - E5 . F5 -",
+			"G5 . . . E5 . . . C5 . . . - - - -",
+			"A5 - G5 - F5 - E5 - D5 - E5 - F5 - D5 -",
+			"C5 . . . G4 . . . C5 . . . - - - -",
+		],
+		"harm": [
+			"E4 - G4 - C5 - G4 - E4 - G4 - C5 . . -",
+			"A4 - G4 - F4 - E4 - B4 . . . - - - -",
+			"E4 - G4 - C5 - G4 - E4 - G4 - C5 . . -",
+			"B4 - A4 - G4 - F4 - E4 . . . - - - -",
+			"G4 . G4 - F4 . E4 - B4 . B4 - C5 . D5 -",
+			"E5 . . . C5 . . . G4 . . . - - - -",
+			"C5 - B4 - A4 - G4 - B4 - C5 - D5 - B4 -",
+			"E4 . . . D4 . . . E4 . . . - - - -",
+		],
+		"bass": [
+			"C2 . . . C2 . G2 . C2 . . . C2 . G2 .",
+			"F2 . . . F2 . C3 . G2 . . . G2 . D3 .",
+			"C2 . . . C2 . G2 . A2 . . . A2 . E3 .",
+			"G2 . . . G2 . D3 . C2 . . . C2 . G2 .",
+			"C2 . . . C2 . G2 . G2 . . . G2 . D3 .",
+			"C2 . . . C2 . G2 . C2 . . . C2 . G2 .",
+			"F2 . . . F2 . C3 . G2 . . . G2 . D3 .",
+			"C2 . . . G2 . . . C2 . . . - - - -",
+		],
+		"drums": [
+			"K - H - S - H - K - H - S - H -",
+			"K - H - S - H - K K H - S - H -",
+			"K - H - S - H - K - H - S - H -",
+			"K - H - S - H - K K H - S S S -",
+			"K - H - S - H - K - H - S - H -",
+			"K - H - S - H - K K H - S - H -",
+			"K - H - S - H - K - H - S - H -",
+			"K - - - S - - - K - - - S S S S",
+		],
+	},
+
 	# Title screen, opening story, ending screen. Mysterious, a little sad.
 	"title": {
 		"bpm": 76,
@@ -889,6 +974,13 @@ func _initialize() -> void:
 	genocide["pitch"] = 0.84
 	genocide["reverb"] = 0.75
 	songs["genocide"] = genocide
+	# Battles once Elric has become Relic (dread 4): Relic's theme, slowed down,
+	# a few notes lower, and drowned in reverb.
+	var relic_slow: Dictionary = songs["relic"].duplicate(true)
+	relic_slow["bpm"] = 50
+	relic_slow["pitch"] = 0.84
+	relic_slow["reverb"] = 0.75
+	songs["relic_slow"] = relic_slow
 	# The shops on the Genocide route, once everyone has gone: each shop's
 	# cheerful tune crawling at less than half speed, dropped a tritone (the most
 	# uneasy interval there is), with the drums gone and only echoes left.

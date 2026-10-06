@@ -73,6 +73,9 @@ var flash: float = 0.0
 var shown_hp: float = -1.0
 ## Seconds since this enemy was knocked out (-1 if it hasn't been), for its KO animation.
 var ko_time: float = -1.0
+## Killed for real (not the tutorial, the training dummy or a boss): instead of
+## falling over, they crack into green pieces and the wind carries them away.
+var shattered: bool = false
 
 ## How this enemy reacts if a partner is knocked out, by the partner's name:
 ##   {"BigJoe6": {"line": "...", "mood": "sad", "taunts": [...], "attack": 1}}

@@ -187,7 +187,12 @@ func _ready() -> void:
 	if _data.silent:
 		Game.stop_music(0.0)
 	else:
-		Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
+		var music := _data.music if _data.music != "" else "battle"
+		# Once Elric has become Relic, ordinary fights play Relic's theme, slowed
+		# and drowned in reverb.
+		if music == "battle" and Game.dread() >= 4:
+			music = "relic_slow"
+		Game.play_music(music, 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
 	if not _data.party_only.is_empty():
@@ -1498,9 +1503,19 @@ func _process_fight_anim(delta: float) -> void:
 	if target.hp == 0:
 		target.state = "defeated"
 		target.ko_time = 0.0
-		Game.play_sfx("thud")
 		exp_gained += target.exp_reward
-		lines.append("* %s was knocked out!" % target.name)
+		if _deaths_are_real():
+			# Cracks into green pieces, and the wind carries them away.
+			target.shattered = true
+			Game.play_sfx("crack" if Game.has_sfx("crack") else "thud")
+			_start_wind(SHATTER_WIND_TIME, 0.22)
+			lines.append("* %s cracked into pieces.\n* The wind carried them away." % target.name)
+			var hop_line := _hop_after_kill()
+			if hop_line != "":
+				lines.append(hop_line)
+		else:
+			Game.play_sfx("thud")
+			lines.append("* %s was knocked out!" % target.name)
 		# Their partner reacts.
 		for other in _active_enemies():
 			var reaction: Dictionary = other.partner_reactions.get(target.name, {})
@@ -1516,6 +1531,57 @@ func _process_fight_anim(delta: float) -> void:
 
 
 # --- Enemy turn -----------------------------------------------------------
+
+## Whether a defeat here is a real death (shattering away), or just a knockout:
+## the tutorial, the training dummy and bosses only get knocked out.
+func _deaths_are_real() -> bool:
+	return not _data.id in ["tutorial", "training"] and _data.boss_style == "" and _data.event == ""
+
+
+## How long the wind blows after someone shatters, in seconds.
+const SHATTER_WIND_TIME := 2.6
+
+## Hop, after you kill someone: more nervous, then more afraid, the more you kill.
+## Each new stage gets its line once; after that he just reacts.
+const HOP_KILL_LINES := [
+	[1, "* Hop: \"...Elric? They're not... getting back up.\""],
+	[2, "* Hop: \"We could've just talked to them.\n*  You know that, right?\""],
+	[4, "* Hop: \"Can we- can we stop doing that?\n*  Please?\""],
+	[8, "* Hop: \"...Your eyes. Since when are your eyes green?\""],
+	[14, "* Hop: \"I keep telling myself it's still you.\""],
+	[20, "* (Hop takes a step back from you.\n*  He doesn't say anything.)"],
+	[40, "* Hop: \"Who ARE you?\""],
+	[75, "* Hop: \"...You look just like-\"\n* Hop: \"No. No, you don't.\""],
+]
+const HOP_KILL_REACTIONS := ["* (Hop flinches.)", "* (Hop looks away.)", "* (Hop doesn't say anything.)", "* (Hop's hands are shaking.)"]
+
+
+func _hop_after_kill() -> String:
+	if not party.any(func(m: PartyMember) -> bool: return m.name == "Hop"):
+		return ""
+	var kills := _total_kills()
+	var stage := -1
+	for i in HOP_KILL_LINES.size():
+		if kills >= HOP_KILL_LINES[i][0]:
+			stage = i
+	if stage < 0:
+		return ""
+	if stage > int(Game.flags.get("hop_kill_stage", -1)):
+		Game.flags["hop_kill_stage"] = stage
+		return HOP_KILL_LINES[stage][1]
+	return HOP_KILL_REACTIONS.pick_random()
+
+
+## Everyone killed so far, counting this fight.
+func _total_kills() -> int:
+	var now := enemies.filter(func(e: Enemy) -> bool: return e.shattered).size()
+	return int(Game.flags.get("kills", 0)) + now
+
+
+## How nervous Hop is (0 to 1), from how many people Elric has killed. He trembles.
+func _hop_fear() -> float:
+	return clampf(_total_kills() / 40.0, 0.0, 1.0)
+
 
 func _start_enemy_turn() -> void:
 	state = State.ENEMY_TURN
@@ -1663,6 +1729,7 @@ func _switch_soul() -> void:
 
 func _update_soul_look() -> void:
 	soul.fragmented = _soul_member().name == "Hop"
+	soul.dread = 0 if soul.fragmented else Game.dread()
 
 
 ## A quick flash when the SOUL switches owners.
@@ -2097,21 +2164,22 @@ func _draw_jumpscare(_time: float) -> void:
 
 ## The only sound at the end of the tent: wind, the wind over the field where
 ## Relic died (the first hint of how). It fades out as the eyes go.
-func _start_wind() -> void:
+func _start_wind(length: float = TENT_WIND_TIME, volume: float = 0.35) -> void:
 	var player := AudioStreamPlayer.new()
 	player.bus = "SFX"
 	var start := 0.0
 	if Game.has_sfx("relic_wind"):
 		player.stream = load(Game.SOUND_FILES["relic_wind"])
 		start = WIND_FILE_START
-		player.volume_db = WIND_BOOST_DB
+		player.volume_db = WIND_BOOST_DB + linear_to_db(volume / 0.35)
 	else:
-		player.stream = Sfx.wind(TENT_WIND_TIME, 0.35)
+		player.stream = Sfx.wind(length, volume)
 	add_child(player)
 	player.play(start)
 	var fade := create_tween()
-	fade.tween_interval(TENT_WIND_TIME - WIND_FADE)
-	fade.tween_property(player, "volume_db", -60.0, WIND_FADE)
+	var fade_time := minf(WIND_FADE, length * 0.6)
+	fade.tween_interval(length - fade_time)
+	fade.tween_property(player, "volume_db", -60.0, fade_time)
 	fade.tween_callback(player.stop)
 
 
@@ -2649,6 +2717,11 @@ func _enemy_motion(enemy: Enemy) -> Array:
 	var rot := 0.0
 	var scale := Vector2.ONE
 	var style: String = ENEMY_STYLES.get(_enemy_kind(enemy), "")
+	if enemy.state == "defeated" and enemy.shattered:
+		var k := maxf(enemy.ko_time, 0.0)
+		if k < 0.5:
+			offset.x = sin(k * 70.0) * 4.0 * (1.0 - k * 2.0)
+		return [offset, rot, scale]
 	if enemy.state == "defeated":
 		# KO: shudder, then topple over backwards and stay down.
 		var k := maxf(enemy.ko_time, 0.0)
@@ -2719,6 +2792,50 @@ func _enemy_mood_picture(enemy: Enemy) -> Texture2D:
 	return _hurt_pictures[key]
 
 
+## Someone killed: green cracks spread across them, then they break into pieces
+## that the wind carries off to the right, tumbling and fading. Then nothing.
+func _draw_shatter(enemy: Enemy, feet: Vector2, sprite_size: Vector2) -> void:
+	var k := maxf(enemy.ko_time, 0.0)
+	var tex := enemy.sprite
+	var tex_size := tex.get_size()
+	var cell := 4
+	var pixel := sprite_size.x / tex_size.x
+	var top_left := feet - Vector2(sprite_size.x / 2, sprite_size.y)
+	var crack := clampf(k / 0.5, 0.0, 1.0)
+	var rng := RandomNumberGenerator.new()
+	var cols := int(ceil(tex_size.x / cell))
+	var rows := int(ceil(tex_size.y / cell))
+	for row in rows:
+		for col in cols:
+			rng.seed = enemy.get_instance_id() + row * 131 + col * 17
+			var source := Rect2(col * cell, row * cell, cell, cell)
+			var home := top_left + Vector2(col, row) * cell * pixel
+			# Pieces nearer the top and right go first (the wind comes from the left).
+			var wait := 0.6 + (rows - row) * 0.02 + (cols - col) * 0.035 + rng.randf() * 0.25
+			var p := clampf((k - wait) / 1.6, 0.0, 1.0)
+			if p >= 1.0:
+				continue
+			var drift := Vector2(pow(p, 1.4) * rng.randf_range(220.0, 340.0), -p * rng.randf_range(40.0, 120.0) + sin(p * 9.0 + col) * 6.0)
+			var spin := p * rng.randf_range(-6.0, 6.0)
+			var size := Vector2.ONE * cell * pixel * (1.0 - 0.5 * p)
+			var green := Color(1, 1, 1).lerp(Color(0.35, 1.0, 0.5), crack)
+			green.a = 1.0 - p
+			_overlay.draw_set_transform(home + drift + size / 2, spin, Vector2.ONE)
+			_overlay.draw_texture_rect_region(tex, Rect2(-size / 2, size), source, green)
+	_overlay.draw_set_transform(Vector2.ZERO)
+	# The cracks: jagged green lines running across them before they break.
+	if k < 0.75:
+		var bright := Color(0.5, 1.0, 0.6, 1.0 - clampf((k - 0.6) / 0.15, 0.0, 1.0))
+		rng.seed = enemy.get_instance_id()
+		for line in 5:
+			var at := top_left + Vector2(rng.randf() * sprite_size.x, rng.randf() * sprite_size.y)
+			var points := PackedVector2Array([at])
+			for step in int(2 + crack * 5):
+				at += Vector2(rng.randf_range(-14, 14), rng.randf_range(-14, 14))
+				points.append(at)
+			_overlay.draw_polyline(points, bright, 2.0)
+
+
 ## Dust puffing up as a knocked-out enemy hits the ground.
 func _draw_enemy_ko_dust(enemy: Enemy, feet: Vector2) -> void:
 	if enemy.state != "defeated" or enemy.ko_time < 0.55 or enemy.ko_time > 1.3:
@@ -2747,6 +2864,9 @@ func _draw_enemies() -> void:
 			top = pos.y + 40.0 - sprite_size.y
 			var feet := Vector2(pos.x, pos.y + 40.0)
 			var feet_rect := Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size)
+			if enemy.shattered:
+				_draw_shatter(enemy, feet + _enemy_motion(enemy)[0], sprite_size)
+				continue
 			# A soft shadow on the ground.
 			if enemy.state != "spared":
 				_overlay.draw_set_transform(feet, 0.0, Vector2(1.0, 0.28))
@@ -2900,6 +3020,8 @@ func _draw_party_sprites() -> void:
 		if member.sprite == null:
 			continue
 		var pos := Vector2(_slot_x(i), 140)
+		if member.name == "Hop" and _hop_fear() > 0.0:
+			pos.x += sin(Time.get_ticks_msec() / 18.0) * _hop_fear() * 1.6
 		if member.shake > 0.0:
 			pos.x += sin(member.shake * 60.0) * 4.0
 		var sprite_size := member.sprite.get_size() * 3.0
