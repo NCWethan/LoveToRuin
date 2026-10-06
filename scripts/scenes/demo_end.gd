@@ -95,10 +95,10 @@ func _draw_chapter_complete(alpha: float) -> void:
 		_centered("CONTINUE  (press ENTER)", 440, 14, Color(1, 1, 1, 0.55 + 0.45 * sin(_time * 3.0)))
 
 
-## Genocide: the Corps won't have you.
+## Genocide: leaving Hop's house the morning after. (What comes next isn't built yet.)
 func _draw_sealed(alpha: float) -> void:
-	_centered("The hatch to the Corps' base is bolted shut.", 190, 18, Color(0.8, 0.8, 0.8, alpha))
-	_centered("Somewhere in the dark, Hop is waiting.", 230, 18, Color(0.8, 0.8, 0.8, alpha))
+	_centered("Hop locks the door behind you.", 190, 18, Color(0.8, 0.8, 0.8, alpha))
+	_centered("The city is waiting.", 230, 18, Color(0.8, 0.8, 0.8, alpha))
 	_centered("So is someone else.", 270, 18, Color(1.0, 0.25, 0.3, alpha))
 	# Relic (green), saying "we" for the first time.
 	_centered("...And so are we.", 310, 18, Color(0.45, 0.95, 0.55, clampf((_time - 1.5) / 1.0, 0.0, 1.0)))

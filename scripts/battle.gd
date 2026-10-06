@@ -184,7 +184,10 @@ func _ready() -> void:
 	for member in party:
 		member.overheal = 0
 		member.overheal_purple = 0
-	Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
+	if _data.silent:
+		Game.stop_music(0.0)
+	else:
+		Game.play_music(_data.music if _data.music != "" else "battle", 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
 	if not _data.party_only.is_empty():
@@ -398,6 +401,16 @@ func _process_menu() -> void:
 	elif _pressed("ui_right"):
 		_button = wrapi(_button + 1, 0, BUTTONS.size())
 		Game.play_sfx("move")
+	elif _pressed("confirm") and BUTTONS[_button] in _data.locked_buttons:
+		# Locked: a voice in green says no.
+		Game.play_sfx("miss")
+		_locked_tries += 1
+		_text_color = RELIC_GREEN
+		var mock: String = _data.locked_lines[mini(_locked_tries - 1, _data.locked_lines.size() - 1)] if not _data.locked_lines.is_empty() else "* ..."
+		_show_messages([mock], func() -> void:
+			_text_color = Color.WHITE
+			state = State.MENU
+			_set_text(_flavor))
 	elif _pressed("confirm"):
 		Game.play_sfx("select")
 		_pending = BUTTONS[_button]
@@ -1954,6 +1967,8 @@ var _tent_phase: String = ""
 var _tent_time: float = 0.0
 ## The color of the text in the box (red for the tent).
 var _text_color: Color = Color.WHITE
+## How many times a locked button has been tried (see BattleData.locked_buttons).
+var _locked_tries: int = 0
 ## When the tent froze the background (so it stops right where it was).
 var _frozen_at: float = 0.0
 ## Relic's color (the tent's words are theirs).
@@ -2785,6 +2800,13 @@ func _draw_aura() -> void:
 
 ## Draws Elric's party on the left side of the screen, facing the enemies.
 func _draw_party_sprites() -> void:
+	# Someone watching from behind the party (never fights): worried.
+	if _data.watcher != "":
+		var look := Cast.portrait(_data.watcher, "sad")
+		if look:
+			var size := look.get_size() * 3.0
+			var feet := Vector2(38, 174 + sin(Time.get_ticks_msec() / 650.0) * 1.0)
+			_overlay.draw_texture_rect(look, Rect2(feet - Vector2(size.x / 2, size.y), size), false, Color(0.78, 0.78, 0.85))
 	for i in party.size():
 		var member := party[i]
 		if member.sprite == null:
@@ -3080,12 +3102,35 @@ func _draw_buttons() -> void:
 	for i in BUTTONS.size():
 		var rect := Rect2(Vector2(22 + i * BUTTON_SPACING, BUTTON_Y), BUTTON_SIZE)
 		var selected := state == State.MENU and i == _button
+		var locked: bool = BUTTONS[i] in _data.locked_buttons
 		var color := YELLOW if selected else ORANGE
+		if locked:
+			color = Color(0.55, 0.55, 0.55) if selected else Color(0.32, 0.32, 0.34)
 		_overlay.draw_rect(rect, color, false, 2.0)
 		_overlay.draw_string(_font, rect.position + Vector2(32, 22), BUTTONS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
 		# The SOUL sits where the icon is on the selected button (like Undertale).
 		if not selected:
 			_draw_button_icon(BUTTONS[i], rect.position + Vector2(15, 16), color)
+		if locked:
+			_draw_chains(rect)
+
+
+## Chains wrapped across a locked button: two diagonal rows of links, and a
+## padlock where they cross.
+func _draw_chains(rect: Rect2) -> void:
+	var steel := Color(0.62, 0.62, 0.66)
+	for line in [[rect.position + Vector2(4, 4), rect.end - Vector2(4, 4)], [Vector2(rect.position.x + 4, rect.end.y - 4), Vector2(rect.end.x - 4, rect.position.y + 4)]]:
+		var from: Vector2 = line[0]
+		var to: Vector2 = line[1]
+		var links := 9
+		for k in links:
+			var at := from.lerp(to, (k + 0.5) / links)
+			_overlay.draw_arc(at, 3.2, 0, TAU, 8, Color(0.15, 0.15, 0.17), 3.0)
+			_overlay.draw_arc(at, 3.2, 0, TAU, 8, steel, 1.5)
+	var lock := rect.get_center()
+	_overlay.draw_arc(lock + Vector2(0, -4), 4, PI, TAU, 8, steel, 2.0)
+	_overlay.draw_rect(Rect2(lock + Vector2(-6, -3), Vector2(12, 10)), Color(0.5, 0.45, 0.3))
+	_overlay.draw_rect(Rect2(lock + Vector2(-1, 0), Vector2(2, 4)), Color(0.15, 0.15, 0.17))
 
 
 ## Little pictures on the battle buttons: a sword, a megaphone, a bag, a white flag

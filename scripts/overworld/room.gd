@@ -11,13 +11,14 @@ enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	FIELD, FIELD_LINE, BLEACHERS, BENCH, ROAD, ROAD_LINE, DIRT, ROOF,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE,
-	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP, SCORCHED, STUMP }
+	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP, SCORCHED, STUMP,
+	HOUSE_FLOOR, HOUSE_WALL, HOUSE_PROP }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE,
-	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP]
+	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP, HOUSE_WALL, HOUSE_PROP]
 
 var width: int = 0
 var height: int = 0
@@ -114,7 +115,7 @@ func _draw() -> void:
 
 ## Tiles that cast a shadow onto the ground below them (buildings, walls, lockers...).
 const SHADOW_CASTERS := [WALL, WINDOW, DOOR, STUCCO, GLASS, WOOD_WALL, RED_WALL,
-	INTERIOR_WALL, LOCKER, CHALKBOARD, BLEACHERS, BUNKER_WALL, BUNKER_DOOR]
+	INTERIOR_WALL, LOCKER, CHALKBOARD, BLEACHERS, BUNKER_WALL, BUNKER_DOOR, HOUSE_WALL]
 
 
 ## A soft shadow along the ground at the foot of every wall, and a thinner one
@@ -292,6 +293,20 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 				draw_rect(Rect2(p + Vector2(6, 8), Vector2(2, 10)), Color8(60, 44, 32))
 				draw_colored_polygon(PackedVector2Array([p + Vector2(6, 8), p + Vector2(9, 4), p + Vector2(11, 8), p + Vector2(13, 5), p + Vector2(14, 8)]), Color8(30, 20, 15))
 				draw_rect(Rect2(p + Vector2(8, 9), Vector2(4, 2)), Color8(120, 60, 30))
+		HOUSE_FLOOR, HOUSE_PROP:
+			# Warm wooden floorboards (Hop's house). (HOUSE_PROP is solid floor that
+			# furniture is drawn on top of.)
+			draw_rect(r, Color8(150, 106, 72))
+			for row in 4:
+				draw_rect(Rect2(p + Vector2(0, row * 5 + 4), Vector2(TILE, 1)), Color8(124, 86, 56))
+			draw_rect(Rect2(p + Vector2((_hash(x, y, 2) % 3) * 6 + 2, (_hash(x, y, 3) % 4) * 5), Vector2(1, 5)), Color8(124, 86, 56))
+		HOUSE_WALL:
+			# Faded wallpaper with thin stripes, and a wooden baseboard.
+			draw_rect(r, Color8(132, 150, 140))
+			for stripe in 3:
+				draw_rect(Rect2(p + Vector2(stripe * 7 + 2, 0), Vector2(1, TILE)), Color8(118, 136, 126))
+			if get_tile(x, y + 1) != HOUSE_WALL:
+				draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(98, 70, 50))
 		BUNKER_FLOOR, PROP:
 			# Poured concrete, in big slabs. (PROP is solid floor that furniture is
 			# drawn on top of.)

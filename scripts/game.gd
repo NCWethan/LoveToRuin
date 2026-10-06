@@ -617,6 +617,10 @@ func finish_battle(result: Dictionary) -> void:
 	# (Sparring with the training dummy doesn't count.)
 	if result.get("id", "") != "training":
 		flags["kills"] = int(flags.get("kills", 0)) + result.get("defeated", []).size()
+	# The glowbug, on the way to Hop's house: killing it is what starts the
+	# Genocide route, officially.
+	if result.get("id", "") == "glowbug" and not result.get("defeated", []).is_empty():
+		flags["route"] = "genocide"
 	# Someone you challenged (townsfolk.gd): gone for good, or they remember you spared them.
 	var fight_id := str(result.get("id", ""))
 	if fight_id.begins_with("person_") and not result.get("fled", false):
@@ -713,6 +717,8 @@ const AREA_NAMES := {
 	"res://scenes/pq_mall.tscn": "PQ Mall",
 	"res://scenes/westview.tscn": "Westview High",
 	"res://scenes/hilltop.tscn": "Westview Field",
+	"res://scenes/hop_house.tscn": "Hop's House",
+	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 
 

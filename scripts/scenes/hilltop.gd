@@ -15,6 +15,7 @@ const DEMO_END_SCENE := "res://scenes/demo_end.tscn"
 ## Chapter 2: the hatch under the shelter leads down into the Corps' base, and the
 ## road south goes back through Westview (into the gym, by the emergency exit).
 const CORPS_BASE_SCENE := "res://scenes/corps_base.tscn"
+const HOP_HOUSE_SCENE := "res://scenes/hop_house.tscn"
 const WESTVIEW_SCENE := "res://scenes/westview.tscn"
 const HATCH := Vector2(7 * 20 + 10, 5 * 20 + 10)
 const T := Room.TILE
@@ -926,7 +927,9 @@ func _route_choice() -> void:
 			picked = choice
 
 	var route: String = routes[picked]
-	Game.flags["route"] = route
+	# (Going with Hop isn't the Genocide route yet: nothing says so. It starts on
+	# the way to his house, with the glowbug. Until then, the route is "with_hop".)
+	Game.flags["route"] = route if route != "genocide" else "with_hop"
 	# (chapter1_done: the choice has been made. There are no chapters; the story
 	# just goes on, and where it goes next depends on the choice.)
 	match route:
@@ -953,8 +956,9 @@ func _route_choice() -> void:
 			Game.flags["neutral_locked"] = true
 			await _ending_genocide()
 			Game.flags["chapter1_done"] = true
-			Game.save_game(SCENE, player.position)
-			await Game.change_scene(DEMO_END_SCENE)
+			# Back to Hop's place for the night.
+			Game.save_game(HOP_HOUSE_SCENE, Vector2(40, 290))
+			await Game.change_scene(HOP_HOUSE_SCENE, Vector2(40, 290))
 
 
 func _ending_pacifist() -> void:
@@ -1045,7 +1049,6 @@ func _ending_genocide() -> void:
 		"* (Hop looks back at them. Then at you.)",
 		{"who": "Hop", "text": "...I'm sorry, guys.", "mood": "sad"},
 		"* (You and Hop walk into the dark.)",
-		{"who": "Hopkuna", "tag": "???", "face": false, "text": "Good choice, little wanderer."},
 	])
 
 

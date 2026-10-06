@@ -36,6 +36,15 @@ var boss_style: String = ""
 var backdrop_style: String = "diamonds"
 ## Not a real fight: a scripted scare instead ("tent").
 var event: String = ""
+## Someone standing behind the party who doesn't fight: drawn there, worried,
+## and never given a turn (e.g. Hop, at the glowbug).
+var watcher: String = ""
+## No music at all.
+var silent: bool = false
+## Buttons that can't be used: greyed out and chained. Trying one shows the next
+## of `locked_lines` (in Relic's green; the last one repeats).
+var locked_buttons: Array[String] = []
+var locked_lines: Array[String] = []
 
 
 func flavor_text(turn: int) -> String:

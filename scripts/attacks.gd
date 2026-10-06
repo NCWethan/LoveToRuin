@@ -16,6 +16,8 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	match pattern:
 		"rain": return _rain(enemy, parent, area, s, step)
 		"straw": return _straw(enemy, parent, area, s, step)
+		# The glowbug doesn't attack. It just trembles. (Nothing comes for a long while.)
+		"tremble": return 99.0
 		"bullseye": return _bullseye(enemy, parent, area, s, step)
 		"egg_drop": return _egg_drop(enemy, parent, area, s, step)
 		"bunny_hop": return _bunny_hop(enemy, parent, area, s, step)
