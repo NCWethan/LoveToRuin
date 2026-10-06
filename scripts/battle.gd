@@ -929,16 +929,9 @@ const RIFF_OVERHEAL := 5
 const MAX_PURPLE := 15
 const AMPED_TURNS := 2
 var _riff_script: GDScript
-var _hands_script: GDScript
 var _guitar_sprite: Texture2D
 var _amp_sprite: Texture2D
 var _ronin_zone: Texture2D
-
-
-func _hands() -> GDScript:
-	if _hands_script == null:
-		_hands_script = load("res://scripts/ronin_hands.gd")
-	return _hands_script
 
 
 func _riff() -> GDScript:
@@ -947,7 +940,7 @@ func _riff() -> GDScript:
 	return _riff_script
 
 
-## How long until the riff's last sound (the recording ends with a little silence).
+## How long until the riff's last sound.
 func _riff_length() -> float:
 	var loud: String = _riff().LOUD
 	var last := loud.length() - 1
@@ -956,45 +949,35 @@ func _riff_length() -> float:
 	return (last + 1) * float(_riff().STEP)
 
 
-## The riff, measured at `time` seconds in: how loud (0 to 9), how long since the
-## last picked note, how high the note is (0 to 9), and whether he's holding a note.
+## The riff at `time` seconds in (from scripts/ronin_riff.gd, written along with
+## the music by tools/make_riff.gd): how loud (0 to 9), how long since the last
+## picked note, where his fretting hand is (0 to 9), and whether he's shredding,
+## holding a note, or it's swelling.
 func _riff_moment(time: float) -> Dictionary:
-	var loud: String = _riff().LOUD
-	var onsets: String = _riff().ONSETS
-	var step: float = _riff().STEP
+	var riff := _riff()
+	var loud: String = riff.LOUD
+	var step: float = riff.STEP
 	var f := clampi(int(time / step), 0, loud.length() - 1)
 	var level := int(loud[f])
-	# A new note: the analysis heard a pick, or it got louder right after a dip.
-	var picked := func(k: int) -> bool:
-		if k < 2:
-			return false
-		return onsets[k] == "1" or int(loud[k]) - mini(int(loud[k - 1]), int(loud[k - 2])) >= 2
 	var since := 99.0
-	var recent := 0
 	for back in range(0, 24):
 		var k := f - back
-		if k < 2:
+		if k < 0:
 			break
-		if picked.call(k):
-			if since == 99.0:
-				since = back * step + fmod(time, step)
-			if back < 10:
-				recent += 1
-	# Where his fretting hand is: from a video of the riff being played for real
-	# (scripts/ronin_hands.gd), blended a little with its neighbours so it glides.
-	var hands: String = _hands().HAND
-	var height := 4.0
-	if hands.length() > 0:
-		var total := 0.0
-		var count := 0
-		for k in range(f - 1, f + 2):
-			if k >= 0 and k < hands.length():
-				total += int(hands[k])
-				count += 1
-		height = total / maxi(count, 1)
+		if riff.ONSETS[k] == "1":
+			since = back * step + fmod(time, step)
+			break
+	# The fretting hand, blended a little with its neighbours so it glides.
+	var hands: String = riff.HAND
+	var total := 0.0
+	var count := 0
+	for k in range(f - 1, f + 2):
+		if k >= 0 and k < hands.length():
+			total += int(hands[k])
+			count += 1
 	var rising := level - int(loud[maxi(f - 8, 0)])
-	return {"loud": level, "since": since, "shred": recent >= 3 and level >= 6, "height": height,
-		"hold": since > 0.4 and level >= 6, "swell": rising >= 2}
+	return {"loud": level, "since": since, "shred": riff.SHRED[f] == "1", "height": total / maxi(count, 1),
+		"hold": riff.HOLD[f] == "1", "swell": rising >= 2}
 
 
 func _draw_ronin_riff(t: float, texture: Texture2D) -> void:
