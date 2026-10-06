@@ -3,8 +3,10 @@ extends SceneTree
 ## being played for real (a different take from the recording he plays).
 ##
 ## HAND_IN_VIDEO is where the fretting hand was in the video every quarter second,
-## measured by eye from the frames: how far up the neck from the nut, 0.0 (at the
-## nut) to 1.0 (where the neck meets the body). To line the video's take up with
+## measured by eye from the frames (against the soundhole, since the camera moves):
+## how far up the neck from the nut, 0.0 (at the nut) to 1.0 (where the neck meets
+## the body). From the second video (IMG_1049), whose take matches the recording
+## more closely. To line the video's take up with
 ## the recording, both are turned into loudness curves and matched up with dynamic
 ## time warping (stretching and squeezing the video's timeline until the two
 ## curves agree), so each moment in the recording gets the hand position from the
@@ -18,11 +20,11 @@ const OUT := "res://scripts/ronin_hands.gd"
 const STEP := 0.05
 const VIDEO_STEP := 0.25
 const HAND_IN_VIDEO := [
-	0.32, 0.34, 0.34, 0.26, 0.32, 0.32, 0.29, 0.29, 0.47, 0.45, 0.5, 0.5, 0.6, 0.63, 0.63, 0.66,
-	0.66, 0.66, 0.66, 0.63, 0.66, 0.68, 0.68, 0.66, 0.66, 0.66, 0.66, 0.42, 0.32, 0.32, 0.34, 0.24,
-	0.66, 0.68, 0.66, 0.34, 0.63, 0.63, 0.55, 0.45, 0.33, 0.27, 0.33, 0.24, 0.55, 0.48, 0.45, 0.21,
-	0.27, 0.3, 0.3, 0.33, 0.47, 0.42, 0.4, 0.34, 0.45, 0.39, 0.36, 0.33, 0.45, 0.45, 0.42, 0.34,
-	0.53, 0.5, 0.5, 0.45, 0.6, 0.66, 0.32, 0.34, 0.6, 0.6,
+	0.57, 0.59, 0.62, 0.57, 0.57, 0.57, 0.54, 0.57, 0.54, 0.57, 0.57, 0.38, 0.48, 0.54, 0.46, 0.40,
+	0.70, 0.65, 0.57, 0.38, 0.62, 0.70, 0.59, 0.48, 0.62, 0.59, 0.54, 0.40, 0.59, 0.57, 0.59, 0.51,
+	0.46, 0.54, 0.59, 0.38, 0.54, 0.48, 0.59, 0.46, 0.54, 0.54, 0.62, 0.62, 0.51, 0.57, 0.54, 0.40,
+	0.54, 0.48, 0.48, 0.37, 0.54, 0.57, 0.54, 0.43, 0.48, 0.59, 0.57, 0.54, 0.57, 0.62, 0.57, 0.48,
+	0.51, 0.54, 0.54, 0.46, 0.54, 0.51, 0.51, 0.43, 0.51, 0.48, 0.48, 0.40,
 ]
 
 
