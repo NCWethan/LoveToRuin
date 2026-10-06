@@ -27,6 +27,8 @@ static func make_all() -> Dictionary:
 		"slash": slide(1600, 250, 0.14, 0.22),
 		"honk": tone([392, 0, 392], 0.12, 0.25),
 		"door": noise(0.06, 0.25),
+		# A shop door's bell: ding-dong.
+		"chime": tone([1318, 1046], 0.16, 0.14),
 		"punch": slide(260, 70, 0.09, 0.32),
 		"thud": slide(140, 40, 0.25, 0.35),
 		"ping": slide(1400, 1100, 0.18, 0.12),

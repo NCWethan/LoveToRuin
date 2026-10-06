@@ -75,6 +75,8 @@ func open(shop: Dictionary) -> void:
 	var was_busy := Game.busy
 	Game.busy = true
 	var song_before := Game.current_music()
+	# The door's bell (an empty shop's door doesn't chime).
+	Game.play_sfx("door" if Shops.gone() else "chime")
 	await Game.fade_out(0.3)
 	_shop = shop
 	_empty = Shops.gone()
@@ -93,6 +95,7 @@ func open(shop: Dictionary) -> void:
 	Game.play_music(str(shop["music"]) + ("_gone" if _empty else ""), 0.3)
 	await Game.fade_in(0.3)
 	await _closed
+	Game.play_sfx("door" if _empty else "chime")
 	await Game.fade_out(0.3)
 	_panel.visible = false
 	Game.play_music(song_before, 0.3)
