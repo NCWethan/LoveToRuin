@@ -95,9 +95,52 @@ Each shopkeeper has their own things to talk about (some only after something ha
 Pronouns: they/them
 
 **Who Relic was**
-- **Hop's best friend**, years ago. A wanderer with nowhere to be, like Elric.
-- One night, on **Westview Field**, they were both in real danger, and Hop let **Hopkuna** out for the very first time. Hopkuna saved Hop's body. **Relic didn't survive.** (It's the same field where Hopkuna comes out again at the end of Chapter 1.)
-- With their last strength, Relic tore Hopkuna's power out of Hop and **shattered it into the 12 fragments**. What was left of Relic went with them. That's why Hop treats Hopkuna as a last resort, and why he goes still whenever the old story comes up.
+- **Five years ago**, a kid showed up in San Diego alone, with a backpack and nowhere to be. A wanderer, like Elric. They slept in the **picnic shelter by Westview Field** (the same shelter that's now Revolution's base).
+- **Hop** found them there one morning and brought them curly fries from Jack in the Box. They were inseparable all summer: **Hop's best friend**.
+- They never told anyone their real name. They **collected things**: bottle caps, keys, a cracked compass, a single chess piece. Hop teased them that they collected "relics," and the name stuck. It's the only name anyone ever knew them by.
+- Hop told Relic about the voice inside him. Relic was the only person he ever told, and they weren't scared: *"Everybody's got something in them they didn't ask for."*
+
+**Relic's power: KEEPSAKE**
+- Relic could **take something out of a person and keep it in an object**: never strength or magic, only what someone carried inside them (a fear, a bad memory, a grief). Relic would hold their hand, the weight would lift out of them, and it would settle into something small Relic carried.
+- That's what the collection really was: every "relic" in their backpack held someone else's pain. They wandered from town to town carrying other people's burdens so those people didn't have to.
+- **The rules:**
+  - **Touch only.** Relic had to be holding on.
+  - **The person has to let go.** Relic could only take what someone truly wanted gone. ("You can't pull a splinter out of a fist that won't open.")
+  - **It costs Relic.** Every keepsake weighed on them a little. Small things were fine; something big could break them.
+- That summer, Relic took Hop's nightmares (the ones about the voice) and kept them in a Jack in the Box curly-fry token: the last thing in the collection.
+- Relic had offered before: "If you ever want him gone, I could try." Hop always said no. Hopkuna had been in him his whole life, and Hop was scared of what he'd be without him.
+
+**The night of the fire**
+- At the end of the summer, they camped on **Westview Field** in Hop's dad's old **three-person tent**. Relic joked there was room for three: "You, me, and him."
+- That night the **Santa Ana winds** came in hot off the hills, and a **brush fire** jumped the canyon. In minutes the field was ringed in fire, the smoke too thick to see the road.
+- Hop panicked and did the one thing he swore he never would: he **let Hopkuna out**, for the very first time, to save them both.
+- Hopkuna saved Hop's body. Then he looked at the fire (the whole city lit up orange) and he *liked* it. Relic grabbed him and begged Hop to come back, and **Hopkuna turned on Relic**.
+- In the middle of it, Relic saw Hop for a second, fighting from the inside, and held on: **"Hop. Let go."** For the first time in his life, Hop did. He wanted Hopkuna gone more than anything.
+- So KEEPSAKE worked: Relic pulled **all of Hopkuna's power** out of Hop's chest at once. But it was far too big to keep in any object, and too big for Relic. Relic broke apart around it.
+- Hopkuna's power and Relic **shattered together into twelve pieces**, and the wind carried them across San Diego. **Each fragment is Hopkuna's power wrapped in a piece of Relic**: the last keepsake they ever made. Only Hopkuna's *mind* stayed in Hop (it was tied too deep to his soul to let go of), which is why Hopkuna is weak now, and why he needs the fragments back.
+
+**Afterward**
+- Hop woke up at dawn in the burned field, alone. The tent was half melted. **Relic was never found.**
+- To the city, it was a fire with one missing kid nobody could put a name to. Only Hop remembers Relic, and he's never told anyone what really happened. He hasn't had a nightmare since.
+
+**What this explains**
+- **The tent** encounter is *that* tent: "We were here, too. Three of us." (Hop, Relic and Hopkuna.) It's Relic talking.
+- **The wind** at the end of the tent is the Santa Ana wind that spread the fire and scattered the fragments.
+- **Hopkuna's "watch the world burn"**: the first thing he ever saw was a city on fire.
+- **The crater** on Westview Field in Chapter 1 is where it happened; Hopkuna breaks out in the same place ("Right here, on this field").
+- **The first fragment** "hums, like it's breathing," and it's warm: Relic is in there. Hop "stares at it a little too long": he can feel them.
+- **Nassan's "Don't carry it alone"** is Relic's whole tragedy: they carried everything alone, and it killed them. (And his Genocide note: "I told you not to carry it alone.")
+- **BOND**: Elric grows stronger through connection, the opposite of how Relic lived. On Pacifist, Elric is what Relic never had: someone who doesn't carry it alone. Destroying the fragments finally lets Relic put the keepsakes down. On Genocide, Relic stops carrying and starts *taking*.
+
+**Mysteries for later chapters**
+- **Who tore the last page out of Nat's book?** Hop did: it had Relic's name on it (a Chapter 3 reveal).
+- **What started the fire?** Never solved. Hopkuna, much later: *"I didn't start that fire, little wanderer."* ... *"Probably."*
+
+**Hooks for later chapters**
+- **Relic's lost collection**: optional items across the map (the bottle cap, the cracked compass, the chess piece...), each holding a stranger's old pain, with its story when you CHECK it. The curly-fry token is last, and it goes to Hop.
+- **A green core**: in a later chapter, Elric notices a faint green light deep inside each fragment, under the red.
+- Hop realizing why he never had nightmares again.
+- Small Chapter 1 seeds (not built yet): Hop flinching at Ronin's "FIRE TIME!!!"; old scorched tent stakes at the edge of Westview Field; a faded MISSING flyer at the mall with no name on it.
 
 **Relic and Elric**
 - When Elric picks up the first fragment, Relic **wakes up and rides along** with them. It's why Elric always wandered without knowing why: the fragments were calling.
