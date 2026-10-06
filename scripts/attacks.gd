@@ -15,6 +15,7 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	var s := soul_position
 	match pattern:
 		"rain": return _rain(enemy, parent, area, s, step)
+		"straw": return _straw(enemy, parent, area, s, step)
 		"egg_drop": return _egg_drop(enemy, parent, area, s, step)
 		"bunny_hop": return _bunny_hop(enemy, parent, area, s, step)
 		"lance": return _lance(enemy, parent, area, s, step)
@@ -103,6 +104,18 @@ static func _rain(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: 
 	drop.color = Color(1.0, 0.78, 0.15)
 	drop.velocity = Vector2(0, enemy.bullet_speed)
 	drop.trail_length = 5
+	return 0.3
+
+
+## The training dummy: tufts of straw shaken loose from its stuffing drift down,
+## swaying a little as they fall. Every few fall over the SOUL.
+static func _straw(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := _aim_x(area, soul, step, 3, 4.0)
+	var tuft := _bullet(enemy, parent, area, Vector2(x, area.position.y + 3))
+	tuft.shape = "straw"
+	tuft.size = 6.0
+	tuft.color = Color(0.92, 0.8, 0.42)
+	tuft.velocity = Vector2(randf_range(-18.0, 18.0), enemy.bullet_speed * 0.9)
 	return 0.3
 
 

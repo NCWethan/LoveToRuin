@@ -1227,7 +1227,9 @@ func _draw_shield() -> void:
 	for p in outline:
 		field.append(middle + (p - middle) * 0.75)
 	_overlay.draw_colored_polygon(field, Color(0.2, 0.32, 0.65, 0.9))
-	_overlay.draw_string(_font, middle + Vector2(-9, 7), "BJ", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, gold)
+	# His name across it (centered, small enough to fit).
+	var name_width := _font.get_string_size("BIG JOE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x
+	_overlay.draw_string(_font, middle + Vector2(-name_width / 2, 4), "BIG JOE", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, gold)
 	if state == State.ENEMY_TURN:
 		var frame := box.get_inner_rect()
 		_overlay.draw_string(_font, Vector2(frame.end.x + 12, frame.position.y + 14), "SHIELD", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, gold)

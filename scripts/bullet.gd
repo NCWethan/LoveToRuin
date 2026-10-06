@@ -352,6 +352,12 @@ func _draw() -> void:
 			for i in 4:
 				var dir := Vector2.from_angle(spin + i * PI / 2) * half
 				draw_line(-dir, dir, color, 2.0)
+		"straw":
+			# A little tuft of straw (three stalks), tumbling as it falls.
+			var spin := _time * 4.0 + global_position.x * 0.1
+			for k in 3:
+				var dir := Vector2.from_angle(spin + (k - 1) * 0.35)
+				draw_line(-dir * size, dir * size, color.darkened(0.15 * k), 2.0)
 		"pencil":
 			# A yellow pencil pointing the way it flies, pink eraser at the back.
 			var dir := velocity.normalized() if velocity.length() > 0.1 else Vector2.DOWN

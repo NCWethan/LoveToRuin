@@ -31,7 +31,7 @@ static func _dummy() -> Enemy:
 			"lines": ["* {actor} bows politely.\n* The dummy... nods? Practice over."],
 		},
 	]
-	e.patterns = ["rain", "lance"]
+	e.patterns = ["straw", "lance"]
 	e.taunts = ["...", "(straw rustling)", "..."]
 	e.spare_taunts = ["(a satisfied rustle)"]
 	e.flavor_lines = ["* The dummy wobbles on its post.", "* Someone drew a mustache on it.", "* It smells like hay."]
