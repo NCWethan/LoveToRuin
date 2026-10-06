@@ -666,8 +666,8 @@ func _talk_nassan() -> void:
 	# Off to work: across the parking lot and in through the Vons doors.
 	var nassan: Character = people.get("Nassan")
 	if nassan:
-		await nassan.walk_to(Vector2(nassan.position.x, 300), 130.0)
-		await nassan.walk_to(Vector2(180, 300), 130.0)
+		await nassan.walk_to(Vector2(nassan.position.x, 275), 130.0)
+		await nassan.walk_to(Vector2(180, 275), 130.0)
 		await nassan.walk_to(Vector2(180, 150), 130.0)
 		# Gone inside. (Hidden rather than deleted: this conversation is still
 		# running from him, and deleting him would cut it off.)

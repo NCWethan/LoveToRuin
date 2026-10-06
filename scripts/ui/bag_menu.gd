@@ -334,6 +334,12 @@ func _text(text: String, at: Vector2, color: Color = Color.WHITE, size: int = FO
 func _draw_panel() -> void:
 	_panel.draw_rect(Rect2(Vector2.ZERO, Vector2(640, 480)), Color(0, 0, 0, 0.55))
 
+	# The Encyclopedia covers the whole bag (nothing else is drawn under it).
+	if _step == Step.BOOK:
+		_draw_book()
+		_text("W/S: choose   X: close", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
+		return
+
 	# The party and your money.
 	_box(STATS)
 	var left := STATS.position.x + 14
@@ -358,11 +364,6 @@ func _draw_panel() -> void:
 		_text("OBJECTIVE", goal.position + Vector2(14, 20), Color.YELLOW, 12)
 		_panel.draw_multiline_string(_font, goal.position + Vector2(14, 38), Game.objective(), HORIZONTAL_ALIGNMENT_LEFT, goal.size.x - 24, 13)
 
-	# The Encyclopedia covers the whole bag.
-	if _step == Step.BOOK:
-		_draw_book()
-		_text("W/S: choose   X: close", Vector2(30, 474), Color(0.55, 0.55, 0.55), 12)
-		return
 	# The team screen (and the partner list) cover the whole bag.
 	if _step == Step.TEAM or _step == Step.PARTNER or (_step == Step.MESSAGE and _message_return == Step.TEAM):
 		_draw_team_cards()
