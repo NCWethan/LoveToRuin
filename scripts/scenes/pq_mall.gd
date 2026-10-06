@@ -372,6 +372,13 @@ func _shop_cards() -> void:
 		])
 		return
 	await Game.shop.open(Shops.cards())
+	# The first time it's actually open, Hop can't believe it.
+	if not flag("hop_saw_pip") and not Shops.gone():
+		Game.flags["hop_saw_pip"] = true
+		await Game.dialogue.say([
+			{"who": "Hop", "text": "That sign has said BACK IN 5 MINUTES\nsince I was in diapers.", "mood": "shocked"},
+			{"who": "Hop", "text": "He came back. The legends were true.", "mood": "happy"},
+		])
 
 
 func _shop_lease() -> void:

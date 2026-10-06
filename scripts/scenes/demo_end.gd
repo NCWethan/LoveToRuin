@@ -97,8 +97,10 @@ func _draw_sealed(alpha: float) -> void:
 	_centered("The hatch to the Corps' base is bolted shut.", 190, 18, Color(0.8, 0.8, 0.8, alpha))
 	_centered("Somewhere in the dark, Hop is waiting.", 230, 18, Color(0.8, 0.8, 0.8, alpha))
 	_centered("So is someone else.", 270, 18, Color(1.0, 0.25, 0.3, alpha))
-	if _time > 1.5:
-		_centered("Chapter 2 is still being written.", 360, 14, Color(0.6, 0.6, 0.6))
+	# Relic (green), saying "we" for the first time.
+	_centered("...And so are we.", 310, 18, Color(0.45, 0.95, 0.55, clampf((_time - 1.5) / 1.0, 0.0, 1.0)))
+	if _time > 2.5:
+		_centered("Chapter 2 is still being written.", 370, 14, Color(0.6, 0.6, 0.6))
 		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 

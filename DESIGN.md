@@ -110,10 +110,13 @@ Each shopkeeper has their own things to talk about (some only after something ha
 - Meeting Elric, Hop: "Elric. ...Huh. Sorry. You just remind me of someone."
 - Arriving at Westview, Hop slips: "Rel-- Elric. Stay close, okay?" (and blames the late hour).
 - Nat's story: "Somebody gave everything to break it apart. The book doesn't say who."
+- After Hopkuna leaves, Hop: "The last time I let him out, I lost somebody. I swore it would never happen again."
 - Hopkuna on Westview Field: "The last time was years ago. He had a friend back then, too. ...I know that look. I killed the last one who had it." Then: "(Something in the fragments goes cold.)"
 - The first dream (resting on the bunk at the base, Pacifist or Neutral): the voice in the dark, with different words for each route.
 - Rooster's mirror at the base: the first time, "(For a second, the reflection looks like someone else.)" (Rooster is not happy you're using it.)
 - The trophy case in Westview's hallway (set into the wall): "(In the glass: it's you.)" With some dread, the reflection looks away a moment before you do; with a lot (10+ kills in Chapter 1), it smiles while you don't. On the Genocide route: "It's me, RELIC."
+- The Genocide end page: "Somewhere in the dark, Hop is waiting. So is someone else." Then, in green: "...And so are we."
+- A Westview student (Chapter 2): her friend swears her reflection in the trophy case winked at her.
 - On the Genocide route, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
 
 **Continuity:** the Genocide route only starts at the end of Chapter 1 (Go with Hop), and right now it goes straight to the demo end, so its content (empty shops, "we", the RELIC mirror) is ready for when Genocide reaches those places in later chapters. During Chapter 1, killing only raises dread: Elric looks worse, people flinch and back away, shopkeepers are nervous, and the reflection goes wrong. Nobody leaves and Relic doesn't say their name yet.

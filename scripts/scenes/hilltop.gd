@@ -861,6 +861,7 @@ func _corps_arrives() -> void:
 		{"who": "Hop", "text": "I'm sorry. I should've told you.", "mood": "sad"},
 		{"who": "Hop", "text": "He's been in here my whole life. I only ever let him\nout when there's no other choice.", "mood": "sad"},
 		{"who": "Hop", "text": "...Tonight there wasn't.", "mood": "sad"},
+		{"who": "Hop", "text": "The last time I let him out, I lost somebody.\nI swore it would never happen again.", "mood": "sad"},
 		{"who": "BigJoe6", "text": "So it's true. Hop IS Hopkuna.", "mood": "angry"},
 		{"who": "Eggo", "text": "he's also hop, though.", "mood": "sad"},
 		"* (In the crater, something red is glowing.)",

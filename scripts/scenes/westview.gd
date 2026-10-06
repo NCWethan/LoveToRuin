@@ -751,6 +751,7 @@ const STUDENTS := [
 	["Student3", Vector2i(13, 14), "Is it just me, or is the hallway shorter today?", ["It's just you.", "It used to loop."], ["Yeah, probably. I didn't sleep.", "...Loop? Okay, weirdo."]],
 	["Student4", Vector2i(20, 15), "Nice outfit. Very... wanderer.", ["Thanks!", "It's called style."], ["No problem, traveler.", "Okay, okay. Style. Sure."]],
 	["Student5", Vector2i(58, 12), "My locker was humming this morning.\nLike, a song. I'm not okay.", ["Lockers do that.", "Was it in tune?"], ["They DO?", "...Actually, yeah. Kinda catchy."]],
+	["Student8", Vector2i(68, 10), "Don't stare into the trophy case too long.\nMy friend says her reflection winked at her.", ["Creepy.", "Mine smiled."], ["Right?? It's a SPELLING BEE trophy.\nWhat does it want?", "...Okay. I'm taking the long way to class now."]],
 	["Student6", Vector2i(75, 10), "Have you seen my hall pass? It ran away.", ["It RAN?", "Check the gym."], ["I said what I said.", "Why would it be in the... you know what, I'll check."]],
 	["Student7", Vector2i(96, 13), "The library book I returned was 47 years overdue.\nThe fine is insane.", ["Yikes.", "Worth it?"], ["They want $4,000. In 1979 money.", "...It was a good book."]],
 	["Student8", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"]],
