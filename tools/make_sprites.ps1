@@ -713,6 +713,167 @@ $sprites['agent'] = @(
     ".......WWWWW.WWWW......."
 )
 
+# --- Shopkeepers (the PQ Mall's shops) ---------------------------------------
+# Gloria runs Vons: gray hair in a bun, glasses, the red Vons apron with a name tag.
+$sprites['gloria'] = @(
+    "........................",
+    "..........GGGG..........",
+    "..........GGGG..........",
+    "........GGGGGGGG........",
+    ".......GGGGGGGGGG.......",
+    ".......GQQQQQQQQG.......",
+    "........DKDQQDKD........",
+    "........QQQQQQQQ........",
+    "........QQQQQQQQ........",
+    "........QQKKKKQQ........",
+    "........QQQQQQQQ........",
+    ".........QQQQQQ.........",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRWWRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...WWWWWRRRRRRRRWWWWW...",
+    "...QQQQWRRRRRRRRWQQQQ...",
+    "...QQQQWRRRRRRRRWQQQQ...",
+    ".......PRRRRRRRRP.......",
+    ".......PRRRRRRRRP.......",
+    ".......PRRRRRRRRP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# Dex works the counter at Jack in the Box: red cap, a headset with a little mic,
+# a black polo with red sleeves and a name tag. Permanently unimpressed.
+$sprites['dex'] = @(
+    "........................",
+    "........RRRRRRRR........",
+    ".......RRRRWWRRRR.......",
+    ".......RRRRRRRRRR.......",
+    "......RRRRRRRRRRRR......",
+    ".......D99999999K.......",
+    ".......D9K9999K9K.......",
+    ".......D99999999........",
+    ".......DD9999999........",
+    "........9D9KKK99........",
+    "........99999999........",
+    "........99999999........",
+    "...RRRRRCCCWWCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...RRRRRCCWWCCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...RRRRRCCCCCCCCRRRRR...",
+    "...9999RCCCCCCCCR9999...",
+    "...9999RCCCCCCCCR9999...",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
+# Big Lou, the chef at Knotty Barrel: a tall chef's hat, a huge brown beard, a
+# white chef's coat with two rows of buttons, and a brown apron.
+$sprites['lou'] = @(
+    "........WWWWWWWW........",
+    ".......WWWWWWWWWW.......",
+    ".......WWWWWWWWWW.......",
+    "........WWWWWWWW........",
+    "........88888888........",
+    "........QQQQQQQQ........",
+    "........QKQQQQKQ........",
+    "........QQQQQQQQ........",
+    "........QQQ99QQQ........",
+    ".......8888888888.......",
+    ".......8888KK8888.......",
+    "........88888888........",
+    "...WWWWWWWWWWWWWWWWWW...",
+    "...WWWWWWKWWWWKWWWWWW...",
+    "...WWWW6666666666WWWW...",
+    "...WWWW6666666666WWWW...",
+    "...WWWW6666666666WWWW...",
+    "...WWWW6668888666WWWW...",
+    "...WWWW6666666666WWWW...",
+    "...WWWW6666666666WWWW...",
+    "...QQQQ6666666666QQQQ...",
+    "...QQQQ6666666666QQQQ...",
+    ".......6666666666.......",
+    ".......6666666666.......",
+    ".......6666666666.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# Old Man Pip, who runs Games & Cards (when he's there): bald with white tufts,
+# round glasses, a white mustache, a green cardigan with gold buttons, and a
+# playing card in his pocket.
+$sprites['pip'] = @(
+    "........................",
+    "........................",
+    "..........QQQQ..........",
+    "........QQQQQQQQ........",
+    ".......WQQQQQQQQW.......",
+    ".......WQQQQQQQQW.......",
+    "........DKDQQDKD........",
+    "........QQQQQQQQ........",
+    "........QQQQQQQQ........",
+    "........QWWWWWWQ........",
+    "........QQQKKQQQ........",
+    ".........QQQQQQ.........",
+    "...@@@@@@WWWWWW@@@@@@...",
+    "...@@@@@@@WWWW@@@@@@@...",
+    "...@@@@@@@@AA@@@@@@@@...",
+    "...@@@@@@@@@@@@WRW@@@...",
+    "...@@@@@@@@@@@@WWW@@@...",
+    "...@@@@@@@@AA@@@@@@@@...",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...@@@@@@@@AA@@@@@@@@...",
+    "...QQQQ@@@@@@@@@@QQQQ...",
+    "...QQQQ@@@@@@@@@@QQQQ...",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# Nassan at work: the red Vons apron over his "im batman" shirt (the straps
+# leave the shirt showing), with a name tag.
+$nv = [string[]]($sprites['nassan'].Clone())
+for ($y = 12; $y -le 24; $y++) {
+    $c = $nv[$y].ToCharArray()
+    if ($y -le 15) { $c[8] = 'R'; $c[15] = 'R' }
+    else { for ($x = 8; $x -le 15; $x++) { $c[$x] = 'R' } }
+    if ($y -eq 17) { $c[13] = 'W'; $c[14] = 'W' }
+    $nv[$y] = -join $c
+}
+$sprites['nassan_vons'] = $nv
+
 # --- Westview High School enemies -------------------------------------------
 
 $sprites['pop_quiz'] = @(
@@ -1317,9 +1478,15 @@ $faces = [ordered]@{
     'sansworth' = @('W', 'K')
     'nassan'    = @('C', 'W')
     'agent'     = @('Y', 'K')
+    'gloria'    = @('Q', 'K')
+    'dex'       = @('9', 'K')
+    'lou'       = @('Q', 'K')
+    'pip'       = @('Q', 'K')
+    'nassan_vons' = @('C', 'W')
 }
 # Hop keeps his gritted-teeth grin for these moods (only his eyes change).
-$keepMouth = @{ 'hop' = @('happy', 'angry', 'smug') }
+# (Big Lou's beard and Pip's mustache stay put too.)
+$keepMouth = @{ 'hop' = @('happy', 'angry', 'smug'); 'lou' = @($moods.Keys); 'pip' = @($moods.Keys) }
 
 $portraits = [ordered]@{}
 foreach ($who in $faces.Keys) {

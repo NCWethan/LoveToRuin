@@ -99,6 +99,10 @@ const BLACK_FLASH_DAMAGE := 2.5
 var _black_flash: bool = false
 ## For tests: the next hit by Hop with the glove is always a Black Flash.
 var force_black_flash: bool = false
+## This FIGHT hit was a LUCKY one (the Lucky Card).
+var _lucky: bool = false
+## Who has already been saved by their Heart Card this battle.
+var _heart_card_used: Dictionary = {}
 
 # The attack animation after the bar is stopped.
 var _anim_time: float = 0.0
@@ -557,7 +561,7 @@ func _use_item(member: PartyMember, item: Dictionary, target: PartyMember) -> vo
 	items.erase(item)
 	var was_down := target.is_down()
 	# (QUEASY: food only does half as much.)
-	var heal_amount := int(item["heal"]) / (2 if target.statuses.has("QUEASY") else 1)
+	var heal_amount := Items.food_heal(item, target.name) / (2 if target.statuses.has("QUEASY") else 1)
 	var healed := mini(heal_amount, target.max_hp - target.hp)
 	target.hp += healed
 	_add_popup("+%d" % healed, _panel_position(target), Color.GREEN)
@@ -1353,6 +1357,10 @@ func _start_attack_anim(damage: int, accuracy: float) -> void:
 	if _black_flash:
 		force_black_flash = false
 		damage = roundi(damage * BLACK_FLASH_DAMAGE)
+	# The Lucky Card: sometimes a hit just goes really, really well.
+	_lucky = not _black_flash and Game.card_of(member.name) == "Lucky Card" and randf() < Items.LUCKY_CHANCE
+	if _lucky:
+		damage *= 2
 	_anim_damage = damage
 	_anim_accuracy = accuracy
 	_anim_time = 0.0
@@ -1421,12 +1429,17 @@ func _process_fight_anim(delta: float) -> void:
 		_add_popup(str(_anim_damage), target.position + Vector2(0, -30), YELLOW if critical else Color(1, 0.25, 0.25), 32 if critical else 26, true)
 		if critical and not _black_flash:
 			_add_popup("CRITICAL!", target.position + Vector2(0, -70), YELLOW, 18)
+		if _lucky:
+			Game.play_sfx("item", 1.5)
+			_add_popup("LUCKY!", target.position + Vector2(0, -92), Color(0.5, 1.0, 0.5), 20, true)
 	if _anim_time < ATTACK_SLASH_TIME + 0.9:
 		return
 
 	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, _anim_damage]]
 	if _anim_accuracy >= CRITICAL:
 		lines[0] = "* CRITICAL HIT!\n" + lines[0]
+	if _lucky:
+		lines.insert(0, "* LUCKY!! The Lucky Card glinted.")
 	if _black_flash:
 		lines[0] = lines[0].trim_prefix("* CRITICAL HIT!\n")
 		lines.insert(0, "* BLACK FLASH!!\n* For an instant, the air around Hop's fist went black.")
@@ -1518,13 +1531,19 @@ func _process_enemy_turn(delta: float) -> void:
 			if _spawn_timers[enemy] <= 0.0:
 				var before := get_child_count()
 				var wait := Attacks.spawn(_turn_patterns[enemy], enemy, self, box.get_inner_rect(), soul.global_position, _spawn_steps[enemy])
-				# Stravant's Lightning: everything it throws moves slower, and less often.
+				# Stravant's Lightning (and the Clock Card): everything thrown moves
+				# slower, and comes less often.
+				var slow := 1.0
 				if enemy.statuses.has("STRAVANT"):
+					slow *= STRAVANT_SLOW
+				if Game.party_has_card("Clock Card"):
+					slow *= Items.CLOCK_SLOW
+				if slow < 1.0:
 					for k in range(before, get_child_count()):
 						var thrown := get_child(k) as Bullet
 						if thrown:
-							thrown.time_scale = STRAVANT_SLOW
-					wait /= STRAVANT_SLOW
+							thrown.time_scale = slow
+					wait /= slow
 				_spawn_timers[enemy] = wait * crowding
 				_spawn_steps[enemy] += 1
 				_last_spawn[enemy] = ENEMY_TURN_TIME - _enemy_timer
@@ -1635,6 +1654,12 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 		damage -= soaked
 		_add_popup(str(soaked), _panel_position(member) + Vector2(60, 0), Color(0.4, 0.7, 1.0))
 	member.hp = maxi(member.hp - damage, 0)
+	# The Heart Card: once a battle, a knockout blow leaves them hanging on.
+	if member.hp == 0 and Game.card_of(member.name) == "Heart Card" and not _heart_card_used.has(member.name):
+		_heart_card_used[member.name] = true
+		member.hp = 1
+		Game.play_sfx("heal", 1.3)
+		_add_popup("HEART CARD!", _panel_position(member) + Vector2(0, -26), Color(1.0, 0.45, 0.6), 15)
 	member.shake = 0.4
 	if damage > 0 or soaked == 0:
 		_add_popup(str(damage), _panel_position(member), Color.RED)
@@ -1711,7 +1736,12 @@ func _victory() -> void:
 	var money := 0
 	for enemy in enemies:
 		money += enemy.money_reward
-	lines.append("* You found $%d." % money)
+	# The Clover Card: money finds you.
+	if Game.party_has_card("Clover Card"):
+		money = ceili(money * Items.CLOVER_MONEY)
+		lines.append("* You found $%d. (The Clover Card found a little extra.)" % money)
+	else:
+		lines.append("* You found $%d." % money)
 	# Growing a level (the rewards are added once the battle ends).
 	if Game.lv_for(Game.exp_points + exp_gained) > Game.lv():
 		lines.append("* Your LV increased to %d!\n* (Max HP and attack went up.)" % Game.lv_for(Game.exp_points + exp_gained))

@@ -551,6 +551,191 @@ const SONGS := {
 	},
 
 	# The PQ Mall at night. Soft and slow: everyone's going home.
+	# Jack in the Box: a bouncy fast-food jingle. Bright, quick, and a little too
+	# cheerful for 2 AM.
+	"jack": {
+		"bpm": 138,
+		"lead": [
+			"E5 . G5 . C6 . G5 . E5 . G5 . A5 . G5 .",
+			"F5 . A5 . C6 . A5 . F5 . . . E5 . D5 .",
+			"D5 . G5 . B5 . G5 . D5 . G5 . B5 . D6 .",
+			"C6 . . . G5 . . . C5 . . . - - - -",
+			"E5 . G5 . C6 . G5 . E5 . G5 . A5 . G5 .",
+			"A5 . C6 . E6 . C6 . A5 . . . G5 . F5 .",
+			"F5 . A5 . C6 . . . D6 . B5 . G5 . . .",
+			"C6 . G5 . E5 . G5 . C6 . . . - - - -",
+		],
+		"harm": [
+			"- - C4 . - - E4 . - - C4 . - - E4 .",
+			"- - F4 . - - A4 . - - F4 . - - A4 .",
+			"- - D4 . - - G4 . - - D4 . - - G4 .",
+			"- - E4 . - - G4 . - - E4 . - - - -",
+			"- - C4 . - - E4 . - - C4 . - - E4 .",
+			"- - C4 . - - E4 . - - C4 . - - E4 .",
+			"- - F4 . - - A4 . - - G4 . - - B4 .",
+			"- - E4 . - - G4 . - - - - - - - -",
+		],
+		"bass": [
+			"C2 . C3 . C2 . C3 . C2 . C3 . C2 . C3 .",
+			"F2 . F3 . F2 . F3 . F2 . F3 . F2 . F3 .",
+			"G2 . G3 . G2 . G3 . G2 . G3 . G2 . G3 .",
+			"C2 . C3 . C2 . C3 . C2 . . . G2 . . .",
+			"C2 . C3 . C2 . C3 . C2 . C3 . C2 . C3 .",
+			"A2 . A3 . A2 . A3 . A2 . A3 . A2 . A3 .",
+			"F2 . F3 . F2 . F3 . G2 . G3 . G2 . G3 .",
+			"C2 . C3 . G2 . G3 . C2 . . . - - - -",
+		],
+		"drums": [
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - H K S - S S",
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - H K S - H H",
+			"K - H - S - H - K - - - S S S S",
+		],
+	},
+
+	# Knotty Barrel: a sea shanty in D minor, with an accordion pumping away and
+	# everyone stomping and clapping along.
+	"knotty": {
+		"bpm": 112,
+		"lead": [
+			"D5 . . A4 D5 . F5 . E5 . D5 . C5 . A4 .",
+			"C5 . . G4 C5 . E5 . D5 . C5 . A4 . . .",
+			"D5 . . A4 D5 . F5 . A5 . G5 . F5 . E5 .",
+			"E5 . . . C#5 . . . A4 . . . - - - -",
+			"F5 . . C5 F5 . A5 . G5 . F5 . E5 . D5 .",
+			"E5 . . C5 E5 . G5 . F5 . E5 . D5 . C5 .",
+			"D5 . F5 . A5 . F5 . E5 . C#5 . E5 . A4 .",
+			"D5 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"- - - - F4 . A4 . - - - - F4 . A4 .",
+			"- - - - E4 . G4 . - - - - E4 . G4 .",
+			"- - - - F4 . A4 . - - - - F4 . A4 .",
+			"- - - - C#4 . E4 . - - - - C#4 . E4 .",
+			"- - - - A4 . C5 . - - - - A4 . C5 .",
+			"- - - - E4 . G4 . - - - - E4 . G4 .",
+			"- - - - F4 . A4 . - - - - C#4 . E4 .",
+			"- - - - F4 . A4 . - - - - - - - -",
+		],
+		"bass": [
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"C2 . . . G2 . . . C2 . . . G2 . . .",
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"A1 . . . E2 . . . A1 . . . E2 . . .",
+			"F2 . . . C3 . . . F2 . . . C3 . . .",
+			"C2 . . . G2 . . . C2 . . . G2 . . .",
+			"D2 . . . A2 . . . A1 . . . E2 . . .",
+			"D2 . . . A2 . . . D2 . . . . . . .",
+		],
+		"drums": [
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - H K - - - S - S S",
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - H K - - - S - - H",
+			"K - - - S - - - K - - - - - - -",
+		],
+	},
+
+	# Games & Cards: an old ragtime tune, played like a music box that's been
+	# sitting in the back of the shop since 1987.
+	"cards": {
+		"bpm": 96,
+		"lead_wave": "triangle",
+		"lead": [
+			"A4 . C5 . F5 . . . E5 . F5 . A5 . . .",
+			"G5 . . . E5 . . . C5 . D5 . E5 . . .",
+			"F5 . A5 . C6 . . . A5 . F5 . A5 . . .",
+			"G5 . . . . . . . - - - - C5 . . .",
+			"D5 . F5 . A#5 . . . A5 . G5 . F5 . . .",
+			"C5 . F5 . A5 . . . G5 . F5 . E5 . . .",
+			"D5 . E5 . G5 . . . A#5 . A5 . G5 . E5 .",
+			"F5 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"- - A3 . - - C4 . - - A3 . - - C4 .",
+			"- - A#3 . - - E4 . - - A#3 . - - E4 .",
+			"- - A3 . - - C4 . - - A3 . - - C4 .",
+			"- - A#3 . - - E4 . - - A#3 . - - - -",
+			"- - D4 . - - F4 . - - D4 . - - F4 .",
+			"- - A3 . - - C4 . - - A3 . - - C4 .",
+			"- - A#3 . - - E4 . - - A#3 . - - E4 .",
+			"- - A3 . - - C4 . - - - - - - - -",
+		],
+		"bass": [
+			"F2 . . . C3 . . . F2 . . . C3 . . .",
+			"C2 . . . G2 . . . C2 . . . G2 . . .",
+			"F2 . . . C3 . . . F2 . . . C3 . . .",
+			"C2 . . . G2 . . . C2 . . . E2 . . .",
+			"A#1 . . . F2 . . . A#1 . . . F2 . . .",
+			"F2 . . . C3 . . . F2 . . . C3 . . .",
+			"C2 . . . G2 . . . C2 . . . E2 . . .",
+			"F2 . . . C3 . . . F2 . . . . . . .",
+		],
+		"drums": [
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - H - H -",
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - H - - -",
+			"K - - - H - - - K - - - - - - -",
+		],
+	},
+
+	# Vons: grocery-store music. Cozy and a little bouncy, a walking bass under a
+	# happy square-wave tune, like elevator music that's having a good day.
+	"vons": {
+		"bpm": 104,
+		"lead": [
+			"B4 . D5 . G5 . . . F#5 . E5 . D5 . . .",
+			"E5 . . . B4 . . . G4 . A4 . B4 . . .",
+			"C5 . E5 . G5 . . . E5 . C5 . E5 . . .",
+			"D5 . . . F#5 . . . A5 . . . - - - -",
+			"B4 . D5 . G5 . . . A5 . B5 . G5 . . .",
+			"E5 . . . G5 . . . B5 . . . A5 . G5 .",
+			"A5 . G5 . E5 . C5 . D5 . . . F#5 . . .",
+			"G5 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"- - B3 . - - D4 . - - B3 . - - D4 .",
+			"- - G3 . - - B3 . - - G3 . - - B3 .",
+			"- - E4 . - - G4 . - - E4 . - - G4 .",
+			"- - F#4 . - - A4 . - - F#4 . - - A4 .",
+			"- - B3 . - - D4 . - - B3 . - - D4 .",
+			"- - G3 . - - B3 . - - G3 . - - B3 .",
+			"- - C4 . - - E4 . - - D4 . - - F#4 .",
+			"- - B3 . - - D4 . - - - - - - - -",
+		],
+		"bass": [
+			"G2 . . . B2 . . . D3 . . . B2 . . .",
+			"E2 . . . G2 . . . B2 . . . G2 . . .",
+			"C2 . . . E2 . . . G2 . . . E2 . . .",
+			"D2 . . . F#2 . . . A2 . . . F#2 . . .",
+			"G2 . . . B2 . . . D3 . . . B2 . . .",
+			"E2 . . . G2 . . . B2 . . . G2 . . .",
+			"A2 . . . C3 . . . D2 . . . F#2 . . .",
+			"G2 . . . D2 . . . G2 . . . . . . .",
+		],
+		"drums": [
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - H - S S -",
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - H - - S -",
+			"K - - H - - S - K - - - - - - -",
+		],
+	},
+
 	"mall_night": {
 		"bpm": 84,
 		"lead_wave": "triangle",
@@ -704,6 +889,17 @@ func _initialize() -> void:
 	genocide["pitch"] = 0.84
 	genocide["reverb"] = 0.75
 	songs["genocide"] = genocide
+	# The shops on the Genocide route, once everyone has gone: each shop's
+	# cheerful tune crawling at less than half speed, dropped a tritone (the most
+	# uneasy interval there is), with the drums gone and only echoes left.
+	for shop in ["vons", "jack", "knotty", "cards"]:
+		var gone: Dictionary = songs[shop].duplicate(true)
+		gone.erase("drums")
+		gone["bpm"] = roundi(float(gone["bpm"]) * 0.42)
+		gone["pitch"] = 0.707
+		gone["reverb"] = 0.85
+		gone["lead_wave"] = "triangle"
+		songs[shop + "_gone"] = gone
 	for song_name in songs:
 		var stream := render(songs[song_name])
 		var path: String = OUT_DIR + song_name + ".res"

@@ -21,28 +21,7 @@ const EAST_EXIT_X := 1075.0
 const WEST_EXIT_X := 15.0
 const ROAD_Y := 500.0
 
-# --- What the shops sell ---
-
-const VONS_STOCK := [
-	{"name": "Trail Mix", "heal": 15, "price": 8},
-	{"name": "Soda", "heal": 10, "price": 5},
-	{"name": "Granola Bar", "heal": 18, "price": 10},
-	{"name": "Deli Sandwich", "heal": 25, "price": 15},
-	# Accessories: one for each slot.
-	{"name": "Nail File", "heal": 0, "slot": "weapon", "atk": 2, "def": 0, "price": 18},
-	{"name": "Hoodie", "heal": 0, "slot": "torso", "atk": 0, "def": 2, "price": 24},
-	{"name": "Sneakers", "heal": 0, "slot": "shoes", "atk": 0, "def": 1, "price": 14},
-	{"name": "Divergent Glove", "heal": 0, "slot": "weapon", "atk": 1, "def": 0, "price": 35},
-]
-const JACK_STOCK := [
-	{"name": "Two Tacos", "heal": 12, "price": 6},
-	{"name": "Curly Fries", "heal": 20, "price": 10},
-	{"name": "Burger", "heal": 30, "price": 16},
-]
-const KNOTTY_STOCK := [
-	{"name": "Fish & Chips", "heal": 32, "price": 18},
-	{"name": "Salmon Burger", "heal": 40, "price": 22},
-]
+# (What the shops sell, and what their shopkeepers say, is in shops.gd.)
 
 # --- Time of day ---
 
@@ -65,7 +44,7 @@ const SPOTS := {
 	"afternoon": {
 		"Supreme": Vector2(960, 440), "Crayola": Vector2(560, 236), "NCWethan": Vector2(470, 300),
 		"Ronin": Vector2(510, 300), "MuffinMage": Vector2(640, 236), "Rooster": Vector2(300, 300),
-		"Sansworth": Vector2(200, 420), "Nat": Vector2(910, 298), "Nassan": Vector2(1050, 538),
+		"Sansworth": Vector2(200, 420), "Nat": Vector2(910, 298),
 		"Agent": Vector2(820, 300),
 	},
 	"evening": {
@@ -259,6 +238,9 @@ func _place_people() -> void:
 	}
 	var spots: Dictionary = SPOTS[time]
 	for who in spots:
+		# Once Nassan starts his shift, he's inside Vons (until it closes).
+		if who == "Nassan" and time == "day" and flag("heard_westview"):
+			continue
 		var talk: Callable = day_talks[who] if time == "day" else _talk_later.bind(who)
 		var npc := add_npc(who, spots[who], talk)
 		people[who] = npc
@@ -357,31 +339,32 @@ func _use_save_point() -> void:
 # --- Shops ----------------------------------------------------------------
 
 func _shop_vons() -> void:
-	if _stores_closed():
+	if _stores_closed() and not Shops.gone():
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (Through the glass, someone is mopping the floor.)"])
 		return
-	await Game.shop.open("Vons", "* (Bright lights. Soft music. A shopping cart\n*  with one bad wheel squeaks somewhere.)", VONS_STOCK)
+	await Game.shop.open(Shops.vons())
 
 
 func _shop_jack() -> void:
-	var greeting := "* (The menu board glows. It smells amazing in here.)"
-	if _stores_closed():
-		greeting = "* (Jack in the Box: open late. The only lights\n*  still on in the whole mall.)"
-	await Game.shop.open("Jack in the Box", greeting, JACK_STOCK)
+	await Game.shop.open(Shops.jack())
 
 
 func _shop_knotty() -> void:
-	if _stores_closed():
+	if _stores_closed() and not Shops.gone():
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (The chairs are up on the tables.)"])
 		return
-	await Game.shop.open("Knotty Barrel", "* (Wooden tables, a busy kitchen.\n*  Someone is very loudly recommending the salmon burger.)", KNOTTY_STOCK)
+	await Game.shop.open(Shops.knotty())
 
 
+## Games & Cards: BACK IN 5 MINUTES, for years... until the afternoon.
 func _shop_cards() -> void:
-	await Game.dialogue.say([
-		"* (A sign on the door says: BACK IN 5 MINUTES.)",
-		"* (The sign looks like it's been there for years.)",
-	])
+	if not Shops.cards_open() and not Shops.gone():
+		await Game.dialogue.say([
+			"* (A sign on the door says: BACK IN 5 MINUTES.)",
+			"* (The sign looks like it's been there for years.)",
+		])
+		return
+	await Game.shop.open(Shops.cards())
 
 
 func _shop_lease() -> void:
@@ -645,19 +628,6 @@ func _talk_nat() -> void:
 
 
 func _talk_nassan() -> void:
-	if flag("heard_westview"):
-		await chat("nassan", [], [
-			[{"who": "Nassan", "text": "The plan: food, save, Westview. In that order."}],
-			[{"who": "Nassan", "text": "I'd come with you, but someone has to\nplan what happens after the plan."}],
-			[
-				{"who": "Hop", "text": "...Why does your shirt say \"im batman\"?", "mood": "shocked"},
-				{"who": "Nassan", "text": "Because I am.", "mood": "smug"},
-				{"who": "Hop", "text": "..."},
-				{"who": "Nassan", "text": "Next question."},
-			],
-		])
-		return
-
 	await Game.dialogue.say([
 		{"who": "Nassan", "text": "You must be Elric. I've heard about you.\nEggo and Big Joe have been busy."},
 		{"who": "Nassan", "text": "I'm Nassan. I plan things.\nMostly other people's things."},
@@ -671,9 +641,29 @@ func _talk_nassan() -> void:
 		{"who": "Hop", "text": "It's like... two in the afternoon.", "mood": "shocked"},
 		{"who": "Nassan", "text": "Then you've got time to kill.", "mood": "smug"},
 		{"who": "Nassan", "text": "And Elric... whatever you're carrying,\nit's heavier than it looks. Don't carry it alone.", "mood": "sad"},
+		{"who": "Nassan", "text": "Now, if you'll excuse me. My shift starts in five."},
+		{"who": "Hop", "text": "Your... shift?", "mood": "shocked"},
+		{"who": "Nassan", "text": "I got hired at Vons. Recently.\nVery recently. Tuesday.", "mood": "smug"},
+		{"who": "Nassan", "text": "Every good plan needs funding.\nIf you need supplies, you know where to find me."},
 	])
 	Game.flags["heard_westview"] = true
 	Game.set_objective("Kill some time until it gets dark.")
+	# Off to work: across the parking lot and in through the Vons doors.
+	var nassan: Character = people.get("Nassan")
+	if nassan:
+		await nassan.walk_to(Vector2(nassan.position.x, 300), 130.0)
+		await nassan.walk_to(Vector2(180, 300), 130.0)
+		await nassan.walk_to(Vector2(180, 150), 130.0)
+		# Gone inside. (Hidden rather than deleted: this conversation is still
+		# running from him, and deleting him would cut it off.)
+		people.erase("Nassan")
+		nassan.remove_from_group("npc")
+		nassan.on_interact = Callable()
+		nassan.hide()
+		nassan.position = Vector2(-1000, -1000)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "Nassan has a JOB? Nassan has a job.\nI'm so proud. And a little scared.", "mood": "happy"},
+	])
 	await get_tree().create_timer(0.3).timeout
 	# If you've met him, you know that voice.
 	var caller := "N.C. Wethan" if int(Game.flags.get("talks_ncwethan", 0)) > 0 else "???"
@@ -830,7 +820,8 @@ func _talk_later(who: String) -> void:
 
 func _nightfall() -> void:
 	await Game.dialogue.say([
-		{"who": "Nassan", "text": "There you are. The sun's almost down."},
+		{"who": "Nassan", "text": "There you are. I just clocked out.\nGloria says I bag faster than anyone she's trained.", "mood": "smug"},
+		{"who": "Nassan", "text": "Anyway. The sun's almost down."},
 		{"who": "Nassan", "text": "Everyone's heading home. You two are heading to Westview."},
 		{"who": "Nassan", "text": "Remember: the fragment's somewhere inside. If something\nfeels wrong in there... it probably is."},
 		{"who": "Hop", "text": "Great pep talk. Really. Ten out of ten.", "mood": "sad"},
@@ -878,10 +869,6 @@ const LATER_LINES := {
 		"Agent": [
 			[{"who": "Agent", "text": "You waited instead of going in early. Smart.\nMost people would've gone in and lost."}, {"who": "Agent", "text": "...Not as smart as me. But smart.", "mood": "smug"}],
 			[{"who": "Agent", "text": "Sunset's at 7:42. I checked. Be ready."}],
-		],
-		"Nassan": [
-			[{"who": "Nassan", "text": "Not dark yet. I'll tell you when.\nGo enjoy the afternoon. That's an order.", "mood": "smug"}],
-			[{"who": "Nassan", "text": "Patience is part of the plan."}],
 		],
 	},
 	"evening": {

@@ -56,6 +56,11 @@ const SPEAKERS := {
 	"Agent": {"color": Color(0.2, 0.75, 0.72), "pitch": 1.05},
 	"Wally": {"color": Color(0.75, 0.5, 0.3), "pitch": 0.55},
 	"Hopkuna": {"color": Color(1.0, 0.25, 0.3), "pitch": 0.5},
+	# Shopkeepers.
+	"Gloria": {"color": Color(0.9, 0.35, 0.35), "pitch": 1.05},
+	"Dex": {"color": Color(0.95, 0.3, 0.3), "pitch": 0.95},
+	"Lou": {"color": Color(0.8, 0.55, 0.3), "pitch": 0.6},
+	"Pip": {"color": Color(0.4, 0.75, 0.5), "pitch": 1.2},
 }
 
 ## Where the box is drawn. It moves to the top when Elric is in the

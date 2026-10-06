@@ -32,7 +32,24 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 
 ### The PQ Mall (as built)
 
-**Stores:** Vons (groceries), Games & Cards (permanently "back in 5 minutes"), Knotty Barrel (patio + salmon burgers), an empty store FOR LEASE (someone wrote "REVOLUTION HQ??" in the dust), and Jack in the Box. Vons, Jack in the Box and Knotty Barrel sell healing items for money ($).
+**Stores:** Vons (groceries), Games & Cards ("BACK IN 5 MINUTES" for years, until the afternoon), Knotty Barrel (patio + salmon burgers), an empty store FOR LEASE (someone wrote "REVOLUTION HQ??" in the dust), and Jack in the Box. See **Shops** below.
+
+### Shops
+
+Going into a shop fades to a whole different screen, like Undertale: the shop itself at the top, with the shopkeeper big behind the counter and everything they sell drawn on the shelves, menu boards and display case behind them (pixel pictures in `scripts/ui/shop_art.gd`); what they say in the box at the bottom left (typed out in their voice, with their face changing); and **Buy / Sell / Talk / Exit** at the bottom right, with your money and how full your bag is. Browsing shows what each thing does in a little panel; buying asks first, and the shopkeeper reacts (some things get their own line). Each shop has its **own song**. Everything a shop sells and says is in `scripts/shops.gd`.
+
+| Shop | Shopkeeper | Sells | Song |
+|---|---|---|---|
+| **Vons** | **Gloria**, the manager (22 years, a stopwatch, gray bun, glasses). Once Elric has met Nassan, **Nassan** works the register: he got hired *recently* (Tuesday). | Groceries (Trail Mix, Soda, Granola Bar, Deli Sandwich); from the health & beauty and seasonal aisles, a Nail File, Rain Poncho and Flip-Flops | Grocery-store muzak |
+| **Jack in the Box** | **Dex**, 16, headset, permanently unimpressed. Open late; different greeting at night. | Two Tacos, Egg Rolls, Curly Fries, Burger (the shake machine is OUT OF ORDER) | A bouncy fast-food jingle |
+| **Knotty Barrel** | **Big Lou**, the chef: tall hat, huge beard, yells everything. | Clam Chowder, Fish & Chips, Salmon Burger | A sea shanty |
+| **Games & Cards** | **Old Man Pip**, back from getting a sandwich (it's been years). Opens in the afternoon. The only one who **buys** things: $2 each, flat rate, since 1987. | Card Pack Gum, Candy Dice, five **cards** (see below), and the **Divergent Glove** from his glass case of oddities | An old ragtime music box |
+
+Each shopkeeper has their own things to talk about (some only after something has happened, like Rock Paper Scissors or Nat's story), their own reasons not to buy your stuff, and their own goodbye. If Elric has been killing things, they're nervous when you come in.
+
+**On Genocide (once everyone has gone):** the shops are empty, the lights half off, and each shop's song plays at less than half speed, a tritone lower, drowned in echo. The menu becomes **Steal / Register / Read / Exit**: take anything for free, empty the register (once), or read the note the shopkeeper left on the counter. Every note is written to make you feel it; Nassan's is to Elric, personally.
+
+**Cards** (Games & Cards) go in their own **Card** slot, one per person, and each has a picture and a power instead of stats: **Lucky Card** (1 in 6 FIGHT hits are LUCKY, 2x damage), **Heart Card** (survive one knockout a battle at 1 HP), **Clover Card** (+50% money from battles), **Snack Card** (food heals 50% more), **Clock Card** (enemy attacks move 15% slower).
 
 **Who hangs out there, and what they're up to:**
 
@@ -45,7 +62,7 @@ The player, **Elric**, gets pulled into this conflict and decides, through how t
 | **Rooster** | Parking lot | Roasts Elric; the player can roast back ("Couldn't pick a color?" → "It's called DUALITY."). |
 | **Sansworth** | Parking lot | Looking for a car he doesn't have; gives Elric a Trail Mix. |
 | **Nat** | By the bench near Jack in the Box | **Lore:** the old story of twelve fragments and Hopkuna, with the last page torn out. Hop goes still. |
-| **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. |
+| **Nassan** | By the road east | **Plot:** has mapped strange reports and sends Elric to **Westview High School after dark**. Required to move on. Then his shift starts: he got hired at **Vons** recently, and walks off to work the register until closing. |
 
 **The day goes by (as built):** after Nassan, it's only about 2 PM, and Westview only gets weird after dark. N.C. Wethan yells for a third player, and Elric gets roped into a **Rock Paper Scissors minigame** (drawn hands, a "ROCK... PAPER... SCISSORS... SHOOT!" countdown, a score). Three rounds vs. N.C. Wethan, whose lightning crackles in the *shape* of his throw; one vs. Ronin, who hides his hand but not his *shadow*; and a final round vs. **Agent**, who counts every throw you've made, says the odds out loud, and always plays the counter to your most likely throw. Follow his math and you can beat him. Win all five and Ronin pays up with Curly Fries. Then hours pass:
 - **Afternoon** (golden light): everyone has moved. Supreme does "field research" at Jack in the Box, Crayola and MuffinMage play a made-up card game, Rooster power-walks laps, Sansworth checks every car. Talking to three people makes the sky go orange.
@@ -559,7 +576,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] The title screen: centered, with a red glow, twelve red fragments circling the title, rising embers and a glowing crack under "LOVE TO RUIN"
 - [x] People walking around stop when you talk to them
 - [x] **Levels:** LV (from EXP) and BOND level (from BOND) both raise max HP and attack for the whole party (LV: +3 HP +2 ATK; BOND: +4 HP +1 ATK). The bag shows progress to the next of each, and each member's ATK and DEF. Battle shows LV next to party names (not enemies). Level-ups are announced after a fight.
-- [x] **Accessories:** three slots per member (Weapon, Torso, Shoes), one item each. Only accessories raise defense. EQUIP them from the bag (whatever was worn goes back in). Vons sells a Nail File (ATK +2), Hoodie (DEF +2) and Sneakers (DEF +1); Cleats (ATK +1 DEF +1) are hidden under the Mt. Carmel bleachers; Wally's Foam Finger (ATK +3) is in his empty costume.
+- [x] **Accessories:** four slots per member (Weapon, Torso, Shoes, Card), one item each. Only accessories raise defense. EQUIP them from the bag (whatever was worn goes back in). Vons sells a Nail File (ATK +2), Rain Poncho (DEF +2) and Flip-Flops (DEF +1); Games & Cards sells cards with powers (see Shops); Cleats (ATK +1 DEF +1) are hidden under the Mt. Carmel bleachers; Wally's Foam Finger (ATK +3) is in his empty costume.
 - [x] Title screen: with a save, Continue / Reset / Settings (Reset asks first, then erases the save); without one, Begin / Settings. More particles: glints, shooting shards, sparks off the crack.
 - [x] The opening narration has Undertale-style sepia pictures: Elric on an endless road at sunset, at a bus stop in the rain, on a cliff over the ocean; the whispering city; a humming fragment; a shadow with red eyes.
 - [x] Side-view walking swings the arms.
@@ -582,7 +599,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] **No safe spots:** every attack aims some of its shots at the SOUL (or puts its gap away from you), so standing still always gets you hit. Checked by a test that runs every attack against a SOUL that never moves.
 - [x] New looks for Eggo's and Big Joe's attacks: runny yolk drops with trails; shaded, wobbling eggs that crack as they fall and splatter into yolk; bunnies with floppy ears that hop exactly as high as your SOUL; lances with red-and-gold pennants; a wall of blue kite shields; spinning gold JUSTICE stars trailing light.
 - [x] **Nail File:** three thinner bars cross the FIGHT bar one after another, and ENTER stops each one. Every bar deals a third of the damage (by its own accuracy), each jab shows its share, and all three in the green is a CRITICAL.
-- [x] **Divergent Glove** (Vons, $35, Weapon ATK +1): "It wants a hand the FRAGMENTS have already touched." On Hop, every hit has a 1 in 20 chance to be a **BLACK FLASH**: 2.5x damage, a long freeze that flickers between black and red, black and red lightning crashing into the enemy, its own sound, and crackling sparks afterward.
+- [x] **Divergent Glove** (Games & Cards' glass case, $35, Weapon ATK +1): "It wants a hand the FRAGMENTS have already touched." On Hop, every hit has a 1 in 20 chance to be a **BLACK FLASH**: 2.5x damage, a long freeze that flickers between black and red, black and red lightning crashing into the enemy, its own sound, and crackling sparks afterward.
 - [x] Hopkuna's background: his eyes and a ring of orbs throb on every beat of his music (184 BPM, hardest on the first beat of each bar), and every two bars a black-and-red BLACK FLASH bolt strikes in the background.
 
 ### Milestone 6 — Westview High School

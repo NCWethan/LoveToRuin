@@ -294,12 +294,13 @@ func _use_on(member: PartyMember) -> void:
 		_equip_on(member, item)
 		return
 	Game.items.remove_at(_cursor)
-	var healed := mini(int(item["heal"]), member.max_hp - member.hp)
+	var heal := Items.food_heal(item, member.name)
+	var healed := mini(heal, member.max_hp - member.hp)
 	member.hp += healed
 	Game.play_sfx("heal")
 	var who := "You" if member.name == "Elric" else member.name
 	var text := "* %s ate the %s." % [who, item["name"]]
-	if healed >= int(item["heal"]):
+	if healed >= heal:
 		text += "\n* %s recovered %d HP!" % [member.name, healed]
 	elif healed > 0:
 		text += "\n* %s's HP was maxed out." % member.name
@@ -536,12 +537,16 @@ func _draw_team_cards() -> void:
 		for s in Game.SLOTS.size():
 			var slot: String = Game.SLOTS[s]
 			var item: Dictionary = Game.worn_by(member.name).get(slot, {})
-			var row_at := card.position + Vector2(36, 196 + s * 30)
+			var row_at := card.position + Vector2(36, 188 + s * 26)
 			var here := picked and _team_slot == s
 			_text(Game.SLOT_NAMES[slot], row_at, Color(0.6, 0.6, 0.6), 13)
 			var label: String = item.get("name", "(nothing)")
 			if not item.is_empty():
 				label += "  " + Items.stats_text(item).get_slice(": ", 1)
+			if slot == "card" and not item.is_empty():
+				# Cards show their picture, and just the name (their power is in the bag).
+				label = item["name"]
+				ShopArt.draw(_panel, item["name"], row_at + Vector2(200, -14), 1.7)
 			_text(label, row_at + Vector2(64, 0), Color.YELLOW if here else (Color.WHITE if not item.is_empty() else Color(0.45, 0.45, 0.45)), 14)
 			if here:
 				_heart(row_at + Vector2(-18, -5))

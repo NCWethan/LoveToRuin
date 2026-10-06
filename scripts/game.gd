@@ -269,8 +269,10 @@ const HP_PER_BOND_LV := 4
 const ATTACK_PER_BOND_LV := 1
 
 ## Accessory slots. Each member can wear one item in each.
-const SLOTS := ["weapon", "torso", "shoes"]
-const SLOT_NAMES := {"weapon": "Weapon", "torso": "Torso", "shoes": "Shoes"}
+## Where accessories go. "card" holds one of Old Man Pip's cards (see
+## Items.CARDS), each with its own power instead of stats.
+const SLOTS := ["weapon", "torso", "shoes", "card"]
+const SLOT_NAMES := {"weapon": "Weapon", "torso": "Torso", "shoes": "Shoes", "card": "Card"}
 ## What everyone's wearing: {member name: {slot: item}}.
 var equipment: Dictionary = {}
 
@@ -362,6 +364,19 @@ func _build_partner() -> void:
 	else:
 		party.append(member)
 	update_stats()
+
+
+## The name of the card a member holds ("" for none).
+func card_of(member_name: String) -> String:
+	return str(worn_by(member_name).get("card", {}).get("name", ""))
+
+
+## Does anyone in the party hold this card?
+func party_has_card(card: String) -> bool:
+	for member in party:
+		if card_of(member.name) == card:
+			return true
+	return false
 
 
 ## {slot: item} for everything one member is wearing.
