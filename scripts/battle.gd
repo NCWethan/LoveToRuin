@@ -917,9 +917,10 @@ func _nat_reads(target: Enemy) -> void:
 
 
 ## Ronin's POWER RIFF: he runs in, plugs into his amp, and plays the whole riff (the
-## recording). His hands follow the music (see tools/analyze_riff.gd for how it's
-## measured): his picking hand strikes on each new note and blurs when he shreds,
-## his fretting hand slides along the neck with the notes, and on a held note he
+## recording). His hands follow the music: his picking hand strikes on each new note
+## and blurs when he shreds (from the recording; see tools/analyze_riff.gd), his
+## fretting hand goes where the real player's did in a video of the riff (see
+## tools/riff_hands.gd), and on a held note he
 ## raises the neck, lifts his picking hand off, and shakes the note with vibrato.
 ## Music notes fly out of the amp and circle the team. Only when the riff is over:
 ## everyone gets 5 purple overheal, and AMPED (the SOUL moves faster).
@@ -928,8 +929,15 @@ const RIFF_OVERHEAL := 5
 const MAX_PURPLE := 15
 const AMPED_TURNS := 2
 var _riff_script: GDScript
+var _hands_script: GDScript
 var _guitar_sprite: Texture2D
 var _amp_sprite: Texture2D
+
+
+func _hands() -> GDScript:
+	if _hands_script == null:
+		_hands_script = load("res://scripts/ronin_hands.gd")
+	return _hands_script
 
 
 func _riff() -> GDScript:
@@ -952,7 +960,6 @@ func _riff_length() -> float:
 func _riff_moment(time: float) -> Dictionary:
 	var loud: String = _riff().LOUD
 	var onsets: String = _riff().ONSETS
-	var pitch: String = _riff().PITCH
 	var step: float = _riff().STEP
 	var f := clampi(int(time / step), 0, loud.length() - 1)
 	var level := int(loud[f])
@@ -972,14 +979,18 @@ func _riff_moment(time: float) -> Dictionary:
 				since = back * step + fmod(time, step)
 			if back < 10:
 				recent += 1
-	# The note's height: the middle value of the readings around now (the
-	# distortion makes single readings jumpy).
-	var readings: Array = []
-	for k in range(f - 3, f + 4):
-		if k >= 0 and k < pitch.length() and pitch[k] != "-":
-			readings.append(int(pitch[k]))
-	readings.sort()
-	var height: float = readings[readings.size() / 2] if not readings.is_empty() else 4.0
+	# Where his fretting hand is: from a video of the riff being played for real
+	# (scripts/ronin_hands.gd), blended a little with its neighbours so it glides.
+	var hands: String = _hands().HAND
+	var height := 4.0
+	if hands.length() > 0:
+		var total := 0.0
+		var count := 0
+		for k in range(f - 1, f + 2):
+			if k >= 0 and k < hands.length():
+				total += int(hands[k])
+				count += 1
+		height = total / maxi(count, 1)
 	var rising := level - int(loud[maxi(f - 8, 0)])
 	return {"loud": level, "since": since, "shred": recent >= 3 and level >= 6, "height": height,
 		"hold": since > 0.4 and level >= 6, "swell": rising >= 2}
