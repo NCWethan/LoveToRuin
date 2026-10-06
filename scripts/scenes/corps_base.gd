@@ -8,7 +8,7 @@ extends Area
 ##               fragments, monitors, a couch, bunks, a kitchen corner, a SAVE
 ##               point and a training dummy to spar with
 ##   Corridor    a long hallway with a steel door for each member, names on them
-##   Rooms       one for each of the ten Corps members, decorated like them, with
+##   Rooms       one for each of the twelve Corps members, decorated like them, with
 ##               them inside
 ##
 ## Story flags (in Game.flags): base_arrived, plus talks_base_<id> for each chat.
@@ -23,7 +23,7 @@ const CORRIDOR := Rect2i(0, 30, 184, 24)
 const WALK_TOP := 39
 const WALK_BOTTOM := 44
 ## Where the members' doors are along the corridor's top wall (tile x of the left half).
-const DOOR_XS := [8, 25, 42, 59, 76, 93, 110, 127, 144, 161]
+const DOOR_XS := [8, 23, 38, 53, 68, 83, 98, 113, 128, 143, 158, 173]
 
 ## Where Elric arrives: at the foot of the ladder.
 const LADDER_FOOT := Vector2(20 * T, 5 * T)
@@ -43,6 +43,8 @@ const MEMBERS := [
 	{"id": "Crayola", "room": "Art & Cards", "color": Color(1.0, 0.55, 0.8), "spot": Vector2i(19, 13)},
 	{"id": "Rooster", "room": "Rooster's Royal Chamber", "color": Color(0.95, 0.95, 0.95), "spot": Vector2i(15, 9)},
 	{"id": "Agent", "room": "Strategy", "color": Color(0.7, 0.5, 1.0), "spot": Vector2i(13, 12)},
+	{"id": "MuffinMage", "room": "The Kitchen", "color": Color(0.95, 0.5, 0.2), "spot": Vector2i(15, 13)},
+	{"id": "Sansworth", "room": "The Garage", "color": Color(0.7, 0.7, 0.75), "spot": Vector2i(16, 12)},
 ]
 
 ## Whoever's coming along with Elric (Game.partner()), following behind.
@@ -99,7 +101,7 @@ func _process(delta: float) -> void:
 # --- The map --------------------------------------------------------------------
 
 func build_map() -> void:
-	room.setup(184, 112, Room.VOID)
+	room.setup(184, 144, Room.VOID)
 	_build_hall()
 	_build_corridor()
 	for i in MEMBERS.size():
@@ -192,6 +194,14 @@ func _build_member_room(i: int) -> void:
 			_prop(r, 26, 3, 2, 3)     # mirror
 			_prop(r, 4, 12, 4, 2)     # desk
 			_prop(r, 24, 16, 3, 2)    # bed
+		"MuffinMage":
+			_prop(r, 4, 4, 4, 2)      # the grill
+			_prop(r, 23, 3, 6, 2)     # the fish tank
+			_prop(r, 25, 16, 3, 2)    # bed
+		"Sansworth":
+			_prop(r, 4, 3, 8, 1)      # the pegboard of keys
+			_prop(r, 24, 3, 2, 2)     # the steering wheel on the wall
+			_prop(r, 24, 15, 4, 3)    # the race car bed
 		"Agent":
 			_prop(r, 10, 6, 3, 3)     # chess table
 			_prop(r, 25, 4, 2, 2)     # sunglasses display
@@ -414,6 +424,16 @@ const ROOM_TALK := {
 		[[["smug", "I'm not roasting you. I'm SEASONING you."]], [["angry", "...Did you just laugh at my throne?"]]],
 		"Look who crawled back. Couldn't stay away from me, huh?",
 	],
+	"MuffinMage": [
+		[["", "Yo. Welcome to the Kitchen."], ["", "That's a grill. That's a fish tank.\nThey are NOT related. Don't ask."], ["smug", "The fish's name is Burger.\nHe knows what he did."], ["", "Salmon burgers every Friday. It's the law.\n...My law."]],
+		[[["", "Brain food. Want one? Too bad. Last one."]], [["", "Burger says hi.\n...He's judging you. He judges everyone."]]],
+		"You came back. Good. More salmon burgers for...\nno. Still mine.",
+	],
+	"Sansworth": [
+		[["happy", "Welcome to the Garage!"], ["", "That's my parking spot. It's reserved.\nFor my car. Which I'll find."], ["", "Those are my car keys. Thirty-one of them.\nNone of them open anything."], ["happy", "The bed is a race car.\nIt's the closest I've gotten."]],
+		[[["", "Still no car. But the spot's ready."]], [["happy", "Vroom. ...That was me. Not a car."]]],
+		"You came back! Like a car that remembers\nwhere it parked!",
+	],
 	"Agent": [
 		[["", "Strategy room. Sit. Or don't."], ["smug", "That's the math on the fragments.\nYou won't follow it."], ["", "The dartboard is for thinking. I don't miss."], ["", "Welcome to the Corps.\nDon't make me recalculate."]],
 		[[["", "Still here? Efficient use of time? No."]], [["smug", "Four. Next."]]],
@@ -602,6 +622,8 @@ func _draw_decor() -> void:
 			"Crayola": _draw_crayola(r)
 			"Rooster": _draw_rooster(r)
 			"Agent": _draw_agent(r)
+			"MuffinMage": _draw_muffinmage(r)
+			"Sansworth": _draw_sansworth(r)
 
 
 func _text(at: Vector2, text: String, size: int, color: Color) -> void:
@@ -1051,6 +1073,56 @@ func _draw_rooster(r: Rect2) -> void:
 	_decor.draw_rect(Rect2(_tile(r, 5, 12) + Vector2(0, 8), Vector2(24, 18)), Color8(245, 245, 240))
 	_text(_tile(r, 5, 12) + Vector2(2, 20), "ROASTS", 6, Color8(200, 40, 40))
 	_bed(_tile(r, 24, 16), 3 * T, 2 * T, Color8(30, 30, 34))
+
+
+## MuffinMage's Kitchen: a grill, a fish tank (the fish is named Burger), and a
+## SALMON BURGER FRIDAY poster.
+func _draw_muffinmage(r: Rect2) -> void:
+	var grill := Rect2(_tile(r, 4, 4), Vector2(4 * T, 2 * T))
+	_block(grill, Color8(50, 50, 56))
+	for k in 6:
+		_decor.draw_line(grill.position + Vector2(6 + k * 12, 8), grill.position + Vector2(6 + k * 12, 32), Color8(120, 120, 128), 2.0)
+	_decor.draw_rect(Rect2(grill.position + Vector2(16, 10), Vector2(24, 8)), Color8(230, 140, 110))
+	_decor.draw_rect(Rect2(grill.position + Vector2(14, 8), Vector2(28, 3)), Color8(215, 165, 80))
+	var tank := Rect2(_tile(r, 23, 3), Vector2(6 * T, 2 * T))
+	_block(tank, Color8(60, 60, 70))
+	_decor.draw_rect(tank.grow(-4), Color8(70, 140, 210))
+	var swim := sin(_time * 1.3) * 30.0
+	var fish := tank.get_center() + Vector2(swim, 0)
+	_decor.draw_circle(fish, 5, Color8(245, 135, 105))
+	var tail := -1.0 if cos(_time * 1.3) > 0.0 else 1.0
+	_decor.draw_colored_polygon(PackedVector2Array([fish + Vector2(5 * tail, 0), fish + Vector2(11 * tail, -4), fish + Vector2(11 * tail, 4)]), Color8(245, 135, 105))
+	_centered(tank.position + Vector2(tank.size.x / 2, -3), "BURGER", 9, Color8(240, 240, 240))
+	var poster := Rect2(_tile(r, 12, 0) + Vector2(0, 10), Vector2(6 * T, 2 * T))
+	_decor.draw_rect(poster, Color8(240, 200, 120))
+	_centered(poster.position + Vector2(poster.size.x / 2, 16), "SALMON BURGER", 11, Color8(180, 60, 40))
+	_centered(poster.position + Vector2(poster.size.x / 2, 30), "FRIDAY", 11, Color8(180, 60, 40))
+	_bed(_tile(r, 25, 16), 3 * T, 2 * T, Color8(225, 110, 50))
+
+
+## Sansworth's Garage: an empty parking spot (reserved), a pegboard of keys that
+## don't open anything, a steering wheel on the wall, and a race car bed.
+func _draw_sansworth(r: Rect2) -> void:
+	var spot := Rect2(_tile(r, 12, 8), Vector2(8 * T, 9 * T))
+	for side in [0.0, spot.size.x]:
+		_decor.draw_line(spot.position + Vector2(side, 0), spot.position + Vector2(side, spot.size.y), Color8(240, 210, 60), 3.0)
+	_decor.draw_line(spot.position, spot.position + Vector2(spot.size.x, 0), Color8(240, 210, 60), 3.0)
+	_centered(spot.position + Vector2(spot.size.x / 2, 22), "RESERVED", 12, Color8(240, 210, 60))
+	_centered(spot.position + Vector2(spot.size.x / 2, 36), "SANSWORTH", 10, Color8(240, 210, 60))
+	var board := Rect2(_tile(r, 4, 3), Vector2(8 * T, T))
+	_block(board, Color8(170, 130, 90))
+	for k in 16:
+		var hook := board.position + Vector2(8 + k * 9.5, 8)
+		_decor.draw_circle(hook, 2, Color8(210, 190, 80) if k % 3 else Color8(190, 190, 200))
+	var wheel := _tile(r, 24, 3) + Vector2(T, T)
+	_decor.draw_arc(wheel, 14, 0, TAU, 20, Color8(40, 40, 46), 4.0)
+	_decor.draw_line(wheel + Vector2(-14, 0), wheel + Vector2(14, 0), Color8(40, 40, 46), 3.0)
+	_decor.draw_line(wheel, wheel + Vector2(0, 14), Color8(40, 40, 46), 3.0)
+	var car := Rect2(_tile(r, 24, 15), Vector2(4 * T, 3 * T))
+	_block(car, Color8(210, 40, 40))
+	_decor.draw_rect(Rect2(car.position + Vector2(8, 6), Vector2(car.size.x - 16, 14)), Color8(235, 235, 230))
+	for wheel_x in [10.0, car.size.x - 18.0]:
+		_decor.draw_rect(Rect2(car.position + Vector2(wheel_x, car.size.y - 8), Vector2(10, 8)), Color8(20, 20, 24))
 
 
 func _draw_agent(r: Rect2) -> void:

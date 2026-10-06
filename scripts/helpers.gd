@@ -19,7 +19,7 @@ extends RefCounted
 ##   charges   how many times they can be called per battle (default: no limit)
 ## Members without a decided ability yet use a placeholder hit.
 
-const CORPS := ["BigJoe6", "Eggo", "Nassan", "Nat", "NCWethan", "Ronin", "Supreme", "Crayola", "Rooster", "Agent"]
+const CORPS := ["BigJoe6", "Eggo", "Nassan", "Nat", "NCWethan", "Ronin", "Supreme", "Crayola", "Rooster", "Agent", "MuffinMage", "Sansworth"]
 
 const HELPERS := {
 	# Big Joe is a tank: he plants his shield in front of the party, and all damage is
@@ -47,6 +47,8 @@ const HELPERS := {
 	"Crayola": {"color": Color(1.0, 0.55, 0.8), "line": "Crayola shyly steps in!", "move": "CARD FLICK"},
 	"Rooster": {"color": Color(1.0, 0.3, 0.3), "line": "Rooster struts in!", "move": "ROAST"},
 	"Agent": {"color": Color(0.7, 0.5, 1.0), "line": "Agent walks in, already calculating!", "move": "THE ODDS"},
+	"MuffinMage": {"color": Color(0.95, 0.5, 0.2), "line": "MuffinMage drops in, mid-salmon-burger. \"Yo.\"", "move": "BRAIN FOOD"},
+	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "line": "Sansworth runs in going \"VROOM.\" He doesn't have a car.", "move": "HONK"},
 }
 
 ## What Nat reads out about each attack ("its next attack: ...").

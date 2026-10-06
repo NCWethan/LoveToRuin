@@ -300,6 +300,11 @@ func _place_people() -> void:
 	hop.follow = player
 
 
+	# The only people here at night (townsfolk.gd): a guard out front, dozing, and
+	# the night janitor in the classroom. Either can be challenged.
+	add_person("guard", Vector2(24 * T, 11 * T + 10), SCENE)
+	add_person("nightjanitor", Vector2(45 * T, 40 * T), SCENE)
+
 	add_storage_box(Vector2(9 * T + 36, 12 * T + 10))
 	add_storage_box(Vector2(86 * T + 36, 45 * T))
 	_add_save_point(Vector2(9 * T, 12 * T + 10), [
@@ -401,6 +406,8 @@ func _place_hotspots() -> void:
 func _start() -> void:
 	await wait_for_fade()
 	if not is_inside_tree():
+		return
+	if await handle_person_return():
 		return
 	if await _back_from_battle():
 		return
@@ -745,20 +752,22 @@ const GYM_FROM_PARK := Vector2(116 * T, 42 * T + 10)
 
 ## The students: which picture, where (in tiles), what they say, two answers to
 ## pick from, and what they say back to each.
+## Each student: sprite, where they stand (tiles), what they say, two answers, the
+## reaction to each, and the moods for [their line, reaction 1, reaction 2].
 const STUDENTS := [
-	["Student1", Vector2i(8, 12), "Did you hear? Somebody broke into the school last\nnight. The bells were ringing at like 3 AM.", ["That was weird.", "...That was me."], ["Right?? My mom thought it was a fire drill.", "Ha! Sure. And I'm the principal."]],
-	["Student2", Vector2i(23, 12), "Ugh. Pop quiz first period. I didn't study.", ["Me neither.", "Answer C."], ["Solidarity.", "...C? Is it always C? It's always C, isn't it."]],
-	["Student3", Vector2i(13, 14), "Is it just me, or is the hallway shorter today?", ["It's just you.", "It used to loop."], ["Yeah, probably. I didn't sleep.", "...Loop? Okay, weirdo."]],
-	["Student4", Vector2i(20, 15), "Nice outfit. Very... wanderer.", ["Thanks!", "It's called style."], ["No problem, traveler.", "Okay, okay. Style. Sure."]],
-	["Student5", Vector2i(58, 12), "My locker was humming this morning.\nLike, a song. I'm not okay.", ["Lockers do that.", "Was it in tune?"], ["They DO?", "...Actually, yeah. Kinda catchy."]],
-	["Student8", Vector2i(68, 10), "Don't stare into the trophy case too long.\nMy friend says her reflection winked at her.", ["Creepy.", "Mine smiled."], ["Right?? It's a SPELLING BEE trophy.\nWhat does it want?", "...Okay. I'm taking the long way to class now."]],
-	["Student6", Vector2i(75, 10), "Have you seen my hall pass? It ran away.", ["It RAN?", "Check the gym."], ["I said what I said.", "Why would it be in the... you know what, I'll check."]],
-	["Student7", Vector2i(96, 13), "The library book I returned was 47 years overdue.\nThe fine is insane.", ["Yikes.", "Worth it?"], ["They want $4,000. In 1979 money.", "...It was a good book."]],
-	["Student8", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"]],
-	["Student3", Vector2i(60, 46), "Shh! I'm trying to nap before class.", ["Sorry.", "WAKE UP!"], ["Zzz...", "AH! ...I was awake. Totally awake."]],
-	["Student1", Vector2i(95, 40), "Somebody wrecked Wally's costume.\nHe's just... lying there. Empty.", ["Rest in peace.", "He'll be back."], ["Go Wolverines... :(", "You think?? GO WOLVERINES!!"]],
-	["Student6", Vector2i(104, 45), "Did you see the foam finger? It's GONE.\nTHE foam finger!", ["No idea.", "...It's in my bag."], ["The whole team's freaking out.", "WHAT. ...Okay, keep it. It looks good on you."]],
-	["Student2", Vector2i(112, 38), "The emergency exit goes out to the park.\nPractice is out there today.", ["Thanks.", "Is it safe?"], ["No prob. Watch out for the sprinklers.", "It's a park. What could happen?"]],
+	["Student1", Vector2i(8, 12), "Did you hear? Somebody broke into the school last\nnight. The bells were ringing at like 3 AM.", ["That was weird.", "...That was me."], ["Right?? My mom thought it was a fire drill.", "Ha! Sure. And I'm the principal."], ["shocked", "happy", "smug"]],
+	["Student2", Vector2i(23, 12), "Ugh. Pop quiz first period. I didn't study.", ["Me neither.", "Answer C."], ["Solidarity.", "...C? Is it always C? It's always C, isn't it."], ["sad", "happy", "shocked"]],
+	["Student3", Vector2i(13, 14), "Is it just me, or is the hallway shorter today?", ["It's just you.", "It used to loop."], ["Yeah, probably. I didn't sleep.", "...Loop? Okay, weirdo."], ["shocked", "sad", "smug"]],
+	["Student4", Vector2i(20, 15), "Nice outfit. Very... wanderer.", ["Thanks!", "It's called style."], ["No problem, traveler.", "Okay, okay. Style. Sure."], ["smug", "happy", "smug"]],
+	["Student5", Vector2i(58, 12), "My locker was humming this morning.\nLike, a song. I'm not okay.", ["Lockers do that.", "Was it in tune?"], ["They DO?", "...Actually, yeah. Kinda catchy."], ["shocked", "shocked", "happy"]],
+	["Student8", Vector2i(68, 10), "Don't stare into the trophy case too long.\nMy friend says her reflection winked at her.", ["Creepy.", "Mine smiled."], ["Right?? It's a SPELLING BEE trophy.\nWhat does it want?", "...Okay. I'm taking the long way to class now."], ["sad", "shocked", "shocked"]],
+	["Student6", Vector2i(75, 10), "Have you seen my hall pass? It ran away.", ["It RAN?", "Check the gym."], ["I said what I said.", "Why would it be in the... you know what, I'll check."], ["sad", "angry", "shocked"]],
+	["Student7", Vector2i(96, 13), "The library book I returned was 47 years overdue.\nThe fine is insane.", ["Yikes.", "Worth it?"], ["They want $4,000. In 1979 money.", "...It was a good book."], ["sad", "sad", "happy"]],
+	["Student8", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"], ["", "smug", "shocked"]],
+	["Student3", Vector2i(60, 46), "Shh! I'm trying to nap before class.", ["Sorry.", "WAKE UP!"], ["Zzz...", "AH! ...I was awake. Totally awake."], ["angry", "happy", "shocked"]],
+	["Student1", Vector2i(95, 40), "Somebody wrecked Wally's costume.\nHe's just... lying there. Empty.", ["Rest in peace.", "He'll be back."], ["Go Wolverines... :(", "You think?? GO WOLVERINES!!"], ["sad", "sad", "happy"]],
+	["Student6", Vector2i(104, 45), "Did you see the foam finger? It's GONE.\nTHE foam finger!", ["No idea.", "...It's in my bag."], ["The whole team's freaking out.", "WHAT. ...Okay, keep it. It looks good on you."], ["shocked", "sad", "happy"]],
+	["Student2", Vector2i(112, 38), "The emergency exit goes out to the park.\nPractice is out there today.", ["Thanks.", "Is it safe?"], ["No prob. Watch out for the sprinklers.", "It's a park. What could happen?"], ["happy", "happy", "smug"]],
 ]
 
 
@@ -782,16 +791,32 @@ func _place_day_people() -> void:
 	for i in STUDENTS.size():
 		var student: Array = STUDENTS[i]
 		var spot: Vector2i = student[1]
-		add_npc(student[0], Vector2(spot.x * T + 10, spot.y * T + 10), _talk_to_student.bind(i))
+		# (Anyone beaten in a fight is gone for good.)
+		if Townsfolk.is_gone(_student_id(i)):
+			continue
+		add_npc(student[0], Vector2(spot.x * T + 10, spot.y * T + 10), _talk_to_student.bind(i), "the student")
 
 
-## A student says something, Elric picks one of two answers, and they react.
+## A student's id in townsfolk.gd: "student-<look>-<n>".
+func _student_id(i: int) -> String:
+	return "student-%s-%d" % [str(STUDENTS[i][0]).trim_prefix("Student"), i]
+
+
+## A student says something, and Elric picks one of two answers (they react), or
+## challenges them to a fight.
 func _talk_to_student(i: int) -> void:
 	var student: Array = STUDENTS[i]
 	var who: String = student[0]
-	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[2]}])
-	var choice := await Game.dialogue.ask("* (What do you say?)", student[3])
-	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[4][choice]}])
+	var line_moods: Array = student[5] if student.size() > 5 else ["", "", ""]
+	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[2], "mood": line_moods[0]}])
+	var options: Array = student[3].duplicate()
+	options.append("Challenge")
+	var choice := await Game.dialogue.ask("* (What do you say?)", options)
+	if choice == 2:
+		await challenge(_student_id(i), SCENE)
+		return
+	var moods: Array = student[5] if student.size() > 5 else ["", "", ""]
+	await Game.dialogue.say([{"who": who, "tag": "Student", "text": student[4][choice], "mood": moods[choice + 1]}])
 
 
 func _day_chalkboard() -> void:

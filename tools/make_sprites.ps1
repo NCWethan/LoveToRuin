@@ -1415,6 +1415,734 @@ foreach ($name in @($sprites.Keys)) {
     $sprites[$name] = Add-LimbGaps $sprites[$name]
 }
 
+# --- Townsfolk (people around town who aren't in the Corps; see scripts/townsfolk.gd)
+# Everyone has their own look, and not everyone is human. Saved under their id.
+$palette['('] = @(150, 155, 170)   # pigeon gray
+$palette[')'] = @(110, 165, 140)   # pigeon neck shimmer
+$palette['['] = @(150, 220, 120)   # frog / lizard green
+$palette[']'] = @(85, 150, 70)     # darker green
+$palette['{'] = @(205, 222, 245)   # ghost white
+$palette['}'] = @(240, 165, 70)    # beaks and talons
+$palette['-'] = @(200, 175, 235)   # jelly lavender
+$palette['_'] = @(235, 145, 60)    # corgi and cat orange
+
+# Coach Ramirez: a rhino in a red tracksuit and cap, with a whistle.
+$sprites['coach'] = @(
+    "........................",
+    "..........RRRR..........",
+    "........RRRRRRRR........",
+    "........RRRRRRRRRRR.....",
+    ".......NNNNNNNNNN.......",
+    ".......NNNNNNNNNN.......",
+    ".......NNKNNNNKNN.......",
+    ".......NNNNNWNNNN.......",
+    "........NNNWWNNN........",
+    "........NNNNNNNN........",
+    "........NNKKKKNN........",
+    ".........NNNNNN.........",
+    "...RRRRRRRRGRRRRRRRRR...",
+    "...RWRRRRRRRGRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...RWRRRRRRRRRRRRRRWR...",
+    "...NNNNRRRRRRRRRRNNNN...",
+    "...NNNNRRRRRRRRRRNNNN...",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WRRRR3RRRW.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
+# The janitor: a raccoon in green coveralls, a ring of keys at his belt.
+$sprites['janitor'] = @(
+    "........................",
+    ".......xx......xx.......",
+    ".......xKx....xKx.......",
+    "........xxxxxxxx........",
+    ".......xxxxxxxxxx.......",
+    ".......xxWWxxWWxx.......",
+    ".......KKWKKKKWKK.......",
+    ".......xxKKxxKKxx.......",
+    "........xxxWWxxx........",
+    "........xxWWKWWx........",
+    "........xxWKKWxx........",
+    ".........xxxxxx.........",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...@@@@@@W@@@@@@@@@@@...",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...@@@@^^^^^^^^^^@@@@...",
+    "...@@@@@@@@AA@@@@@@@@...",
+    "...@@@@@@@@@@@@@@@@@@...",
+    "...xxxx@@@@@@@@@@xxxx...",
+    "...xxxx@@@@@@@@@@xxxx...",
+    ".......@@@@@^@@@@.......",
+    ".......@@@@@^@@@@..xKx..",
+    ".......@@@@@^@@@@..KxK..",
+    ".......@@@@@^@@@@..xKx..",
+    ".......@@@@@^@@@@..KxK..",
+    ".......@@@@@^@@@@.......",
+    ".......@@@@@^@@@@.......",
+    ".......@@@@@^@@@@.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# The skater: a frog in a backwards cap and a teal tee, board under his arm.
+$sprites['skater'] = @(
+    "........................",
+    "........................",
+    ".........RRRRRR.........",
+    "........RRRRRRRR........",
+    ".......[[RRRRRR[[.......",
+    ".......[[[[[[[[[[.......",
+    ".......[[K[[[[K[[.......",
+    ".......[[[[[[[[[[.......",
+    "........[[[[[[[[........",
+    "........]]]]]]]]........",
+    "........[[[[[[[[........",
+    ".........[[[[[[.........",
+    ".66##################...",
+    ".K6##################...",
+    ".66##################...",
+    ".66#######WWWW#######...",
+    ".66#######WWWW#######...",
+    ".66##################...",
+    ".66##################...",
+    ".66##################...",
+    ".K6[[[[##########[[[[...",
+    ".66[[[[##########[[[[...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......[[[[[.[[[[.......",
+    ".......[[[[[.[[[[.......",
+    ".......[[[[[.[[[[.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
+# The kid waiting for pickup: a little ghost with a backpack and a phone. (Still waiting.)
+$sprites['waiting'] = @(
+    "........................",
+    "........................",
+    "..........{{{{..........",
+    "........{{{{{{{{........",
+    ".......{{{{{{{{{{.......",
+    ".......{{{{{{{{{{.......",
+    ".......{{K{{{{K{{.......",
+    ".......{{K{{{{K{{.......",
+    ".......{{{{{{{{{{.......",
+    ".......{{{{KK{{{{.......",
+    ".......{{{{{{{{{{.......",
+    "......{{{{{{{{{{{{......",
+    "......{{R{{{{{{R{{......",
+    ".....{{{R{{{{{{R{{{.....",
+    ".....{{{R{{{{{{R{{{.....",
+    "....{{{{R{{{{{{R{{{{....",
+    "....{{{{{{{{{{{{{{{{....",
+    "....{{{{{{5555{{{{{{....",
+    "...{{{{{{{5555{{{{{{{...",
+    "...{{{{{{{{{{{{{{{{{{...",
+    "...{{{{{{{{{{{{{{{{{{...",
+    "..{{{{{{{{{{{{{{{{{{{{..",
+    "..{{{{{{{{{{{{{{{{{{{{..",
+    "..{{.{{{{.{{{{.{{{{.{{..",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+    "........................"
+)
+
+# The mall cop: a walrus with a mustache and tusks, in navy, with a cap and badge.
+$sprites['mallcop'] = @(
+    "........................",
+    "........uuuuuuuu........",
+    ".......uuuuAAuuuu.......",
+    "......uuuuuuuuuuuu......",
+    ".......6666666666.......",
+    ".......6666666666.......",
+    ".......66K6666K66.......",
+    ".......6666666666.......",
+    ".......6888888886.......",
+    ".......8888888888.......",
+    ".......68W6666W86.......",
+    "........6W6666W6........",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...uuuuuuuuuuuuAuuuuu...",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...uuuuKKKKAAKKKKuuuu...",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......KKKKK.KKKK.......",
+    ".......KKKKK.KKKK......."
+)
+
+# The busy mom: a kangaroo, groceries poking out of her pouch, a bag in each hand.
+$sprites['mom'] = @(
+    ".......99......99.......",
+    ".......9p9....9p9.......",
+    ".......9p9....9p9.......",
+    "........99999999........",
+    ".......9999999999.......",
+    ".......9999999999.......",
+    ".......99K9999K99.......",
+    ".......9999999999.......",
+    "........999KK999........",
+    "........99999999........",
+    "........99KKKK99........",
+    ".........999999.........",
+    "...pppppppppppppppppp...",
+    "...pppppppppppppppppp...",
+    "...ppppp1L1L1Lppppppp...",
+    "...pppp9999999999pppp...",
+    "...pppp9999999999pppp...",
+    "...pppp9999999999pppp...",
+    "...pppp9999999999pppp...",
+    "...pppp9999999999pppp...",
+    "...9999pppppppppp9999...",
+    "...9999pppppppppp9999...",
+    ".WWW...JJJJJjJJJJ...WWW.",
+    ".WWW...JJJJJjJJJJ...WWW.",
+    ".WWW...JJJJJjJJJJ...WWW.",
+    ".WWW...JJJJJjJJJJ...WWW.",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ999....",
+    ".......JJJJJjJJJJ999....",
+    ".......JJJJJjJJJJ999....",
+    ".......99999.9999.......",
+    ".......99999.9999......."
+)
+
+# The Pigeon Man: an old man in a flat cap with a white beard, a newspaper under his
+# arm, and pigeons (all named Gerald) on his head and shoulders.
+$sprites['pigeons'] = @(
+    ".........((.............",
+    "........((K)............",
+    "........xxxxxxxx........",
+    ".......xxxxxxxxxxx......",
+    "........22222222........",
+    "........22222222........",
+    "........2K2222K2........",
+    "........22222222........",
+    "........2WWWWWW2........",
+    "........WWWKKWWW........",
+    "........WWWWWWWW........",
+    ".........WWWWWW.........",
+    ".((BBBBBBBBBBBBBBBBBB((.",
+    ".K)BBBBBBBBBBBBBBBBBB)K.",
+    "...BBBBBBBBBBBBBBBBBB...",
+    "...BBBBBBBBBBBBBBWaWa...",
+    "...BBBBBBBBBBBBBBaWaW...",
+    "...BBBBBBBBBBBBBBWaWa...",
+    "...BBBBBBBBBBBBBBaWaW...",
+    "...BBBBBBBBBBBBBBBBBB...",
+    "...2222BBBBBBBBBB2222...",
+    "...2222BBBBBBBBBB2222...",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......xxxxxkxxxx.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# The teen on their phone: a jelly blob in a purple hoodie, phone glowing.
+$sprites['teen'] = @(
+    "........................",
+    "..........----..........",
+    "........--------........",
+    ".......----W-----.......",
+    ".......---W------.......",
+    ".......----------.......",
+    ".......--K----K--.......",
+    ".......----------.......",
+    ".......----------.......",
+    ".......----KK----.......",
+    "........--------........",
+    ".......-.-.--.-.-.......",
+    "...555555555555555555...",
+    "...555555555555555555...",
+    "...5555555iiii5555555...",
+    "...5555555iKKi5555555...",
+    "...5555555iiii5555555...",
+    "...555555555555555555...",
+    "...555555555555555555...",
+    "...555555555555555555...",
+    "...----5555555555----...",
+    "...----5555555555----...",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......PPPPPkPPPP.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
+# The jogger: an ostrich in a red headband and a cyan tank top, on long legs.
+$sprites['jogger'] = @(
+    "........................",
+    "........................",
+    "........................",
+    ".........999999.........",
+    ".........RRRRRR.........",
+    ".........999999.........",
+    "........9K9999K9........",
+    "........99999999........",
+    "........999}}}}9........",
+    "..........9999..........",
+    "..........9999..........",
+    "..........9999..........",
+    "....KKKKKKiiiiKKKKKK....",
+    "...KKKKKKKiiiiKKKKKKK...",
+    "...KKKKKKiiiiiiKKKKKK...",
+    "...KWKKKKiiiiiiKKKKWK...",
+    "...KKKKKKiiiiiiKKKKKK...",
+    "...KKKKKKiiiiiiKKKKKK...",
+    "....KKKKKiiiiiiKKKKK....",
+    ".....KKKKKKKKKKKKKK.....",
+    "......KKKKKKKKKKKK......",
+    "........KKKKKKKK........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    "..........9..9..........",
+    ".........WWW.WWW........",
+    ".........WWW.WWW........"
+)
+
+# The night janitor: a moth, fuzzy antennae and big dark eyes, wings folded behind
+# brown coveralls.
+$sprites['nightjanitor'] = @(
+    "......K..........K......",
+    ".......K........K.......",
+    "........K......K........",
+    ".........999999.........",
+    "........99999999........",
+    ".......9999999999.......",
+    ".......9KK9999KK9.......",
+    ".......9KK9999KK9.......",
+    ".......9999999999.......",
+    "........99999999........",
+    "........999KK999........",
+    ".........999999.........",
+    "eee666666666666666666eee",
+    "eKe666666W66666666666eKe",
+    "eee666666666666666666eee",
+    ".ee666666666666666666ee.",
+    ".ee666666666666666666ee.",
+    "..e666666666666666666e..",
+    "...666666666666666666...",
+    "...666666666666666666...",
+    "...999966666666669999...",
+    "...999966666666669999...",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......66666k6666.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# The security guard: an owl (who sleeps through the night shift) in a navy cap and
+# uniform, a flashlight in one wing.
+$sprites['guard'] = @(
+    "........................",
+    "........uuuuuuuu........",
+    ".......uuuuAuuuuu.......",
+    "......uuuuuuuuuuuu......",
+    ".......6666666666.......",
+    ".......6999999996.......",
+    ".......69KK99KK96.......",
+    ".......6999999996.......",
+    ".......6999}}9996.......",
+    ".......6999999996.......",
+    "........66666666........",
+    ".........666666.........",
+    "...uuuuuuuuuuuuuuuuuu...",
+    "...6666uuuuuuuuAu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...6666uuuuuuuuuu6666...",
+    "...YY66uuuuuuuuuu6666...",
+    "...KK66uuuuuuuuuu6666...",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......uuuuukuuuu.......",
+    ".......}}}}}.}}}}.......",
+    ".......}}}}}.}}}}......."
+)
+
+# The dog walker: a beanie and a green jacket, and Biscuit the corgi on a leash.
+$sprites['dogwalker'] = @(
+    "........................",
+    "........................",
+    ".........bbbbbb.........",
+    "........bbbbbbbb........",
+    "........bbbbbbbb........",
+    "........44444444........",
+    "........4K4444K4........",
+    "........44444444........",
+    "........44444444........",
+    "........444KK444........",
+    "........44444444........",
+    ".........444444.........",
+    "...111111111111111111...",
+    "...111111111111111111...",
+    "...111111111111111111...",
+    "...111111111111111111...",
+    "...111111111111111111...",
+    "...1111111DDDD1111111...",
+    "...111111111111111111...",
+    "...111111111111111111...",
+    "...444411111111114444...",
+    "...444411111111114444...",
+    "...K...JJJJJjJJJJ.......",
+    "...K...JJJJJjJJJJ.......",
+    "...K...JJJJJjJJJJ.......",
+    ".__R...JJJJJjJJJJ.......",
+    "_K__...JJJJJjJJJJ.......",
+    "_W____.JJJJJjJJJJ.......",
+    "______.JJJJJjJJJJ.......",
+    "______.JJJJJjJJJJ.......",
+    "K.K.K..DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+
+# --- The Westview students: eight kids, eight looks.
+# A bunny in a letterman jacket.
+$sprites['student1'] = @(
+    "........WW....WW........",
+    "........Wp....pW........",
+    "........Wp....pW........",
+    "........WW....WW........",
+    "........WWWWWWWW........",
+    ".......WWWWWWWWWW.......",
+    ".......WWKWWWWKWW.......",
+    ".......WWWWWWWWWW.......",
+    "........WWWppWWW........",
+    "........WWWWWWWW........",
+    "........WWWKKWWW........",
+    ".........WWWWWW.........",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRWWRRRRRRWWWW...",
+    "...WWWWRRWWRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    "...WWWWRRRRRRRRRRWWWW...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+# A robot kid with an antenna and blinking chest lights.
+$sprites['student2'] = @(
+    "...........R............",
+    "...........g............",
+    "...........g............",
+    ".......gggggggggg.......",
+    ".......gGGGGGGGGg.......",
+    ".......gGGGGGGGGg.......",
+    ".......gGiGGGGiGg.......",
+    ".......gGGGGGGGGg.......",
+    ".......gGGGGGGGGg.......",
+    ".......gGiiiiiiGg.......",
+    ".......gGGGGGGGGg.......",
+    ".......gggggggggg.......",
+    "...ggggGGGGGGGGGGgggg...",
+    "...gGGgGGRRGGGGGGgGGg...",
+    "...gGGgGGGGGGGGGGgGGg...",
+    "...gGGgGGiiGGGGGGgGGg...",
+    "...gGGgGGGGGGGGGGgGGg...",
+    "...gGGgGGGGGGGGGGgGGg...",
+    "...gGGgGGGGGGGGGGgGGg...",
+    "...gGGgGGGGGGGGGGgGGg...",
+    "...ggggGGGGGGGGGGgggg...",
+    "...ggggGGGGGGGGGGgggg...",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......gggggKgggg.......",
+    ".......KKKKK.KKKK.......",
+    ".......KKKKK.KKKK......."
+)
+# A sleepy sloth in starry pajamas.
+$sprites['student3'] = @(
+    "........................",
+    "........................",
+    ".........wwwwww.........",
+    "........wwwwwwww........",
+    ".......wwwwwwwwww.......",
+    ".......ww000000ww.......",
+    ".......w8K0000K8w.......",
+    ".......w88000088w.......",
+    ".......ww000000ww.......",
+    "........w00KK00w........",
+    "........ww0000ww........",
+    ".........wwwwww.........",
+    "...wwwwppppppppppwwww...",
+    "...wwwwppppppppppwwww...",
+    "...wwwwppppppppppwwww...",
+    "...wwwwppYppppYppwwww...",
+    "...wwwwppppppppppwwww...",
+    "...wwwwppppYpppppwwww...",
+    "...wwwwppppppppppwwww...",
+    "...wwwwppppppppppwwww...",
+    "...KKwwppppppppppwwKK...",
+    "...KKwwppppppppppwwKK...",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......pppppkpppp.......",
+    ".......wwwww.wwww.......",
+    ".......wwwww.wwww......."
+)
+# A lizard in a gray hoodie, with a tail.
+$sprites['student4'] = @(
+    "........................",
+    "...........]............",
+    "..........]]]...........",
+    "........[[[]][[[........",
+    ".......[[[[[[[[[[.......",
+    ".......[[[[[[[[[[.......",
+    ".......[[K[[[[K[[.......",
+    ".......[[[[[[[[[[.......",
+    ".......[[[[[[[[[[.......",
+    ".......[[]]]]]][[.......",
+    "........[[[[[[[[........",
+    ".........[[[[[[.........",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "...xxxxxxxWxxWxxxxxxx...",
+    "...xxxxxxxWxxWxxxxxxx...",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "...xxxxxxDDDDDDxxxxxx...",
+    "...xxxxxxxxxxxxxxxxxx...",
+    "...[[[[xxxxxxxxxx[[[[...",
+    "...[[[[xxxxxxxxxx[[[[...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.[[....",
+    ".......JJJJJjJJJJ.[[....",
+    ".......JJJJJjJJJJ.[[....",
+    ".......JJJJJjJJJJ..[[[..",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......KKKKK.KKKK.......",
+    ".......KKKKK.KKKK......."
+)
+# A mushroom kid: a big red cap with white spots, and overalls.
+$sprites['student5'] = @(
+    "........................",
+    ".........RRRRRR.........",
+    ".......RRWWRRRRRR.......",
+    ".....RRRRRRRRWWRRRRR....",
+    "....RRWWRRRRRRRRRRWWRR..",
+    "....RRRRRRRRRRRRRRRRRR..",
+    "........2K2222K2........",
+    "........22222222........",
+    "........22222222........",
+    "........222KK222........",
+    "........22222222........",
+    ".........222222.........",
+    "...YYYYBYYYYYYYYBYYYY...",
+    "...YYYYBYYYYYYYYBYYYY...",
+    "...YYYYBBBBBBBBBBYYYY...",
+    "...YYYYBBBAABBBBBYYYY...",
+    "...YYYYBBBBBBBBBBYYYY...",
+    "...YYYYBBBBBBBBBBYYYY...",
+    "...YYYYBBBBBBBBBBYYYY...",
+    "...YYYYBBBBBBBBBBYYYY...",
+    "...2222BBBBBBBBBB2222...",
+    "...2222BBBBBBBBBB2222...",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......BBBBBnBBBB.......",
+    ".......DDDDD.DDDD.......",
+    ".......DDDDD.DDDD......."
+)
+# A hamster with puffy cheeks, in a Westview jersey.
+$sprites['student6'] = @(
+    "........................",
+    "........................",
+    "........ee....ee........",
+    "........ep....pe........",
+    "........eeeeeeee........",
+    ".......eeeeeeeeee.......",
+    ".......eeKeeeeKee.......",
+    ".......eeeeeeeeee.......",
+    ".......WWeeppeeWW.......",
+    ".......WWWeeeeWWW.......",
+    ".......WWeKKKKeWW.......",
+    "........eeeeeeee........",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...eeeeYYY8YY8YYYeeee...",
+    "...eeeeYYY8YY8YYYeeee...",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...eeeeYYYYYYYYYYeeee...",
+    "...ppppYYYYYYYYYYpppp...",
+    "...ppppYYYYYYYYYYpppp...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+# A bookworm: an actual worm, in glasses and a sweater vest, holding a book.
+$sprites['student7'] = @(
+    "........................",
+    "........................",
+    "..........pppp..........",
+    "........pppppppp........",
+    ".......pppppppppp.......",
+    ".......pppppppppp.......",
+    ".......pDKDppDKDp.......",
+    ".......pppppppppp.......",
+    ".......pppppppppp.......",
+    "........pppKKppp........",
+    "........pppppppp........",
+    ".........pppppp.........",
+    "...WWWW5555555555WWWW...",
+    "...WWWW55W5555W55WWWW...",
+    "...WWWW5555555555WWWW...",
+    "...WWWW5555555555WWWW...",
+    "...WWWW5555555555WWWW...",
+    "...WWWW55@@@@@@55WWWW...",
+    "...WWWW55@@@@@@55WWWW...",
+    "...WWWW55@@@@@@55WWWW...",
+    "...pppp55@@@@@@55pppp...",
+    "...pppp5555555555pppp...",
+    ".........pppppp.........",
+    ".........pppppp.........",
+    ".........UUUUUU.........",
+    "..........pppppp........",
+    "..........pppppp........",
+    "..........UUUUUU........",
+    "...........pppppp.......",
+    "...........pppppp.......",
+    "...........pppppp.......",
+    "............pppp........"
+)
+# A cat in headphones and a band tee, tail curled.
+$sprites['student8'] = @(
+    "........_......._.......",
+    ".......__KKKKKKKK__.....",
+    ".......__________.......",
+    ".......___8__8___.......",
+    ".......__________.......",
+    "......R__________R......",
+    "......R__K____K__R......",
+    "......R__________R......",
+    ".......___WWWW___.......",
+    ".......___WKKW___.......",
+    "........__WWWW__........",
+    ".........______.........",
+    "...CCCCCCCCCCCCCCCCCC...",
+    "...CCCCCCCWWWWCCCCCCC...",
+    "...CCCCCCCWRRWCCCCCCC...",
+    "...CCCCCCCWWWWCCCCCCC...",
+    "...CCCCCCCCCCCCCCCCCC...",
+    "...CCCCCCCCCCCCCCCCCC...",
+    "...CCCCCCCCCCCCCCCCCC...",
+    "...CCCCCCCCCCCCCCCCCC...",
+    "...____CCCCCCCCCC____...",
+    "...____CCCCCCCCCC____...",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.._....",
+    ".......JJJJJjJJJJ.._....",
+    ".......JJJJJjJJJJ.__....",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......JJJJJjJJJJ.......",
+    ".......WWWWW.WWWW.......",
+    ".......WWWWW.WWWW......."
+)
+
 # --- Facial expressions (dialogue portraits only) -----------------------------
 # Each mood is a little 8 x 6 stamp drawn over the face (columns 8-15, rows 6-11
 # of the front view). In a stamp:
@@ -1483,10 +2211,35 @@ $faces = [ordered]@{
     'lou'       = @('Q', 'K')
     'pip'       = @('Q', 'K')
     'nassan_vons' = @('C', 'W')
+    # Townsfolk and students (each on their own face, in their own colors).
+    'coach'     = @('N', 'K')
+    'janitor'   = @('x', 'K')
+    'skater'    = @('[', 'K')
+    'waiting'   = @('{', 'K')
+    'mallcop'   = @('6', 'K')
+    'mom'       = @('9', 'K')
+    'pigeons'   = @('2', 'K')
+    'teen'      = @('-', 'K')
+    'jogger'    = @('9', 'K')
+    'nightjanitor' = @('9', 'K')
+    'guard'     = @('9', 'K')
+    'dogwalker' = @('4', 'K')
+    'student1'  = @('W', 'K')
+    'student2'  = @('G', 'i')
+    'student3'  = @('0', 'K')
+    'student4'  = @('[', 'K')
+    'student5'  = @('2', 'K')
+    'student6'  = @('e', 'K')
+    'student7'  = @('p', 'K')
+    'student8'  = @('_', 'K')
 }
 # Hop keeps his gritted-teeth grin for these moods (only his eyes change).
 # (Big Lou's beard and Pip's mustache stay put too.)
-$keepMouth = @{ 'hop' = @('happy', 'angry', 'smug'); 'lou' = @($moods.Keys); 'pip' = @($moods.Keys) }
+# (Big Lou's beard, Pip's mustache, and the townsfolk's snouts, beaks, tusks and
+# beards stay put too: only their eyes change.)
+$keepMouth = @{ 'hop' = @('happy', 'angry', 'smug'); 'lou' = @($moods.Keys); 'pip' = @($moods.Keys)
+    'coach' = @($moods.Keys); 'mallcop' = @($moods.Keys); 'pigeons' = @($moods.Keys); 'jogger' = @($moods.Keys)
+    'guard' = @($moods.Keys); 'janitor' = @($moods.Keys); 'student8' = @($moods.Keys) }
 
 $portraits = [ordered]@{}
 foreach ($who in $faces.Keys) {
@@ -1522,49 +2275,6 @@ foreach ($mood in $visor.Keys) {
     $rows = [string[]]($sprites['bigjoe6'].Clone())
     $rows[6] = $visor[$mood]
     $portraits["bigjoe6_$mood"] = $rows
-}
-
-# --- Westview students (Chapter 2: the school by day) ----------------------------
-# Made from Elric's body (front and back), recolored: skin, hair, shirt, pants,
-# and a beanie on some. They get walking frames like everyone else.
-# skin, hair, shirt, shirt detail, pants, pants line, beanie (or '')
-$studentLooks = @(
-    @('Q', 'K', 'S', 'u', 'J', 'j', ''),
-    @('4', 'K', 'E', 'D', 'P', 'k', ''),
-    @('2', 'H', '5', 'D', 'B', 'n', ''),
-    @('Y', 'h', '#', 'D', 'J', 'j', 'b'),
-    @('Q', 'w', 'R', 'D', 'x', 'k', ''),
-    @('4', '8', '1', 'D', 'J', 'j', 'u'),
-    @('2', 'K', 'W', 'a', 'P', 'k', ''),
-    @('Q', 'H', 'E', 'D', 'B', 'n', 'R')
-)
-
-function Recolor-Student([string[]]$rows, $look) {
-    $out = @()
-    for ($y = 0; $y -lt $rows.Count; $y++) {
-        $c = $rows[$y].ToCharArray()
-        for ($x = 0; $x -lt $c.Length; $x++) {
-            switch -CaseSensitive ([string]$c[$x]) {
-                'L' { $c[$x] = $look[0] }
-                'h' { $c[$x] = if ($look[6] -ne '' -and $y -le 4) { $look[6] } else { $look[1] } }
-                'T' { $c[$x] = $look[2] }
-                # Elric's patches and dirt just become plain shirt (or pants).
-                't' { $c[$x] = if ($y -ge 22) { $look[4] } else { $look[2] } }
-                'd' { $c[$x] = if ($y -ge 22) { $look[4] } else { $look[2] } }
-                'r' { $c[$x] = $look[3] }
-                'O' { $c[$x] = $look[4] }
-                'o' { $c[$x] = $look[5] }
-            }
-        }
-        $out += -join $c
-    }
-    return [string[]]$out
-}
-
-for ($s = 0; $s -lt $studentLooks.Count; $s++) {
-    $n = $s + 1
-    $sprites["student$n"] = Recolor-Student $sprites['elric'] $studentLooks[$s]
-    $sprites["student${n}_back"] = Recolor-Student $sprites['elric_back'] $studentLooks[$s]
 }
 
 # --- Walking frames (front and back views) ------------------------------------

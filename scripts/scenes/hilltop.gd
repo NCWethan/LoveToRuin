@@ -28,7 +28,7 @@ const ERUPT_DISTANCE := 95.0
 
 ## Who arrives with the REVOLUTION Corps, in the order they stand around Hopkuna
 ## (going around the circle from Elric).
-const CORPS := ["Rooster", "Ronin", "Nat", "Agent", "Nassan", "Crayola", "Supreme", "BigJoe6", "Eggo", "NCWethan"]
+const CORPS := ["Rooster", "Ronin", "Nat", "Agent", "Nassan", "MuffinMage", "Crayola", "Supreme", "BigJoe6", "Sansworth", "Eggo", "NCWethan"]
 ## The circle they make around Hopkuna (an oval, since the ground is seen at an angle).
 const CORPS_RING := Vector2(100, 66)
 
@@ -38,6 +38,11 @@ const CORPS_RING := Vector2(100, 66)
 const SPRINKLERS := ["NW", "NE", "SW", "SE"]
 const FIELD_RECT := Rect2(160, 120, 480, 320)
 const CONTROL_BOX := Vector2(630, 474)
+## Two old tent stakes in the grass past the edge of the field, blackened by a fire,
+## years ago. (The night Relic died; see DESIGN.md.)
+const TENT_STAKES := Vector2(690, 232)
+## Where someone walks their dog, at the bottom-left of the park.
+const DOG_WALKER := Vector2(180, 470)
 
 var hop: Character
 var corps: Dictionary = {}
@@ -98,6 +103,7 @@ func _ready() -> void:
 	_place_people()
 	world.add_child(Hotspot.create(Vector2(110, 96), _read_map))
 	world.add_child(Hotspot.create(CONTROL_BOX, _control_box))
+	world.add_child(Hotspot.create(TENT_STAKES + Vector2(0, 8), _tent_stakes))
 	# The buried fragment: a red glow in the field, and eerie music when you get close.
 	if not flag("hp_erupted"):
 		_crater_marker = Node2D.new()
@@ -182,6 +188,13 @@ func _process(delta: float) -> void:
 
 
 func _draw_decor() -> void:
+	# The old tent stakes: two short, blackened spikes, half buried, a scrap of
+	# melted fabric caught on one.
+	for k in 2:
+		var stake := TENT_STAKES + Vector2(k * 14 - 7, 0)
+		_decor.draw_line(stake + Vector2(0, -6), stake + Vector2(1, 3), Color8(40, 34, 30), 2.0)
+		_decor.draw_circle(stake + Vector2(0, -6), 1.5, Color8(60, 52, 46))
+	_decor.draw_rect(Rect2(TENT_STAKES + Vector2(-9, -2), Vector2(5, 3)), Color8(80, 90, 60))
 	# Chapter 2: the hatch down to the base, in front of the shelter.
 	if _day():
 		_decor.draw_rect(Rect2(HATCH + Vector2(-14, -10), Vector2(28, 18)), Color8(85, 90, 98))
@@ -518,6 +531,7 @@ func _place_people() -> void:
 		star.on_interact = _use_save_point
 		add_storage_box(Vector2(322, 500))
 		add_character(star, Vector2(360, 500))
+		add_person("dogwalker", DOG_WALKER, SCENE, "talk_later")
 		return
 	hop = Cast.make("Hop")
 	add_character(hop, player.position + Vector2(-20, -4))
@@ -530,6 +544,10 @@ func _place_people() -> void:
 		hop.on_interact = _talk_to_hop_after
 		hop.add_to_group("interactable")
 		return
+
+	# Someone walking their dog, at the edge of the park (until the field erupts).
+	if not flag("hp_erupted"):
+		add_person("dogwalker", DOG_WALKER, SCENE)
 
 	if flag("hp_erupted") and not flag("has_fragment_3"):
 		# Coming back from the Hopkuna fight: he's still standing over the crater.
@@ -551,6 +569,8 @@ func _place_people() -> void:
 func _start() -> void:
 	await wait_for_fade()
 	if not is_inside_tree():
+		return
+	if await handle_person_return():
 		return
 	if Game.battle_result.get("id", "") == "hopkuna":
 		await run_cutscene(_corps_arrives)
@@ -737,8 +757,8 @@ func _reset_lines() -> Array:
 	return lines
 
 
-## Where a Corps member stands: eleven even spots on a ring around Hopkuna, one
-## for each of the ten of them and one for Elric (wherever Elric already is).
+## Where a Corps member stands: thirteen even spots on a ring around Hopkuna, one
+## for each of the twelve of them and one for Elric (wherever Elric already is).
 func _corps_spot(who: String) -> Vector2:
 	var elric_angle := (player.position - hop.position).angle()
 	var slot := CORPS.find(who) + 1
@@ -797,9 +817,11 @@ func _corps_arrives() -> void:
 		{"who": "Hopkuna", "text": "Oh, look. The little club showed up."},
 		{"who": "Rooster", "text": "Nice tattoos. Did you lose a fight with a Sharpie?", "mood": "smug"},
 		{"who": "Hopkuna", "text": "..."},
-		{"who": "Agent", "text": "Eleven of us. One of you. Do the math.", "mood": "smug"},
-		{"who": "Supreme", "text": "Ten. Elric can barely stand.", "mood": "shocked"},
-		{"who": "Agent", "text": "Eleven. Keep up."},
+		{"who": "MuffinMage", "text": "Let him go. I'm not asking twice.", "mood": "angry"},
+		{"who": "Sansworth", "text": "I don't have a car.\nBut if I did, I'd run you over with it.", "mood": "angry"},
+		{"who": "Agent", "text": "Thirteen of us. One of you. Do the math.", "mood": "smug"},
+		{"who": "Supreme", "text": "Twelve. Elric can barely stand.", "mood": "shocked"},
+		{"who": "Agent", "text": "Thirteen. Keep up."},
 		{"who": "NCWethan", "text": "LIGHTNING TIME!!!", "mood": "happy"},
 	])
 	# NCWethan's lightning arcs into Hopkuna...
@@ -826,6 +848,7 @@ func _corps_arrives() -> void:
 	await get_tree().create_timer(1.4).timeout
 	await Game.dialogue.say([
 		"* (A storm of sparks and flame slams into Hopkuna.)",
+		"* (For an instant, something behind his eyes flinches\n*  from the fire. It isn't Hopkuna.)",
 		"* (He barely moves. But he isn't smiling anymore.)",
 		{"who": "Supreme", "text": "Statistically, we can't beat him.\nBut we can make him want to leave.", "mood": "shocked"},
 		{"who": "Agent", "text": "He's stalling. He wants the fragments, not a fight.\nElric. Whatever happens, don't let go of them."},
@@ -1035,6 +1058,20 @@ func _leave_after_chapter() -> void:
 		await Game.change_scene(WESTVIEW_SCENE, Vector2(116 * 20, 42 * 20 + 10))
 		return
 	await Game.change_scene(DEMO_END_SCENE)
+
+
+## The tent stakes. In Chapter 1, Hop is right there, and doesn't want to talk about it.
+func _tent_stakes() -> void:
+	var lines: Array = [
+		"* (Two old tent stakes, half buried in the grass.)",
+		"* (They're blackened. Like they've been through a fire.)",
+	]
+	if not flag("hp_erupted") and not _day():
+		lines.append({"who": "Hop", "text": "...Leave those.", "mood": "sad"})
+		lines.append({"who": "Hop", "text": "Probably from somebody's campout.\nA long time ago.", "mood": "sad"})
+	else:
+		lines.append("* (Someone camped here, once.)")
+	await Game.dialogue.say(lines)
 
 
 func _go_down_hatch() -> void:

@@ -270,7 +270,8 @@ func add_character(character: Character, at: Vector2) -> Character:
 
 
 ## Adds someone Elric can talk to. `talk` runs when Elric presses Z next to them.
-func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
+## `label` is the name used for them in narration (if it isn't just `who`).
+func add_npc(who: String, at: Vector2, talk: Callable, label: String = "") -> Character:
 	var npc := Cast.make(who)
 	npc.add_to_group("npc")
 	npc.set_meta("home", at)
@@ -278,7 +279,7 @@ func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
 		npc.face(player.position - npc.position)
 		# On the Genocide path, people are afraid of Elric.
 		if Game.dread() >= 2:
-			var who_name := DialogueBox.display_name(who)
+			var who_name := label if label != "" else DialogueBox.display_name(who)
 			var line := "* (%s flinches when you get close.)"
 			if Game.on_genocide_route():
 				line = "* %s backs away from us.\n* Smart."
@@ -287,6 +288,60 @@ func add_npc(who: String, at: Vector2, talk: Callable) -> Character:
 			await Game.dialogue.say([line % who_name])
 		await talk.call()
 	return add_character(npc, at)
+
+
+# --- People around town (townsfolk.gd) -------------------------------------
+# Talking to any of them ends with a choice: leave, or CHALLENGE them. Anyone
+# defeated is gone for good; anyone spared remembers it.
+
+## Places a person (by their id in Townsfolk.PEOPLE), unless they're gone.
+## `talk_key` picks which conversation they have ("talk", "talk_later", ...).
+func add_person(id: String, at: Vector2, scene_path: String, talk_key: String = "talk") -> Character:
+	if Townsfolk.is_gone(id):
+		return null
+	var person := Townsfolk.profile(id)
+	var talk := func() -> void:
+		await talk_to_person(id, person.get(talk_key, person["talk"]), scene_path)
+	return add_npc(person["sprite"], at, talk, person["name"])
+
+
+## A conversation with someone: they say their lines, and Elric picks one of two
+## answers (and they react), or challenges them to a fight.
+func talk_to_person(id: String, talk: Dictionary, scene_path: String) -> void:
+	var person := Townsfolk.profile(id)
+	var lines: Array = []
+	for said in talk["lines"]:
+		lines.append(Townsfolk.line(person, said))
+	await Game.dialogue.say(lines)
+	var options: Array = talk["options"].duplicate()
+	options.append("Challenge")
+	var choice := await Game.dialogue.ask("* (What do you say?)", options)
+	if choice == options.size() - 1:
+		await challenge(id, scene_path)
+		return
+	await Game.dialogue.say([Townsfolk.line(person, talk["answers"][choice])])
+
+
+## Challenges someone (not in the Corps) to a fight.
+func challenge(id: String, scene_path: String) -> void:
+	var person := Townsfolk.profile(id)
+	await Game.dialogue.say([Townsfolk.line(person, person["challenged"])])
+	await Game.start_battle("person_" + id, scene_path, player.position)
+
+
+## Call at the start of an area: if we just came back from fighting someone,
+## they react if they were spared (if they weren't, there's nothing to say).
+## Returns true if we did.
+func handle_person_return() -> bool:
+	var fight_id := str(Game.battle_result.get("id", ""))
+	if not fight_id.begins_with("person_"):
+		return false
+	var spared: bool = not Game.battle_result.get("spared", []).is_empty()
+	Game.battle_result = {}
+	if spared:
+		var person := Townsfolk.profile(fight_id.trim_prefix("person_"))
+		await Game.dialogue.say([Townsfolk.line(person, person["spared"])])
+	return true
 
 
 # --- Genocide: the world changes with Elric -------------------------------------

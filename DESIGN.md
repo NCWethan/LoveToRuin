@@ -140,7 +140,7 @@ Pronouns: they/them
 - **Relic's lost collection**: optional items across the map (the bottle cap, the cracked compass, the chess piece...), each holding a stranger's old pain, with its story when you CHECK it. The curly-fry token is last, and it goes to Hop.
 - **A green core**: in a later chapter, Elric notices a faint green light deep inside each fragment, under the red.
 - Hop realizing why he never had nightmares again.
-- Small Chapter 1 seeds (not built yet): Hop flinching at Ronin's "FIRE TIME!!!"; old scorched tent stakes at the edge of Westview Field; a faded MISSING flyer at the mall with no name on it.
+- Small Chapter 1 seeds (built): Hop laughs "a second too late" when Ronin brings up fire at the mall, and on Westview Field something behind Hopkuna's eyes flinches from Ronin's fire ("It isn't Hopkuna."); old scorched tent stakes past the edge of Westview Field ("...Leave those." "Probably from somebody's campout. A long time ago."); a faded MISSING flyer on the mall wall by the empty store, no name and no photo left, just LAST SEEN NEAR WESTVIEW FIELD (Hop won't look at it).
 
 **Relic and Elric**
 - When Elric picks up the first fragment, Relic **wakes up and rides along** with them. It's why Elric always wandered without knowing why: the fragments were calling.
@@ -166,6 +166,18 @@ Pronouns: they/them
 - On the Genocide route, the empty shops and people backing away are narrated as "we" ("Nobody stops us. Nobody can.").
 
 **Continuity:** the Genocide route only starts at the end of Chapter 1 (Go with Hop), and right now it goes straight to the demo end, so its content (empty shops, "we", the RELIC mirror) is ready for when Genocide reaches those places in later chapters. During Chapter 1, killing only raises dread: Elric looks worse, people flinch and back away, shopkeepers are nervous, and the reflection goes wrong. Nobody leaves and Relic doesn't say their name yet.
+
+### Townsfolk
+
+Every place is full of people who aren't in the REVOLUTION Corps, and not all of them are human (`scripts/townsfolk.gd`). Each has their own sprite and their own expressions (art/portraits), and a conversation: a line, **two answers** to pick from (they react to each), and **Challenge**, which starts a real fight with them (with their own attacks, ACTs and CHECK). Defeat someone and they're **gone for good** (it counts toward dread like any other kill); spare them and they remember it. Nobody in the Corps can be challenged... yet. Random encounters with little creatures still happen inside Westview at night.
+
+| Where | Who |
+|---|---|
+| Mt. Carmel | **Coach Ramirez** (a rhino in a red tracksuit; loses his keys in a tree, daily) · the **Janitor** (a raccoon in coveralls; has heard every joke) · the **Skater** (a frog; almost landed a kickflip, spiritually) · the **Waiting Ghost** (a little ghost whose mom is "five minutes away"... still) |
+| PQ Mall | the **Mall Cop** (a walrus with a mustache, tusks and a badge; at night he guards the empty lot) · the **Busy Mom** (a kangaroo, groceries and one kid in her pouch) · the **Pigeon Man** (an old man covered in pigeons, all named Gerald, after his late wife Geraldine) · the **Teen on Phone** (a jelly blob in a hoodie, texting themself) · the **Jogger** (an ostrich who can't fly, so runs; afternoons) |
+| Westview (night) | the **Security Guard** (an owl who sleeps through the night shift: "I'm a MORNING owl") · the **Night Janitor** (a moth who mops while the bells ring by themselves) |
+| Westview (day) | eight kinds of students: a bunny in a letterman jacket, a robot, a sleepy sloth, a lizard in a hoodie, a mushroom kid, a hamster Wolverines fan, a bookworm (an actual worm, in glasses) and a cat in headphones |
+| Westview Field | the **Dog Walker** and **Biscuit** the corgi, who won't go near the middle of the field ("There was a fire out here, a few years back.") |
 
 ## 4. The cast
 
@@ -223,7 +235,7 @@ Pronouns: he/him · Co-founder of Revolution
 
 ### MuffinMage
 
-Pronouns: he/him
+Pronouns: he/him · Member of the REVOLUTION Corps
 
 **Personality**
 - Neutral.
@@ -275,7 +287,7 @@ Pronouns: he/him
 
 ### Sansworth
 
-Pronouns: he/him
+Pronouns: he/him · Member of the REVOLUTION Corps
 
 **Personality**
 - A complete **idiot**.
@@ -395,7 +407,7 @@ Pronouns: he/him
 
 **Where he shows up**
 - **PQ Mall:** leaning by the FOR LEASE store (he wrote "REVOLUTION HQ" in the dust; the question marks were Eggo). He stays through the afternoon and evening, giving blunt advice about Westview.
-- **Westview Field:** arrives with the Corps against Hopkuna ("Eleven of us. One of you. Do the math."), and reacts to Elric's route choice.
+- **Westview Field:** arrives with the Corps against Hopkuna ("Thirteen of us. One of you. Do the math."), and reacts to Elric's route choice.
 
 **Appearance** (based on his Roblox avatar)
 - Yellow skin and a friendly smile.
@@ -712,7 +724,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - **Hopkuna (survive, don't win)** — Elric fights **alone**. Hopkuna can't be spared or meaningfully hurt ("It barely leaves a mark."). Survive **5 enemy turns**. Attacks (all aimed at the SOUL, with warnings, 6 damage, faster every turn): **Cleave** (glowing slashes through your position), **Slash Grid** (three slashes crossing where you stand, one after another), **Red Arrows** (volleys of three that curve toward you), **Closing Ring** (shards circle you and collapse inward; one gap), **Flaming Arrow** (a big burning arrow that chases you). A red aura pulses around the box during his turns. ACTs: Talk to Hop, Stand Firm. Music: "Hopkuna."
 - **Hopkuna has DETERMINATION too, from the very first line.** The faceless voice at the start of the game knows if you RESET. If you reset before ever reaching him, it stops mid-sentence: "I HAVE seen you. Recently. ...How strange." If you reset after meeting him, it knows exactly what you did ("Back at the very beginning, are we? ...They've all forgotten you already. Not me."), counts your resets, and remembers your answer to "How will you do it?" from last time ("Same answer as last time. Of course it is." / "That's not what you said last time. Changing your story already?").
 - **Hopkuna has DETERMINATION too.** Resetting (erasing the save from the title) is remembered outside the save file. After a reset, Hopkuna knows: if you'd already met him, he calls it out ("You RESET. I felt it... Everyone except me."), counts how many times, and adds "Even if you go back and do this all again" when he leaves. If you reset before ever reaching him, he only feels that this has happened before. Without a reset, none of this appears.
-- **The Corps arrives** — Big Joe, Eggo, Nassan, Nat, N.C. Wethan, Ronin, Supreme, Crayola, Rooster and Agent form an even circle around Hopkuna, with a spot for Elric, ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
+- **The Corps arrives** — Big Joe, Eggo, Nassan, Nat, N.C. Wethan, Ronin, Supreme, Crayola, Rooster, Agent, MuffinMage and Sansworth form an even circle around Hopkuna, with a spot for Elric, ("LIGHTNING TIME!!!" / "FIRE TIME!!!"). Elric speaks to Hop ("Come back."). Hopkuna lets go — *"Three fragments, little wanderer. Nine to go. I can wait."* — and Hop collapses, then explains: he only ever let Hopkuna out when there was no other choice. Elric picks up **fragment 3**.
 - **The route choice** (with an "Are you sure?" confirm):
 
 | Choice | What happens | Locks |
@@ -728,8 +740,8 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] **The bunker** (under the shelter at Westview Field), with its own music ("bunker": warm and steady, like the hum of the generators). Dim concrete, pipes, caged lamps.
   - **Main hall:** the ladder down from the hatch, a REVOLUTION banner, the map table (twelve red circles, three crossed out), security monitors, a couch with a checkers game in progress, bunk beds (on Pacifist, one has a sign: "ELRIC", with a backwards E), a kitchen corner ("EGGO'S EGGS. DO NOT TOUCH."), the Corps' emblem on the floor, a SAVE point, a storage box, and Gerald the training dummy to spar with.
   - **Corridor:** a steel door for each member with their name on it in their color. Walk up into a door (or press ENTER at it) to go in.
-  - **Ten rooms**, one per member, each decorated like them, with them inside to talk to:
-    Big Joe's Knight's Quarters (armor, crossed lances, JUSTICE banner) · Eggo's Nest (egg beanbag, fairy lights, Toast the bunny, an EGGS ONLY fridge) · Nassan's Planning Room (a wall of notes and red string) · Nat's Library (the book with the torn last page) · N.C. Wethan's LAB (a sparking tesla coil, KING ME!!! poster, checkers) · Ronin's Studio / Observatory (smoking amp, scorch marks, telescope, the fire extinguisher Nassan made him get) · Supreme's Data Center (seven monitors of graphs, all going up) · Crayola's Art & Cards (crayon scribbles, an easel, a duck pool float) · Rooster's Royal Chamber (half white, half black, a throne and a mirror) · Agent's Strategy room (chalkboard math, every dart in the bullseye, chess).
+  - **Twelve rooms**, one per member, each decorated like them, with them inside to talk to:
+    MuffinMage's Kitchen (a grill, a fish tank whose fish is named Burger, a SALMON BURGER FRIDAY poster) · Sansworth's Garage (a RESERVED parking spot with no car in it, 31 keys that open nothing, a steering wheel on the wall, a race car bed) · Big Joe's Knight's Quarters (armor, crossed lances, JUSTICE banner) · Eggo's Nest (egg beanbag, fairy lights, Toast the bunny, an EGGS ONLY fridge) · Nassan's Planning Room (a wall of notes and red string) · Nat's Library (the book with the torn last page) · N.C. Wethan's LAB (a sparking tesla coil, KING ME!!! poster, checkers) · Ronin's Studio / Observatory (smoking amp, scorch marks, telescope, the fire extinguisher Nassan made him get) · Supreme's Data Center (seven monitors of graphs, all going up) · Crayola's Art & Cards (crayon scribbles, an easel, a duck pool float) · Rooster's Royal Chamber (half white, half black, a throne and a mirror) · Agent's Strategy room (chalkboard math, every dart in the bullseye, chess).
   - Arriving: on Pacifist, Big Joe and Nassan welcome Elric as a recruit; on Neutral, the offer stood ("Fine. But you're on dish duty."), Hop has been living there, and everyone has a word about Elric coming back.
 
 - **Getting to the base by day:** the base is under the shelter at Westview Field (the park). From the base, the ladder goes up to a hatch in front of the shelter; from the park, the road south leads back into Westview through the gym's emergency exit. In Chapter 2 Westview is just a school again: daytime, school music, no random fights, the spooky things are ordinary (the locker isn't humming; "3, 1, 2" is still on the chalkboard), and it's full of students (eight new student sprites) who are still talking about last night. Each one says something and Elric picks one of two answers.
@@ -744,7 +756,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
   - **N.C. Wethan (lightning):** STRAVANT'S LIGHTNING. Only when whoever calls him is below half HP. He floats up with glowing blue rune ribbons spiraling around him, then fires a huge beam at an enemy that swells and throbs the whole time, its edges crackling, bright bands racing along it, with a pulsing burst where it hits: real damage, and the enemy is STRAVANT for 3 turns (its attacks move at 60% speed and come less often). 1 charge per battle.
   - **Ronin (music):** POWER RIFF. He runs in, plugs into his amp (a little black combo with a purple cable), and plays his POWER RIFF (an original 8-bit riff written note by note in tools/make_riff.gd: galloping E-minor chugs and power chords on two square waves with a triangle bass and noise drums, a solo that races up the pentatonic, one big held note with vibrato, and a final chord left ringing; about 12 seconds) on his guitar (based on his real one: a black superstrat with a quilted top, white binding, shark-fin inlays and a pointy headstock). The same notes drive his animation (scripts/ronin_riff.gd, written by the same tool), so they can't drift apart: his picking hand strikes on every note and blurs through the solo; his fretting hand stays low on the neck for the chugs and climbs it during the solo; on the held note and the last chord he raises the neck, leans back, lifts his picking hand off and shakes the note with vibrato. While he plays he's in the zone: eyes shut, grinning, bobbing on every note and swaying to it. The battle music steps aside while he plays, and music notes fly out of the guitar and circle the team. Only when the riff is over: everyone gets 5 purple overheal (it stacks with Eggo's blue: the bar shows blue, then purple, and purple is used up first, up to 15) and AMPED for 2 turns (the SOUL moves 30% faster). The usual 3-turn wait; no charge limit.
   - Everyone else: a placeholder hit (never knocks an enemy out) until their abilities are decided.
-- **The team:** Elric always goes, plus one partner, in battle and following around town. In Chapter 1 it's Hop. Once the Corps' base exists, TEAM in the bag picks the partner from Hop and all ten Corps members, but only at the base (anywhere else it says so). The partner follows Elric everywhere, fights with their own stats, and isn't in their room while they're out. When Hop isn't the partner, he hangs out on the couch in the main hall.
+- **The team:** Elric always goes, plus one partner, in battle and following around town. In Chapter 1 it's Hop. Once the Corps' base exists, TEAM in the bag picks the partner from Hop and all twelve Corps members, but only at the base (anywhere else it says so). The partner follows Elric everywhere, fights with their own stats, and isn't in their room while they're out. When Hop isn't the partner, he hangs out on the couch in the main hall.
 - **Reduce flashing** (Settings): keeps hit-stop and shaking but skips the full-screen impact flash, makes the Black Flash one steady dark frame, holds the jumpscare without strobing cuts or glitch bars, and softens the field's flashes.
 
 ### Throughout

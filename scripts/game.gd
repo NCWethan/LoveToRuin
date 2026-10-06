@@ -266,7 +266,8 @@ const BOND_THRESHOLDS := [0, 20, 50, 100, 170, 260, 380, 530, 720, 950]
 const BASE_STATS := {"Elric": [30, 6], "Hop": [35, 7],
 	# REVOLUTION Corps members, when they come along instead of Hop (see partner()).
 	"BigJoe6": [44, 5], "Eggo": [32, 6], "Nassan": [30, 5], "Nat": [28, 5], "NCWethan": [34, 8],
-	"Ronin": [30, 7], "Supreme": [28, 5], "Crayola": [26, 4], "Rooster": [30, 6], "Agent": [28, 6]}
+	"Ronin": [30, 7], "Supreme": [28, 5], "Crayola": [26, 4], "Rooster": [30, 6], "Agent": [28, 6],
+	"MuffinMage": [36, 6], "Sansworth": [32, 5]}
 ## What each level adds, for every party member.
 const HP_PER_LV := 3
 const ATTACK_PER_LV := 2
@@ -601,6 +602,13 @@ func finish_battle(result: Dictionary) -> void:
 	# (Sparring with the training dummy doesn't count.)
 	if result.get("id", "") != "training":
 		flags["kills"] = int(flags.get("kills", 0)) + result.get("defeated", []).size()
+	# Someone you challenged (townsfolk.gd): gone for good, or they remember you spared them.
+	var fight_id := str(result.get("id", ""))
+	if fight_id.begins_with("person_") and not result.get("fled", false):
+		if not result.get("defeated", []).is_empty():
+			flags["killed_" + fight_id] = true
+		elif not result.get("spared", []).is_empty():
+			flags["spared_" + fight_id] = true
 	bond += int(result.get("bond", 0))
 	exp_points += int(result.get("exp", 0))
 	money += int(result.get("money", 0))

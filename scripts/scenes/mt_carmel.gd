@@ -162,6 +162,12 @@ func _place_characters() -> void:
 		fragment.on_interact = _inspect_fragment
 		world.add_child(fragment)
 
+	# People around campus (townsfolk.gd). Anyone can be challenged.
+	add_person("janitor", Vector2(130, 236), SCENE)
+	add_person("coach", Vector2(540, 300), SCENE, "talk_later" if _flag("has_gate_key") else "talk")
+	add_person("skater", Vector2(150, 330), SCENE)
+	add_person("waiting", Vector2(640, 472), SCENE)
+
 	# A SAVE point in the courtyard.
 	var star := make_save_star()
 	star.position = SAVE_SPOT
@@ -281,6 +287,8 @@ func _start_story() -> void:
 			return
 		await get_tree().process_frame
 
+	if await handle_person_return():
+		return
 	if _flag("tutorial_started") and not _flag("tutorial_done"):
 		await _after_tutorial_battle()
 	elif not _flag("arrived"):

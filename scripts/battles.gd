@@ -4,6 +4,9 @@ extends RefCounted
 
 
 static func create(id: String) -> BattleData:
+	# People around town you challenged (see townsfolk.gd).
+	if id.begins_with("person_"):
+		return Townsfolk.create_battle(id.trim_prefix("person_"))
 	match id:
 		"hopkuna":
 			return HilltopBattles.create(id)

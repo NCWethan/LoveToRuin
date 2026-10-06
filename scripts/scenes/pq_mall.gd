@@ -61,6 +61,15 @@ const SPOTS := {
 	},
 }
 
+## Shoppers and regulars at each time of day (townsfolk.gd): where they stand, and
+## where they walk to and back (if they do).
+const SHOPPERS := {
+	"day": {"mallcop": [Vector2(790, 470)], "mom": [Vector2(330, 250)], "pigeons": [Vector2(110, 330)], "teen": [Vector2(690, 330)]},
+	"afternoon": {"mallcop": [Vector2(790, 470)], "mom": [Vector2(330, 250)], "pigeons": [Vector2(110, 330)], "teen": [Vector2(690, 330)], "jogger": [Vector2(220, 470), Vector2(480, 470)]},
+	"evening": {"mallcop": [Vector2(790, 470)], "pigeons": [Vector2(110, 330)], "teen": [Vector2(690, 330)]},
+	"night": {"mallcop": [Vector2(900, 470)]},
+}
+
 ## People who wander back and forth at a time of day: [from, to].
 const WANDERERS := {
 	"afternoon": {"Rooster": [Vector2(300, 300), Vector2(760, 300)], "Sansworth": [Vector2(200, 420), Vector2(820, 420)]},
@@ -175,6 +184,11 @@ func _add_signs() -> void:
 	]
 	var closed := _stores_closed()
 	signs.draw.connect(func() -> void:
+		# The faded MISSING flyer: bleached paper, a blank square where the photo was.
+		signs.draw_rect(Rect2(681, 86, 18, 24), Color8(232, 228, 214))
+		signs.draw_rect(Rect2(685, 89, 10, 3), Color8(150, 140, 140))
+		signs.draw_rect(Rect2(684, 94, 12, 9), Color8(244, 242, 236))
+		signs.draw_rect(Rect2(684, 105, 12, 1), Color8(185, 180, 175))
 		for label in labels:
 			var width := font.get_string_size(label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2]).x
 			signs.draw_string(font, label[1] - Vector2(width / 2, 0), label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2], label[3])
@@ -250,6 +264,13 @@ func _place_people() -> void:
 		if wander.has(who):
 			npc.patrol(wander[who][0], wander[who][1], 45.0)
 
+	# Shoppers and regulars (townsfolk.gd). Anyone can be challenged.
+	var shoppers: Dictionary = SHOPPERS[time]
+	for id in shoppers:
+		var person := add_person(id, shoppers[id][0], SCENE, "talk_night" if time == "night" else "talk")
+		if person and shoppers[id].size() > 1:
+			person.patrol(shoppers[id][0], shoppers[id][1], 40.0)
+
 	var star := make_save_star()
 	star.glow = true
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
@@ -259,6 +280,8 @@ func _place_people() -> void:
 
 
 func _place_hotspots() -> void:
+	# A faded MISSING flyer on the wall by the empty store.
+	world.add_child(Hotspot.create(Vector2(690, 138), _missing_flyer))
 	world.add_child(Hotspot.create(Vector2(180, 138), _shop_vons))
 	world.add_child(Hotspot.create(Vector2(430, 138), _shop_cards))
 	world.add_child(Hotspot.create(Vector2(580, 138), _shop_knotty))
@@ -270,6 +293,8 @@ func _place_hotspots() -> void:
 
 func _start() -> void:
 	await wait_for_fade()
+	if await handle_person_return():
+		return
 	if not flag("mall_arrived"):
 		await run_cutscene(_arrival)
 	elif not flag("seen_" + _time_of_day()):
@@ -383,6 +408,17 @@ func _shop_cards() -> void:
 		])
 
 
+## A flyer, years old. Nobody remembers who it was for. Hop does.
+func _missing_flyer() -> void:
+	await Game.dialogue.say([
+		"* (A flyer taped to the wall. It's old.\n*  The sun has bleached it almost white.)",
+		"* (MISSING. The photo has faded to nothing.\n*  There's no name.)",
+		"* (Just: LAST SEEN NEAR WESTVIEW FIELD.)",
+		"* (Hop doesn't look at it.)",
+		{"who": "Hop", "text": "...C'mon. Let's keep moving.", "mood": "sad"},
+	])
+
+
 func _shop_lease() -> void:
 	await Game.dialogue.say(["* (FOR LEASE. The windows are dusty.\n*  Somebody wrote \"REVOLUTION HQ??\" in the dust.)"])
 
@@ -485,6 +521,7 @@ func _talk_ronin() -> void:
 		{"who": "Ronin", "text": "Also, I'm a mage. And I play guitar.\nSometimes at the same time. Mostly, fire happens."},
 		{"who": "Hop", "text": "The mall banned his guitar after the fire alarm thing."},
 		{"who": "Ronin", "text": "ONE TIME!!", "mood": "angry"},
+		"* (Hop laughs. A second too late.)",
 	], [
 		[{"who": "Ronin", "text": "Rematch. Rematch. REMATCH.", "mood": "angry"}],
 		[{"who": "Ronin", "text": "My staff is NOT a guitar stand.\n...It is sometimes."}],
