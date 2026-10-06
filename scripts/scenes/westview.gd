@@ -68,7 +68,7 @@ var _glow_time: float = 0.0
 
 
 func _ready() -> void:
-	_day = flag("base_arrived")
+	_day = Game.daytime()
 	rooms.assign([_px(OUTSIDE), _px(HALLWAY), _px(CLASSROOM), _px(GYM)])
 	# Random fights in the hallway and the classroom (see westview_battles.gd for how
 	# often each one shows up). There are no enemies wandering around: just these.
@@ -772,10 +772,12 @@ const STUDENTS := [
 
 
 func _place_day_people() -> void:
-	partner = Cast.make(Game.partner())
-	add_character(partner, player.position + Vector2(-20, -4))
-	partner.follow = player
-	hop = partner
+	# (Going their own way, Elric comes alone until they've been to the base.)
+	if not Game.walking_alone():
+		partner = Cast.make(Game.partner())
+		add_character(partner, player.position + Vector2(-20, -4))
+		partner.follow = player
+		hop = partner
 	add_storage_box(Vector2(9 * T + 36, 12 * T + 10))
 	add_storage_box(Vector2(86 * T + 36, 45 * T))
 	_add_save_point(Vector2(9 * T, 12 * T + 10), [

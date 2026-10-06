@@ -11,6 +11,9 @@ const CORPS_BASE_SCENE := "res://scenes/corps_base.tscn"
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
+	# Going with Hop: straight to the bolted hatch (no chapter screen).
+	if Game.flags.get("chapter1_done", false) and Game.flags.get("route", "") == "genocide":
+		_sealed = true
 	_font = ThemeDB.fallback_font
 	Game.play_music("title")
 
@@ -54,7 +57,7 @@ func _draw() -> void:
 		_draw_chapter_complete(alpha)
 		return
 	_centered("LOVE TO RUIN", 140, 44, Color(1, 1, 1, alpha))
-	_centered("Chapter 1  -  to be continued", 190, 18, Color(0.8, 0.8, 0.8, alpha))
+	_centered("To be continued", 190, 18, Color(0.8, 0.8, 0.8, alpha))
 	var next := "Next stop: the PQ Mall."
 	if Game.flags.get("westview_done", false):
 		next = "2 of 12 fragments found.   Next stop: Westview Field."
@@ -100,7 +103,7 @@ func _draw_sealed(alpha: float) -> void:
 	# Relic (green), saying "we" for the first time.
 	_centered("...And so are we.", 310, 18, Color(0.45, 0.95, 0.55, clampf((_time - 1.5) / 1.0, 0.0, 1.0)))
 	if _time > 2.5:
-		_centered("Chapter 2 is still being written.", 370, 14, Color(0.6, 0.6, 0.6))
+		_centered("What comes next is still being written.", 370, 14, Color(0.6, 0.6, 0.6))
 		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 

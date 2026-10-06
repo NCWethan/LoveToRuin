@@ -19,6 +19,10 @@ const WESTVIEW_SCENE := "res://scenes/westview.tscn"
 const HATCH := Vector2(7 * 20 + 10, 5 * 20 + 10)
 const T := Room.TILE
 
+## Where Elric ends up the morning after going their own way (by the benches).
+const MORNING_SPOT := Vector2(420, 520)
+## The foot of the ladder down in the Corps' base.
+const BASE_LADDER := Vector2(20 * 20, 5 * 20)
 ## Where Elric arrives (the path at the bottom of the park).
 const ENTRY := Vector2(400, 548)
 ## The middle of the big field, where fragment 3 is buried.
@@ -515,15 +519,18 @@ func _control_box() -> void:
 
 ## Chapter 2: daytime at the park, after the Corps' base.
 func _day() -> bool:
-	return flag("base_arrived")
+	return Game.daytime()
 
 
 func _place_people() -> void:
 	if _day():
 		# Whoever's coming along follows Elric. (The Corps is down in the base.)
+		# Going their own way, Elric is alone until they go down there.
 		hop = Cast.make(Game.partner())
 		add_character(hop, player.position + Vector2(-20, -4))
 		hop.follow = player
+		if Game.walking_alone():
+			hop.queue_free()
 		world.add_child(Hotspot.create(HATCH, _go_down_hatch))
 		var star := make_save_star()
 		star.glow = true
@@ -576,6 +583,8 @@ func _start() -> void:
 		await run_cutscene(_corps_arrives)
 	elif not flag("hp_arrived"):
 		await run_cutscene(_arrival)
+	elif flag("morning_after") and not flag("seen_morning"):
+		await run_cutscene(_morning)
 
 
 func _physics_process(_delta: float) -> void:
@@ -918,24 +927,34 @@ func _route_choice() -> void:
 
 	var route: String = routes[picked]
 	Game.flags["route"] = route
+	# (chapter1_done: the choice has been made. There are no chapters; the story
+	# just goes on, and where it goes next depends on the choice.)
 	match route:
 		"pacifist":
 			# Joining the Corps closes off the other two paths.
 			Game.flags["genocide_locked"] = true
 			Game.flags["neutral_locked"] = true
 			await _ending_pacifist()
+			Game.flags["chapter1_done"] = true
+			# Straight down the hatch into the Corps' base.
+			Game.save_game(CORPS_BASE_SCENE, BASE_LADDER)
+			await Game.change_scene(CORPS_BASE_SCENE, BASE_LADDER)
 		"neutral":
 			# The Corps' offer stays open; going with Hop does not.
 			Game.flags["genocide_locked"] = true
 			await _ending_neutral()
+			Game.flags["chapter1_done"] = true
+			# Elric wanders the city all night, and ends up back here by morning.
+			Game.flags["morning_after"] = true
+			Game.save_game(SCENE, MORNING_SPOT)
+			await Game.change_scene(SCENE, MORNING_SPOT)
 		"genocide":
 			Game.flags["pacifist_locked"] = true
 			Game.flags["neutral_locked"] = true
 			await _ending_genocide()
-
-	Game.flags["chapter1_done"] = true
-	Game.save_game(SCENE, player.position)
-	await Game.change_scene(DEMO_END_SCENE)
+			Game.flags["chapter1_done"] = true
+			Game.save_game(SCENE, player.position)
+			await Game.change_scene(DEMO_END_SCENE)
 
 
 func _ending_pacifist() -> void:
@@ -956,6 +975,8 @@ func _ending_pacifist() -> void:
 		{"who": "Nat", "text": "If the fragments are destroyed, Hopkuna can never\nfully wake up. That's our job now."},
 		{"who": "Agent", "text": "Good. You're smarter than you look.\n...That's a compliment. Take it.", "mood": "smug"},
 		{"who": "Nassan", "text": "Nine fragments left. Let's find them before he does."},
+		"* (Big Joe hauls open a hatch hidden under\n*  the picnic shelter.)",
+		"* (One by one, the Corps climbs down.\n*  Hop waits for you at the top of the ladder.)",
 	])
 
 
@@ -985,6 +1006,18 @@ func _group_hug() -> void:
 	for i in people.size():
 		release.tween_property(people[i], "position", home[i], 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await release.finished
+
+
+## Going their own way: Elric wanders all night, and ends up back here anyway.
+func _morning() -> void:
+	Game.flags["seen_morning"] = true
+	await Game.dialogue.say([
+		"* (You wander the city all night.)",
+		"* (Down streets you don't know.\n*  Past shops with their lights off.)",
+		"* (By morning, your feet bring you back to\n*  Westview Field anyway.)",
+		"* (The Corps' hatch is right there, by the shelter.\n*  Nobody's watching it.)",
+	])
+	Game.set_objective("Go anywhere. (The Corps' hatch is by the shelter.)")
 
 
 func _ending_neutral() -> void:

@@ -558,16 +558,18 @@ So Neutral is the only choice that can still change, and only toward Pacifist.
 
 ## 7. Size
 
-- **4 chapters**, with **3 fragments each** (12 total).
+- **One big game, no chapters.** The story just goes on, and where it goes depends on what you choose. 12 fragments in all.
+- (Older notes that say "Chapter 1" mean the opening, up to the choice on Westview Field; "Chapter 2" means after it. The internal flag `chapter1_done` just means the choice has been made.)
 
-| Chapter | Fragments | Area |
+| Part | Fragments | Area |
 |---|---|---|
-| **1** | 3 (fragments 1–3) | Westview High School ↔ Mt. Carmel High School and everything in between |
-| **2** | 3 (fragments 4–6) | *to be decided* |
-| **3** | 3 (fragments 7–9) | *to be decided* |
-| **4** | 3 (fragments 10–12) | *to be decided* |
+| **The opening** | 3 (fragments 1–3) | Mt. Carmel High School, the PQ Mall, Westview High School, Westview Field |
+| **After the choice** | 9 (fragments 4–12) | *to be decided* |
 
-- Each chapter expands the world, like Deltarune.
+**Right after the choice on Westview Field:**
+- **Join the REVOLUTION Corps:** the Corps opens a hatch hidden under the picnic shelter, and Elric goes straight down into their base.
+- **Go my own way:** the Corps goes down; Hop stays with them. Elric wanders the city all night, and by morning their feet bring them back to Westview Field anyway (by day; the hatch is right there). Elric travels **alone** (and fights alone) until they go down to the base.
+- **Go with Hop:** see the Genocide route (being built).
 
 ## 8. Build order — Chapter 1
 

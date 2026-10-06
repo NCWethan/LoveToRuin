@@ -1,7 +1,7 @@
 extends Area
 ## The REVOLUTION Corps' base: an old bunker under the shelter at Westview Field.
-## Where Chapter 2 starts (CONTINUE after Chapter 1's ending, on the Pacifist and
-## Neutral routes).
+## Joining the Corps on Westview Field leads straight down here; going their own
+## way, Elric can come down whenever they like.
 ##
 ## Three parts, each its own rectangle on one big tile grid:
 ##   Main hall   the ladder down from the hatch, a map table with the twelve
@@ -75,7 +75,6 @@ func _ready() -> void:
 	setup_area(LADDER_FOOT)
 	Game.play_music("bunker")
 	_font = ThemeDB.fallback_font
-	Game.flags["chapter"] = 2
 
 	# Underground: dim, with warm caged lamps along the walls.
 	var dim := CanvasModulate.new()

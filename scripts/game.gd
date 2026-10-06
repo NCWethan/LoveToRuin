@@ -336,6 +336,21 @@ func partner() -> String:
 	return flags.get("partner", "Hop")
 
 
+## After the Westview Field choice, the city is seen by day: once Elric has been
+## to the Corps' base, or (going their own way) after wandering till morning.
+## (Not on the Genocide route.)
+func daytime() -> bool:
+	if not flags.get("chapter1_done", false) or flags.get("route", "") == "genocide":
+		return false
+	return flags.get("base_arrived", false) or flags.get("morning_after", false)
+
+
+## Going their own way, Elric travels alone (Hop stayed with the Corps) until they
+## go down to the Corps' base.
+func walking_alone() -> bool:
+	return flags.get("route", "") == "neutral" and not flags.get("base_arrived", false)
+
+
 ## Everyone who could come along right now.
 func team_choices() -> Array:
 	var choices: Array = ["Hop"]

@@ -193,6 +193,10 @@ func _ready() -> void:
 			if member.name in _data.party_only:
 				fighting.append(member)
 		party = fighting
+	# Traveling alone (going their own way, before the base): just Elric.
+	if Game.walking_alone() and party.size() > 1:
+		var just_elric: Array[PartyMember] = [party[0]]
+		party = just_elric
 	enemies = _data.enemies
 	# Everyone here goes in the Encyclopedia.
 	for enemy in enemies:
