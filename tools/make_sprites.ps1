@@ -2148,6 +2148,179 @@ $sprites['student8'] = @(
 )
 
 
+
+
+# --- Wild creatures (wild_battles.gd) ------------------------------------------------
+# The little things you can run into anywhere around town. Each is drawn from
+# the bottom up (art rows below are padded to 24 wide and 32 tall, standing on
+# the bottom).
+$wildArt = [ordered]@{
+    'wild_cart' = @(
+        "..GG",
+        "...GG",
+        "...GGGGGGGGGGGGGGGGGG",
+        "...GgGgGgGgGgGgGgGgGG",
+        "...GGGGGGGGGGGGGGGGGG",
+        "....GgGWWKgGgWWKgGgG",
+        "....GGGWWKGGGWWKGGGG",
+        "....GgGgGgKKKKKgGgGG",
+        ".....GGGGGGGGGGGGGG",
+        "......G...........G",
+        "......GGGGGGGGGGGGG",
+        ".....DKD.........DKD",
+        ".....DDD.........DDD"
+    )
+    'wild_receipt' = @(
+        "..........WWWW",
+        ".........WaaaaW",
+        "........WWWWWWWW",
+        "........WaaaaaaW",
+        "........WWKWWKWW",
+        "........WWWWWWWW",
+        "........WaKKKKaW",
+        "........WWWWWWWW",
+        "........WaaaaaaW",
+        "........WWWWWWWW",
+        "........WaaaaaaWW",
+        "........WWWWWWWWWW",
+        ".........WWWWWWWWWW",
+        "..........WaaaaWWW"
+    )
+    'wild_balloon' = @(
+        "..........ffff",
+        "........ffRRRRff",
+        ".......fRRRRRRRRf",
+        ".......RRWRRRRRRR",
+        "......RRWRKRRKRRRR",
+        "......RRRRKRRKRRRR",
+        "......RRRRRRRRRRRR",
+        ".......RRRRKKRRRR",
+        ".......RRRKRRKRRR",
+        "........RRRRRRRR",
+        "..........RRRR",
+        "...........RR",
+        "...........W",
+        "............W",
+        "...........W",
+        "............W",
+        "...........W"
+    )
+    'wild_goose' = @(
+        "........WWWW",
+        ".......WWKWW}}",
+        ".......WWWWW}}}",
+        "........WWWW",
+        "........WWW",
+        "........WWW",
+        "........WWWW",
+        ".......WWWWWWWWWWW",
+        "......WWWWWWWWWWWWWW",
+        "......WWWWlllWWWWWWWW",
+        "......WWWWWlllWWWWWW",
+        ".......WWWWWWWWWWWW",
+        "..........}....}",
+        ".........}}...}}"
+    )
+    'wild_sprinkler' = @(
+        "......i....i....i",
+        ".......i...i...i",
+        "........i..i..i",
+        ".........i.i.i",
+        "..........DDDD",
+        ".........D1111D",
+        ".........DKDDKD",
+        ".........D1111D",
+        ".........DDKKDD",
+        "..........D11D",
+        "..........D11D",
+        "........11D11D11",
+        ".......1111111111"
+    )
+    'wild_gnome' = @(
+        "...........R",
+        "..........RRR",
+        ".........RRRRR",
+        "........RRRRRRR",
+        ".......RRRRRRRRR",
+        "......QQQQQQQQQQQ",
+        "......QQKQQQQKQQQ",
+        "......QQQQQpQQQQQ",
+        ".......WWWWWWWWW",
+        "......WWWWWWWWWWW",
+        "......SWWWWWWWWWS",
+        "......SSSWWWWWSSS",
+        ".......SSSSSSSSS",
+        ".......88.....88"
+    )
+    'wild_flamingo' = @(
+        "..........ppp",
+        ".........pKpp",
+        ".........ppp}K",
+        "..........p",
+        "..........p",
+        "...........p",
+        "...........pp",
+        ".......ppppppppp",
+        "......ppppppppppp",
+        ".......ppppppppp",
+        "..........}",
+        "..........}",
+        "..........}}",
+        "..........}",
+        "..........}",
+        ".........}}"
+    )
+    'wild_seagull' = @(
+        ".......WWW",
+        "......WWKW}}",
+        "......WWWW}y",
+        ".......WWW",
+        ".....GGGWWWWW",
+        "....GGGGGWWWWWW",
+        "...GGGGGGWWWWWWW",
+        ".........WWWWWWW",
+        "..........WWWWWW",
+        "...........}..}",
+        "...........}..}"
+    )
+    'wild_squirrel' = @(
+        "...............666",
+        "..............66666",
+        ".............6666666",
+        "......66.....6666666",
+        ".....6666....666666",
+        ".....6K66....66666",
+        "....666666..66666",
+        ".....9666666666",
+        "......99666666",
+        "......999666",
+        "......99966",
+        ".......8..8"
+    )
+    'wild_bag' = @(
+        "........WW....WW",
+        ".......W..W..W..W",
+        ".......W..W..W..W",
+        "......WWWWWWWWWWWW",
+        "......WWWWWWWWWWWW",
+        ".....WWWKWWWWWWKWWW",
+        ".....WWWWWWWWWWWWWW",
+        ".....WWWWWKKKKWWWWW",
+        "......WWWWWWWWWWWW",
+        ".......WWWWWWWWWW",
+        "........WWWWWWWW"
+    )
+}
+foreach ($name in $wildArt.Keys) {
+    $art = $wildArt[$name]
+    $rows = @()
+    for ($i = 0; $i -lt (31 - $art.Count); $i++) { $rows += ('.' * 24) }
+    foreach ($line in $art) { $rows += $line.PadRight(24, '.') }
+    $rows += ('.' * 24)
+    $sprites[$name] = $rows
+}
+
+
 # The glowbug: a tiny, lost, glowing bug. (The first thing Elric kills, going with Hop.)
 $sprites['glowbug'] = @(
     "........................",

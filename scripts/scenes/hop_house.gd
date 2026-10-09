@@ -59,6 +59,8 @@ const WESTVIEW_FROM_HERE := Vector2(32 * T - 30, 370)
 func _ready() -> void:
 	rooms.assign([_px(STREET), _px(HOUSE)])
 	setup_area(ENTRY)
+	if _visiting() or flag("glowbug_done"):
+		add_wild_encounters(SCENE, _px(STREET))
 	_font = ThemeDB.fallback_font
 	# Night on the street; warm lamplight inside; plain daylight in the morning.
 	if _visiting():
@@ -298,6 +300,7 @@ func _start() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_blocked():
 		return
+	check_random_encounter(SCENE)
 	if _visiting():
 		if _px(STREET).has_point(player.position) and player.position.x < 10.0:
 			run_cutscene(func() -> void: await Game.change_scene(WESTVIEW_SCENE, WESTVIEW_FROM_HERE))

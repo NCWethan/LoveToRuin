@@ -23,6 +23,9 @@ var _cutscene_running: bool = false
 ## and attaches the camera.
 func setup_area(default_spawn: Vector2) -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
+	# Back from a fight with a wild creature: nothing more to it.
+	if str(Game.battle_result.get("id", "")).begins_with("wild_"):
+		Game.battle_result = {}
 
 	room = Room.new()
 	add_child(room)
@@ -604,6 +607,17 @@ var encounter_zones: Array = []
 ## How far Elric walks between random fights, in pixels (a random amount in this range).
 const ENCOUNTER_DISTANCE := Vector2(550, 1000)
 var _next_encounter: float = -1.0
+
+
+## Lets the wild creatures that live in this area (WildBattles.ZONES) jump out
+## at Elric while they walk around inside `rect` (in pixels). Not before the
+## tutorial fight, and not on the night walk to Hop's house.
+func add_wild_encounters(scene_path: String, rect: Rect2) -> void:
+	if not Game.flags.get("tutorial_done", false) or Game.flags.get("route", "") == "with_hop":
+		return
+	var ids := WildBattles.encounters_for(scene_path)
+	if not ids.is_empty():
+		encounter_zones.append([rect, ids])
 
 
 ## Call from _physics_process: starts a random fight once Elric has walked far enough.

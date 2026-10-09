@@ -56,6 +56,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 		"bleacher_wave": return _bleacher_wave(enemy, parent, area, s)
 		"mascot_spin": return _mascot_spin(enemy, parent, area, s, step)
 		"frenzy": return _frenzy(enemy, parent, area, s, step)
+	# The people around town, and the wild creatures (folk_attacks.gd).
+	var wait := FolkAttacks.spawn(pattern, enemy, parent, area, s, step)
+	if wait >= 0.0:
+		return wait
 	return 1.0
 
 

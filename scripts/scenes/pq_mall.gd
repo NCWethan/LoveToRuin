@@ -89,6 +89,7 @@ var people: Dictionary = {}
 
 func _ready() -> void:
 	setup_area(ENTRY)
+	add_wild_encounters(SCENE, Rect2(Vector2.ZERO, room.pixel_size()))
 	# A soft, quiet theme at night; the usual upbeat one during the day.
 	Game.play_music("mall_night" if _time_of_day() == "night" else "mall")
 	var tint := CanvasModulate.new()
@@ -319,6 +320,7 @@ func _start() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_blocked():
 		return
+	check_random_encounter(SCENE)
 	if player.position.y > ROAD_Y and player.position.x > EAST_EXIT_X:
 		run_cutscene(_head_east)
 	elif player.position.y > ROAD_Y and player.position.x < WEST_EXIT_X:

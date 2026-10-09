@@ -38,6 +38,7 @@ var bigjoe: Character
 
 func _ready() -> void:
 	setup_area(START)
+	add_wild_encounters(SCENE, Rect2(Vector2.ZERO, room.pixel_size()))
 	Game.play_music("mt_carmel")
 	_add_school_pride()
 	_place_characters()
@@ -298,6 +299,7 @@ func _start_story() -> void:
 func _physics_process(_delta: float) -> void:
 	if Game.busy or Game.transitioning or _cutscene_running:
 		return
+	check_random_encounter(SCENE)
 
 	# Leaving the field with the fragment: Eggo and BigJoe6 show up.
 	if _flag("has_fragment_1") and not _flag("tutorial_started") and player.position.x < FIELD_EDGE_X:

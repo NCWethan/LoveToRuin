@@ -82,6 +82,9 @@ var _fx: Node2D
 
 func _ready() -> void:
 	setup_area(ENTRY)
+	# (Only once the night on the field is over: no wild fights in the middle of it.)
+	if flag("chapter1_done"):
+		add_wild_encounters(SCENE, Rect2(Vector2.ZERO, room.pixel_size()))
 	Game.play_music("hilltop")
 	_font = ThemeDB.fallback_font
 
@@ -592,6 +595,8 @@ func _physics_process(_delta: float) -> void:
 	if is_blocked() or flag("chapter1_done"):
 		if flag("chapter1_done") and not is_blocked() and player.position.y > 555:
 			run_cutscene(_leave_after_chapter)
+		elif flag("chapter1_done") and not is_blocked():
+			check_random_encounter(SCENE)
 		return
 	if _in_spray():
 		run_cutscene(_soaked)

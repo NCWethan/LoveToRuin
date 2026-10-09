@@ -19,6 +19,27 @@ extends Node2D
 ## "yolk", "lance", "shield" or "justice_star".
 @export var shape: String = "square"
 
+## For shape "glyph": which little picture to draw (see GLYPHS), each of its pixels
+## GLYPH_PIXEL screen pixels big. Flips to face the way it's moving sideways.
+var glyph: String = ""
+## Spins as it flies, in turns of... radians per second.
+var spin: float = 0.0
+## Points the way it's moving (paper planes, arrows of things).
+var face_motion: bool = false
+## Stops dead this many seconds after it starts moving, and stays there (gum
+## sticking where it lands). -1: never.
+var stop_after: float = -1.0
+## Bounces off the left and right sides of the box instead of leaving it.
+var wall_bounce: bool = false
+## Runs laps around the inside edge of the box at this speed (pixels per second),
+## clockwise, starting `lap_start` pixels along. 0: doesn't.
+var lap_speed: float = 0.0
+var lap_start: float = 0.0
+## Zigzags up and down this many pixels as it goes (a scampering squirrel).
+var zigzag: float = 0.0
+## What a bullet that cracks into pieces breaks into, when they're glyphs.
+var split_glyph: String = ""
+
 ## Bounces up when it reaches the bottom of the box (for hopping things).
 var bounce_speed: float = 0.0
 ## Cracks into this many small pieces when it reaches the bottom of the box.
@@ -119,10 +140,24 @@ func _process(delta: float) -> void:
 		queue_redraw()
 		return
 
+	if lap_speed > 0.0:
+		global_position = _lap_point(lap_start + (_time - delay) * lap_speed)
+		queue_redraw()
+		return
+	if stop_after >= 0.0 and _time - delay >= stop_after:
+		velocity = Vector2.ZERO
+		acceleration = Vector2.ZERO
+		sway = 0.0
 	velocity += acceleration * delta
 	position += velocity * delta
 	if sway != 0.0:
 		position.x += cos(_time * 6.0) * sway * delta
+	if zigzag != 0.0:
+		position.y += cos(_time * 12.0) * zigzag * 12.0 * delta
+	if wall_bounce and bounds.has_area():
+		var half := size / 2
+		if (global_position.x < bounds.position.x + half and velocity.x < 0) or (global_position.x > bounds.end.x - half and velocity.x > 0):
+			velocity.x = -velocity.x
 
 	if trail_length > 0:
 		_trail.append(global_position)
@@ -145,6 +180,24 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+## A point `distance` pixels clockwise around the inside edge of the box (from the
+## top-left corner), for things running laps.
+func _lap_point(distance: float) -> Vector2:
+	var r := bounds.grow(-size / 2 - 1)
+	var perimeter := 2.0 * (r.size.x + r.size.y)
+	var d := fposmod(distance, perimeter)
+	if d < r.size.x:
+		return r.position + Vector2(d, 0)
+	d -= r.size.x
+	if d < r.size.y:
+		return Vector2(r.end.x, r.position.y + d)
+	d -= r.size.y
+	if d < r.size.x:
+		return Vector2(r.end.x - d, r.end.y)
+	d -= r.size.x
+	return Vector2(r.position.x, r.end.y - d)
+
+
 ## Cracks into small pieces that scatter up and sideways.
 func _split() -> void:
 	for i in splits_into:
@@ -156,6 +209,7 @@ func _split() -> void:
 		piece.size = 5.0 if split_shape == "yolk" else 4.0
 		piece.color = split_color
 		piece.shape = split_shape
+		piece.glyph = split_glyph
 		piece.trail_length = 3 if split_shape == "yolk" else 0
 		var angle := lerpf(-PI + 0.4, -0.4, float(i) / maxi(1, splits_into - 1))
 		piece.velocity = Vector2(cos(angle), sin(angle)) * 110.0
@@ -208,6 +262,8 @@ func _draw() -> void:
 		draw_circle(Vector2.ZERO, size * 0.7, Color(color, 0.25))
 
 	match shape:
+		"glyph":
+			_draw_glyph()
 		"claw_slash":
 			var dir := beam_vector.normalized()
 			var side := dir.orthogonal()
@@ -394,6 +450,80 @@ func _draw() -> void:
 			draw_arc(Vector2.ZERO, half * 0.6, _time * 6.0, _time * 6.0 + PI, 8, Color(1, 1, 1, 0.6), 2.0)
 		_:
 			draw_rect(Rect2(-half, -half, size, size), color)
+
+
+## Little pixel pictures for attacks (shape "glyph"). Each letter is a color in
+## GLYPH_COLORS; "." is see-through.
+const GLYPH_PIXEL := 2.0
+const GLYPH_COLORS := {
+	"K": Color(0.08, 0.08, 0.1), "W": Color(0.96, 0.96, 0.98), "R": Color(0.9, 0.2, 0.22),
+	"Y": Color(1.0, 0.85, 0.25), "O": Color(1.0, 0.55, 0.15), "G": Color(0.72, 0.74, 0.8),
+	"g": Color(0.42, 0.44, 0.5), "B": Color(0.3, 0.5, 0.95), "b": Color(0.5, 0.32, 0.18),
+	"P": Color(1.0, 0.55, 0.75), "N": Color(0.35, 0.8, 0.35), "C": Color(0.45, 0.85, 1.0),
+	"L": Color(0.8, 0.72, 1.0), "T": Color(0.85, 0.72, 0.5),
+}
+const GLYPHS := {
+	"key": [".YYY....", "Y...YYYY", ".YYY.Y.Y"],
+	"cone": ["..O..", ".OWO.", ".OOO.", "OWWWO", "OOOOO"],
+	"can": [".GGG.", "GRRRG", "GWWWG", "GRRRG", ".GGG."],
+	"wet_sign": ["..Y..", ".YKY.", ".YKY.", "YYYYY", "Y...Y"],
+	"board": [".KKKKKKKK.", "BBBBBBBBBB", ".W......W."],
+	"car": ["..RRRR..", ".RCCCCR.", "RRRRRRRR", "YRRRRRRY", ".K....K."],
+	"gum": [".PPP.", "PPWPP", "PPPPP", ".PPP."],
+	"segway": ["..GG..", "..g...", "..g...", ".gggg.", "KK..KK"],
+	"coupon": ["YYYYYY", "YKWWKY", "YWKKWY", "YYYYYY"],
+	"grocery": [".b..b.", "TTTTTT", "TNTTRT", "TTTTTT", "TTTTTT"],
+	"apple": ["..N.", ".RR.", "RRRR", ".RR."],
+	"bird": ["..GG.", ".GGKO", "GGGG.", ".GG.."],
+	"notif": ["WWWWW", "WRRWW", "WWWWW", ".W..."],
+	"text": ["LLLLLLL", "LKLKLKL", "LLLLLLL", ".L....."],
+	"drop": ["..C..", ".CCC.", "CCWCC", ".CCC."],
+	"moth": ["T...T", "TTKTT", ".TKT.", "T...T"],
+	"z": ["YYYY", "..Y.", ".Y..", "YYYY"],
+	"dog": ["O....O.", "OOOOOOK", "OOOOOOO", "WWWWWW.", "O.O..O."],
+	"plane": ["W.....", "WWW...", "WWWWWW", "WWW...", "W....."],
+	"book": ["BBBB", "BWWB", "BBBB"],
+	"backpack": [".bb.", "RRRR", "RbbR", "RRRR"],
+	"ostrich": ["..GG", "..KO", ".GG.", "GGGG", ".T.T"],
+	"cart": ["G.....", "GGGGGG", "GgGgGG", ".GGGG.", ".K..K."],
+	"coin": [".YY.", "YWYY", "YYYY", ".YY."],
+	"ink": [".K.", "KKK", ".K."],
+	"balloon": [".RR.", "RRRR", "RRWR", ".RR.", "..W.", "..W."],
+	"feather": ["...W", "..WW", ".WW.", "WW..", "W..."],
+	"pink_feather": ["...P", "..PP", ".PP.", "PP..", "P..."],
+	"hat": ["..R..", ".RRR.", "RRRRR"],
+	"shovel": ["...b", "..b.", ".GG.", "GG.."],
+	"fry": ["Y.Y", "YYY", "YYY", "RRR", "RRR"],
+	"acorn": [".bb.", "bbbb", "TTTT", ".TT."],
+	"squirrel": ["....bb", "b..bbb", "bbbbb.", ".bbb..", ".b.b.."],
+	"leaf": ["..N.", ".NN.", "NN.."],
+	"bag": ["W..W", "WWWW", "WKKW", "WWWW"],
+	"tick": ["WW", "WW"],
+	"tennis": [".NN.", "NYNN", "NNYN", ".NN."],
+	"paper": ["WW", "WW"],
+	"dust": ["L"],
+}
+
+
+func _draw_glyph() -> void:
+	var rows: Array = GLYPHS.get(glyph, ["W"])
+	var w := str(rows[0]).length()
+	var h := rows.size()
+	var angle := _time * spin
+	var flip := 1.0
+	if face_motion and velocity.length() > 0.1:
+		angle = velocity.angle()
+	elif velocity.x < -1.0:
+		flip = -1.0
+	draw_set_transform(Vector2.ZERO, angle, Vector2(flip, 1.0))
+	var origin := -Vector2(w, h) * GLYPH_PIXEL / 2.0
+	for y in h:
+		var row: String = rows[y]
+		for x in w:
+			var c: Color = GLYPH_COLORS.get(row[x], Color.TRANSPARENT)
+			if c.a > 0.0:
+				draw_rect(Rect2(origin + Vector2(x, y) * GLYPH_PIXEL, Vector2(GLYPH_PIXEL, GLYPH_PIXEL)), Color(c, c.a * color.a))
+	draw_set_transform(Vector2.ZERO)
 
 
 ## A filled five-pointed star centered on `at`.

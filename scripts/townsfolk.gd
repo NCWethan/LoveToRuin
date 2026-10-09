@@ -33,7 +33,7 @@ const PEOPLE := {
 		},
 		"challenged": ["smug", "You want to go a round with ME? Ha!\nAlright, kid. Warm-up's over."],
 		"spared": ["happy", "...Good hustle. Real good hustle.\nNow hit the showers. ...Wait, you don't go here."],
-		"hp": 55, "atk": 4, "def": 1, "patterns": ["dodgeballs", "sound_waves"],
+		"hp": 55, "atk": 4, "def": 1, "patterns": ["coach_keys", "coach_laps"],
 		"check": "* COACH RAMIREZ - ATK 4 DEF 1\n* A rhino. Thirty years of P.E. Loses his keys daily.",
 		"acts": [
 			{"name": "Find Keys", "mercy": 60, "lines": ["* {actor} points at the tree.\n* Coach Ramirez sighs. \"...Again?\""]},
@@ -52,7 +52,7 @@ const PEOPLE := {
 		},
 		"challenged": ["shocked", "You want to fight the guy with the mop?\nBold. Very bold."],
 		"spared": ["happy", "Huh. You let me be.\nThat's more than most people do for the janitor."],
-		"hp": 45, "atk": 3, "def": 2, "patterns": ["bubbles", "papers"],
+		"hp": 45, "atk": 3, "def": 2, "patterns": ["wet_floor", "trash_toss"],
 		"check": "* JANITOR - ATK 3 DEF 2\n* A raccoon. Mops the whole school. Nobody says thanks.",
 		"acts": [
 			{"name": "Thank", "mercy": 60, "lines": ["* {actor} thanks the janitor for keeping things clean.\n* He stops. Nobody's ever said that before."]},
@@ -71,7 +71,7 @@ const PEOPLE := {
 		},
 		"challenged": ["happy", "A fight? Sick. Okay. Okay okay okay.\nHold my board. ...Actually, I'll keep it."],
 		"spared": ["happy", "Respect, dude. Total respect.\nYou wanna see the kickflip? ...Some other time."],
-		"hp": 35, "atk": 4, "def": 0, "patterns": ["zoom", "aimed"],
+		"hp": 35, "atk": 4, "def": 0, "patterns": ["kickflip", "grind_rail"],
 		"check": "* SKATER - ATK 4 DEF 0\n* A frog. Has almost landed a kickflip 400 times.",
 		"acts": [
 			{"name": "Cheer", "mercy": 50, "lines": ["* {actor} cheers for the kickflip.\n* The skater beams. \"You SAW that?\""]},
@@ -90,7 +90,7 @@ const PEOPLE := {
 		},
 		"challenged": ["angry", "...Seriously? I've been waiting for an HOUR\nand THIS is what happens?"],
 		"spared": ["happy", "...Thanks. My mom just texted.\nShe's five minutes away. Again."],
-		"hp": 30, "atk": 3, "def": 0, "patterns": ["bubbles", "papers"],
+		"hp": 30, "atk": 3, "def": 0, "patterns": ["five_minutes", "headlights"],
 		"check": "* WAITING GHOST - ATK 3 DEF 0\n* Their ride is \"five minutes away.\" It always will be.",
 		"acts": [
 			{"name": "Wait With", "mercy": 60, "lines": ["* {actor} sits down and waits with them.\n* It's less boring with two."]},
@@ -116,7 +116,7 @@ const PEOPLE := {
 		},
 		"challenged": ["shocked", "Are you... resisting? Is this resisting?\nI'll have to call this in. To myself."],
 		"spared": ["smug", "...I'll let it slide. This time.\nThat's what a hero does. A mall hero."],
-		"hp": 60, "atk": 4, "def": 2, "patterns": ["sound_waves", "aimed"],
+		"hp": 60, "atk": 4, "def": 2, "patterns": ["gum_stick", "segway"],
 		"check": "* MALL COP - ATK 4 DEF 2\n* A walrus. Protects the PQ Mall. Mostly from gum.",
 		"acts": [
 			{"name": "Salute", "mercy": 50, "lines": ["* {actor} salutes.\n* The Mall Cop stands up straighter. He salutes back."]},
@@ -135,7 +135,7 @@ const PEOPLE := {
 		},
 		"challenged": ["angry", "Honey. I have been up since five.\nYou do NOT want to do this."],
 		"spared": ["happy", "...Thank you, sweetie. That was nice of you.\nNow, have you seen a minivan?"],
-		"hp": 50, "atk": 4, "def": 1, "patterns": ["peas", "papers"],
+		"hp": 50, "atk": 4, "def": 1, "patterns": ["coupons", "grocery_hop"],
 		"check": "* BUSY MOM - ATK 4 DEF 1\n* A kangaroo. Has a coupon for everything. Even this.",
 		"acts": [
 			{"name": "Carry Bags", "mercy": 60, "lines": ["* {actor} offers to carry a bag.\n* \"Oh! Aren't YOU sweet.\""]},
@@ -154,7 +154,7 @@ const PEOPLE := {
 		},
 		"challenged": ["angry", "Gerald. Geralds. Assemble."],
 		"spared": ["happy", "You've got a kind face, wanderer.\nThe Geralds approve."],
-		"hp": 40, "atk": 3, "def": 1, "patterns": ["confetti", "pages"],
+		"hp": 40, "atk": 3, "def": 1, "patterns": ["pigeon_flock", "breadcrumbs"],
 		"check": "* PIGEON MAN - ATK 3 DEF 1\n* Feeds the pigeons every day. Every pigeon is Gerald.",
 		"acts": [
 			{"name": "Feed Gerald", "mercy": 60, "lines": ["* {actor} tosses a crumb.\n* A Gerald coos. The old man smiles."]},
@@ -173,7 +173,7 @@ const PEOPLE := {
 		},
 		"challenged": ["happy", "Wait wait wait. Let me get my phone out.\nThis is going on my story."],
 		"spared": ["happy", "That was actually kind of nice of you.\nNot posting that. Too wholesome."],
-		"hp": 30, "atk": 3, "def": 0, "patterns": ["bubbles", "papers"],
+		"hp": 30, "atk": 3, "def": 0, "patterns": ["notifications", "doomscroll"],
 		"check": "* TEEN ON PHONE - ATK 3 DEF 0\n* A jelly. Hasn't looked up since 2019.",
 		"acts": [
 			{"name": "Selfie", "mercy": 60, "lines": ["* {actor} poses for a selfie.\n* The teen actually looks up. \"Okay, that's cute.\""]},
@@ -192,7 +192,7 @@ const PEOPLE := {
 		},
 		"challenged": ["smug", "You want to go? Let's GO.\nI've got cardio for DAYS."],
 		"spared": ["happy", "Good sportsmanship. I like that.\nAlright. Lap 10. Try to keep up next time."],
-		"hp": 45, "atk": 4, "def": 0, "patterns": ["zoom", "dodgeballs"],
+		"hp": 45, "atk": 4, "def": 0, "patterns": ["laps", "sweat_spray"],
 		"check": "* JOGGER - ATK 4 DEF 0\n* An ostrich. Running laps around the parking lot. For fun.",
 		"acts": [
 			{"name": "Stretch", "mercy": 50, "lines": ["* {actor} stretches with the jogger.\n* \"Hamstrings! Love it!\""]},
@@ -213,7 +213,7 @@ const PEOPLE := {
 		},
 		"challenged": ["sad", "Please. I just clean the floors.\n...Fine. If you have to."],
 		"spared": ["happy", "...Thank you. Get out of here, okay?\nThis school's not right at night."],
-		"hp": 45, "atk": 4, "def": 2, "patterns": ["bubbles", "pages"],
+		"hp": 45, "atk": 4, "def": 2, "patterns": ["moths", "wing_dust"],
 		"check": "* NIGHT JANITOR - ATK 4 DEF 2\n* A moth. Works the night shift. Hears the bells.",
 		"acts": [
 			{"name": "Reassure", "mercy": 60, "lines": ["* {actor} says it'll be okay.\n* The janitor almost believes it."]},
@@ -232,7 +232,7 @@ const PEOPLE := {
 		},
 		"challenged": ["shocked", "Okay. Okay okay okay. This is the part where\nI'm supposed to be brave. Here goes."],
 		"spared": ["happy", "...Phew. Thanks.\nI'm going back to sleep. You saw nothing."],
-		"hp": 55, "atk": 4, "def": 2, "patterns": ["sound_waves", "aimed"],
+		"hp": 55, "atk": 4, "def": 2, "patterns": ["flashlight", "zzz"],
 		"check": "* SECURITY GUARD - ATK 4 DEF 2\n* An owl. Guards Westview at night. Mostly sleeps.",
 		"acts": [
 			{"name": "Let Sleep", "mercy": 60, "lines": ["* {actor} tiptoes past.\n* The guard pretends he didn't notice."]},
@@ -258,7 +258,7 @@ const PEOPLE := {
 		},
 		"challenged": ["shocked", "Whoa, whoa! Biscuit, stay back.\n...Okay. I guess we're doing this."],
 		"spared": ["happy", "Biscuit likes you.\nThat's rare. He doesn't like anybody."],
-		"hp": 40, "atk": 3, "def": 1, "patterns": ["dodgeballs", "confetti"],
+		"hp": 40, "atk": 3, "def": 1, "patterns": ["fetch", "zoomies"],
 		"check": "* DOG WALKER - ATK 3 DEF 1\n* Walks Biscuit here every night. Biscuit avoids the middle.",
 		"acts": [
 			{"name": "Pet Biscuit", "mercy": 60, "lines": ["* {actor} pets Biscuit.\n* Biscuit's tail goes everywhere."]},
@@ -274,7 +274,7 @@ const PEOPLE := {
 		"name": "Student",
 		"challenged": ["shocked", "Wait, what? Like, FIGHT fight?\nI have a quiz third period!"],
 		"spared": ["happy", "...You let me go? Okay. Cool. Cool cool cool.\nI'm going to class now. Bye."],
-		"hp": 30, "atk": 3, "def": 0, "patterns": ["pencils", "papers", "scantron"],
+		"hp": 30, "atk": 3, "def": 0, "patterns": ["paper_planes", "backpack"],
 		"check": "* STUDENT - ATK 3 DEF 0\n* Just trying to get to class.",
 		"acts": [
 			{"name": "Help Study", "mercy": 60, "lines": ["* {actor} quizzes them on their notes.\n* They're actually getting it!"]},

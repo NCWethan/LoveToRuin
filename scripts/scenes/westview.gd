@@ -85,6 +85,7 @@ func _ready() -> void:
 			[_px(CLASSROOM), WestviewBattles.CLASSROOM_ENCOUNTERS],
 		]
 	setup_area(ENTRY)
+	add_wild_encounters(SCENE, _px(OUTSIDE))
 	Game.play_music("mt_carmel" if _day else "westview")
 	_font = ThemeDB.fallback_font
 

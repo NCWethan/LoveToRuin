@@ -7,6 +7,9 @@ static func create(id: String) -> BattleData:
 	# People around town you challenged (see townsfolk.gd).
 	if id.begins_with("person_"):
 		return Townsfolk.create_battle(id.trim_prefix("person_"))
+	# Wild creatures (wild_battles.gd).
+	if id.begins_with("wild_"):
+		return WildBattles.create(id.trim_prefix("wild_"))
 	match id:
 		"hopkuna":
 			return HilltopBattles.create(id)
