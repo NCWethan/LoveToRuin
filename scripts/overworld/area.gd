@@ -277,8 +277,10 @@ func add_character(character: Character, at: Vector2) -> Character:
 func add_npc(who: String, at: Vector2, talk: Callable, label: String = "") -> Character:
 	var npc := Cast.make(who)
 	npc.add_to_group("npc")
-	npc.set_meta("home", at)
 	npc.set_meta("who", who)
+	# (Never inside a desk, a wall or the furniture: the nearest clear spot instead.)
+	at = room.free_spot_near(at)
+	npc.set_meta("home", at)
 	npc.on_interact = func() -> void:
 		npc.face(player.position - npc.position)
 		# With dread, people are afraid of Elric: now and then at first, more and
@@ -606,6 +608,8 @@ func handle_battle_return(goodbyes: Dictionary) -> bool:
 var encounter_zones: Array = []
 ## How far Elric walks between random fights, in pixels (a random amount in this range).
 const ENCOUNTER_DISTANCE := Vector2(550, 1000)
+## Wild creatures around town: this many times farther between fights.
+const WILD_RARITY := 3.0
 var _next_encounter: float = -1.0
 
 
@@ -617,7 +621,9 @@ func add_wild_encounters(scene_path: String, rect: Rect2) -> void:
 		return
 	var ids := WildBattles.encounters_for(scene_path)
 	if not ids.is_empty():
-		encounter_zones.append([rect, ids])
+		# (Out in the open, fights come about three times less often than in
+		# Westview's haunted halls.)
+		encounter_zones.append([rect, ids, WILD_RARITY])
 
 
 ## Call from _physics_process: starts a random fight once Elric has walked far enough.
@@ -625,7 +631,12 @@ func check_random_encounter(scene_path: String) -> void:
 	if encounter_zones.is_empty():
 		return
 	if _next_encounter < 0.0:
-		_next_encounter = player.distance_walked + randf_range(ENCOUNTER_DISTANCE.x, ENCOUNTER_DISTANCE.y)
+		# (A zone can make its fights rarer: a third entry, how many times farther.)
+		var rarity := 1.0
+		for zone in encounter_zones:
+			if (zone[0] as Rect2).has_point(player.position) and zone.size() > 2:
+				rarity = float(zone[2])
+		_next_encounter = player.distance_walked + randf_range(ENCOUNTER_DISTANCE.x, ENCOUNTER_DISTANCE.y) * rarity
 	if player.distance_walked < _next_encounter:
 		return
 	for zone in encounter_zones:

@@ -103,6 +103,10 @@ func _ready() -> void:
 
 
 func _time_of_day() -> String:
+	# After the Westview Field choice, it's whatever time it is in the city (day,
+	# once Elric has been to the base or wandered till morning; night on Genocide).
+	if Game.flags.get("chapter1_done", false):
+		return "day" if Game.daytime() else "night"
 	return Game.flags.get("mall_time", "day")
 
 
@@ -257,9 +261,11 @@ func _add_streetlights() -> void:
 # --- People ---------------------------------------------------------------
 
 func _place_people() -> void:
-	hop = Cast.make("Hop")
-	add_character(hop, player.position + Vector2(-20, 0))
-	hop.follow = player
+	# Whoever's coming along (Hop, or a Corps member), unless Elric is on their own.
+	if not Game.walking_alone():
+		hop = Cast.make(Game.partner())
+		add_character(hop, player.position + Vector2(-20, 0))
+		hop.follow = player
 
 	var time := _time_of_day()
 	var day_talks := {

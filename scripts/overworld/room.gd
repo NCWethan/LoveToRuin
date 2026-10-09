@@ -38,6 +38,31 @@ func set_tile(x: int, y: int, tile: int) -> void:
 		_tiles[y * width + x] = tile
 
 
+## Whether someone could stand with their feet at `at` (pixels) without being
+## inside a solid tile.
+func is_free(at: Vector2) -> bool:
+	for corner in [Vector2(-6, -8), Vector2(6, -8), Vector2(-6, 0), Vector2(6, 0)]:
+		var p: Vector2 = at + corner
+		if get_tile(floori(p.x / TILE), floori(p.y / TILE)) in SOLID:
+			return false
+	return true
+
+
+## The nearest spot to `at` where someone can stand (`at` itself if it's clear).
+func free_spot_near(at: Vector2) -> Vector2:
+	if is_free(at):
+		return at
+	for radius in range(1, 8):
+		for dy in range(-radius, radius + 1):
+			for dx in range(-radius, radius + 1):
+				if maxi(absi(dx), absi(dy)) != radius:
+					continue
+				var spot := at + Vector2(dx, dy) * (TILE / 2.0)
+				if is_free(spot):
+					return spot
+	return at
+
+
 func get_tile(x: int, y: int) -> int:
 	if x < 0 or y < 0 or x >= width or y >= height:
 		return WALL
