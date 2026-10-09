@@ -623,10 +623,9 @@ func finish_battle(result: Dictionary) -> void:
 	if not battle_random and not result.get("fled", false):
 		flags["beat_" + str(result.get("id", ""))] = true
 	battle_random = false
-	# Every enemy defeated instead of spared counts (see dread()).
-	# (Sparring with the training dummy doesn't count.)
-	if result.get("id", "") != "training":
-		flags["kills"] = int(flags.get("kills", 0)) + result.get("defeated", []).size()
+	# Only real kills count (see dread()): someone who shattered. Knockouts (the
+	# tutorial, the training dummy, bosses) don't.
+	flags["kills"] = int(flags.get("kills", 0)) + result.get("killed", []).size()
 	# The glowbug, on the way to Hop's house: killing it is what starts the
 	# Genocide route, officially.
 	if result.get("id", "") == "glowbug" and not result.get("defeated", []).is_empty():

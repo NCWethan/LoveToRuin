@@ -1873,6 +1873,9 @@ func _victory() -> void:
 				result["spared"].append(enemy.name)
 			elif enemy.state == "defeated":
 				result["defeated"].append(enemy.name)
+				# (Only the ones who shattered were killed; the rest were just knocked out.)
+				if enemy.shattered:
+					result["killed"] = result.get("killed", []) + [enemy.name]
 		_show_messages(lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
 	else:
 		lines.append("* (Press ENTER to fight again.)")
