@@ -72,40 +72,12 @@ func setup_area(default_spawn: Vector2) -> void:
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vignette_layer.add_child(vignette)
 
-	# A compass in the top-right corner (it never turns; north is always up).
-	var compass_layer := CanvasLayer.new()
-	compass_layer.layer = 5
-	add_child(compass_layer)
-	var compass := Control.new()
-	compass.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	compass.position = Vector2(598, 42)
-	compass_layer.add_child(compass)
-	compass.draw.connect(_draw_compass.bind(compass))
-	compass.queue_redraw()
-
 	# Music goes eerie near fragments (checked every frame).
 	get_tree().process_frame.connect(_check_fragment_music)
 
 	# On the Genocide path, the world changes with Elric.
 	if Game.dread() > 0:
 		_add_dread()
-
-
-## N, E, S and W around a little dial.
-func _draw_compass(compass: Control) -> void:
-	var font := ThemeDB.fallback_font
-	compass.draw_circle(Vector2.ZERO, 27, Color(0, 0, 0, 0.55))
-	compass.draw_arc(Vector2.ZERO, 27, 0, TAU, 32, Color(1, 1, 1, 0.85), 2.0)
-	compass.draw_arc(Vector2.ZERO, 22, 0, TAU, 32, Color(1, 1, 1, 0.25), 1.0)
-	# A small four-pointed star in the middle.
-	var star := PackedVector2Array([Vector2(0, -9), Vector2(2, -2), Vector2(9, 0), Vector2(2, 2),
-		Vector2(0, 9), Vector2(-2, 2), Vector2(-9, 0), Vector2(-2, -2)])
-	compass.draw_colored_polygon(star, Color(1, 1, 1, 0.5))
-	var letters := {"N": Vector2(0, -16), "E": Vector2(16, 0), "S": Vector2(0, 16), "W": Vector2(-16, 0)}
-	for letter in letters:
-		var size := font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-		var color := Color(1.0, 0.35, 0.35) if letter == "N" else Color.WHITE
-		compass.draw_string(font, letters[letter] + Vector2(-size.x / 2, 4), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
 
 
 ## A SAVE point: a star that twinkles between two frames, like in Undertale, and

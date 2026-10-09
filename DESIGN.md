@@ -639,14 +639,13 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] **Objectives**: a "NEW OBJECTIVE" banner at each story beat; the current one is shown in the bag
 - [x] Eggo and Big Joe get picked up by a car after the tutorial fight
 - [x] SAVE stars twinkle between two frames, like in Undertale
-- [x] A compass (N, E, S, W) in the top-right corner
 - [x] Looking at scenery: trees ("It's a tree."), benches, walls, windows, lockers, desks, chalkboards...
 - [x] Mt. Carmel's front doors lock the moment Elric touches them
 - [x] **Hidden-in-plain-sight puzzles:** nothing says "PUZZLE", but something clearly blocks the way
   - Mt. Carmel: the field gate is chained shut. Hop mentions the coach loses his keys ("...the week before, a tree"). One courtyard tree glints: shake it for the keys.
   - PQ Mall: Rock Paper Scissors, where you read each opponent's tell.
   - Westview: the endless hallway (humming locker) and the bell order (chalkboard).
-  - Westview Field: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE (use the compass): turn off the corner you want to walk through.
+  - Westview Field: the field's sprinklers push you back. A control box by the benches has four switches labeled NW, NE, SW, SE: turn off the corner you want to walk through.
 - [x] **Sprinting:** hold Shift to run (1.75x speed) with running sprites (side view: a leaning stride and a knee-up frame; front/back: bigger steps and pumping arms). A stamina bar slides in at the bottom right, drains over about 2.6 seconds and refills after you stop. Run it dry and Elric is WINDED until it's about a third full. Hop runs to keep up.
 - [x] SAVE stars glow yellow and light up the ground around them. FRAGMENTS glow deep red, and the music fades to an eerie drone whenever you get near one (anywhere, any time).
 - [x] PQ Mall: once the sky turns orange, Vons and Knotty Barrel hang CLOSED signs (Jack in the Box stays open late). Streetlights glow orange in the evening and brighter at night, and the music softens at night ("Mall at Night").
