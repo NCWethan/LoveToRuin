@@ -254,7 +254,7 @@ func _place_people() -> void:
 	partner = Cast.make(Game.partner())
 	add_character(partner, player.position + Vector2(-20, 0))
 	partner.follow = player
-	if Game.partner() != "Hop":
+	if Game.partner() != "Hop" and not Game.hop_left():
 		hop = Cast.make("Hop")
 		hop.on_interact = func() -> void:
 			hop.face(player.position - hop.position)
@@ -513,6 +513,25 @@ func _monitors() -> void:
 
 
 func _couch() -> void:
+	# The night after the vote: Hop's gone. A note, folded once, on the cushion.
+	if Game.hop_left():
+		if not flag("hb_hop_left"):
+			Game.flags["hb_hop_left"] = true
+			var kept: Array = Game.flags.get("mementos", [])
+			if not "Hop's Note" in kept:
+				kept.append("Hop's Note")
+			Game.flags["mementos"] = kept
+			await Game.dialogue.say([
+				"* (The couch is empty. The blanket is folded,\n*  very neatly. Hop never folds anything.)",
+				"* (There's a note on the cushion.)",
+				"* (\"Don't carry me. You've got enough.\")",
+				"* (\"- H\")",
+				"* (He took nothing. Not even his hat.)",
+			])
+			Game.set_objective("Hop's gone. (To be continued.)")
+			return
+		await Game.dialogue.say(["* (The couch. The blanket is still folded.\n*  Nobody's sat on it since.)"])
+		return
 	await Game.dialogue.say(["* (A worn-out couch. There's a checkers board on\n*  the coffee table, mid-game.)", "* (Red is winning. Red is always winning.)"])
 
 

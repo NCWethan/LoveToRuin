@@ -270,6 +270,64 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- The Harbor ---
+	"sailor": {
+		"name": "Old Sailor", "sprite": "sailor",
+		"talk": {
+			"lines": [["", "Ahoy. Forty years on the water, and they\nput me on a museum. Like a fish in a frame."], ["smug", "I give the tours. I make up half of it.\nThe tourists like my half better."]],
+			"options": ["Tell me a sea story.", "Ever see a ghost ship?"],
+			"answers": [["happy", "Once I wrestled a squid for a sandwich.\nThe squid won. It was a good sandwich."], ["sad", "Saw one tonight. A jet on the deck,\nengines going, nobody in it. ...Don't go up there."]],
+		},
+		"challenged": ["angry", "HAR! You want to tangle with a walrus?\nI've got tusks, lad. TUSKS."],
+		"spared": ["happy", "Ye've got sea legs.\nCome back and I'll tell ye the squid story again."],
+		"hp": 70, "atk": 5, "def": 2, "patterns": ["anchor_drop", "rope_knots"],
+		"check": "* OLD SAILOR - ATK 5 DEF 2\n* A walrus. Forty years at sea.\n* Twenty of those years are made up.",
+		"acts": [
+			{"name": "Salute", "mercy": 50, "lines": ["* {actor} salutes.\n* The Old Sailor salutes back, with a flipper. Crisply."]},
+			{"name": "Hear the Story", "mercy": 50, "lines": ["* {actor} listens to the squid story.\n* It's different every time. It's great every time."]},
+		],
+		"taunts": ["HAR!", "Batten down!", "Ye scallywag!", "Forty years!"],
+		"flavor": ["* The Old Sailor squints at the horizon.", "* Smells like the sea. And a little like fish."],
+		"backdrop": Color(0.3, 0.45, 0.7), "style": "waves", "exp": 13, "money": 15,
+	},
+	"tourist": {
+		"name": "Tourist", "sprite": "tourist",
+		"talk": {
+			"lines": [["happy", "Oh! Can you take our picture? It's just me.\nI'm the 'our.'"], ["", "I've seen the carrier, the seals, the other seals.\nNext: the seal-shaped rock."]],
+			"options": ["(Take the picture.)", "Where are you from?"],
+			"answers": [["happy", "PERFECT. You cut off my head.\nIt's art. I'm framing it."], ["smug", "Somewhere with no ocean! Look at it!\nThere's so MUCH of it!"]],
+		},
+		"challenged": ["shocked", "A local custom?! How AUTHENTIC.\nHold on, let me get the camera."],
+		"spared": ["happy", "Best vacation EVER.\nFive stars. Would get challenged again."],
+		"hp": 50, "atk": 3, "def": 1, "patterns": ["flash_photo", "souvenir_spoons"],
+		"check": "* TOURIST - ATK 3 DEF 1\n* A capybara on vacation. Very sunburned.\n* Has 3,000 photos of the same seal.",
+		"acts": [
+			{"name": "Pose", "mercy": 50, "lines": ["* {actor} strikes a pose.\n* *CLICK* \"That's going on the fridge.\""]},
+			{"name": "Recommend", "mercy": 50, "lines": ["* {actor} recommends the fish tacos.\n* The Tourist writes it down. Underlines it twice."]},
+		],
+		"taunts": ["Say cheese!", "Hold still!", "*click*", "Is that a SEAL?"],
+		"flavor": ["* The Tourist checks the map. It's upside down.", "* The Tourist's sunburn has a sunburn."],
+		"backdrop": Color(0.9, 0.55, 0.45), "style": "waves", "exp": 11, "money": 20,
+	},
+	"pelican": {
+		"name": "Pelican", "sprite": "pelican",
+		"talk": {
+			"lines": [["smug", "Fish. Fresh fish. Caught 'em myself.\n...With my face. Don't ask."], ["", "Buy one, get one free. The free one\nis the one I already ate."]],
+			"options": ["One fish, please.", "Why do you sell fish?"],
+			"answers": [["happy", "Good choice. Excellent choice.\nThat one was almost in my mouth."], ["sad", "Gotta do something with the ones\nthat don't fit. Don't make it sad."]],
+		},
+		"challenged": ["angry", "You picked a fight with a PELICAN.\nOn a PIER. Bold."],
+		"spared": ["happy", "Respect. Here, a fish.\nNo, the good one. Don't tell anyone."],
+		"hp": 55, "atk": 4, "def": 1, "patterns": ["fish_toss", "beak_scoop"],
+		"check": "* PELICAN - ATK 4 DEF 1\n* Sells fish off the pier. Eats most of the stock.\n* Business is bad. Lunch is great.",
+		"acts": [
+			{"name": "Buy a Fish", "mercy": 50, "lines": ["* {actor} buys a fish.\n* The Pelican looks at it longingly. Hands it over anyway."]},
+			{"name": "Compliment Beak", "mercy": 50, "lines": ["* {actor} compliments the beak.\n* The Pelican fluffs up to twice his size."]},
+		],
+		"taunts": ["SQUAWK.", "Fresh fish!", "Mine.", "It fits. It all fits."],
+		"flavor": ["* The Pelican swallows something whole.", "* The pier creaks."],
+		"backdrop": Color(0.35, 0.6, 0.75), "style": "waves", "exp": 12, "money": 12,
+	},
 	# --- Downtown ---
 	"hotdog": {
 		"name": "Hot Dog Vendor", "sprite": "hotdog",

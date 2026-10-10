@@ -519,6 +519,10 @@ const GLYPHS := {
 	"hotdog": [".TTTTTT.", "TRRRRRRT", "TYRYRYRT", ".TTTTTT."],
 	"towel": ["YYYYY", "YKKYY", "YYYYY", "Y.Y.Y"],
 	"peanut": [".TT.", "TbTT", "TTbT", ".TT."],
+	"anchor": ["..G..", ".GgG.", "..G..", "G.G.G", "GGGGG", ".GGG."],
+	"spoon": [".GG", "GWG", ".GG", ".G.", ".G.", ".G."],
+	"fish": ["..CC..C", ".CCCCCC", "CKCCCC.", ".CCCCCC", "..CC..C"],
+	"dart": ["R.....", "RRKKKKW", "R....."],
 }
 
 

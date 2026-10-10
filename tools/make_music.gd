@@ -23,6 +23,99 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# The Harbor: a sea shanty in G, the kind you stamp your feet to, with a
+	# squeezebox harmony and a bass that rolls like the deck.
+	"harbor": {
+		"bpm": 120,
+		"lead": [
+			"D5 . . B4 . . G4 . . B4 . . D5 . . .",
+			"E5 . . D5 . . B4 . . A4 . . G4 . . .",
+			"A4 . . B4 . . C5 . . D5 . . E5 . D5 .",
+			"D5 . . . . . . . - - - - - - - -",
+			"D5 . . B4 . . G4 . . B4 . . D5 . . .",
+			"G5 . . F#5 . . E5 . . D5 . . B4 . . .",
+			"C5 . . B4 . . A4 . . F#4 . . A4 . . .",
+			"G4 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"B3 . D4 . B3 . D4 . B3 . D4 . B3 . D4 .",
+			"C4 . E4 . C4 . E4 . B3 . D4 . B3 . D4 .",
+			"C4 . E4 . C4 . E4 . A3 . D4 . A3 . D4 .",
+			"A3 . D4 . F#4 . D4 . A3 . D4 . F#4 . D4 .",
+			"B3 . D4 . B3 . D4 . B3 . D4 . B3 . D4 .",
+			"B3 . E4 . B3 . E4 . B3 . D4 . B3 . D4 .",
+			"C4 . E4 . C4 . E4 . A3 . D4 . F#3 . C4 .",
+			"B3 . D4 . G3 . . . - - - - - - - -",
+		],
+		"bass": [
+			"G2 . . . D2 . . . G2 . . . D2 . . .",
+			"C2 . . . G2 . . . G2 . . . D2 . . .",
+			"A2 . . . E2 . . . D2 . . . A2 . . .",
+			"D2 . . . A1 . . . D2 . . . A1 . . .",
+			"G2 . . . D2 . . . G2 . . . D2 . . .",
+			"E2 . . . B1 . . . G2 . . . D2 . . .",
+			"C2 . . . G2 . . . D2 . . . D2 . . .",
+			"G2 . . . D2 . . . G1 . . . - - - -",
+		],
+		"drums": [
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - S - - S S S S",
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - S - - K - S -",
+			"K - - S - - K - - - - - S - - -",
+		],
+	},
+
+	# Flight Deck: jet-engine rock in E minor. A screaming lead, a chugging bass,
+	# and drums like a catapult launch.
+	"flight_deck": {
+		"bpm": 168,
+		"lead_wave": "saw",
+		"lead": [
+			"E5 . E5 . G5 . A5 . B5 . . . A5 . G5 .",
+			"E5 . E5 . G5 . A5 . D6 . . . B5 . . .",
+			"E5 . E5 . G5 . A5 . B5 . . . A5 . G5 .",
+			"F#5 . G5 . F#5 . E5 . D5 . . . E5 . . .",
+			"B5 . . . A5 . . . G5 . . . A5 . B5 .",
+			"C6 . . . B5 . . . A5 . G5 . A5 . . .",
+			"B5 . A5 . G5 . F#5 . G5 . A5 . B5 . D6 .",
+			"E6 . . . . . . . E5 . . . - - - -",
+		],
+		"harm": [
+			"B4 . B4 . B4 . B4 . D5 . D5 . D5 . D5 .",
+			"B4 . B4 . B4 . B4 . F#5 . F#5 . F#5 . F#5 .",
+			"B4 . B4 . B4 . B4 . D5 . D5 . D5 . D5 .",
+			"A4 . A4 . A4 . A4 . F#4 . F#4 . G4 . G4 .",
+			"G4 . G4 . G4 . G4 . E4 . E4 . F#4 . F#4 .",
+			"E4 . E4 . E4 . E4 . D4 . D4 . D4 . D4 .",
+			"D#4 . D#4 . D#4 . D#4 . F#4 . F#4 . F#4 . F#4 .",
+			"G4 . . . . . . . B4 . . . - - - -",
+		],
+		"bass": [
+			"E2 E2 E2 E2 E2 E2 E2 E2 G2 G2 G2 G2 G2 G2 G2 G2",
+			"E2 E2 E2 E2 E2 E2 E2 E2 D2 D2 D2 D2 D2 D2 D2 D2",
+			"E2 E2 E2 E2 E2 E2 E2 E2 G2 G2 G2 G2 G2 G2 G2 G2",
+			"D2 D2 D2 D2 D2 D2 D2 D2 C2 C2 C2 C2 B1 B1 B1 B1",
+			"C2 C2 C2 C2 C2 C2 C2 C2 A1 A1 A1 A1 B1 B1 B1 B1",
+			"C2 C2 C2 C2 C2 C2 C2 C2 D2 D2 D2 D2 D2 D2 D2 D2",
+			"B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1 B1",
+			"E2 . . . . . . . E1 . . . - - - -",
+		],
+		"drums": [
+			"K - H - S - H - K K H - S - H -",
+			"K - H - S - H - K K H - S - H H",
+			"K - H - S - H - K K H - S - H -",
+			"K - H - S - H - K - K - S S S S",
+			"K - H - S - H - K K H - S - H -",
+			"K - H - S - H - K K H - S - H H",
+			"K S K S K S K S K S K S S S S S",
+			"K - - - S - - - K - - - S - - -",
+		],
+	},
+
 	# Downtown: the city at night. A walking bass, swung chords, a cool lead in
 	# F minor that sounds like it's waiting for a trolley.
 	"downtown": {

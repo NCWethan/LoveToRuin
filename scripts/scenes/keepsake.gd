@@ -23,6 +23,8 @@ extends Area
 ##   7  Downtown, the empty ballpark after midnight: Hop wakes up screaming. Relic
 ##      puts his nightmares into the only thing left in their pocket, a Jack in
 ##      the Box curly-fry token, and wears it on a cord from then on.
+##   8  The Harbor, the carrier's flight deck at sunset: "If you ever want him
+##      gone, I could try." Hop says no. "Ask me again someday."
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -70,6 +72,7 @@ func _spawn() -> Vector2:
 		5: return Vector2(4 * T, 14 * T + 10)
 		6: return Vector2(3 * T, 12 * T + 10)
 		7: return Vector2(15 * T, 14 * T + 10)
+		8: return Vector2(6 * T, 12 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -83,6 +86,7 @@ func build_map() -> void:
 		5: _build_steps()
 		6: _build_plaza()
 		7: _build_ballpark()
+		8: _build_carrier()
 		_: _build_road()
 
 
@@ -149,6 +153,13 @@ func _build_ballpark() -> void:
 	room.fill(0, 21, 36, 3, Room.BLEACHERS)
 	room.fill(0, 0, 1, 24, Room.BLEACHERS)
 	room.fill(35, 0, 1, 24, Room.BLEACHERS)
+
+
+## The carrier's flight deck at sunset, five years ago, after the museum closed.
+func _build_carrier() -> void:
+	room.setup(36, 24, Room.WATER)
+	room.fill(1, 4, 34, 16, Room.ASPHALT)
+	room.fill(26, 5, 4, 4, Room.WALL)
 
 
 ## Mission Beach, one afternoon that summer.
@@ -222,6 +233,13 @@ func _draw_decor() -> void:
 			_decor.draw_rect(Rect2(14 * T, 11 * T, 2 * T, 3 * T), Color8(60, 110, 70))
 			if not _flags.get("token_used", false):
 				_decor.draw_circle(Vector2(14 * T + 10, 13 * T + 4), 3.0, Color8(240, 200, 80))
+		8:
+			# The sun going into the sea, the deck stripes, two kids at the edge.
+			for ring in 5:
+				_decor.draw_circle(Vector2(18 * T, 22 * T), 90.0 - ring * 16.0, Color(1.0, 0.55, 0.25, 0.14))
+			for k in 12:
+				_decor.draw_rect(Rect2(2 * T + k * 56, 12 * T - 2, 28, 4), Color(1, 1, 1, 0.6))
+			_decor.draw_string(_font, Vector2(4 * T, 8 * T), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, Color(1, 1, 1, 0.5))
 		5:
 			# The steps (lines across them), and the stars.
 			for k in 3:
@@ -298,6 +316,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# Out to the edge of the deck, where Hop is sitting.
+	if memory == 8 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_carrier)
 	# Hop, after his nightmare.
 	if memory == 7 and hop != null and _flags.get("screamed", false) and player.position.distance_to(hop.position) < 36.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -324,6 +346,7 @@ func _start() -> void:
 		5: await run_cutscene(_intro_steps)
 		6: await run_cutscene(_intro_plaza)
 		7: await run_cutscene(_intro_ballpark)
+		8: await run_cutscene(_intro_carrier)
 
 
 func _intro_road() -> void:
@@ -636,6 +659,45 @@ func _end_ballpark() -> void:
 		"* (You watch the dark scoreboard until the sun comes up.)",
 	])
 	await _finish(["* He slept like a baby.", "* We wore his nightmares around our neck.\n* We never really slept again."])
+
+
+# --- 8: The flight deck, at sunset ------------------------------------------------
+
+func _intro_carrier() -> void:
+	var dusk := CanvasModulate.new()
+	dusk.color = Color(1.0, 0.85, 0.75)
+	add_child(dusk)
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(18 * T, 19 * T + 6))
+	hop.face(Vector2.DOWN)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (The carrier, after the museum closed. Hop knew\n*  a door. Hop always knows a door.)",
+		"* (The sun is going down into the ocean.\n*  Hop's sitting at the very edge of the deck.)",
+	])
+	Game.set_objective("(Sit with Hop.)")
+
+
+func _end_carrier() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "It was loud last night. The voice.\nEven with the token. It's getting around it.", "mood": "sad"},
+		{"who": "Relic", "choices": ["(Listen.)", "...How loud?"]},
+		{"who": "Hop", "text": "Loud enough.", "mood": "sad"},
+		"* (You look at your hands. You know what they can do.\n*  You've done it a hundred times. Never with anything this big.)",
+		{"who": "Relic", "text": "Hop. If you ever want him gone...", "mood": ""},
+		{"who": "Relic", "text": "I could try.", "mood": ""},
+		"* (Hop looks at you for a long time.)",
+		{"who": "Hop", "text": "...No.", "mood": "sad"},
+		{"who": "Hop", "text": "I don't know who I'd be without him.\nHe's been there my whole life. What if I'm just... nothing?", "mood": "sad"},
+		{"who": "Hop", "text": "What if he's the only interesting thing about me?", "mood": "sad"},
+		{"who": "Relic", "text": "You'd be Hop. That's plenty.", "mood": "happy"},
+		{"who": "Hop", "text": "...Not yet. Okay? Not yet.", "mood": "sad"},
+		{"who": "Hop", "text": "Ask me again someday.", "mood": "happy"},
+		"* (You say you will.)",
+		"* (The sun goes into the sea.)",
+	])
+	await _finish(["* We offered.", "* He said no. He should've said yes.\n* We should've asked again."])
 
 
 # --- The end of a memory ---------------------------------------------------------

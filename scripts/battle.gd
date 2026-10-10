@@ -348,10 +348,10 @@ func _start_player_turn() -> void:
 		for enemy in _active_enemies():
 			var next := _pick_pattern(enemy)
 			_planned_patterns[enemy] = next
-			_flavor = "* %s: \"Next up: %s.\n*  %s\"" % [DialogueBox.display_name(_data.announcer), DowntownAttacks.LABELS.get(next, next.to_upper()), DowntownAttacks.HINTS.get(next, "Good luck.")]
+			_flavor = "* %s: \"Next up: %s.\n*  %s\"" % [DialogueBox.display_name(_data.announcer), Attacks.label_of(next), Attacks.hint_of(next)]
 	# A boss nearly beaten: their finale is coming, and they say so.
 	for enemy in _active_enemies():
-		if enemy.finale_line != "" and not enemy.finale_announced and enemy.hp * 3 < enemy.max_hp:
+		if enemy.finale_line != "" and not enemy.finale_announced and enemy.in_finale():
 			enemy.finale_announced = true
 			_flavor = enemy.finale_line
 	# Now and then, the turn is about Hop instead.
@@ -1819,12 +1819,13 @@ func _start_enemy_turn() -> void:
 		else:
 			_turn_patterns[enemy] = _pick_pattern(enemy)
 		enemy.fury = enemy_turn - 1
+		enemy.last_pattern = _turn_patterns[enemy]
 	_planned_patterns.clear()
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
 		# Supreme: every attack labeled with its odds of hitting you.
 		if not enemy.odds.is_empty() and _turn_patterns.has(enemy):
-			var label: String = DowntownAttacks.LABELS.get(_turn_patterns[enemy], "")
+			var label: String = Attacks.label_of(_turn_patterns[enemy])
 			if label != "":
 				_speech[enemy] = "%s: %d%%" % [label, int(enemy.odds.get(_turn_patterns[enemy], 50))]
 
@@ -1846,12 +1847,12 @@ func _pick_pattern(enemy: Enemy) -> String:
 	if not enemy.courses.is_empty():
 		return enemy.patterns[enemy.course % enemy.patterns.size()]
 	# Nearly beaten: the finale joins in (and comes up more often than the rest).
-	if not enemy.finale_patterns.is_empty() and enemy.hp * 3 < enemy.max_hp:
+	if enemy.in_finale():
 		if not enemy.finale_started:
 			enemy.finale_started = true
 			_last_patterns[enemy] = enemy.finale_patterns[0]
 			return enemy.finale_patterns[0]
-		if randf() < 0.4:
+		if randf() < enemy.finale_chance:
 			var finale: String = enemy.finale_patterns.pick_random()
 			if finale != _last_patterns.get(enemy, ""):
 				_last_patterns[enemy] = finale
@@ -4055,6 +4056,8 @@ func _draw_backdrop() -> void:
 			_backdrop_dining(color, t)
 		"stadium":
 			_backdrop_stadium(color, t)
+		"carrier":
+			_backdrop_carrier(color, t)
 		_:
 			_backdrop_sigil(color, t)
 			_backdrop_diamonds(color, t)
@@ -4193,6 +4196,34 @@ func _backdrop_dining(color: Color, t: float) -> void:
 		var flicker := 1.0 + sin(t * 13.0 + k * 2.1) * 0.25
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 4.0 * flicker, Color(1.0, 0.8, 0.35, 0.55))
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 14.0 * flicker, Color(1.0, 0.7, 0.3, 0.08))
+
+
+## The flight deck of the old carrier: the runway stripes running away to the
+## horizon, the island tower, the sea, and the sky going orange.
+func _backdrop_carrier(color: Color, t: float) -> void:
+	var horizon := BACKDROP.position.y + 92
+	# The sunset, in bands.
+	for band in 5:
+		_backdrop.draw_rect(Rect2(BACKDROP.position.x, BACKDROP.position.y + band * 18, BACKDROP.size.x, 18), Color(1.0, 0.55 - band * 0.06, 0.3, 0.05 + band * 0.015))
+	# The sea, glinting.
+	for k in 18:
+		var x := BACKDROP.position.x + fmod(k * 37.0 + t * 12.0, BACKDROP.size.x)
+		_backdrop.draw_line(Vector2(x, horizon + 4 + (k % 3) * 6), Vector2(x + 12, horizon + 4 + (k % 3) * 6), Color(1, 0.8, 0.6, 0.15), 1.0)
+	# The deck, in perspective: its edges, the centerline, the stripes coming at you.
+	var center := BACKDROP.get_center().x
+	var near := BACKDROP.end.y - 4
+	var far := horizon + 22
+	_backdrop.draw_colored_polygon(PackedVector2Array([Vector2(center - 60, far), Vector2(center + 60, far), Vector2(center + 300, near), Vector2(center - 300, near)]), Color(color.darkened(0.4), 0.35))
+	for k in 6:
+		var p := fmod(k / 6.0 + t * 0.25, 1.0)
+		var y := lerpf(far, near, p * p)
+		var half := lerpf(4.0, 20.0, p * p)
+		_backdrop.draw_rect(Rect2(center - 2, y, 4, half), Color(1, 1, 1, 0.12 + 0.2 * p))
+	_backdrop.draw_line(Vector2(center - 60, far), Vector2(center - 300, near), Color(1, 0.95, 0.5, 0.25), 2.0)
+	_backdrop.draw_line(Vector2(center + 60, far), Vector2(center + 300, near), Color(1, 0.95, 0.5, 0.25), 2.0)
+	# The island tower, off to the right.
+	_backdrop.draw_rect(Rect2(BACKDROP.end.x - 110, horizon - 50, 40, 72), Color(0.5, 0.52, 0.58, 0.25))
+	_backdrop.draw_rect(Rect2(BACKDROP.end.x - 104, horizon - 40, 28, 8), Color(1.0, 0.85, 0.5, 0.2 + 0.1 * sin(t * 2.0)))
 
 
 ## The ballpark at night: light towers glaring down, rows and rows of empty seats,

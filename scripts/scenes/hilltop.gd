@@ -1130,6 +1130,13 @@ func _tent_stakes() -> void:
 
 
 func _go_down_hatch() -> void:
+	# Going your own way, after the Harbor: the offer's closed.
+	if Game.flags.get("route", "") == "neutral" and flag("hatch_locked"):
+		await Game.dialogue.say([
+			"* (The hatch is locked. Something is taped to it:\n*  a note, in Nassan's handwriting.)",
+			"* (\"The offer stood. It doesn't anymore.\")",
+		])
+		return
 	var choice := await Game.dialogue.ask("* (The hatch to the Corps' base.\n*  Climb down?)", ["Climb down", "Stay"])
 	if choice == 0:
 		Game.play_sfx("door")

@@ -49,6 +49,14 @@ var finale_patterns: Array[String] = []
 var finale_line: String = ""
 var finale_started: bool = false
 var finale_announced: bool = false
+## When the finale starts: under this much of their HP (a third, usually), or (if
+## above 0) from this turn on, whichever comes first. And how often it comes up.
+var finale_at: float = 1.0 / 3.0
+var finale_turn: int = 0
+var finale_chance: float = 0.4
+## The attack they just used (some ACTs only work right after a certain one: see
+## an act's "when").
+var last_pattern: String = ""
 ## Supreme labels his own attacks with their odds of hitting you: pattern -> %.
 var odds: Dictionary = {}
 var course: int = 0
@@ -106,6 +114,13 @@ var _act_counts: Dictionary = {}
 var _last_act: String = ""
 
 
+## Has their finale started? (See finale_at, finale_turn.)
+func in_finale() -> bool:
+	if finale_patterns.is_empty():
+		return false
+	return hp < max_hp * finale_at or (finale_turn > 0 and fury >= finale_turn - 1)
+
+
 func is_active() -> bool:
 	return state == "active"
 
@@ -128,6 +143,10 @@ func do_act(index: int, actor: String) -> Array[String]:
 		return [check_text]
 
 	var act: Dictionary = acts[index - 1]
+	# Some ACTs only work right after a certain attack (Flight Deck: guide it in
+	# right after its landing approach).
+	if act.has("when") and act["when"] != last_pattern:
+		return [str(act.get("wrong", "* Not now.")).format({"name": name, "actor": actor})]
 	# Only the course that's on the table can be complimented.
 	if act.has("course") and not courses.is_empty() and act["course"] != courses[course % courses.size()]:
 		return [str(act.get("wrong", "* That isn't what's on the table.")).format({"name": name, "actor": actor})]

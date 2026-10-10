@@ -633,7 +633,7 @@ func _feather_bench() -> void:
 		"* (You can feel what's in it: an old man's grief,\n*  five years old, waiting for somebody to come back.)",
 		"* (It isn't yours. It's his.)",
 	])
-	Game.set_objective("6 of 12. Next: Downtown. (And the Pigeon Man, at the mall?)")
+	Game.set_objective("6 of 12. Next: Downtown. (Or the Pigeon Man?)")
 
 
 func _bus_stop() -> void:

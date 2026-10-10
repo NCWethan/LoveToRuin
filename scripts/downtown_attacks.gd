@@ -371,7 +371,6 @@ static func _margin_of_error(enemy: Enemy, parent: Node, area: Rect2, soul: Vect
 	ring.gap_angle = randf() * TAU
 	ring.gap_width = 0.55
 	ring.lifetime = 1.3
-	ring.bounds = Rect2()
 	return 1.2
 
 

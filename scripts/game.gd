@@ -335,7 +335,16 @@ func update_stats() -> void:
 
 ## Who's coming along with Elric: "Hop", or a Corps member's id ("BigJoe6").
 func partner() -> String:
-	return flags.get("partner", "Hop")
+	var id: String = flags.get("partner", "Hop")
+	# (After the vote at the Harbor, Hop is gone.)
+	if id == "Hop" and hop_left():
+		return "BigJoe6"
+	return id
+
+
+## Corps: after the vote at the Harbor, Hop leaves that night.
+func hop_left() -> bool:
+	return flags.get("route", "") == "pacifist" and flags.get("hb_vote_done", false)
 
 
 ## After the Westview Field choice, the city is seen by day: once Elric has been
@@ -358,7 +367,7 @@ func walking_alone() -> bool:
 
 ## Everyone who could come along right now.
 func team_choices() -> Array:
-	var choices: Array = ["Hop"]
+	var choices: Array = [] if hop_left() else ["Hop"]
 	if flags.get("base_arrived", false):
 		choices.append_array(load("res://scripts/helpers.gd").CORPS)
 	return choices
@@ -783,6 +792,7 @@ const AREA_NAMES := {
 	"res://scenes/balboa_park.tscn": "Balboa Park",
 	"res://scenes/old_town.tscn": "Old Town",
 	"res://scenes/downtown.tscn": "Downtown",
+	"res://scenes/harbor.tscn": "The Harbor",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

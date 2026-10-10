@@ -2503,6 +2503,81 @@ $wildArt = [ordered]@{
         ".....JJJ...JJJ",
         ".....}}}...}}}"
     )
+    # Flight Deck (the Harbor): an old jet on the carrier, nose up, canopy
+    # glowing like an eye. Wings out, a number on its tail.
+    'flight_deck' = @(
+        "...........gg",
+        "..........gGGg",
+        ".........gGiiGg",
+        ".........GiYYiG",
+        ".........GiiiiG",
+        "........gGGGGGGg",
+        "........GGGGGGGG",
+        "..gggggGGGGGGGGGGggggg",
+        ".gGGGGGGGGGGGGGGGGGGGGg",
+        "gGGGGGGGGGRRGGGGGGGGGGGg",
+        ".gggggggGGGGGGGGgggggggg",
+        "........GGGGGGGG",
+        "........GGgGGgGG",
+        ".......gGG.GG.GGg",
+        "......gGGG....GGGg",
+        "......gggg....gggg",
+        "........O......O",
+        ".......OYO....OYO"
+    )
+    # The Old Sailor (the Harbor): a walrus in a captain's hat, tusks and all.
+    'sailor' = @(
+        "......WWWWWWWW",
+        ".....WWKKKKKKWW",
+        "....KKKKKKKKKKKK",
+        ".....6666666666",
+        "....669K6666K966",
+        "....6699999999966",
+        "....669WW99WW9966",
+        ".....66W6666W666",
+        "...uuuuuuuuuuuuuu",
+        "..6uuuuAuuuuAuuuu6",
+        "..6uuuuuuuuuuuuuu6",
+        "...uuuuAuuuuAuuuu",
+        "....uuuuuuuuuuuu",
+        "....88........88"
+    )
+    # The Tourist (the Harbor): a sunburned capybara with a camera and a visor.
+    'tourist' = @(
+        ".....eeeeeeee",
+        "....eeeeeeeeeee",
+        ".....99999999",
+        "....9999999999",
+        "....99K9999K99",
+        "....999999999988",
+        ".....99999999998",
+        "....fffffffffff",
+        "...9fPPKKKKPPff9",
+        "...9fPPKiiKPPff9",
+        "....fffKKKKffff",
+        "....fffffffffff",
+        ".....JJJJJJJJJ",
+        ".....99.....99",
+        ".....WW.....WW"
+    )
+    # The Pelican (the Harbor): sells fish off the pier. Mostly to himself.
+    'pelican' = @(
+        "........WWWW",
+        ".......WWWWWW",
+        ".......WWKWWW}}}}}}",
+        ".......WWWWWW}}}}}}}",
+        "........WWWW..}}}}",
+        "........WWW",
+        ".......WWWWW",
+        ".....WWWWWWWWW",
+        "....WWWWWWWWWWWg",
+        "...gWWWWWWWWWWWgg",
+        "...ggWWWWWWWWWgg",
+        "....gggWWWWWggg",
+        "........}..}",
+        "........}..}",
+        ".......}}.}}"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

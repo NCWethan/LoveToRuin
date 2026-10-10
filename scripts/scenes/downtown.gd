@@ -500,7 +500,7 @@ func _after_memory() -> void:
 				{"who": "Supreme", "text": "Emotionally, I'm staying.", "mood": ""},
 				{"who": "Supreme", "text": "...I didn't know I had that column.", "mood": "happy"},
 			])
-			Game.set_objective("7 of 12 FRAGMENTS. (To be continued.)")
+			Game.set_objective("7 of 12. Next: the Harbor. (Take the bus.)")
 		"neutral":
 			if supreme:
 				await Game.dialogue.say([
@@ -508,7 +508,7 @@ func _after_memory() -> void:
 					{"who": "Supreme", "text": "Updating my model. You're 23% more\ndecent than I predicted.", "mood": "smug"},
 					{"who": "Supreme", "text": "...Don't let it go to your head.\nIt's still under half.", "mood": ""},
 				])
-			Game.set_objective("7 of 12 FRAGMENTS. (To be continued.)")
+			Game.set_objective("7 of 12. Next: the Harbor. (Take the bus.)")
 
 
 func _bus_stop() -> void:

@@ -64,6 +64,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	wait = DowntownAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:
 		return wait
+	# The Harbor (harbor_attacks.gd).
+	wait = HarborAttacks.spawn(pattern, enemy, parent, area, s, step)
+	if wait >= 0.0:
+		return wait
 	# The Corps, as bosses (corps_attacks.gd).
 	wait = CorpsAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:
@@ -79,6 +83,16 @@ static func _bullet(enemy: Enemy, parent: Node, area: Rect2, at: Vector2) -> Bul
 	bullet.position = at
 	parent.add_child(bullet)
 	return bullet
+
+
+## What an attack is called out loud, and a hint about it (for whoever announces
+## attacks: Supreme at the Big Screen, Agent at Flight Deck).
+static func label_of(pattern: String) -> String:
+	return DowntownAttacks.LABELS.get(pattern, HarborAttacks.LABELS.get(pattern, pattern.to_upper().replace("_", " ")))
+
+
+static func hint_of(pattern: String) -> String:
+	return DowntownAttacks.HINTS.get(pattern, HarborAttacks.HINTS.get(pattern, "Good luck."))
 
 
 ## An x position: every `every`-th shot lines up with the SOUL (give or take a few

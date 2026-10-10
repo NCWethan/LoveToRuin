@@ -316,7 +316,6 @@ static func _loudest_man(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2,
 	ring.gap_angle = (soul - area.get_center()).angle() + randf_range(0.6, 1.4) * (1.0 if step % 2 == 0 else -1.0)
 	ring.gap_width = 0.6
 	ring.lifetime = 2.6
-	ring.bounds = Rect2()
 	return 0.75 * _pace(enemy)
 
 

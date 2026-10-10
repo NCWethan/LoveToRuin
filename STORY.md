@@ -110,7 +110,7 @@ On every path, the fragments play their memories in the same order (by how many 
 | 5 | **Balboa Park**, the museum **(built)** | **The Empty Knight**, a suit of armor from an exhibit | **Big Joe** | On the museum steps at night, Hop tells Relic about the voice inside him. Relic isn't scared: *"Everybody's got something in them they didn't ask for."* |
 | 6 | **Old Town**, a haunted adobe house **(built)** | **The Hostess**, a ghost still setting the table for guests | **Nat** | Relic holds an old man's hand on a park bench. A grief lifts out of him and into a pigeon feather. He looks at the pigeons and laughs for the first time in a year. (This is Pigeon Man. His wife was Geraldine.) |
 | 7 | **Downtown**, the ballpark **(built)** | **The Big Screen**, the scoreboard | **Supreme** | Hop wakes up screaming again. Relic takes his nightmares into the only thing in their pocket: a Jack in the Box curly-fry token. |
-| 8 | **The Harbor**, the old aircraft carrier | **Flight Deck**, a jet on the carrier | **Agent & Eggo** | *"If you ever want him gone, I could try."* Hop says no. He's scared of who he'd be without the voice. |
+| 8 | **The Harbor**, the old aircraft carrier **(built)** | **Flight Deck**, a jet on the carrier | **Agent & Eggo** | *"If you ever want him gone, I could try."* Hop says no. He's scared of who he'd be without the voice. |
 | 9 | **Torrey Pines**, the cliffs over the ocean | **The Glider**, a hang glider that won't come down | **Rooster** | Relic packs their backpack to leave San Diego, like every town before. They stand on the cliff a long time. Then they unpack. *"First place I ever wanted to stay."* |
 | 10 | **The burned hills** east of the city, where the fire came from | **Ember**, what's left of the fire itself | **Ronin** | The three-person tent. *"Room for three. You, me, and him."* The wind comes in hot off the hills. |
 | 11 | **Hop's house**, in the jar labeled KEEP | — | **Nassan** | The fire. Hopkuna, out for the first time, loving it. Relic holding on: **"Hop. Let go."** |
@@ -153,7 +153,7 @@ A free-roaming stretch. Each fragment is a day trip with a different pair of Cor
 
 **Breaking a fragment.** Each one goes back to the crater, where lightning and fire crack it. The red burns away, and for a moment there's a green light inside, like a person curled up asleep. Then it's gone, and the wind picks up across the field. (Every time, Hop goes quiet for the rest of the day, and nobody asks why.)
 
-### Act 3: The Harbor, and the split (fragment 8)
+### Act 3: The Harbor, and the split (fragment 8) (built)
 - On the old aircraft carrier, the keepsake memory is *"If you ever want him gone, I could try."* Hop says no. Elric watches Hop's past self say it.
 - **The plan backfires.** Agent figures out what nobody wanted to: breaking a fragment frees Relic's piece, but **Hopkuna's power doesn't die. It drifts home, back into Hop.** Every fragment the Corps has broken has made Hopkuna stronger. That's why Hop has been getting worse. *"We haven't been destroying him. We've been feeding him."*
 - **Hop tells Elric everything.** On the flight deck at night: Relic, the summer, the tent, the fire, what he did, and what it cost. *"You look like them. You walk like them. You stand on the edge of things like them. I couldn't tell you. I didn't want you to be a replacement. I wanted you to be you."*
@@ -318,7 +318,7 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 3 | **Big Joe** | Balboa Park | A duel, by the rules. He never strikes while you're down. You do. | *"Justice was supposed to... ...Tell Eggo I'm sorry I was loud."* | **Cracked helmet crest** |
 | 4 | **Nat** **(built)** | Old Town | He reads your next attack out loud, every turn, so you'll know he saw it coming. | *"Page 213. The last page. ...I always wanted to know how it ended."* | **His book** (the last page is blank) |
 | 5 | **Supreme** **(built)** | Downtown | A bullet-hell made of statistics. Every attack is labeled with its odds of hitting you. | *"I kept the odds you'd stop above zero. ...I rounded up."* | **Spreadsheet printout** |
-| 6 | **Agent** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
+| 6 | **Agent** **(built)** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
 | 7 | **Rooster** | Torrey Pines | He roasts you through the whole fight. The jokes fall apart as he gets scared. | *"You were my favorite person to roast. You always roasted back."* (not a joke) | **Top hat** |
 | 8 | **Ronin** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
 | 9 | **Eggo** | The bunker, on the couch | He doesn't fight at all. Only FIGHT works; everything else is chained, like the glowbug. | *"...you could also just talk to us."* Then one last pun. It's perfect. Nobody laughs. (Toast the bunny hops away and is never seen again.) | **Cat-ear beanie** |
@@ -385,12 +385,13 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 
 ## 11. What to build next, in order
 
-1. ~~The first keepsake memories~~ **(built:** 1 to 7**)**
+1. ~~The first keepsake memories~~ **(built:** 1 to 8**)**
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
 4. **Relic's lost collection:** the side quest. (The first piece is built: the pigeon feather from Old Town, which can go back to the Pigeon Man.)
 5. ~~Balboa Park~~ **(built)**: the Empty Knight, Big Joe, and the missing page.
 6. ~~Old Town~~ **(built)**: the Hostess, Nat, and the reveal that Relic's collection was the townsfolk's pain.
 7. ~~Downtown~~ **(built)**: the Big Screen, Supreme and the 0.4%.
-8. **The Harbor** (fragment 8): Flight Deck, Agent and Eggo, and the offer closing.
-9. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+8. ~~The Harbor~~ **(built)**: Flight Deck, Agent and Eggo, the feeding, Hop's confession, the vote, Hop's note, and the offer closing.
+9. **Torrey Pines** (fragment 9): the Glider, Rooster, and Hopkuna takes everything.
+10. Then one fragment area at a time, in the order above, ending at Sabre Springs.
