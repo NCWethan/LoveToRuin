@@ -372,10 +372,15 @@ func _place_people() -> void:
 
 	# Shoppers and regulars (townsfolk.gd). Anyone can be challenged.
 	var shoppers: Dictionary = SHOPPERS[time]
+	var placed: Dictionary = {}
 	for id in shoppers:
 		var person := add_person(id, shoppers[id][0], SCENE, "talk_night" if time == "night" else "talk")
+		if person:
+			placed[id] = person
 		if person and shoppers[id].size() > 1:
 			person.patrol(shoppers[id][0], shoppers[id][1], 40.0)
+	if _keepsakes_home():
+		_place_sitters(placed)
 
 	var star := make_save_star()
 	star.glow = true
@@ -407,12 +412,79 @@ func _start() -> void:
 		return
 	if await handle_person_return():
 		return
+	if _keepsakes_home() and not flag("kh_seen"):
+		await run_cutscene(_keepsakes_home_scene)
+		return
 	if Game.on_genocide_route() and Game.daytime() and not flag("fled_jack"):
 		await run_cutscene(_dex_runs)
 	elif not flag("mall_arrived"):
 		await run_cutscene(_arrival)
 	elif not flag("seen_" + _time_of_day()):
 		await run_cutscene(_new_time_of_day)
+
+
+# --- Corps: the keepsakes come home ---------------------------------------------------
+# After Hopkuna takes the fragments at Torrey Pines, the pain Relic carried for
+# everyone, five years of it, is coming back to the people it belonged to. The
+# answer is BOND: the Corps goes out and sits with them. Nobody carries it alone.
+
+## Who's sitting with whom: [shopper, Corps member, what the shopper says,
+## what the Corps member says].
+const SITTERS := [
+	["pigeons", "Crayola",
+		["* (The Pigeon Man is crying. He's been crying all morning.\n*  He doesn't know why it's happening now.)", "* Pigeon Man: \"Five years. And it all came back this\n*  morning. All at once. Geraldine.\""],
+		["Crayola", "I don't know what to say. So I'm just here.\n...Pick a card? Any card.", "* (He picks one. It's the Seven of Hearts. He laughs,\n*  a little, through it.)"]],
+	["mallcop", "BigJoe6",
+		["* (The Mall Cop is standing very straight.\n*  His eyes are red.)", "* Mall Cop: \"My brother. Five years ago. I thought I was\n*  over it. I woke up this morning and I wasn't.\""],
+		["BigJoe6", "We're on patrol together today. By the rules.\nThe rules say nobody patrols alone.", "* (They walk the lot together, slowly, not talking.)"]],
+	["mom", "MuffinMage",
+		["* (The Busy Mom is sitting on the curb with her bags.\n*  She isn't busy. She's just sitting.)", "* Busy Mom: \"Our old dog. Biscuit's mom. I never cried.\n*  I'm crying now. In a parking lot. Great.\""],
+		["MuffinMage", "Mm. Salmon burger. Eat.\nIt's easier to cry with food in you.", "* (She eats it. It is, in fact, easier.)"]],
+	["teen", "Supreme",
+		["* (The Teen on Phone isn't on their phone.)", "* Teen: \"My best friend moved away. Five years ago.\n*  I never texted them back. Why does that hurt NOW?\""],
+		["Supreme", "Statistically, they'd be glad to hear from you.\n94%. I'll sit here while you type it.", "* (The Teen types for a long time. Supreme doesn't look.)"]],
+]
+
+
+func _keepsakes_home() -> bool:
+	return Game.flags.get("route", "") == "pacifist" and flag("tp_stolen") and not flag("ss_done")
+
+
+func _place_sitters(placed: Dictionary) -> void:
+	for pair in SITTERS:
+		var id: String = pair[0]
+		var who: String = pair[1]
+		if not placed.has(id) or who == Game.partner():
+			continue
+		var person: Character = placed[id]
+		person.set_meta("home", person.position)
+		# Whoever usually stands somewhere else in the lot comes over here.
+		if people.has(who):
+			people[who].queue_free()
+			people.erase(who)
+		var their_lines: Array = pair[2]
+		# (If Elric already gave the Pigeon Man his feather back, he's been carrying it a while.)
+		if id == "pigeons" and flag("feather_returned"):
+			their_lines = ["* (The Pigeon Man is feeding the pigeons. His eyes
+*  are wet, but he's smiling.)", "* Pigeon Man: \"It's still heavy. Some kid gave it back to me.
+*  I'm glad they did. ...Everyone else is getting theirs today.\""]
+		var sitter_lines: Array = pair[3]
+		var talk := func() -> void:
+			await Game.dialogue.say(their_lines + [{"who": sitter_lines[0], "text": sitter_lines[1], "mood": "sad"}, sitter_lines[2]])
+		person.on_interact = talk
+		var sitter := add_npc(who, person.position + Vector2(22, 0), talk)
+		people[who] = sitter
+
+
+func _keepsakes_home_scene() -> void:
+	Game.flags["kh_seen"] = true
+	await Game.dialogue.say([
+		"* (Something's different at the mall today.)",
+		"* (People are crying. On benches, in the lot,\n*  in line at Jack in the Box. Quietly.)",
+		"* (Five years of pain that Relic carried for them\n*  is coming home. Every fragment broken, every\n*  keepsake returned, a little more of it.)",
+		"* (Nobody knows why it's happening now.)",
+		"* (The Corps is here. All over the lot.\n*  Sitting with them.)",
+	])
 
 
 ## With Hop: after Nassan. The last of them.
