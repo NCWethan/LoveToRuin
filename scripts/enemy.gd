@@ -39,6 +39,11 @@ var spare_refusal: String = ""
 var hit_line: String = ""
 ## What they say as they die (shown before they shatter). Mostly for the Corps.
 var last_words: String = ""
+## Courses (the Hostess): the enemy serves its patterns in order, one per turn
+## (patterns[i] is courses[i]), and an ACT with a "course" only works on the turn
+## that course is on the table. `course` is the one on the table now.
+var courses: Array[String] = []
+var course: int = 0
 ## How many turns this enemy has attacked so far (some attacks speed up over time).
 var fury: int = 0
 
@@ -115,6 +120,9 @@ func do_act(index: int, actor: String) -> Array[String]:
 		return [check_text]
 
 	var act: Dictionary = acts[index - 1]
+	# Only the course that's on the table can be complimented.
+	if act.has("course") and not courses.is_empty() and act["course"] != courses[course % courses.size()]:
+		return [str(act.get("wrong", "* That isn't what's on the table.")).format({"name": name, "actor": actor})]
 	if bores_easily and act["name"] == _last_act:
 		return [bored_line.format({"name": name, "actor": actor})]
 	_last_act = act["name"]

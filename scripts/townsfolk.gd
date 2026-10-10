@@ -270,6 +270,64 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- Old Town ---
+	"rosa": {
+		"name": "Doña Rosa", "sprite": "rosa",
+		"talk": {
+			"lines": [["happy", "Tortillas! Fresh! Made by hand since before\nyou were born, mijo."], ["smug", "Don't touch the comal. It bites."]],
+			"options": ["Can I have one?", "How long have you done this?"],
+			"answers": [["happy", "Of course! Here. Careful, it's hot.\n...See? It bit you."], ["", "Fifty years. My hands could do it in my sleep.\nSome nights, they do."]],
+		},
+		"challenged": ["angry", "You want to fight an old woman with a hot\ncomal? ...Fine. Bring it, mijo."],
+		"spared": ["happy", "Ha! You're a good kid.\nCome back hungry."],
+		"hp": 50, "atk": 4, "def": 1, "patterns": ["tortilla_toss", "comal_heat"],
+		"check": "* DOÑA ROSA - ATK 4 DEF 1\n* A hedgehog. Fifty years of tortillas.\n* The spines are for customers who don't say thank you.",
+		"acts": [
+			{"name": "Eat One", "mercy": 50, "lines": ["* {actor} eats a tortilla, still hot.\n* Doña Rosa watches, very pleased."]},
+			{"name": "Say Thank You", "mercy": 50, "lines": ["* {actor} says thank you. Properly.\n* Her spines go flat. \"...Good manners.\""]},
+		],
+		"taunts": ["¡Ay!", "Too slow!", "Eat something!", "Look at you. So skinny."],
+		"flavor": ["* Doña Rosa flips a tortilla without looking.", "* The comal hisses."],
+		"backdrop": Color(0.9, 0.55, 0.3), "style": "plaza", "exp": 11, "money": 12,
+	},
+	"cactus": {
+		"name": "Mariachi Cactus", "sprite": "cactus",
+		"talk": {
+			"lines": [["happy", "(singing) AAAY, AY, AY, AYYYY...\n...A request? I know four songs."], ["smug", "Three of them are this one."]],
+			"options": ["Play something sad.", "Play something fast."],
+			"answers": [["sad", "...This one is about a cactus who wanted\nto be hugged. It's autobiographical."], ["happy", "FAST? I only have one speed, amigo.\nFIESTA."]],
+		},
+		"challenged": ["smug", "A duel? With a mariachi?\nWe have a song for this exact situation."],
+		"spared": ["happy", "You have the soul of a trumpet.\nI mean that as a compliment."],
+		"hp": 55, "atk": 4, "def": 2, "patterns": ["needle_spray", "maraca_beat"],
+		"check": "* MARIACHI CACTUS - ATK 4 DEF 2\n* Plays the plaza every night. Nobody can hug him.\n* He would like that, though.",
+		"acts": [
+			{"name": "Request", "mercy": 50, "lines": ["* {actor} requests his best song.\n* He plays the same one. It's still good."]},
+			{"name": "Dance", "mercy": 50, "lines": ["* {actor} dances, badly.\n* \"¡OLÉ!\" He means it."]},
+		],
+		"taunts": ["¡OLÉ!", "One more time!", "Everybody clap!", "AY AY AY!"],
+		"flavor": ["* The Mariachi Cactus strums a chord.", "* His sombrero has a hole for one of his arms."],
+		"backdrop": Color(0.4, 0.75, 0.4), "style": "plaza", "exp": 12, "money": 10,
+	},
+	"guide": {
+		"name": "Tour Guide", "sprite": "guide",
+		"talk": {
+			"lines": [["smug", "Welcome to the Old Town Ghost Tour!\nFirst stop: that house. Do NOT go in."], ["shocked", "...Nobody goes in. The table's still set.\nIt has been for a hundred and fifty years."]],
+			"options": ["Who set it?", "I'm going in."],
+			"answers": [["sad", "Isabel. The hostess. Her guests never came.\nShe never stopped waiting for them."], ["shocked", "...Can I put that on the tour?\nIf you come out?"]],
+		},
+		"challenged": ["shocked", "FIGHT me? I'm a TOUR GUIDE.\n...Fine. This is part of the tour now."],
+		"spared": ["happy", "Best tour I've ever given.\nFive stars. I'm reviewing myself."],
+		"hp": 45, "atk": 3, "def": 1, "patterns": ["lantern_sweep", "ghost_story"],
+		"check": "* TOUR GUIDE - ATK 3 DEF 1\n* A heron with a lantern. Has never seen a ghost.\n* Would very much like to keep it that way.",
+		"acts": [
+			{"name": "Take the Tour", "mercy": 50, "lines": ["* {actor} takes the tour.\n* It's actually really interesting."]},
+			{"name": "Act Spooked", "mercy": 50, "lines": ["* {actor} gasps at the spooky part.\n* The Tour Guide has never been happier."]},
+		],
+		"taunts": ["BOO! ...Did that work?", "And to your left: danger.", "Stay with the group!"],
+		"flavor": ["* The Tour Guide's lantern swings.", "* He keeps glancing at the old house."],
+		"backdrop": Color(0.45, 0.4, 0.7), "style": "plaza", "exp": 10, "money": 8,
+	},
 	"student": {
 		"name": "Student",
 		"challenged": ["shocked", "Wait, what? Like, FIGHT fight?\nI have a quiz third period!"],
@@ -343,6 +401,6 @@ static func create_battle(id: String) -> BattleData:
 
 ## "the Mall Cop", but just "Coach Ramirez" for a name.
 static func _the(person_name: String) -> String:
-	if person_name in ["Coach Ramirez"]:
+	if person_name in ["Coach Ramirez", "Doña Rosa"]:
 		return person_name
 	return "the " + person_name

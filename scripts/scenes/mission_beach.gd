@@ -232,17 +232,7 @@ func _arrival() -> void:
 
 
 func _bus_stop() -> void:
-	var options := ["PQ Mall", "Not now"]
-	if flag("mb_fragment"):
-		options = ["PQ Mall", "Balboa Park", "Not now"]
-	var go := await Game.dialogue.ask("* (A bus stop. Where to?)", options)
-	if go == options.size() - 1:
-		return
-	Game.play_sfx("door")
-	if go == 0:
-		await Game.change_scene(MALL_SCENE, Vector2(640, 545))
-	else:
-		await Game.change_scene("res://scenes/balboa_park.tscn")
+	await ride_bus(SCENE)
 
 
 func _coaster_gate() -> void:

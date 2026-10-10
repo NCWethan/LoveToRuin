@@ -506,6 +506,16 @@ const GLYPHS := {
 	"helmet": [".GGG.", "GGGGG", "GKKKG", "GGGGG", ".G.G."],
 	"gauntlet": ["G.G.G", "GGGGG", "GGGG.", ".GG.."],
 	"kite_shield": ["RRRRR", "RYRYR", "RRRRR", ".RRR.", "..R.."],
+	"tortilla": [".TTTT.", "TTbTTT", "TTTTbT", "TbTTTT", ".TTTT."],
+	"needle": ["W", "N", "N"],
+	"maraca": [".R.", "RYR", "RRR", ".b.", ".b."],
+	"lantern": [".K.", "KYK", "YYY", "KYK"],
+	"ghost": [".WWW.", "WKWKW", "WWWWW", "WWWWW", "W.W.W"],
+	"knife": ["G", "G", "G", "b", "b"],
+	"fork": ["G.G.G", "GGGGG", "..G..", "..b..", "..b.."],
+	"flan": [".YYY.", "YYYYY", "bbbbb"],
+	"soup": [".b.", "bTb", ".b."],
+	"corner": ["WWW", "WW.", "W.."],
 }
 
 

@@ -202,6 +202,7 @@ func _talk_nat() -> void:
 		return
 	Game.flags["bp_page"] = true
 	_decor.queue_redraw()
+	_onward()
 	await Game.dialogue.say([
 		"* (Nat is sitting at the reading desk.\n*  The book isn't on his head. It's open in front of him.)",
 		{"who": "Nat", "text": "...You know my book. The one with the\nlast page torn out.", "mood": ""},
@@ -228,6 +229,7 @@ func _book() -> void:
 		return
 	Game.flags["bp_page"] = true
 	_decor.queue_redraw()
+	_onward()
 	if _genocide():
 		await Game.dialogue.say([
 			"* (An old book on the reading desk.\n*  The last page is still in it.)",
@@ -325,15 +327,13 @@ func _leave_museum() -> void:
 
 
 func _bus_stop() -> void:
-	var options := ["PQ Mall", "Mission Beach", "Not now"]
-	var where := await Game.dialogue.ask("* (A bus stop. Where to?)", options)
-	if where == 2:
-		return
-	Game.play_sfx("door")
-	if where == 0:
-		await Game.change_scene(MALL_SCENE, Vector2(640, 545))
-	else:
-		await Game.change_scene(BEACH_SCENE)
+	await ride_bus(SCENE)
+
+
+## Once the fragment's found and the page is read: on to Old Town.
+func _onward() -> void:
+	if flag("bp_fragment") and flag("bp_page"):
+		Game.set_objective("..." if _genocide() else "5 of 12. Next: Old Town. (Take the bus.)")
 
 
 func _meet_knight() -> void:
@@ -376,6 +376,7 @@ func _after_knight(spared: bool) -> void:
 			Game.set_objective("5 of 12 FRAGMENTS. (There's an archive here.)")
 		_:
 			Game.set_objective("...")
+	_onward()
 	await Game.dialogue.say(["* (The fragment is warm in your hand.\n*  You close your eyes.)"])
 	await Game.play_keepsakes([5], SCENE, player.position, [
 		"* (The museum steps at night. A boy telling someone\n*  the thing he'd never told anyone.)",

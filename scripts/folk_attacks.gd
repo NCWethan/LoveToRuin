@@ -67,6 +67,18 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"sword_sweep": return _sword_sweep(enemy, parent, area, s, step)
 		"armor_rain": return _armor_rain(enemy, parent, area, s, step)
 		"shield_charge": return _shield_charge(enemy, parent, area, s, step)
+		# --- Old Town ---
+		"soup_waves": return _soup_waves(enemy, parent, area, s, step)
+		"carving_knives": return _carving_knives(enemy, parent, area, s, step)
+		"dessert_tray": return _dessert_tray(enemy, parent, area, s, step)
+		"chapter_break": return _chapter_break(enemy, parent, area, s, step)
+		"dog_ear": return _dog_ear(enemy, parent, area, s, step)
+		"tortilla_toss": return _tortilla_toss(enemy, parent, area, s, step)
+		"comal_heat": return _comal_heat(enemy, parent, area, s, step)
+		"needle_spray": return _needle_spray(enemy, parent, area, s, step)
+		"maraca_beat": return _maraca_beat(enemy, parent, area, s, step)
+		"lantern_sweep": return _lantern_sweep(enemy, parent, area, s, step)
+		"ghost_story": return _ghost_story(enemy, parent, area, s, step)
 	return -1.0
 
 
@@ -872,3 +884,172 @@ static func _shield_charge(enemy: Enemy, parent: Node, area: Rect2, soul: Vector
 	shield.velocity = Vector2(320 if left else -320, 0)
 	shield.acceleration = Vector2(-340 if left else 340, 0)
 	return 1.0
+
+
+# --- The Hostess (Old Town) ---------------------------------------------------------
+
+## THE SOUP: ladlefuls of soup pour down in rows, each with a gap, and the gap
+## snakes back and forth across the box. Follow it.
+static func _soup_waves(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var gap := area.get_center().x + sin(step * 0.45) * (area.size.x * 0.32)
+	var x := area.position.x + 6
+	while x <= area.end.x - 6:
+		if absf(x - gap) > 16.0:
+			var drop := _glyph(enemy, parent, area, Vector2(x, area.position.y + 4), "soup", 6.0)
+			drop.velocity = Vector2(0, 85)
+		x += 12.0
+	return 0.42
+
+
+## THE ROAST: carving knives, flung down at an angle, and every third throw a fork
+## that turns toward you for a moment.
+static func _carving_knives(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var start := Vector2(_side_x(area, left, 10.0) , area.position.y + 4)
+	var knife := _glyph(enemy, parent, area, start, "knife", 8.0)
+	var target := Vector2(Attacks._aim_x(area, soul, step, 2), area.end.y)
+	knife.velocity = (target - start).normalized() * 190.0
+	knife.face_motion = true
+	if step % 3 == 2:
+		var fork := _glyph(enemy, parent, area, Vector2(randf_range(area.position.x + 10, area.end.x - 10), area.position.y + 4), "fork", 9.0)
+		fork.delay = 0.3
+		fork.velocity = (soul - fork.position).normalized() * 150.0
+		fork.homing = Attacks._soul(parent)
+		fork.homing_time = 0.4
+	return 0.38
+
+
+## DESSERT: flans, launched in high arcs from the top corners. They wobble, and
+## they bounce.
+static func _dessert_tray(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	# Every third one slides down the table instead (no corner is safe from flan).
+	if step % 3 == 2:
+		var slide := _glyph(enemy, parent, area, Vector2(_side_x(area, not left, 8.0), clampf(soul.y, area.position.y + 8, area.end.y - 8)), "flan", 10.0)
+		slide.velocity = Vector2(-150 if left else 150, 0)
+		return 0.45
+	var flan := _glyph(enemy, parent, area, Vector2(_side_x(area, left, 8.0), area.position.y + 8), "flan", 10.0)
+	var target := Attacks._aim_x(area, soul, step, 2)
+	flan.velocity = Vector2((target - flan.position.x) / 0.9, -40)
+	flan.acceleration = Vector2(0, 260)
+	flan.bounce_speed = 170
+	flan.zigzag = 1.0
+	return 0.55
+
+
+# --- Nat (Genocide) ------------------------------------------------------------------
+
+## CHAPTER BREAK: lines of text scroll across the box, a row at a time, back and
+## forth like a page being read. Each line has a space in it.
+static func _chapter_break(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var y := area.position.y + 10 + fmod(step * 22.0, area.size.y - 20.0)
+	if step % 3 == 0:
+		y = clampf(soul.y, area.position.y + 8, area.end.y - 8)
+	var gap := randi_range(1, 5)
+	for k in 7:
+		if k == gap:
+			continue
+		var word := _glyph(enemy, parent, area, Vector2(_side_x(area, left, 6.0) - (k * 22.0 if left else -k * 22.0), y), "text", 12.0)
+		word.velocity = Vector2(120 if left else -120, 0)
+	return 0.7
+
+
+## DOG EAR: page corners fold in from the four corners of the box, toward you.
+static func _dog_ear(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var corners := [area.position, Vector2(area.end.x, area.position.y), area.end, Vector2(area.position.x, area.end.y)]
+	var at: Vector2 = corners[step % 4]
+	at = at.clamp(area.position + Vector2(6, 6), area.end - Vector2(6, 6))
+	var corner := _glyph(enemy, parent, area, at, "corner", 8.0)
+	corner.delay = 0.25
+	corner.velocity = (soul - at).normalized() * 130.0
+	corner.face_motion = true
+	return 0.3
+
+
+# --- Old Town townsfolk ---------------------------------------------------------------
+
+## Doña Rosa: TORTILLAS, flipped up off the comal, spinning, coming back down.
+static func _tortilla_toss(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := randf_range(area.position.x + 12, area.end.x - 12)
+	var tortilla := _glyph(enemy, parent, area, Vector2(x, area.end.y - 6), "tortilla", 11.0)
+	var target := Attacks._aim_x(area, soul, step, 2)
+	var up := randf_range(230, 270)
+	var reach := 2.0 * up / 320.0
+	# Every other one peaks right at your height, over where you are.
+	if step % 2 == 1:
+		up = sqrt(640.0 * maxf((area.end.y - 6) - soul.y, 12.0))
+		reach = up / 320.0
+	tortilla.velocity = Vector2((target - x) / reach, -up)
+	tortilla.acceleration = Vector2(0, 320)
+	tortilla.spin = 7.0
+	return 0.5
+
+
+## Doña Rosa: THE COMAL. Heat shimmers up off the griddle in a slow-rising wall
+## with one cool spot.
+static func _comal_heat(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var low := area.position.x + 6
+	var high := area.end.x - 6
+	var gap := Attacks._away_from(randf_range(low, high), soul.x, low, high)
+	var x := low
+	while x <= high:
+		if absf(x - gap) > 14.0:
+			var heat := Attacks._bullet(enemy, parent, area, Vector2(x, area.end.y - 4))
+			heat.size = 5.0
+			heat.color = Color(1.0, 0.55, 0.2)
+			heat.velocity = Vector2(0, -70)
+			heat.sway = 20.0
+		x += 11.0
+	return 1.2
+
+
+## The Mariachi Cactus: NEEDLES, sprayed from the side in a fan, at you.
+static func _needle_spray(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var start := Vector2(_side_x(area, left), randf_range(area.position.y + 10, area.end.y - 10))
+	var aim := (soul - start).angle()
+	for k in 5:
+		var needle := _glyph(enemy, parent, area, start, "needle", 5.0)
+		needle.delay = 0.3
+		needle.velocity = Vector2.from_angle(aim + (k - 2) * 0.16) * 175.0
+		needle.face_motion = true
+	return 0.8
+
+
+## The Mariachi Cactus: THE BEAT. On every beat, maracas shake in from all four
+## corners toward the middle (and you).
+static func _maraca_beat(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var corners := [area.position, Vector2(area.end.x, area.position.y), area.end, Vector2(area.position.x, area.end.y)]
+	for k in 4:
+		if (k + step) % 4 == 3:
+			continue
+		var at: Vector2 = corners[k]
+		at = at.clamp(area.position + Vector2(8, 8), area.end - Vector2(8, 8))
+		var maraca := _glyph(enemy, parent, area, at, "maraca", 8.0)
+		maraca.velocity = (soul - at).normalized() * 105.0
+		maraca.spin = 9.0
+	return 0.55
+
+
+## The Tour Guide: THE LANTERN, carried along the top of the box, dripping hot wax.
+static func _lantern_sweep(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := area.get_center().x + sin(step * 0.35) * (area.size.x * 0.42)
+	var drip := _glyph(enemy, parent, area, Vector2(x, area.position.y + 6), "lantern" if step % 6 == 0 else "soup", 7.0)
+	drip.velocity = Vector2(0, 120)
+	if step % 4 == 0:
+		var aimed := _glyph(enemy, parent, area, Vector2(soul.x, area.position.y + 6), "soup", 7.0)
+		aimed.velocity = Vector2(0, 120)
+	return 0.2
+
+
+## The Tour Guide: A GHOST STORY. Little ghosts fade in around you and drift
+## closer. (He's never seen a ghost. He's terrified of them.)
+static func _ghost_story(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var at := (soul + Vector2.from_angle(randf() * TAU) * 55.0).clamp(area.position + Vector2(8, 8), area.end - Vector2(8, 8))
+	var ghost := _glyph(enemy, parent, area, at, "ghost", 9.0)
+	ghost.delay = 0.6
+	ghost.velocity = (soul - at).normalized() * 70.0
+	ghost.lifetime = 2.2
+	ghost.sway = 25.0
+	return 0.45

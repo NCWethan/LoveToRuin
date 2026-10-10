@@ -42,7 +42,7 @@ The player should always have a question they can't stop thinking about. This is
 | Someone died on Westview Field | *"I killed the last one who had it."* **(built)** | Hop tells Elric (Pacifist: the Harbor; Neutral: Torrey Pines; Genocide: never; Relic shows you) |
 | That someone was named Relic | Hop's *"Rel-- Elric."* **(built)** | The 2nd keepsake memory (all paths) |
 | The fragments hold pieces of Relic | The first fragment "breathes" **(built)**; the green glow under the red | The first keepsake memory, right after the choice |
-| The townsfolk's odd habits come from Relic | Pigeon Man's Geralds, Biscuit avoiding the field **(built)** | Old Town (fragment 6) |
+| The townsfolk's odd habits come from Relic | Pigeon Man's Geralds, Biscuit avoiding the field **(built)** | Old Town (fragment 6) **(built)** |
 | Hop had a fragment the whole time | The jar labeled KEEP **(built)**; Nassan's map has a circle on Hop's street | Fragment 11 |
 | Breaking a fragment makes Hopkuna stronger | Hop gets worse after every fragment the Corps breaks | The Harbor (fragment 8), Pacifist |
 | Who tore the last page out of Nat's book | Nat: *"Convenient."* **(built)** | Balboa Park: Hop did, because Relic's name was on it |
@@ -108,7 +108,7 @@ On every path, the fragments play their memories in the same order (by how many 
 | 3 | Westview Field **(built)** | Hopkuna | — | A boy in a fedora with two orders of curly fries: *"You look like you've never had these. Tragic."* The first day of the summer. |
 | 4 | **Mission Beach** boardwalk **(built)** | **The Dipper**, the old wooden roller coaster | **Crayola & N.C. Wethan** (they swim here) | Relic's first time seeing the ocean. Hop teaches them to bodysurf, badly. *"Everything's so BIG here."* |
 | 5 | **Balboa Park**, the museum **(built)** | **The Empty Knight**, a suit of armor from an exhibit | **Big Joe** | On the museum steps at night, Hop tells Relic about the voice inside him. Relic isn't scared: *"Everybody's got something in them they didn't ask for."* |
-| 6 | **Old Town**, a haunted adobe house | **The Hostess**, a ghost still setting the table for guests | **Nat** | Relic holds an old man's hand on a park bench. A grief lifts out of him and into a pigeon feather. He looks at the pigeons and laughs for the first time in a year. (This is Pigeon Man. His wife was Geraldine.) |
+| 6 | **Old Town**, a haunted adobe house **(built)** | **The Hostess**, a ghost still setting the table for guests | **Nat** | Relic holds an old man's hand on a park bench. A grief lifts out of him and into a pigeon feather. He looks at the pigeons and laughs for the first time in a year. (This is Pigeon Man. His wife was Geraldine.) |
 | 7 | **Downtown**, the ballpark | **The Big Screen**, the scoreboard | **Supreme** | Hop wakes up screaming again. Relic takes his nightmares into the only thing in their pocket: a Jack in the Box curly-fry token. |
 | 8 | **The Harbor**, the old aircraft carrier | **Flight Deck**, a jet on the carrier | **Agent & Eggo** | *"If you ever want him gone, I could try."* Hop says no. He's scared of who he'd be without the voice. |
 | 9 | **Torrey Pines**, the cliffs over the ocean | **The Glider**, a hang glider that won't come down | **Rooster** | Relic packs their backpack to leave San Diego, like every town before. They stand on the cliff a long time. Then they unpack. *"First place I ever wanted to stay."* |
@@ -316,7 +316,7 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 1 | **Crayola** | Mission Beach | His cards fly in and spell C-O-M-E B-A-C-K. Every card is the Seven of Hearts. | *"...Was it this one? Your card?"* | **Seven of Hearts** |
 | 2 | **N.C. Wethan** | Mission Beach | He stands over Crayola and won't move. His lightning hits everything around you and never you. | *"...KING ME?"* (quietly, for once) | **Checker piece** |
 | 3 | **Big Joe** | Balboa Park | A duel, by the rules. He never strikes while you're down. You do. | *"Justice was supposed to... ...Tell Eggo I'm sorry I was loud."* | **Cracked helmet crest** |
-| 4 | **Nat** | Old Town | He reads your next attack out loud, every turn, so you'll know he saw it coming. | *"Page 213. The last page. ...I always wanted to know how it ended."* | **His book** (the last page is blank) |
+| 4 | **Nat** **(built)** | Old Town | He reads your next attack out loud, every turn, so you'll know he saw it coming. | *"Page 213. The last page. ...I always wanted to know how it ended."* | **His book** (the last page is blank) |
 | 5 | **Supreme** | Downtown | A bullet-hell made of statistics. Every attack is labeled with its odds of hitting you. | *"I kept the odds you'd stop above zero. ...I rounded up."* | **Spreadsheet printout** |
 | 6 | **Agent** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
 | 7 | **Rooster** | Torrey Pines | He roasts you through the whole fight. The jokes fall apart as he gets scared. | *"You were my favorite person to roast. You always roasted back."* (not a joke) | **Top hat** |
@@ -385,10 +385,11 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 
 ## 11. What to build next, in order
 
-1. ~~The first keepsake memories~~ **(built:** 1 to 4**)**
+1. ~~The first keepsake memories~~ **(built:** 1 to 6**)**
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
-4. **Relic's lost collection:** the side quest, and its first few keepsakes.
+4. **Relic's lost collection:** the side quest. (The first piece is built: the pigeon feather from Old Town, which can go back to the Pigeon Man.)
 5. ~~Balboa Park~~ **(built)**: the Empty Knight, Big Joe, and the missing page.
-6. **Old Town** (fragment 6): the Hostess, Nat, and the reveal that Relic's collection was the townsfolk's pain.
-7. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+6. ~~Old Town~~ **(built)**: the Hostess, Nat, and the reveal that Relic's collection was the townsfolk's pain.
+7. **Downtown** (fragment 7): the Big Screen, Supreme and the 0.4%.
+8. Then one fragment area at a time, in the order above, ending at Sabre Springs.

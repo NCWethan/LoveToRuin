@@ -463,14 +463,7 @@ func _bus_stop() -> void:
 	if not flag("chapter1_done"):
 		await Game.dialogue.say(["* (A bus stop. The schedule is mostly stickers.)", "* (One of them says MISSION BEACH.)"])
 		return
-	var options := ["Mission Beach", "Not now"]
-	if flag("mb_fragment"):
-		options = ["Mission Beach", "Balboa Park", "Not now"]
-	var go := await Game.dialogue.ask("* (A bus stop. Where to?)", options)
-	if go == options.size() - 1:
-		return
-	Game.play_sfx("door")
-	await Game.change_scene(BEACH_SCENE if go == 0 else BALBOA_SCENE)
+	await ride_bus(SCENE)
 
 
 func _head_east() -> void:

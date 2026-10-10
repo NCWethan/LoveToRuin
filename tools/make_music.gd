@@ -23,6 +23,89 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# Old Town: a bright plaza tune in D, the lead like a trumpet, the harmony
+	# strummed like a guitar, the bass going oom-pah.
+	"oldtown": {
+		"bpm": 132,
+		"lead": [
+			"D5 . . . F#5 . A5 . . . F#5 . D5 . . .",
+			"E5 . . . G5 . B5 . . . G5 . E5 . . .",
+			"A5 . . . G5 . F#5 . . . E5 . D5 . . .",
+			"E5 . F#5 . E5 . D5 . C#5 . . . A4 . . .",
+			"D5 . . . F#5 . A5 . . . F#5 . D5 . . .",
+			"G5 . . . F#5 . E5 . . . D5 . B4 . . .",
+			"A4 . B4 . C#5 . D5 . E5 . F#5 . E5 . C#5 .",
+			"D5 . . . A4 . . . D5 . . . - - - -",
+		],
+		"harm": [
+			"F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 .",
+			"G4 . B4 G4 . B4 G4 . B4 G4 . B4 G4 . B4 .",
+			"F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 .",
+			"E4 . A4 E4 . A4 E4 . A4 E4 . A4 E4 . A4 .",
+			"F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 F#4 . A4 .",
+			"G4 . B4 G4 . B4 G4 . B4 G4 . B4 G4 . B4 .",
+			"E4 . A4 E4 . A4 E4 . A4 E4 . G4 E4 . G4 .",
+			"F#4 . A4 . D4 . . . F#4 . . . - - - -",
+		],
+		"bass": [
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"G2 . . . D2 . . . G2 . . . D2 . . .",
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"A2 . . . E2 . . . A2 . . . E2 . . .",
+			"D2 . . . A2 . . . D2 . . . A2 . . .",
+			"G2 . . . D2 . . . G2 . . . B1 . . .",
+			"A2 . . . E2 . . . A2 . . . A1 . . .",
+			"D2 . . . A1 . . . D2 . . . - - - -",
+		],
+		"drums": [
+			"K - - - S - H - K - - - S - H -",
+			"K - - - S - H - K - - - S - H H",
+			"K - - - S - H - K - - - S - H -",
+			"K - - - S - H - K - K - S S S -",
+			"K - - - S - H - K - - - S - H -",
+			"K - - - S - H - K - - - S - H H",
+			"K - - - S - H - K - K - S - H -",
+			"K - - - S - - - K - - - S S S S",
+		],
+	},
+
+	# The Hostess: a slow music-box waltz in A minor, a little out of tune, in an
+	# empty dining room. (Grand, and very, very lonely.)
+	"hostess": {
+		"bpm": 96,
+		"lead_wave": "triangle",
+		"lead": [
+			"A5 . . . . . C6 . . . B5 . . . A5 .",
+			"G#5 . . . . . B5 . . . E5 . . . . .",
+			"F5 . . . . . A5 . . . G5 . . . F5 .",
+			"E5 . . . . . . . - - - - - - - -",
+			"A5 . . . . . C6 . . . B5 . . . A5 .",
+			"D6 . . . . . C6 . . . B5 . . . A5 .",
+			"G#5 . . . A5 . B5 . . . E5 . . . G#5 .",
+			"A5 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"A3 . C4 . E4 . . . A3 . C4 . E4 . . .",
+			"E3 . G#3 . B3 . . . E3 . G#3 . B3 . . .",
+			"D3 . F3 . A3 . . . D3 . F3 . A3 . . .",
+			"E3 . G#3 . B3 . . . E3 . G#3 . D4 . . .",
+			"A3 . C4 . E4 . . . A3 . C4 . E4 . . .",
+			"D3 . F3 . A3 . . . D3 . F3 . A3 . . .",
+			"E3 . G#3 . B3 . . . E3 . G#3 . B3 . . .",
+			"A3 . C4 . E4 . . . A3 . . . - - - -",
+		],
+		"bass": [
+			"A2 . . . . . . . E2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"D2 . . . . . . . D2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"A2 . . . . . . . E2 . . . . . . .",
+			"D2 . . . . . . . F2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"A2 . . . . . . . - - - - - - - -",
+		],
+	},
+
 	# Balboa Park: warm and old-fashioned, a little Spanish guitar in it.
 	# Arpeggios under a slow, singing melody in D minor and F.
 	"balboa": {

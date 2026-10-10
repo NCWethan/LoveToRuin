@@ -309,12 +309,66 @@ func talk_to_person(id: String, talk: Dictionary, scene_path: String) -> void:
 		lines.append(Townsfolk.line(person, said))
 	await Game.dialogue.say(lines)
 	var options: Array = talk["options"].duplicate()
+	# (The feather from the Old Town bench, if Elric has it.)
+	var feather: bool = id == "pigeons" and flag("has_feather") and not flag("feather_returned") and not Game.on_genocide_route()
+	if feather:
+		options.append("(The feather.)")
 	options.append("Challenge")
 	var choice := await Game.dialogue.ask("* (What do you say?)", options)
 	if choice == options.size() - 1:
 		await challenge(id, scene_path)
 		return
+	if feather and choice == options.size() - 2:
+		await _return_feather()
+		return
 	await Game.dialogue.say([Townsfolk.line(person, talk["answers"][choice])])
+
+
+## The Pigeon Man's feather (fragment 6's KEEPSAKE): Relic took his grief, five
+## years ago, and left it in a feather on a bench in Old Town. Giving it back
+## gives it back: all of it, at once. (It was always his.)
+func _return_feather() -> void:
+	await Game.dialogue.say([
+		"* (You hold out the grey feather. The one from the bench.)",
+		"* Pigeon Man: \"...For me? It's just a feather, kid.\"",
+		"* \"...Gerald's got a hundred of 'em.\"",
+	])
+	var give := await Game.dialogue.ask("* (It's heavy. It's his. Give it back?)", ["Give it back", "Keep carrying it"])
+	if give != 0:
+		await Game.dialogue.say([
+			"* (You put it back in your pocket.)",
+			"* (Maybe some things are better carried by someone\n*  else. Relic thought so.)",
+		])
+		return
+	Game.flags["feather_returned"] = true
+	var kept: Array = Game.flags.get("mementos", [])
+	kept.erase("Pigeon Feather")
+	Game.flags["mementos"] = kept
+	var lines: Array = [
+		"* (He takes it. He turns it over in his fingers.)",
+		"* (His face changes.)",
+		"* Pigeon Man: \"...Geraldine.\"",
+		"* \"Five years. I haven't cried in five years.\n*  I thought I was just... done. I thought I was fine.\"",
+		"* (He's crying now. Really crying. All of it at once,\n*  five years of it.)",
+	]
+	if Game.walking_alone():
+		lines.append("* (You sit down next to him. The pigeons gather\n*  around your feet. You stay until he's done.)")
+	else:
+		lines.append("* (You sit down next to him. %s sits on his\n*  other side. The pigeons gather around your feet.)" % DialogueBox.display_name(Game.partner()))
+		lines.append("* (Nobody says anything. You stay until he's done.)")
+	lines.append_array([
+		"* Pigeon Man: \"...It's heavy.\"",
+		"* \"It's supposed to be heavy, isn't it.\n*  She was worth carrying.\"",
+		"* \"...Thank you, kid. I mean it.\"",
+		"* (A pigeon lands on his knee. He laughs, wet and real.)",
+		"* \"Hello, Gerald.\"",
+	])
+	await Game.dialogue.say(lines)
+	Game.bond += 5
+	Game.play_sfx("heal")
+	await Game.dialogue.say(["* (Your BOND went up by 5.)"])
+	if Game.objective().contains("Pigeon Man"):
+		Game.set_objective("6 of 12 FRAGMENTS.")
 
 
 ## Challenges someone (not in the Corps) to a fight.
@@ -595,6 +649,37 @@ const ENCOUNTER_DISTANCE := Vector2(550, 1000)
 ## Wild creatures around town: this many times farther between fights.
 const WILD_RARITY := 3.0
 var _next_encounter: float = -1.0
+
+
+## The bus. Every stop goes to every place the story has reached so far:
+## [name, scene, the flag that opens it].
+const BUS_ROUTE := [
+	["PQ Mall", "res://scenes/pq_mall.tscn", "chapter1_done"],
+	["Mission Beach", "res://scenes/mission_beach.tscn", "chapter1_done"],
+	["Balboa Park", "res://scenes/balboa_park.tscn", "mb_fragment"],
+	["Old Town", "res://scenes/old_town.tscn", "bp_fragment"],
+]
+## Where the bus lets you off at the mall (the stop on the road).
+const MALL_BUS_SPOT := Vector2(640, 545)
+
+
+## Asks where to go, and takes the bus there (from the stop in `here`).
+func ride_bus(here: String) -> void:
+	var names: Array = []
+	var stops: Array = []
+	for stop in BUS_ROUTE:
+		if stop[1] != here and flag(stop[2]):
+			names.append(stop[0])
+			stops.append(stop[1])
+	names.append("Not now")
+	var go := await Game.dialogue.ask("* (A bus stop. Where to?)", names)
+	if go < 0 or go >= stops.size():
+		return
+	Game.play_sfx("door")
+	if stops[go] == BUS_ROUTE[0][1]:
+		await Game.change_scene(stops[go], MALL_BUS_SPOT)
+	else:
+		await Game.change_scene(stops[go])
 
 
 ## Lets the wild creatures that live in this area (WildBattles.ZONES) jump out

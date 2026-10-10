@@ -16,6 +16,10 @@ extends Area
 ##      bodysurf, badly.
 ##   5  Balboa Park, the museum steps at night: Hop tells Relic about the voice
 ##      inside him. "Everybody's got something in them they didn't ask for."
+##   6  Old Town, the plaza bench: an old man crying over his wife. Relic takes
+##      his grief into a pigeon feather, and he laughs at the pigeons ("That one
+##      looks like a Gerald"). Hop finds out what the backpack is really full of.
+##      The feather goes between the slats of the bench: "I'll come back for it."
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -61,6 +65,7 @@ func _spawn() -> Vector2:
 		3: return Vector2(8 * T, 11 * T + 10)
 		4: return Vector2(10 * T, 5 * T + 10)
 		5: return Vector2(4 * T, 14 * T + 10)
+		6: return Vector2(3 * T, 12 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -72,6 +77,7 @@ func build_map() -> void:
 		3: _build_field()
 		4: _build_ocean()
 		5: _build_steps()
+		6: _build_plaza()
 		_: _build_road()
 
 
@@ -112,6 +118,21 @@ func _build_steps() -> void:
 	room.fill(0, 12, 34, 4, Room.PATIO)
 	for spot in [Vector2i(3, 5), Vector2i(29, 4), Vector2i(5, 19), Vector2i(27, 20)]:
 		room.set_tile(spot.x, spot.y, Room.TREE)
+
+
+## Old Town's plaza, late in the summer: the same benches, the same pigeons.
+func _build_plaza() -> void:
+	room.setup(36, 24, Room.DIRT)
+	room.fill(0, 0, 36, 1, Room.TREE)
+	room.fill(0, 23, 36, 1, Room.TREE)
+	room.fill(2, 2, 14, 1, Room.CLAY_ROOF)
+	room.fill(2, 3, 14, 3, Room.ADOBE)
+	room.fill(20, 2, 14, 1, Room.CLAY_ROOF)
+	room.fill(20, 3, 14, 3, Room.ADOBE)
+	room.fill(10, 9, 18, 10, Room.GRASS)
+	room.fill(15, 13, 2, 1, Room.BENCH)     # the bench
+	room.fill(23, 13, 2, 1, Room.BENCH)
+	room.set_tile(19, 15, Room.PROP)        # the flagpole
 
 
 ## Mission Beach, one afternoon that summer.
@@ -163,6 +184,17 @@ func _draw_decor() -> void:
 			# A backpack, if Relic has set it down.
 			if _flags.get("bag_down", false):
 				_decor.draw_rect(Rect2(21 * T + 6, 16 * T, 10, 12), Color8(70, 110, 70))
+		6:
+			# Paper flags, the flagpole, and pigeons (the bread's in his hand).
+			var colors := [Color8(230, 70, 110), Color8(250, 190, 50), Color8(80, 190, 120), Color8(70, 150, 230)]
+			for k in 18:
+				_decor.draw_rect(Rect2(Vector2(10 * T + k * 20, 8 * T + 2), Vector2(12, 12)), colors[k % colors.size()])
+			_decor.draw_rect(Rect2(19 * T + 9, 11 * T, 3, 4 * T + 10), Color8(190, 190, 196))
+			for spot in [Vector2(14, 15), Vector2(16, 15.5), Vector2(17.5, 14.8), Vector2(13, 14), Vector2(18, 16), Vector2(15, 16.5)]:
+				_decor.draw_circle(spot * T, 4.0, Color8(130, 130, 145))
+				_decor.draw_circle(spot * T + Vector2(4, -4), 2.5, Color8(110, 120, 140))
+			if _flags.get("feather", false):
+				_decor.draw_line(Vector2(15 * T + 14, 13 * T + 6), Vector2(16 * T + 4, 13 * T - 2), Color8(150, 150, 160), 3.0)
 		5:
 			# The steps (lines across them), and the stars.
 			for k in 3:
@@ -239,6 +271,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# The old man on the bench.
+	if memory == 6 and _flags.has("man") and player.position.distance_to(_flags["man"]) < 40.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_plaza)
 	# Down to the water.
 	if memory == 4 and hop != null and player.position.y > 13 * T and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -255,6 +291,7 @@ func _start() -> void:
 		3: await run_cutscene(_intro_field)
 		4: await run_cutscene(_intro_ocean)
 		5: await run_cutscene(_intro_steps)
+		6: await run_cutscene(_intro_plaza)
 
 
 func _intro_road() -> void:
@@ -449,6 +486,71 @@ func _end_steps() -> void:
 		{"who": "Hop", "text": "...Thanks, Relic.", "mood": "happy"},
 	])
 	await _finish(["* He told us everything.\n* We kept every word."])
+
+
+# --- 6: The plaza bench ---------------------------------------------------------------
+
+var _man: Character
+
+
+func _intro_plaza() -> void:
+	_man = Cast.make("pigeons")
+	add_character(_man, Vector2(16 * T, 14 * T + 4))
+	_man.face(Vector2.DOWN)
+	_flags["man"] = _man.position
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (Old Town, late in the summer. Hop went to get\n*  churros. There's a line. There's always a line.)",
+		"* (On a bench in the plaza, an old man is feeding\n*  the pigeons.)",
+		"* (No. He's holding the bread, and the pigeons are\n*  waiting, and he's crying.)",
+	])
+	Game.set_objective("(The old man on the bench.)")
+
+
+func _end_plaza() -> void:
+	_man.face(player.position - _man.position)
+	await Game.dialogue.say([
+		"* (He doesn't look up when you sit down.)",
+		"* The old man: \"...She'd have liked you. My wife.\"",
+		"* \"Geraldine. Forty-one years. Last Tuesday\n*  she just... didn't wake up.\"",
+		"* \"She fed these birds every day. I don't even\n*  like birds. I don't know why I'm here.\"",
+		{"who": "Relic", "choices": ["(Listen.)", "(Stay.)"]},
+		"* \"Everybody keeps saying it gets lighter.\n*  It doesn't get lighter. It gets HEAVIER.\"",
+		"* (A pigeon walks up and drops a feather at your\n*  feet, like it's paying a toll.)",
+		"* (You pick it up. You hold it between your hands.)",
+		{"who": "Relic", "text": "Can I carry some of that for you?", "mood": ""},
+		"* The old man: \"...What?\"",
+		"* (Something moves. Out of him, and into the feather.\n*  It's so heavy your arms shake.)",
+		"* (The old man blinks. He looks at the bread in his\n*  hand. He looks at the pigeons like he's never\n*  seen them before.)",
+		"* The old man: \"...That one looks like a Gerald.\"",
+		"* (He laughs. He can't stop.)",
+		"* \"They ALL look like Geralds! Look at them!\n*  Every single one!\"",
+	])
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(34 * T, 15 * T))
+	await hop.walk_to(Vector2(19 * T, 15 * T), 110.0)
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "Okay I got churros, the line was INSANE-\n...Who's that? Why's he laughing?", "mood": "happy"},
+		"* (The old man is throwing bread to the pigeons and\n*  naming them. They're all named Gerald.)",
+		"* (Hop looks at the feather in your hands.\n*  He stops smiling.)",
+		{"who": "Hop", "text": "...What did you just do?", "mood": "shocked"},
+		{"who": "Relic", "text": "Took some of it. He was carrying too much.", "mood": ""},
+		{"who": "Hop", "text": "Is that what's in your backpack?\nAll that stuff? The bottle caps and-", "mood": "sad"},
+		{"who": "Relic", "text": "People's worst days. Somebody has to hold them.", "mood": ""},
+		{"who": "Hop", "text": "Doesn't it get heavy?", "mood": "sad"},
+		{"who": "Relic", "text": "Yeah. That's how you know it's real.", "mood": "smug"},
+		"* (The backpack's full. Relic tucks the feather between\n*  two slats of the bench, so it won't blow away.)",
+	])
+	_flags["feather"] = true
+	_decor.queue_redraw()
+	await Game.dialogue.say([
+		{"who": "Relic", "text": "I'll come back for it.", "mood": ""},
+		{"who": "Hop", "text": "...You will?", "mood": "sad"},
+		{"who": "Relic", "text": "I always come back for them.", "mood": "happy"},
+		"* (Hop hands you a churro. It's still warm.)",
+	])
+	await _finish(["* We carried his wife for him. Five years.\n* He never even knew.", "* We said we'd come back for it."])
 
 
 # --- The end of a memory ---------------------------------------------------------

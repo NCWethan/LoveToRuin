@@ -317,6 +317,10 @@ func _process_text() -> void:
 
 func _start_player_turn() -> void:
 	turn += 1
+	# The next course goes on the table.
+	for enemy in enemies:
+		if not enemy.courses.is_empty():
+			enemy.course = (turn - 1) % enemy.courses.size()
 	# The Seven of Hearts (Crayola's card): whoever holds it heals a little each turn.
 	if turn > 1:
 		for member in party:
@@ -1775,6 +1779,9 @@ func _start_enemy_turn() -> void:
 ## The enemy's first attack is always its first (easiest) one, and it never uses
 ## the same attack two turns in a row.
 func _pick_pattern(enemy: Enemy) -> String:
+	# Courses come out in order.
+	if not enemy.courses.is_empty():
+		return enemy.patterns[enemy.course % enemy.patterns.size()]
 	var pattern: String
 	if not _last_patterns.has(enemy):
 		pattern = enemy.patterns[0]
@@ -3780,6 +3787,8 @@ const DIAMOND_SPACING := 36.0
 ##   waves       the ocean: a low sun, rolling waves, gulls (the beach)
 ##   leaves      trees, and leaves blowing past (parks, the neighborhood)
 ##   banners     a great hall: heraldry banners, crossed swords (the museum)
+##   plaza       Old Town at dusk: adobe arches, strings of papel picado
+##   dining      a candlelit dining room: a long table, candles flickering
 func _draw_backdrop() -> void:
 	if state == State.GAME_OVER or _data == null:
 		return
@@ -3821,6 +3830,10 @@ func _draw_backdrop() -> void:
 			_backdrop_leaves(color, t)
 		"banners":
 			_backdrop_banners(color, t)
+		"plaza":
+			_backdrop_plaza(color, t)
+		"dining":
+			_backdrop_dining(color, t)
 		_:
 			_backdrop_sigil(color, t)
 			_backdrop_diamonds(color, t)
@@ -3909,6 +3922,56 @@ func _backdrop_banners(color: Color, t: float) -> void:
 			var mid := Vector2(x + 42, top + 70)
 			_backdrop.draw_line(mid + Vector2(-14, -14), mid + Vector2(14, 14), Color(0.85, 0.88, 0.95, 0.25 * fade), 2.0)
 			_backdrop.draw_line(mid + Vector2(14, -14), mid + Vector2(-14, 14), Color(0.85, 0.88, 0.95, 0.25 * fade), 2.0)
+
+
+## Old Town at dusk: a row of adobe arches along the bottom, and strings of papel
+## picado (cut-paper flags, every color) swaying across the top.
+func _backdrop_plaza(color: Color, t: float) -> void:
+	var bottom := BACKDROP.end.y
+	for i in 8:
+		var x := BACKDROP.position.x + 10 + i * 78.0
+		var fade := _edge_fade(Vector2(x + 30, bottom - 40))
+		_backdrop.draw_rect(Rect2(x, bottom - 70, 66, 70), Color(color.lightened(0.15), 0.18 * fade))
+		_backdrop.draw_circle(Vector2(x + 33, bottom - 40), 22.0, Color(0, 0, 0, 0.35 * fade))
+		_backdrop.draw_rect(Rect2(x + 11, bottom - 40, 44, 40), Color(0, 0, 0, 0.35 * fade))
+	var flags := [Color(0.95, 0.3, 0.4), Color(1.0, 0.75, 0.2), Color(0.3, 0.75, 0.95), Color(0.5, 0.85, 0.4), Color(0.85, 0.45, 0.95)]
+	for row in 2:
+		var y := BACKDROP.position.y + 18 + row * 34
+		for k in 15:
+			var x := BACKDROP.position.x + 14 + k * 40.0 + row * 20.0
+			var sag := sin(float(k % 5) / 4.0 * PI) * 10.0
+			var sway := sin(t * 2.0 + k + row) * 2.0
+			var at := Vector2(x + sway, y + sag)
+			var c: Color = flags[(k + row * 2) % flags.size()]
+			var fade := _edge_fade(at)
+			_backdrop.draw_colored_polygon(PackedVector2Array([at, at + Vector2(18, 0), at + Vector2(18, 18), at + Vector2(9, 24), at + Vector2(0, 18)]), Color(c, 0.35 * fade))
+
+
+## A candlelit dining room: a long table stretching back, plates down both sides,
+## and candles whose flames flicker.
+func _backdrop_dining(color: Color, t: float) -> void:
+	var center := BACKDROP.get_center().x
+	var near := BACKDROP.end.y - 10
+	var far := BACKDROP.position.y + 70
+	var table := PackedVector2Array([Vector2(center - 40, far), Vector2(center + 40, far), Vector2(center + 220, near), Vector2(center - 220, near)])
+	_backdrop.draw_colored_polygon(table, Color(color.darkened(0.3), 0.3))
+	for k in 6:
+		var p := float(k) / 5.0
+		var y := lerpf(far + 8, near - 12, p)
+		var half := lerpf(30.0, 180.0, p)
+		for side in [-1.0, 1.0]:
+			var at := Vector2(center + side * half, y)
+			_backdrop.draw_set_transform(at, 0.0, Vector2(1.0, 0.45))
+			_backdrop.draw_circle(Vector2.ZERO, lerpf(5.0, 16.0, p), Color(0.95, 0.95, 0.95, 0.18))
+			_backdrop.draw_set_transform(Vector2.ZERO)
+	for k in 5:
+		var p := float(k) / 4.0
+		var at := Vector2(center, lerpf(far + 4, near - 20, p))
+		var h := lerpf(10.0, 26.0, p)
+		_backdrop.draw_rect(Rect2(at + Vector2(-2, -h), Vector2(4, h)), Color(0.95, 0.92, 0.85, 0.3))
+		var flicker := 1.0 + sin(t * 13.0 + k * 2.1) * 0.25
+		_backdrop.draw_circle(at + Vector2(0, -h - 4), 4.0 * flicker, Color(1.0, 0.8, 0.35, 0.55))
+		_backdrop.draw_circle(at + Vector2(0, -h - 4), 14.0 * flicker, Color(1.0, 0.7, 0.3, 0.08))
 
 
 ## How visible something is at `point`: full in the middle, fading out near the edges.

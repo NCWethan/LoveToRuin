@@ -12,13 +12,13 @@ enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE,
 	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP, SCORCHED, STUMP,
-	HOUSE_FLOOR, HOUSE_WALL, HOUSE_PROP, SAND, WATER, BOARDWALK }
+	HOUSE_FLOOR, HOUSE_WALL, HOUSE_PROP, SAND, WATER, BOARDWALK, ADOBE, CLAY_ROOF }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE,
-	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP, HOUSE_WALL, HOUSE_PROP, WATER]
+	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP, HOUSE_WALL, HOUSE_PROP, WATER, ADOBE, CLAY_ROOF]
 
 var width: int = 0
 var height: int = 0
@@ -272,6 +272,18 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 			draw_rect(Rect2(p + Vector2(2 + wave * 4, 6 + wave * 3), Vector2(8, 1)), Color(1, 1, 1, 0.35))
 			if shore:
 				draw_rect(Rect2(p, Vector2(TILE, 3)), Color(1, 1, 1, 0.75))
+		ADOBE:
+			# Old Town's adobe walls: warm, uneven plaster with a few cracks.
+			draw_rect(r, Color8(214, 168, 120))
+			_specks(x, y, r, Color8(196, 150, 104), 3)
+			if _hash(x, y, 5) % 7 == 0:
+				draw_line(p + Vector2(4, 6), p + Vector2(9, 12), Color8(170, 126, 86), 1.0)
+		CLAY_ROOF:
+			# Red clay roof tiles, in rounded rows.
+			draw_rect(r, Color8(178, 82, 56))
+			for k in 4:
+				draw_line(p + Vector2(0, k * 5 + 4), p + Vector2(TILE, k * 5 + 4), Color8(140, 60, 40), 1.0)
+				draw_line(p + Vector2((k * 5 + x * 3) % TILE, k * 5), p + Vector2((k * 5 + x * 3) % TILE, k * 5 + 4), Color8(150, 66, 44), 1.0)
 		BOARDWALK:
 			# Sun-bleached wooden planks, running along the beach.
 			draw_rect(r, Color8(176, 140, 98))

@@ -781,6 +781,7 @@ const AREA_NAMES := {
 	"res://scenes/hop_house.tscn": "Hop's House",
 	"res://scenes/mission_beach.tscn": "Mission Beach",
 	"res://scenes/balboa_park.tscn": "Balboa Park",
+	"res://scenes/old_town.tscn": "Old Town",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 
