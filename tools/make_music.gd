@@ -23,6 +23,90 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# The burned hills: ash, wind, and very little else. E minor, slow, with long
+	# gaps, like it's trying not to wake something up.
+	"burned_hills": {
+		"bpm": 76,
+		"lead_wave": "triangle",
+		"lead": [
+			"E5 . . . . . . . B4 . . . . . . .",
+			"C5 . . . . . B4 . A4 . . . . . . .",
+			"G4 . . . . . . . F#4 . . . . . . .",
+			"E4 . . . . . . . - - - - - - - -",
+			"E5 . . . . . . . G5 . . . . . . .",
+			"F#5 . . . . . E5 . D5 . . . . . . .",
+			"C5 . . . B4 . . . A4 . . . F#4 . . .",
+			"E4 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"E3 . G3 . B3 . . . E3 . G3 . B3 . . .",
+			"A2 . C3 . E3 . . . A2 . C3 . E3 . . .",
+			"C3 . E3 . G3 . . . B2 . D#3 . F#3 . . .",
+			"E3 . G3 . B3 . . . - - - - - - - -",
+			"E3 . G3 . B3 . . . E3 . G3 . B3 . . .",
+			"D3 . F#3 . A3 . . . G2 . B2 . D3 . . .",
+			"A2 . C3 . E3 . . . B2 . D#3 . F#3 . . .",
+			"E3 . G3 . B3 . . . - - - - - - - -",
+		],
+		"bass": [
+			"E2 . . . . . . . . . . . . . . .",
+			"A1 . . . . . . . . . . . . . . .",
+			"C2 . . . . . . . B1 . . . . . . .",
+			"E2 . . . . . . . - - - - - - - -",
+			"E2 . . . . . . . . . . . . . . .",
+			"D2 . . . . . . . G1 . . . . . . .",
+			"A1 . . . . . . . B1 . . . . . . .",
+			"E2 . . . . . . . - - - - - - - -",
+		],
+	},
+
+	# Ember: the same fire. D minor, fast, a harsh lead that crackles, and a beat
+	# that keeps catching, like it's spreading.
+	"ember": {
+		"bpm": 160,
+		"lead_wave": "saw",
+		"lead": [
+			"D5 . F5 . A5 . D6 . C6 . A5 . F5 . E5 .",
+			"D5 . F5 . A5 . D6 . E6 . . . D6 . . .",
+			"Bb5 . A5 . G5 . F5 . G5 . A5 . Bb5 . C6 .",
+			"A5 . . . E5 . . . A4 . . . - - - -",
+			"D6 . C6 . Bb5 . A5 . Bb5 . A5 . G5 . F5 .",
+			"G5 . F5 . E5 . D5 . E5 . F5 . G5 . A5 .",
+			"Bb5 . . . A5 . . . G5 . . . C#6 . . .",
+			"D6 . . . . . . . D5 . . . - - - -",
+		],
+		"harm": [
+			"F4 . A4 . F4 . A4 . F4 . A4 . F4 . A4 .",
+			"F4 . A4 . F4 . A4 . G4 . Bb4 . G4 . Bb4 .",
+			"D4 . F4 . D4 . F4 . E4 . G4 . E4 . G4 .",
+			"C#4 . E4 . C#4 . E4 . C#4 . E4 . A4 . . .",
+			"F4 . A4 . F4 . A4 . F4 . A4 . F4 . A4 .",
+			"E4 . G4 . E4 . G4 . C#4 . E4 . C#4 . E4 .",
+			"D4 . F4 . D4 . F4 . E4 . G4 . E4 . A4 .",
+			"F4 . A4 . F4 . . . - - - - - - - -",
+		],
+		"bass": [
+			"D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 C2 C2 C2 C2",
+			"Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 G1 G1 G1 G1 G1 G1 G1 G1",
+			"Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 C2 C2 C2 C2 C2 C2 C2 C2",
+			"A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1 A1",
+			"D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 D2 C2 C2 C2 C2",
+			"Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 A1 A1 A1 A1 A1 A1 A1 A1",
+			"G1 G1 G1 G1 G1 G1 G1 G1 A1 A1 A1 A1 A1 A1 A1 A1",
+			"D2 . . . . . . . D1 . . . - - - -",
+		],
+		"drums": [
+			"K - H K S - H - K - H K S - H -",
+			"K - H K S - H - K - H K S - H H",
+			"K - H K S - H - K - H K S - H -",
+			"K - K K S - S - K K K K S S S S",
+			"K - H K S - H - K - H K S - H -",
+			"K - H K S - H - K - H K S - H H",
+			"K S K S K S K S K S K S S S S S",
+			"K - - - S - - - K - - - S - - -",
+		],
+	},
+
 	# Torrey Pines: the cliffs, the wind, the ocean a long way down. Airy and slow,
 	# in D, with the bright raised fourth that sounds like open sky.
 	"torrey": {

@@ -61,6 +61,12 @@ var last_pattern: String = ""
 var finale_taunts: Array[String] = []
 ## ACTs marked "once" that have been used (they don't work twice).
 var _used_once: Array = []
+## Ember: hits don't hurt it, they FEED it (it heals what it would have lost).
+var feeds_on_hits: bool = false
+## Ember: every turn it isn't hit, it burns a little lower (this much MERCY).
+var burnout_mercy: int = 0
+## (Was it hit since the last player turn? For burnout_mercy.)
+var hit_this_round: bool = false
 ## Supreme labels his own attacks with their odds of hitting you: pattern -> %.
 var odds: Dictionary = {}
 var course: int = 0

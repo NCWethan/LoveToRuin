@@ -327,6 +327,12 @@ func _process_text() -> void:
 
 func _start_player_turn() -> void:
 	turn += 1
+	# Ember: a turn without being fed, and it burns a little lower.
+	for enemy in enemies:
+		if enemy.burnout_mercy > 0 and turn > 1 and enemy.is_active():
+			if not enemy.hit_this_round:
+				enemy.mercy = mini(enemy.mercy + enemy.burnout_mercy, 100)
+			enemy.hit_this_round = false
 	# The next course goes on the table.
 	for enemy in enemies:
 		if not enemy.courses.is_empty():
@@ -1628,7 +1634,13 @@ func _process_fight_anim(delta: float) -> void:
 				_hitstop = 0.035
 	if not _anim_landed and _anim_time >= ATTACK_SLASH_TIME:
 		_anim_landed = true
-		target.hp = maxi(target.hp - _anim_damage, 0)
+		target.hit_this_round = true
+		# Ember eats the hit: it burns hotter instead.
+		if target.feeds_on_hits:
+			target.hp = mini(target.hp + _anim_damage, target.max_hp)
+			target.mercy = maxi(target.mercy - 10, 0)
+		else:
+			target.hp = maxi(target.hp - _anim_damage, 0)
 		target.shake = 0.5
 		target.flash = 0.25
 		# Each way of attacking has its own sound when it connects.
@@ -1655,7 +1667,9 @@ func _process_fight_anim(delta: float) -> void:
 			_squash_enemy = target
 			_squash_time = 0.45
 			_add_popup("BONK!", target.position + Vector2(-40, -90), Color(1.0, 0.85, 0.2), 24, true)
-		if _relic_strike(member) or _relic_power(member) >= 0.5:
+		if target.feeds_on_hits:
+			_add_popup("+%d" % _anim_damage, target.position + Vector2(0, -30), Color(1.0, 0.55, 0.2), 26, true)
+		elif _relic_strike(member) or _relic_power(member) >= 0.5:
 			_add_popup(str(_anim_damage), target.position + Vector2(0, -30), RELIC_GREEN, 32 if critical else 26, true)
 			_popups[-1]["glitch"] = true
 			if critical:
@@ -1671,6 +1685,8 @@ func _process_fight_anim(delta: float) -> void:
 		return
 
 	var lines: Array[String] = ["* %s hit %s for %d damage!" % [member.name, target.name, _anim_damage]]
+	if target.feeds_on_hits:
+		lines[0] = "* %s's hit went right into %s.\n* It ate it. It's burning HOTTER." % [member.name, target.name]
 	if _anim_accuracy >= CRITICAL:
 		lines[0] = "* CRITICAL HIT!\n" + lines[0]
 	if _lucky:

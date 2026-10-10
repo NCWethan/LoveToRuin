@@ -2644,6 +2644,42 @@ $wildArt = [ordered]@{
         ".....66666666666",
         "......}}.....}}"
     )
+    # Ember (the burned hills): the fire's leftover heart. A flame with eyes, red
+    # outside, and under the red, faintly, something green.
+    'ember' = @(
+        "..........*",
+        ".........f*f",
+        "........ff*ff.....f",
+        ".......fEf*fEf...ff",
+        "..f....fEEffEEf.fEf",
+        ".ff...fEEEEEEEEffEf",
+        ".fEf.fEEEccccEEEEEf",
+        ".fEEfEEEcIccIcEEEf",
+        "..fEEEEEcIccIcEEEf",
+        "..fEEEEEccccccEEf",
+        "...fEEEEcc>>ccEEf",
+        "...fEEEEEcccEEEf",
+        "....fEEEEEEEEEf",
+        ".....ffEEEEEff",
+        ".......ffffff"
+    )
+    # The Firefighter (the burned hills): a dalmatian in a helmet, five years on
+    # the hill, planting little trees where the old ones burned.
+    'firefighter' = @(
+        "......RRRRRRRR",
+        ".....RRRRRRRRRR",
+        "....RRRRAARRRRRR",
+        ".....WWWWWWWWWW",
+        ".....WKWWWWWWKW",
+        ".....WWWKWWWWWW",
+        "......WWWKKWWW",
+        "....YYYYYYYYYYYY",
+        "...WYYYYYYYYYYYYW",
+        "...WYYKYYYYYYKYYW",
+        "....YYYYYYYYYYYY",
+        "....YYYYYYYYYYYY",
+        ".....DD......DD"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

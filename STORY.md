@@ -320,7 +320,7 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 5 | **Supreme** **(built)** | Downtown | A bullet-hell made of statistics. Every attack is labeled with its odds of hitting you. | *"I kept the odds you'd stop above zero. ...I rounded up."* | **Spreadsheet printout** |
 | 6 | **Agent** **(built)** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
 | 7 | **Rooster** **(built)** | Torrey Pines | He roasts you through the whole fight. The jokes fall apart as he gets scared. | *"You were my favorite person to roast. You always roasted back."* (not a joke) | **Top hat** |
-| 8 | **Ronin** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
+| 8 | **Ronin** **(built)** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
 | 9 | **Eggo** | The bunker, on the couch | He doesn't fight at all. Only FIGHT works; everything else is chained, like the glowbug. | *"...you could also just talk to us."* Then one last pun. It's perfect. Nobody laughs. (Toast the bunny hops away and is never seen again.) | **Cat-ear beanie** |
 | 10 | **MuffinMage** | The bunker kitchen | Calm, almost bored, salmon burger in hand. His face is never shown, not even now. | *"I warned you about the fragment. Should've warned you about yourself."* | **Salmon burger** (it never goes bad) |
 | 11 | **Sansworth** | The junkyard | He was going to drive everyone to safety. He's too dumb to run. The van never starts. | *"...Vroom?"* | **One of his 31 keys** |
@@ -385,7 +385,7 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 
 ## 11. What to build next, in order
 
-1. ~~The first keepsake memories~~ **(built:** 1 to 9**)**
+1. ~~The first keepsake memories~~ **(built:** 1 to 10**)**
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
 4. **Relic's lost collection:** the side quest. (The first piece is built: the pigeon feather from Old Town, which can go back to the Pigeon Man.)
@@ -394,5 +394,6 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 7. ~~Downtown~~ **(built)**: the Big Screen, Supreme and the 0.4%.
 8. ~~The Harbor~~ **(built)**: Flight Deck, Agent and Eggo, the feeding, Hop's confession, the vote, Hop's note, and the offer closing.
 9. ~~Torrey Pines~~ **(built)**: the Glider, Rooster, Hop at the viewpoint, and Hopkuna takes everything.
-10. **The burned hills** (fragment 10): Ember, Ronin, and the tent memory. Then the junkyard.
-11. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+10. ~~The burned hills~~ **(built)**: Ember, Ronin, and the tent memory.
+11. **The junkyard**: Scrap Heap, and Sansworth's van.
+12. Then one fragment area at a time, in the order above, ending at Sabre Springs.

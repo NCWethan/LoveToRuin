@@ -398,7 +398,7 @@ func _after_memory() -> void:
 		"pacifist":
 			await _hopkuna_strikes()
 		"neutral":
-			Game.set_objective("9 of 12 FRAGMENTS. (To be continued.)")
+			Game.set_objective("9 of 12. Next: the burned hills. (Take the bus.)")
 		_:
 			Game.set_objective("...")
 
@@ -460,7 +460,7 @@ func _after_hopkuna() -> void:
 			{"who": "Rooster", "text": "No joke. I don't- I don't have one.\nI don't have anything.", "mood": "sad"},
 		])
 	Game.flags["tp_left"] = true
-	Game.set_objective("Hopkuna has the fragments. (To be continued.)")
+	Game.set_objective("Hopkuna has them. (Next: the burned hills.)")
 
 
 # --- With Hop: Rooster -------------------------------------------------------------

@@ -118,4 +118,9 @@ const PAGE_HINTS := {
 	"rule_signs": "signs that slide in and stop.", "slow_and_steady": "shells, crawling up. One gap.",
 	"rockslide": "rocks bouncing down.", "trail_mix_toss": "trail mix. A handful.",
 	"binocular_scan": "two lenses, closing on you.", "field_guide": "birds, flying out of a book.",
+	"wildfire": "fire running along the ground, row by row.", "spark_burst": "sparks, every way but one.",
+	"smoke_screen": "smoke with something hot inside.", "firestorm": "a ring of fire, closing. One gap.",
+	"heat_shimmer": "wobbling heat, rising.", "the_tent": "a tent made of fire. Room for three.",
+	"ash_fall": "ash, falling like snow.", "burning_out": "embers, dying. Almost over.",
+	"hose_spray": "a hose, swinging.", "axe_chop": "an axe, three times.",
 }

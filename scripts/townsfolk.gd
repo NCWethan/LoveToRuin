@@ -270,6 +270,26 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- The burned hills ---
+	"firefighter": {
+		"name": "Firefighter", "sprite": "firefighter",
+		"talk": {
+			"lines": [["", "Careful up there. Ground's still warm in places.\nFive years, and it's still warm."], ["sad", "I was on the line that night. We lost the hill.\nI come back every weekend and plant something."]],
+			"options": ["What are you planting?", "What happened that night?"],
+			"answers": [["happy", "Pines, mostly. Some sage. I name every one.\nThat one's Lucky. That one's Also Lucky."], ["sad", "It started on the field. A tent, they said.\nIt moved faster than any fire I ever saw. Like it wanted to."]],
+		},
+		"challenged": ["angry", "Kid. I've stared down a wildfire.\nYou're not even warm."],
+		"spared": ["happy", "Good. That's good. Help me plant one\nsometime. It helps. Trust me."],
+		"hp": 80, "atk": 5, "def": 3, "patterns": ["hose_spray", "axe_chop"],
+		"check": "* FIREFIGHTER - ATK 5 DEF 3\n* A dalmatian. Was there the night of the fire.\n* Plants a tree for every one that burned.",
+		"acts": [
+			{"name": "Plant a Tree", "mercy": 50, "lines": ["* {actor} helps plant a sapling.\n* The Firefighter ties a tag to it. It says FRIEND."]},
+			{"name": "Thank Them", "mercy": 50, "lines": ["* {actor} thanks the Firefighter.\n* \"...Nobody ever says that. Not for that night.\""]},
+		],
+		"taunts": ["Stand back!", "Hose!", "Stay low!", "I've seen worse."],
+		"flavor": ["* The Firefighter's helmet has a dent in it.\n* Five years old.", "* Ash drifts across the hill."],
+		"backdrop": Color(0.75, 0.3, 0.2), "style": "shards", "exp": 14, "money": 12,
+	},
 	# --- Torrey Pines ---
 	"ranger": {
 		"name": "Park Ranger", "sprite": "ranger",

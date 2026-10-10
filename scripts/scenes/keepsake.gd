@@ -28,6 +28,8 @@ extends Area
 ##   9  Torrey Pines at dawn: Relic, packed to leave town like every town before,
 ##      at the edge of the cliff a long time. Then unpacking. "First place I
 ##      ever wanted to stay."
+##  10  Westview Field, the night before the fire: the tent, room for three.
+##      "Who's the third?" "Whoever shows up." The voice is quiet. Too quiet.
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -77,6 +79,7 @@ func _spawn() -> Vector2:
 		7: return Vector2(15 * T, 14 * T + 10)
 		8: return Vector2(6 * T, 12 * T + 10)
 		9: return Vector2(30 * T, 12 * T + 10)
+		10: return Vector2(4 * T, 18 * T)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -92,6 +95,7 @@ func build_map() -> void:
 		7: _build_ballpark()
 		8: _build_carrier()
 		9: _build_cliff()
+		10: _build_tent_night()
 		_: _build_road()
 
 
@@ -177,6 +181,16 @@ func _build_cliff() -> void:
 	room.fill(35, 0, 1, 24, Room.TREE)
 	for spot in [Vector2i(16, 4), Vector2i(24, 6), Vector2i(28, 18), Vector2i(20, 19), Vector2i(31, 4)]:
 		room.set_tile(spot.x, spot.y, Room.TREE)
+
+
+## Westview Field, the last night of the summer: the tent, in the middle.
+func _build_tent_night() -> void:
+	room.setup(34, 24, Room.FIELD)
+	room.fill(0, 0, 34, 1, Room.TREE)
+	room.fill(0, 23, 34, 1, Room.TREE)
+	room.fill(0, 0, 1, 24, Room.TREE)
+	room.fill(33, 0, 1, 24, Room.TREE)
+	room.fill(15, 9, 4, 3, Room.PROP)    # the tent
 
 
 ## Mission Beach, one afternoon that summer.
@@ -269,6 +283,18 @@ func _draw_decor() -> void:
 					_decor.draw_rect(Rect2(Vector2(12 * T + i * 14, 14 * T + (i % 2) * 8), Vector2(8, 8)), things[i])
 			else:
 				_decor.draw_rect(Rect2(Vector2(30 * T - 6, 12 * T + 2), Vector2(12, 14)), Color8(70, 110, 70))
+		10:
+			# The tent: big enough for three. A lantern. Stars. Very quiet.
+			var tent := PackedVector2Array([Vector2(15 * T, 12 * T), Vector2(17 * T, 9 * T - 10), Vector2(19 * T, 12 * T)])
+			_decor.draw_colored_polygon(tent, Color8(98, 112, 72))
+			_decor.draw_polyline(PackedVector2Array([tent[0], tent[1], tent[2], tent[0]]), Color8(66, 78, 48), 2.0)
+			_decor.draw_line(Vector2(17 * T, 9 * T - 10), Vector2(17 * T, 12 * T), Color8(66, 78, 48), 1.0)
+			var glow := 0.7 + 0.2 * sin(_card_time * 3.0)
+			_decor.draw_circle(Vector2(20 * T, 12 * T), 30.0, Color(1.0, 0.8, 0.4, 0.12 * glow))
+			_decor.draw_rect(Rect2(20 * T - 3, 12 * T - 6, 6, 8), Color(1.0, 0.85, 0.4, glow))
+			for k in 50:
+				_decor.draw_rect(Rect2(Vector2((k * 131) % (34 * T), (k * 53) % (6 * T)), Vector2(2, 2)), Color(1, 1, 1, 0.6))
+			_decor.draw_string(_font, Vector2(16 * T - 4, 13 * T + 4), "ROOM FOR 3", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1, 1, 1, 0.5))
 		5:
 			# The steps (lines across them), and the stars.
 			for k in 3:
@@ -345,6 +371,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# To the tent, where Hop is waiting.
+	if memory == 10 and hop != null and player.position.distance_to(hop.position) < 36.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_tent)
 	# Out to the edge of the cliff.
 	if memory == 9 and player.position.x < 10 * T + 10 and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -381,6 +411,7 @@ func _start() -> void:
 		7: await run_cutscene(_intro_ballpark)
 		8: await run_cutscene(_intro_carrier)
 		9: await run_cutscene(_intro_cliff)
+		10: await run_cutscene(_intro_tent)
 
 
 func _intro_road() -> void:
@@ -767,6 +798,44 @@ func _end_cliff() -> void:
 		"* (Far away, up the trail, someone is yelling your\n*  name. With his mouth full. Something about fries.)",
 	])
 	await _finish(["* First place we ever wanted to stay.", "* Look what it did to us."])
+
+
+# --- 10: The tent -------------------------------------------------------------------
+
+func _intro_tent() -> void:
+	var night := CanvasModulate.new()
+	night.color = Color(0.5, 0.55, 0.75)
+	add_child(night)
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(17 * T, 13 * T + 4))
+	hop.face(Vector2.LEFT)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (Westview Field, the last night of the summer.)",
+		"* (Hop wanted to camp out on the field. For no reason.\n*  For every reason. School starts Monday.)",
+		"* (The tent is up. It's way too big for two people.)",
+	])
+	Game.set_objective("(The tent.)")
+
+
+func _end_tent() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "Okay. Real question. Why'd you buy\na tent for THREE people?", "mood": "smug"},
+		{"who": "Relic", "text": "Room for three.", "mood": ""},
+		{"who": "Hop", "text": "...There's two of us.", "mood": ""},
+		{"who": "Relic", "text": "Whoever shows up. There's always someone.\nThere's always room for one more.", "mood": "happy"},
+		{"who": "Hop", "text": "You're so weird. I love it.", "mood": "happy"},
+		"* (You lie on your backs with your heads sticking\n*  out of the tent, looking at the stars.)",
+		{"who": "Hop", "text": "...Hey. The voice is quiet tonight.", "mood": ""},
+		{"who": "Hop", "text": "Like, REALLY quiet. It's never this quiet.\nMaybe the token's working. Maybe it gave up.", "mood": "happy"},
+		{"who": "Relic", "choices": ["(Look at the token.)", "Maybe."]},
+		"* (The token around your neck is cold.\n*  Colder than it's ever been.)",
+		{"who": "Hop", "text": "Wake me up if anything weird happens, okay?", "mood": "happy"},
+		"* (He's asleep in a minute. You stay up.)",
+		"* (It's very, very quiet.)",
+	])
+	await _finish(["* We made room for three.", "* Look who moved in."])
 
 
 # --- The end of a memory ---------------------------------------------------------

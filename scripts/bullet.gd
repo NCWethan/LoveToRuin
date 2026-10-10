@@ -526,6 +526,7 @@ const GLYPHS := {
 	"pinecone": [".b.", "bTb", "TbT", "bTb", ".b."],
 	"tophat": [".KKKKK.", ".KKKKK.", ".KRRRK.", "KKKKKKK"],
 	"mic": [".gg.", "gGGg", ".gg.", "..K.", "..K."],
+	"pick": ["RRRR", "RRRR", ".RR.", ".RR."],
 }
 
 
