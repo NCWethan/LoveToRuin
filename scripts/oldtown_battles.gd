@@ -76,23 +76,22 @@ static func _nat() -> BattleData:
 	data.intro = ["* Nat closes his book and stands up.\n* \"I read ahead. I know how this goes.\""]
 	data.locked_buttons.assign(["MERCY"])
 	data.locked_lines.assign(RELIC_LINES)
-	# Hop won't fight Nat. He just watches.
-	data.party_only.assign(["Elric"])
-	data.watcher = "Hop"
 	var e := Enemy.new()
 	e.name = "Nat"
-	e.max_hp = 70
-	e.hp = 70
-	e.attack = 5
-	e.defense = 1
+	e.max_hp = 210
+	e.hp = 210
+	e.attack = 6
+	e.defense = 2
 	e.position = Vector2(470, 140)
 	e.sprite = load("res://art/sprites/nat.png")
-	e.check_text = "* NAT - ATK 5 DEF 1\n* Knows too much history to get attached to anything.\n* Got attached anyway. To all of you."
+	e.check_text = "* NAT - ATK 6 DEF 2\n* Knows too much history to get attached to anything.\n* Got attached anyway. To all of you."
 	e.acts.assign([
 		{"name": "Talk", "mercy": 0, "lines": ["* {actor} says nothing.\n* Nat: \"...I know. I read ahead.\""]},
 		{"name": "The Page", "mercy": 0, "lines": ["* {actor} mentions the torn page.\n* Nat: \"Hop tore it. I never told him I knew.\""]},
 	])
-	e.patterns.assign(["chapter_break", "dog_ear"])
+	e.patterns.assign(["chapter_break", "dog_ear", "footnotes", "spoiler", "page_turn", "cross_reference", "history_repeats"])
+	e.finale_patterns.assign(["the_last_page"])
+	e.finale_line = "* Nat tears the pages out of his book, one by one.\n* \"I know how this ends. I'm skipping to it.\""
 	e.taunts.assign(["Page 211: you swing.", "Page 212: you swing again.", "Page 212. Still you.", "I read ahead."])
 	e.flavor_lines.assign([
 		"* Nat turns a page. He's reading your next move.",
@@ -100,7 +99,7 @@ static func _nat() -> BattleData:
 		"* Behind you, Hop has stopped walking.",
 	])
 	e.last_words = "* Nat: \"Page 213. The last page.\"\n* Nat: \"...I always wanted to know how it ended.\""
-	e.exp_reward = 45
+	e.exp_reward = 90
 	e.money_reward = 0
 	e.bond_reward = 0
 	data.enemies.append(e)

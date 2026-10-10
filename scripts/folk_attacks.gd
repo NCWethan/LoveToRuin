@@ -825,7 +825,7 @@ static func _come_back(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, s
 	var letter: String = word[step % word.length()]
 	var col := step % 4
 	var row := (step % 8) / 4
-	var origin := area.position + Vector2(18 + col * 36, 10 + row * 0)
+	var origin := area.position + Vector2(10 + fmod(col * 36.0 + step * 11.0, area.size.x - 30.0), 10 + row * 0)
 	var rows: Array = LETTERS[letter]
 	for y in rows.size():
 		for x in 3:
@@ -833,6 +833,10 @@ static func _come_back(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, s
 				var card := _glyph(enemy, parent, area, origin + Vector2(x * 7, y * 7), "heart_card", 6.0)
 				card.delay = 0.5
 				card.velocity = Vector2(0, 38 + (step % 8) * 4)
+	# And one card, every time, flicked right at you.
+	var flick := _glyph(enemy, parent, area, Vector2(clampf(soul.x, area.position.x + 6, area.end.x - 6), area.position.y + 4), "heart_card", 7.0)
+	flick.delay = 0.35
+	flick.velocity = Vector2(0, 120)
 	return 0.75
 
 

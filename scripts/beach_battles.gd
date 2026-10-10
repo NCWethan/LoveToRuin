@@ -82,18 +82,20 @@ static func _corps(e: Enemy, intro: String) -> BattleData:
 static func _crayola() -> Enemy:
 	var e := Enemy.new()
 	e.name = "Crayola"
-	e.max_hp = 60
-	e.hp = 60
-	e.attack = 3
-	e.defense = 0
+	e.max_hp = 170
+	e.hp = 170
+	e.attack = 5
+	e.defense = 1
 	e.position = Vector2(470, 140)
 	e.sprite = load("res://art/sprites/crayola.png")
-	e.check_text = "* CRAYOLA - ATK 3 DEF 0\n* He swims with N.C. Wethan. He did a card trick\n  for you once. He remembers your card."
+	e.check_text = "* CRAYOLA - ATK 5 DEF 1\n* He swims with N.C. Wethan. He did a card trick\n  for you once. He remembers your card."
 	e.acts.assign([
 		{"name": "Talk", "mercy": 0, "lines": ["* {actor} says nothing.\n* Crayola: \"...You used to talk to me.\""]},
 		{"name": "Pick a Card", "mercy": 0, "lines": ["* {actor} picks a card.\n* It's the Seven of Hearts. Every card is."]},
 	])
-	e.patterns.assign(["come_back"])
+	e.patterns.assign(["come_back", "card_fan", "riffle_shuffle", "pick_a_card", "fifty_two_pickup", "vanishing_act", "undertow"])
+	e.finale_patterns.assign(["seven_of_hearts"])
+	e.finale_line = "* Crayola fans out the whole deck.\n* Fifty-two Sevens of Hearts. \"...Pick one. PLEASE.\""
 	e.taunts.assign(["...Elric?", "Come back.", "Please.", "It's still you. Right?"])
 	e.flavor_lines.assign([
 		"* Crayola is holding a deck of cards.\n* They're all the Seven of Hearts.",
@@ -101,7 +103,7 @@ static func _crayola() -> Enemy:
 		"* Behind you, Hop doesn't move.",
 	])
 	e.last_words = "* Crayola: \"...Was it this one?\n*  Your card?\""
-	e.exp_reward = 30
+	e.exp_reward = 60
 	e.money_reward = 0
 	e.bond_reward = 0
 	return e
@@ -110,18 +112,20 @@ static func _crayola() -> Enemy:
 static func _ncwethan() -> Enemy:
 	var e := Enemy.new()
 	e.name = "N.C. Wethan"
-	e.max_hp = 80
-	e.hp = 80
+	e.max_hp = 200
+	e.hp = 200
 	e.attack = 6
-	e.defense = 1
+	e.defense = 2
 	e.position = Vector2(470, 140)
 	e.sprite = load("res://art/sprites/ncwethan.png")
-	e.check_text = "* N.C. WETHAN - ATK 6 DEF 1\n* The loudest person you've ever met.\n* He's being very quiet."
+	e.check_text = "* N.C. WETHAN - ATK 6 DEF 2\n* The loudest person you've ever met.\n* He's being very quiet."
 	e.acts.assign([
 		{"name": "Talk", "mercy": 0, "lines": ["* {actor} tries to say something.\n* N.C. Wethan: \"...Don't.\""]},
 		{"name": "Checkers", "mercy": 0, "lines": ["* {actor} mentions checkers.\n* N.C. Wethan's lightning flickers out for a second."]},
 	])
-	e.patterns.assign(["near_miss"])
+	e.patterns.assign(["near_miss", "checkerboard", "king_me", "chain_lightning", "storm_front", "live_wire", "double_jump"])
+	e.finale_patterns.assign(["loudest_man"])
+	e.finale_line = "* N.C. Wethan takes a deep breath.\n* For the first time all fight, he's LOUD."
 	e.taunts.assign(["...", "Why.", "He was my best friend.", "I'm not gonna hit you."])
 	e.flavor_lines.assign([
 		"* N.C. Wethan's lightning hits the sand. Not you.",
@@ -129,7 +133,7 @@ static func _ncwethan() -> Enemy:
 		"* Behind you, Hop has his eyes shut.",
 	])
 	e.last_words = "* N.C. Wethan: \"...KING ME?\"\n* (Quietly, for once.)"
-	e.exp_reward = 40
+	e.exp_reward = 80
 	e.money_reward = 0
 	e.bond_reward = 0
 	return e

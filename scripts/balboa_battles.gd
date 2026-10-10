@@ -72,19 +72,21 @@ static func _duel(genocide: bool) -> BattleData:
 	data.backdrop_style = "banners"
 	var e := Enemy.new()
 	e.name = "Big Joe"
-	e.max_hp = 110 if genocide else 90
+	e.max_hp = 230 if genocide else 200
 	e.hp = e.max_hp
-	e.attack = 6 if genocide else 5
+	e.attack = 7 if genocide else 6
 	e.defense = 2
 	e.position = Vector2(470, 140)
 	e.sprite = load("res://art/sprites/bigjoe6.png")
-	e.patterns.assign(["lance", "sweep", "aimed"])
+	e.patterns.assign(["lance", "sweep", "aimed", "joust", "shield_press", "rulebook", "salute", "helmet_bash"])
+	e.finale_patterns.assign(["justice_for_all"])
+	e.finale_line = "* Big Joe raises his lance to the sky.\n* \"JUSTICE! FOR! ALL!\""
 	if genocide:
 		data.silent = true
 		data.intro = ["* Big Joe plants his feet.\n* \"By the rules. One on one. ...Leave Hop out of this.\""]
 		data.locked_buttons.assign(["MERCY"])
 		data.locked_lines.assign(RELIC_LINES)
-		e.check_text = "* BIG JOE - ATK 6 DEF 2\n* Co-founder of Revolution. Justice and truth.\n* He's fighting fair. He's the only one who is."
+		e.check_text = "* BIG JOE - ATK 7 DEF 2\n* Co-founder of Revolution. Justice and truth.\n* He's fighting fair. He's the only one who is."
 		e.acts.assign([
 			{"name": "Tell the Truth", "mercy": 0, "lines": ["* {actor} tells Big Joe the truth.\n* He believes it. That's the worst part."]},
 			{"name": "Salute", "mercy": 0, "lines": ["* {actor} salutes.\n* Big Joe salutes back. He doesn't know why."]},
@@ -96,13 +98,13 @@ static func _duel(genocide: bool) -> BattleData:
 			"* Behind you, Hop says something. You don't hear it.",
 		])
 		e.last_words = "* Big Joe: \"Justice was supposed to...\"\n* Big Joe: \"...Tell Eggo I'm sorry I was loud.\""
-		e.exp_reward = 50
+		e.exp_reward = 100
 		e.money_reward = 0
 		e.bond_reward = 0
 	else:
-		data.music = "battle"
+		data.music = "eggo_joe"
 		data.intro = ["* Big Joe raises his lance.\n* \"A duel! By the rules! Winner takes the fragment!\""]
-		e.check_text = "* BIG JOE - ATK 5 DEF 2\n* Justice and truth. He wants this to be fair.\n* He wants you to come back, too. He won't say it."
+		e.check_text = "* BIG JOE - ATK 6 DEF 2\n* Justice and truth. He wants this to be fair.\n* He wants you to come back, too. He won't say it."
 		e.acts.assign([
 			{"name": "Tell the Truth", "mercy": 40, "lines": ["* {actor} tells Big Joe why they walked away.\n* He listens. All of it."]},
 			{"name": "Salute", "mercy": 30, "lines": ["* {actor} salutes.\n* Big Joe salutes back, very seriously."]},
@@ -114,8 +116,8 @@ static func _duel(genocide: bool) -> BattleData:
 			"* Big Joe announces each attack before he does it.",
 		])
 		e.spare_taunts.assign(["...Fine. FINE. You win."])
-		e.exp_reward = 30
-		e.bond_reward = 30
-		e.money_reward = 10
+		e.exp_reward = 60
+		e.bond_reward = 40
+		e.money_reward = 20
 	data.enemies.append(e)
 	return data

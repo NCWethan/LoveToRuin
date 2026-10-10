@@ -201,6 +201,16 @@ func _ready() -> void:
 			if member.name in _data.party_only:
 				fighting.append(member)
 		party = fighting
+	# With Hop, from the glowbug on: Hop never fights again. He stands back,
+	# behind Elric, and watches. (Every fight: the Corps, the townsfolk, the wild.)
+	if Game.on_genocide_route() and Game.flags.get("glowbug_done", false) and party.any(func(m: PartyMember) -> bool: return m.name == "Hop"):
+		var without_hop: Array[PartyMember] = []
+		for member in party:
+			if member.name != "Hop":
+				without_hop.append(member)
+		party = without_hop
+		if _data.watcher == "":
+			_data.watcher = "Hop"
 	# Traveling alone (going their own way, before the base): just Elric.
 	if Game.walking_alone() and party.size() > 1:
 		var just_elric: Array[PartyMember] = [party[0]]
@@ -332,6 +342,14 @@ func _start_player_turn() -> void:
 	actions.clear()
 	current_member = -1
 	_flavor = _data.flavor_text(turn)
+	# A boss nearly beaten: their finale is coming, and they say so.
+	for enemy in _active_enemies():
+		if enemy.finale_line != "" and not enemy.finale_announced and enemy.hp * 3 < enemy.max_hp:
+			enemy.finale_announced = true
+			_flavor = enemy.finale_line
+	# Now and then, the turn is about Hop instead.
+	if _hop_watching() and turn > 1 and randf() < 0.3 and not _flavor.contains("YELLOW") and not _active_enemies().any(func(e: Enemy) -> bool: return e.finale_line == _flavor):
+		_flavor = _hop_watching_line()
 	_set_text(_flavor)
 	# Wait for the box to finish growing back before the text starts typing.
 	_typed = -0.3 * TYPE_SPEED
@@ -1607,6 +1625,9 @@ func _process_fight_anim(delta: float) -> void:
 			"finger": Game.play_sfx("squeak")
 			_ when _relic_strike(member): Game.play_sfx("claw_hit", 0.7)
 			_: Game.play_sfx("punch_hit" if member.name == "Hop" else "claw_hit")
+		# The old power, landing: a low, ringing hum under the hit.
+		if _relic_power(member) >= 0.6 and weapon == "":
+			Game.play_sfx("zap", 0.5)
 		var critical := _anim_accuracy >= CRITICAL
 		# The impact frame: a freeze, a flash, and the enemy as a silhouette.
 		_impact(target, 0.13 if critical else 0.08, critical)
@@ -1622,7 +1643,7 @@ func _process_fight_anim(delta: float) -> void:
 			_squash_enemy = target
 			_squash_time = 0.45
 			_add_popup("BONK!", target.position + Vector2(-40, -90), Color(1.0, 0.85, 0.2), 24, true)
-		if _relic_strike(member):
+		if _relic_strike(member) or _relic_power(member) >= 0.5:
 			_add_popup(str(_anim_damage), target.position + Vector2(0, -30), RELIC_GREEN, 32 if critical else 26, true)
 			_popups[-1]["glitch"] = true
 			if critical:
@@ -1706,7 +1727,7 @@ const HOP_KILL_REACTIONS := ["* (Hop flinches.)", "* (Hop looks away.)", "* (Hop
 
 
 func _hop_after_kill() -> String:
-	if not party.any(func(m: PartyMember) -> bool: return m.name == "Hop"):
+	if not _hop_watching() and not party.any(func(m: PartyMember) -> bool: return m.name == "Hop"):
 		return ""
 	var kills := _total_kills()
 	var stage := -1
@@ -1719,6 +1740,28 @@ func _hop_after_kill() -> String:
 		Game.flags["hop_kill_stage"] = stage
 		return HOP_KILL_LINES[stage][1]
 	return HOP_KILL_REACTIONS.pick_random()
+
+
+## Hop is standing back, watching (with Hop, from the glowbug on).
+func _hop_watching() -> bool:
+	return _data.watcher == "Hop"
+
+
+## What Hop does while he watches (sometimes, in place of the turn's flavor text),
+## by how afraid he is: [fear up to, lines].
+const HOP_WATCHING_LINES := [
+	[0.3, ["* Hop is standing back. His fists are up.\n* He isn't swinging.", "* Hop is watching the enemy.\n* Then he's watching you.", "* Hop says \"Elric.\" Just that."]],
+	[0.65, ["* Hop is watching you instead of the enemy.", "* Behind you, Hop says something.\n* You don't hear it.", "* Hop has his hands in his pockets.\n* They're shaking anyway."]],
+	[1.01, ["* Hop is very far back.", "* Hop won't look at you.", "* Hop is looking at the exit.", "* You can hear Hop breathing. Too fast."]],
+]
+
+
+func _hop_watching_line() -> String:
+	var fear := _hop_fear()
+	for stage in HOP_WATCHING_LINES:
+		if fear < stage[0]:
+			return (stage[1] as Array).pick_random()
+	return ""
 
 
 ## Everyone killed so far, counting this fight.
@@ -1782,6 +1825,17 @@ func _pick_pattern(enemy: Enemy) -> String:
 	# Courses come out in order.
 	if not enemy.courses.is_empty():
 		return enemy.patterns[enemy.course % enemy.patterns.size()]
+	# Nearly beaten: the finale joins in (and comes up more often than the rest).
+	if not enemy.finale_patterns.is_empty() and enemy.hp * 3 < enemy.max_hp:
+		if not enemy.finale_started:
+			enemy.finale_started = true
+			_last_patterns[enemy] = enemy.finale_patterns[0]
+			return enemy.finale_patterns[0]
+		if randf() < 0.4:
+			var finale: String = enemy.finale_patterns.pick_random()
+			if finale != _last_patterns.get(enemy, ""):
+				_last_patterns[enemy] = finale
+				return finale
 	var pattern: String
 	if not _last_patterns.has(enemy):
 		pattern = enemy.patterns[0]
@@ -2549,7 +2603,7 @@ func _draw_impact() -> void:
 	var inverted := _impact_critical and _impact_time < _impact_length / 2
 	var background := Color.BLACK if inverted else Color(1, 1, 1, 0.92)
 	# Relic's strike: the flash is a pale green, and the inverted lines are green too.
-	var relic := state == State.FIGHT_ANIM and _relic_strike(_bar_member)
+	var relic := state == State.FIGHT_ANIM and (_relic_strike(_bar_member) or _relic_power(_bar_member) >= 0.5)
 	if relic and not inverted:
 		background = Color(0.86, 1.0, 0.88, 0.92)
 	var ink := Color.WHITE if inverted else Color.BLACK
@@ -2727,7 +2781,9 @@ func _draw_foam_finger() -> void:
 func _draw_slash() -> void:
 	if state != State.FIGHT_ANIM or _bar_target == null:
 		return
-	if _relic_strike(_bar_member):
+	# Elric's claws, turning into Relic's power (and all Relic, from the glowbug
+	# on, on the Genocide route).
+	if _relic_strike(_bar_member) or _relic_power(_bar_member) >= 0.75:
 		_draw_relic_strike()
 		return
 	match _weapon_style(_bar_member):
@@ -2739,6 +2795,9 @@ func _draw_slash() -> void:
 			return
 	if _bar_member.name == "Hop":
 		_draw_hop_strike()
+		return
+	if _bar_member.name == "Elric":
+		_draw_relic_strike()
 		return
 	var progress := clampf(_anim_time / ATTACK_SLASH_TIME, 0.0, 1.0)
 	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.35, 0.0, 1.0)
@@ -2762,16 +2821,68 @@ func _draw_slash() -> void:
 			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(color, fade), 2.0)
 
 
-## Relic's strike: three green slashes, and a fainter second set a beat behind
-## (two of them swinging, not one). Where it lands, green embers drift up, like
-## the field the night of the fire.
+## How far Elric's attack has turned into Relic's (0 to 1). It grows with every
+## kill (fast at first, then slower): at 8 kills the claws glow faintly green, by
+## 20 an old sigil flickers under them, by 40 green light gathers before every hit,
+## and at 75 (Relic, in the flesh) there are no claws left at all, only the old
+## green power. From the glowbug on, the Genocide route starts at least halfway.
+func _relic_power(member: PartyMember) -> float:
+	if member == null or member.name != "Elric":
+		return 0.0
+	var power := sqrt(clampf(_total_kills() / 75.0, 0.0, 1.0))
+	if Game.on_genocide_route() and Game.flags.get("glowbug_done", false):
+		power = maxf(power, 0.5)
+	if _data.id == "glowbug":
+		power = maxf(power, 0.75)
+	return power
+
+
+## Elric's strike, turning into Relic's. Everything is drawn by how far along it
+## is (`_relic_power`):
+##   claws      three slashes, in Elric's color going green; they fade out near the
+##              end and are gone for Relic
+##   echo       a second set of slashes a beat behind (two of them swinging)
+##   sigil      an old circle of runes turns under the target, and flares on the hit
+##   gathering  green motes are pulled in to the target before the blow lands
+##   eruption   a pillar of green light through the target, a shockwave, and
+##              rune-shards thrown outward
+##   crescents  (Relic) three arcs of ancient light that close on the target like
+##              a hand
 func _draw_relic_strike() -> void:
-	var fade := clampf(1.0 - (_anim_time - ATTACK_SLASH_TIME) / 0.6, 0.0, 1.0)
+	var power := _relic_power(_bar_member)
 	var center := _bar_target.position + Vector2(0, -20)
-	for pass_i in 2:
+	var windup := clampf(_anim_time / ATTACK_SLASH_TIME, 0.0, 1.0)
+	var age := _anim_time - ATTACK_SLASH_TIME
+	var fade := clampf(1.0 - age / 0.6, 0.0, 1.0)
+	var green := RELIC_GREEN
+	var pale := Color(0.85, 1.0, 0.88)
+	var base: Color = (YELLOW if _anim_accuracy >= CRITICAL else _bar_member.color).lerp(green, clampf(power * 1.6, 0.0, 1.0))
+
+	# The sigil: a ring of runes, turning, under (behind) everything else.
+	var sigil := clampf((power - 0.3) / 0.5, 0.0, 1.0)
+	if sigil > 0.0:
+		var flare := 1.0 + (0.35 * clampf(1.0 - age / 0.3, 0.0, 1.0) if age >= 0.0 else 0.0)
+		var radius := (34.0 + 18.0 * power) * (0.4 + 0.6 * windup) * flare
+		var alpha := sigil * (windup if age < 0.0 else fade)
+		_draw_sigil(center, radius, _anim_time * (1.5 + power * 2.0), Color(green, alpha), power >= 0.95)
+
+	# Gathering: motes pulled in to the target before the hit.
+	var gather := clampf((power - 0.5) / 0.3, 0.0, 1.0)
+	if gather > 0.0 and age < 0.0:
+		for i in 16:
+			var angle := i * TAU / 16.0 + i * 0.7
+			var dist := (90.0 + (i * 23) % 40) * (1.0 - windup)
+			var at := center + Vector2.from_angle(angle) * (dist + 6.0)
+			_overlay.draw_line(at, at + Vector2.from_angle(angle) * 8.0 * (1.0 - windup), Color(green, gather * 0.8), 2.0)
+			_overlay.draw_rect(Rect2(at - Vector2(1.5, 1.5), Vector2(3, 3)), Color(pale, gather))
+
+	# The claws (fading out as Relic takes over), and their echo.
+	var claws := 1.0 - clampf((power - 0.8) / 0.2, 0.0, 1.0)
+	var passes := 2 if power >= 0.15 else 1
+	for pass_i in passes:
 		var lag := 0.07 * pass_i
 		var progress := clampf((_anim_time - lag) / ATTACK_SLASH_TIME, 0.0, 1.0)
-		var alpha := fade * (1.0 if pass_i == 0 else 0.45)
+		var alpha := claws * fade * (1.0 if pass_i == 0 else 0.45 * clampf(power * 2.0, 0.0, 1.0))
 		if progress <= 0.0 or alpha <= 0.0:
 			continue
 		var shift := Vector2(7, -3) * pass_i
@@ -2780,20 +2891,95 @@ func _draw_relic_strike() -> void:
 			var from := center + offset + Vector2(38, -42)
 			var to := center + offset + Vector2(-38, 42)
 			var tip := from.lerp(to, progress)
-			# Every so often the slash jumps sideways for a frame, like a bad signal.
-			if pass_i == 0 and randf() < 0.12:
+			# With enough of Relic in it, the slash jumps sideways now and then, like a bad signal.
+			if pass_i == 0 and power >= 0.3 and randf() < 0.12:
 				var jolt := Vector2(randf_range(-5, 5), 0)
-				from += jolt; tip += jolt
-			_overlay.draw_line(from, tip, Color(RELIC_GREEN, 0.3 * alpha), 10.0)
-			_overlay.draw_line(from, tip, Color(RELIC_GREEN, alpha), 4.0)
-			_overlay.draw_line(from, tip, Color(0.85, 1, 0.88, alpha), 1.5)
-	if _anim_landed:
-		var age := _anim_time - ATTACK_SLASH_TIME
-		var ember_fade := clampf(1.0 - age / 0.9, 0.0, 1.0)
-		for i in 12:
-			var drift := Vector2(sin(i * 2.3 + age * 4.0) * (10 + i % 4 * 6), -age * (50 + (i * 37) % 40))
-			var at := center + Vector2(-30 + (i * 53) % 60, 10 - (i * 29) % 30) + drift
-			_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(RELIC_GREEN, ember_fade))
+				from += jolt
+				tip += jolt
+			_overlay.draw_line(from, tip, Color(base, 0.3 * alpha), 10.0)
+			_overlay.draw_line(from, tip, Color(base, alpha), 4.0)
+			_overlay.draw_line(from, tip, Color(1, 1, 1, alpha).lerp(Color(pale, alpha), power), 1.5)
+
+	# Relic: three crescents of old light close on the target from three sides.
+	var crescents := clampf((power - 0.75) / 0.25, 0.0, 1.0)
+	if crescents > 0.0:
+		for i in 3:
+			var side := -PI / 2 + i * TAU / 3.0 + 0.4
+			var reach := lerpf(70.0, 8.0, windup)
+			var mid := center + Vector2.from_angle(side) * reach
+			var alpha := crescents * fade
+			var start := side + PI - 1.1
+			_overlay.draw_arc(mid, 32.0, start, start + 2.2, 18, Color(green, 0.3 * alpha), 11.0)
+			_overlay.draw_arc(mid, 32.0, start, start + 2.2, 18, Color(green, alpha), 4.0)
+			_overlay.draw_arc(mid, 32.0, start + 0.2, start + 2.0, 14, Color(pale, alpha), 1.5)
+
+	if not _anim_landed:
+		return
+	# The eruption: a pillar of light, a shockwave, rune-shards flung out.
+	var erupt := clampf((power - 0.6) / 0.4, 0.0, 1.0)
+	if erupt > 0.0:
+		var t := clampf(age / 0.7, 0.0, 1.0)
+		var pillar_fade := (1.0 - t) * erupt
+		var width := (26.0 + 30.0 * power) * (1.0 - t * 0.6)
+		var floor_y := _bar_target.position.y + 40.0
+		_overlay.draw_rect(Rect2(center.x - width / 2, -20, width, floor_y + 20), Color(green, 0.38 * pillar_fade))
+		_overlay.draw_rect(Rect2(center.x - width / 4, -20, width / 2, floor_y + 20), Color(pale, 0.6 * pillar_fade))
+		_overlay.draw_arc(Vector2(center.x, floor_y), 10.0 + t * 120.0, PI, TAU, 24, Color(green, pillar_fade), 3.0)
+		_overlay.draw_arc(center, 6.0 + t * 90.0, 0, TAU, 32, Color(pale, 0.7 * pillar_fade), 2.0)
+		for i in 10:
+			var dir := Vector2.from_angle(i * TAU / 10.0 + 0.3)
+			var at := center + dir * (12.0 + t * (70.0 + (i * 17) % 30))
+			_draw_rune(at, 5.0, i * 7 + 3, Color(green, pillar_fade), _anim_time * 3.0 + i)
+	# Embers drifting up, like the field the night of the fire.
+	var ember_fade := clampf(1.0 - age / 0.9, 0.0, 1.0) * clampf(power * 2.0, 0.0, 1.0)
+	for i in 12:
+		var drift := Vector2(sin(i * 2.3 + age * 4.0) * (10 + i % 4 * 6), -age * (50 + (i * 37) % 40))
+		var at := center + Vector2(-30 + (i * 53) % 60, 10 - (i * 29) % 30) + drift
+		_overlay.draw_rect(Rect2(at, Vector2(3, 3)), Color(green, ember_fade))
+	# Without any of Relic in it yet: Elric's own little spark burst.
+	if power < 0.15:
+		var burst := clampf(age / 0.35, 0.0, 1.0)
+		for i in 10:
+			var dir := Vector2.from_angle(i * TAU / 10 + 0.3)
+			_overlay.draw_line(center + dir * (10 + burst * 30), center + dir * (18 + burst * 46), Color(base, fade), 2.0)
+
+
+## An old circle: two rings, runes between them, and (for Relic) a six-pointed
+## star inside, all turning.
+func _draw_sigil(center: Vector2, radius: float, turn: float, color: Color, full: bool) -> void:
+	var squash := Vector2(1.0, 0.55)
+	var points := PackedVector2Array()
+	for k in 41:
+		points.append(center + Vector2.from_angle(k * TAU / 40.0) * radius * squash)
+	_overlay.draw_polyline(points, color, 2.0)
+	var inner := PackedVector2Array()
+	for k in 41:
+		inner.append(center + Vector2.from_angle(k * TAU / 40.0) * radius * 0.78 * squash)
+	_overlay.draw_polyline(inner, Color(color, color.a * 0.7), 1.0)
+	for i in 8:
+		var angle := turn + i * TAU / 8.0
+		_draw_rune(center + Vector2.from_angle(angle) * radius * 0.89 * squash, 4.0, i * 5 + 1, color, 0.0)
+	if full:
+		for tri in 2:
+			var star := PackedVector2Array()
+			for k in 4:
+				star.append(center + Vector2.from_angle(-turn * 0.6 + tri * PI / 3.0 + k * TAU / 3.0) * radius * 0.7 * squash)
+			_overlay.draw_polyline(star, color, 1.5)
+
+
+## One rune: a few strokes picked from a little alphabet of angles (`seed` picks
+## the letter), `size` pixels tall.
+func _draw_rune(at: Vector2, size: float, seed: int, color: Color, spin: float) -> void:
+	var strokes := [
+		[Vector2(0, -1), Vector2(0, 1)], [Vector2(-1, -1), Vector2(1, 1)], [Vector2(1, -1), Vector2(-1, 1)],
+		[Vector2(-1, 0), Vector2(1, 0)], [Vector2(0, -1), Vector2(1, 0)], [Vector2(0, 1), Vector2(-1, 0)],
+		[Vector2(-1, -1), Vector2(1, -1)], [Vector2(-1, 1), Vector2(1, 1)],
+	]
+	for k in 3:
+		var stroke: Array = strokes[(seed * 3 + k * 5) % strokes.size()]
+		var a: Vector2 = (stroke[0] as Vector2).rotated(spin) * size
+		var b: Vector2 = (stroke[1] as Vector2).rotated(spin) * size
+		_overlay.draw_line(at + a, at + b, color, 1.5)
 
 
 ## Wally's dance, in time with his song (152 beats per minute): a hop on every beat
@@ -3182,7 +3368,9 @@ func _draw_aura() -> void:
 ## Where party member `i` stands, across the screen: Elric (first in the party)
 ## is always at the front, closest to the enemies.
 func _slot_x(i: int) -> float:
-	return 80.0 + (party.size() - 1 - i) * 100.0
+	# (With someone watching, the party steps forward to make room behind.)
+	var room := 54.0 if _data.watcher != "" else 0.0
+	return 80.0 + room + (party.size() - 1 - i) * 100.0
 
 
 func _draw_party_sprites() -> void:
@@ -3191,8 +3379,15 @@ func _draw_party_sprites() -> void:
 		var look := Cast.portrait(_data.watcher, "shocked")
 		if look:
 			var size := look.get_size() * 3.0
-			var feet := Vector2(38, 174 + sin(Time.get_ticks_msec() / 650.0) * 1.0)
-			_overlay.draw_texture_rect(look, Rect2(feet - Vector2(size.x / 2, size.y), size), false, Color(0.78, 0.78, 0.85))
+			var feet := Vector2(42, 174 + sin(Time.get_ticks_msec() / 650.0) * 1.0)
+			var shade := Color(0.78, 0.78, 0.85)
+			# Hop: the more Elric has killed, the more he shakes, the further back he
+			# stands, and the more he fades into the dark.
+			if _hop_watching():
+				var fear := _hop_fear()
+				feet.x += sin(Time.get_ticks_msec() / 18.0) * fear * 1.6 - fear * 14.0
+				shade = Color(0.78, 0.78, 0.85).lerp(Color(0.4, 0.4, 0.48), fear)
+			_overlay.draw_texture_rect(look, Rect2(feet - Vector2(size.x / 2, size.y), size), false, shade)
 	for i in party.size():
 		var member := party[i]
 		if member.sprite == null:

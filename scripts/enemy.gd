@@ -43,6 +43,12 @@ var last_words: String = ""
 ## (patterns[i] is courses[i]), and an ACT with a "course" only works on the turn
 ## that course is on the table. `course` is the one on the table now.
 var courses: Array[String] = []
+## Bosses (the Corps): attacks they only start using once they're nearly beaten
+## (under a third of their HP), and what's said the first time they do.
+var finale_patterns: Array[String] = []
+var finale_line: String = ""
+var finale_started: bool = false
+var finale_announced: bool = false
 var course: int = 0
 ## How many turns this enemy has attacked so far (some attacks speed up over time).
 var fury: int = 0
