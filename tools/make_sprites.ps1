@@ -2680,6 +2680,48 @@ $wildArt = [ordered]@{
         "....YYYYYYYYYYYY",
         ".....DD......DD"
     )
+    # Scrap Heap (the junkyard): a crane with a car crusher for a body and a big
+    # magnet for a hand. Rust everywhere. Two headlights for eyes.
+    'scrap_heap' = @(
+        "...........gggggggg",
+        "..........gGGGGGGGGg",
+        "..........gG.....gGg",
+        "...gggg...gG.....gG",
+        "..gRRRRg..gG.....gG",
+        "..gRggRg..gG.....KK",
+        "..gRRRRg..gG....KDDK",
+        "...gggg...gG....KDDK",
+        "..ggggggggggggg..KK",
+        ".gGGGGGGGGGGGGGg",
+        ".gGYYGGGGGGGYYGg",
+        ".gGYYGGGGGGGYYGg",
+        ".gGGGGdddddGGGGg",
+        ".gGGGGdgdgdGGGGg",
+        ".gGGGGdddddGGGGg",
+        ".gGGGGGGGGGGGGGg",
+        ".ggggggggggggggg",
+        ".KKK.KKK..KKK.KKK",
+        ".KDK.KDK..KDK.KDK",
+        "..K...K....K...K"
+    )
+    # The Junk Dealer (the junkyard): a raccoon in overalls. He once fought a
+    # kid in a fedora for a taco. He lost. He respects that kid.
+    'junkdealer' = @(
+        "....D........D",
+        "....DD......DD",
+        "....NNNNNNNNNN",
+        "...NKKKNNNNKKKN",
+        "...NKWKNNNNKWKN",
+        "...NNNNNWWNNNNN",
+        "....NNNWKKWNNN",
+        ".....NNWWWWNN",
+        "....JJJJJJJJJJ",
+        "...NJJAJJJJAJJN",
+        "...NJJJJJJJJJJN",
+        "....JJJJJJJJJJ",
+        "....JJJ....JJJ",
+        "....DD......DD..NDNDN"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

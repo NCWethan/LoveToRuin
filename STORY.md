@@ -323,7 +323,7 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 8 | **Ronin** **(built)** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
 | 9 | **Eggo** | The bunker, on the couch | He doesn't fight at all. Only FIGHT works; everything else is chained, like the glowbug. | *"...you could also just talk to us."* Then one last pun. It's perfect. Nobody laughs. (Toast the bunny hops away and is never seen again.) | **Cat-ear beanie** |
 | 10 | **MuffinMage** | The bunker kitchen | Calm, almost bored, salmon burger in hand. His face is never shown, not even now. | *"I warned you about the fragment. Should've warned you about yourself."* | **Salmon burger** (it never goes bad) |
-| 11 | **Sansworth** | The junkyard | He was going to drive everyone to safety. He's too dumb to run. The van never starts. | *"...Vroom?"* | **One of his 31 keys** |
+| 11 | **Sansworth** **(built)** | The junkyard | He was going to drive everyone to safety. He's too dumb to run. The van never starts. | *"...Vroom?"* | **One of his 31 keys** |
 | 12 | **Nassan** | Vons, at the register | He doesn't fight. Only FIGHT works. He hands you his note, five pages, and asks you to read it while he waits. | *"I told you not to carry it alone."* | **His name tag** (NASSAN, hired Tuesday) |
 
 After the last of them, the base is empty. The map table still has twelve circles on it. Someone has drawn a thirteenth, small, in the corner: Elric.
@@ -395,5 +395,6 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 8. ~~The Harbor~~ **(built)**: Flight Deck, Agent and Eggo, the feeding, Hop's confession, the vote, Hop's note, and the offer closing.
 9. ~~Torrey Pines~~ **(built)**: the Glider, Rooster, Hop at the viewpoint, and Hopkuna takes everything.
 10. ~~The burned hills~~ **(built)**: Ember, Ronin, and the tent memory.
-11. **The junkyard**: Scrap Heap, and Sansworth's van.
-12. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+11. ~~The junkyard~~ **(built)**: Scrap Heap, Sansworth's van, and Nassan's confession.
+12. **Hop's house** (fragment 11), **the bunker** and **Vons** (Genocide), then **Sabre Springs**.
+13. Then one fragment area at a time, in the order above, ending at Sabre Springs.

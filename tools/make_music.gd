@@ -23,6 +23,99 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# The junkyard: clanky, funky, a little broken. Bb, a bass that limps, drums
+	# like something falling over in time.
+	"junkyard": {
+		"bpm": 104,
+		"lead": [
+			"Bb4 . . Db5 . . Eb5 . F5 . Ab5 . F5 . . .",
+			"Eb5 . Db5 . Bb4 . . . Ab4 . Bb4 . . . . .",
+			"Bb4 . . Db5 . . Eb5 . F5 . Ab5 . Bb5 . . .",
+			"Ab5 . F5 . Eb5 . Db5 . Bb4 . . . - - - -",
+			"F5 . . . Eb5 . . . Db5 . . . Eb5 . F5 .",
+			"Gb5 . . . F5 . . . Eb5 . Db5 . Bb4 . . .",
+			"Db5 . Eb5 . F5 . Ab5 . F5 . Eb5 . Db5 . Eb5 .",
+			"Bb4 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"Db4 . F4 . Db4 . F4 . Db4 . F4 . Db4 . F4 .",
+			"Eb4 . Gb4 . Eb4 . Gb4 . Db4 . F4 . Db4 . F4 .",
+			"Db4 . F4 . Db4 . F4 . Db4 . F4 . Db4 . F4 .",
+			"Eb4 . Ab4 . Eb4 . Ab4 . Db4 . F4 . Db4 . F4 .",
+			"Db4 . F4 . Db4 . F4 . Bb3 . Db4 . Bb3 . Db4 .",
+			"Eb4 . Gb4 . Eb4 . Gb4 . Db4 . F4 . Db4 . F4 .",
+			"F4 . Ab4 . F4 . Ab4 . Eb4 . Ab4 . Eb4 . Ab4 .",
+			"Db4 . F4 . Bb3 . . . - - - - - - - -",
+		],
+		"bass": [
+			"Bb1 . . Bb1 . . Bb2 . Ab1 . . Ab1 . . Ab2 .",
+			"Gb1 . . Gb1 . . Gb2 . F1 . . F1 . . F2 .",
+			"Bb1 . . Bb1 . . Bb2 . Ab1 . . Ab1 . . Ab2 .",
+			"Gb1 . . Gb1 . . Ab1 . Bb1 . . . - - - -",
+			"Bb1 . . Bb1 . . Bb2 . Gb1 . . Gb1 . . Gb2 .",
+			"Eb1 . . Eb1 . . Eb2 . F1 . . F1 . . F2 .",
+			"Db2 . . Db2 . . Eb2 . F2 . . F1 . . F2 .",
+			"Bb1 . . . . . . . - - - - - - - -",
+		],
+		"drums": [
+			"K - - S - K S - K - - S - K S -",
+			"K - - S - K S - K - - S - K S S",
+			"K - - S - K S - K - - S - K S -",
+			"K - K S - K S - S S - S - - - -",
+			"K - - S - K S - K - - S - K S -",
+			"K - - S - K S - K - - S - K S S",
+			"K - K S - K S - K - K S S S S S",
+			"K - - - S - - - - - - - - - - -",
+		],
+	},
+
+	# Scrap Heap: metal grinding on metal. C minor, hard, relentless, the lead
+	# buzzing like a crusher about to close.
+	"scrap_heap": {
+		"bpm": 150,
+		"lead_wave": "saw",
+		"lead": [
+			"C5 . C5 . Eb5 . C5 . G5 . F5 . Eb5 . D5 .",
+			"C5 . C5 . Eb5 . C5 . Bb5 . Ab5 . G5 . . .",
+			"Ab5 . G5 . F5 . Eb5 . F5 . G5 . Ab5 . Bb5 .",
+			"G5 . . . D5 . . . G4 . . . - - - -",
+			"C6 . Bb5 . Ab5 . G5 . Ab5 . G5 . F5 . Eb5 .",
+			"F5 . Eb5 . D5 . C5 . D5 . Eb5 . F5 . G5 .",
+			"Ab5 . . . G5 . . . F5 . . . B5 . . .",
+			"C6 . . . . . . . C5 . . . - - - -",
+		],
+		"harm": [
+			"Eb4 . G4 . Eb4 . G4 . Eb4 . G4 . Eb4 . G4 .",
+			"Eb4 . G4 . Eb4 . G4 . F4 . Ab4 . F4 . Ab4 .",
+			"C4 . Eb4 . C4 . Eb4 . D4 . F4 . D4 . F4 .",
+			"B3 . D4 . B3 . D4 . B3 . D4 . G4 . . .",
+			"Eb4 . G4 . Eb4 . G4 . Eb4 . G4 . Eb4 . G4 .",
+			"D4 . F4 . D4 . F4 . B3 . D4 . B3 . D4 .",
+			"C4 . Eb4 . C4 . Eb4 . D4 . F4 . D4 . G4 .",
+			"Eb4 . G4 . Eb4 . . . - - - - - - - -",
+		],
+		"bass": [
+			"C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 Bb1 Bb1 Bb1 Bb1",
+			"Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 F1 F1 F1 F1 F1 F1 F1 F1",
+			"Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1 Bb1",
+			"G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1 G1",
+			"C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 C2 Bb1 Bb1 Bb1 Bb1",
+			"Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 Ab1 G1 G1 G1 G1 G1 G1 G1 G1",
+			"F1 F1 F1 F1 F1 F1 F1 F1 G1 G1 G1 G1 G1 G1 G1 G1",
+			"C2 . . . . . . . C1 . . . - - - -",
+		],
+		"drums": [
+			"K - H K S - H - K - H K S - H -",
+			"K - H K S - H - K - H K S - H H",
+			"K - H K S - H - K - H K S - H -",
+			"K K K K S - S - K K K K S S S S",
+			"K - H K S - H - K - H K S - H -",
+			"K - H K S - H - K - H K S - H H",
+			"K S K S K S K S K S K S S S S S",
+			"K - - - S - - - K - - - S - - -",
+		],
+	},
+
 	# The burned hills: ash, wind, and very little else. E minor, slow, with long
 	# gaps, like it's trying not to wake something up.
 	"burned_hills": {

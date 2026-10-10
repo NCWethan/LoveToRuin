@@ -349,9 +349,9 @@ func _after_memory() -> void:
 				{"who": "Ronin", "text": "...Hopkuna's trail. Burned grass, all the way north.\nPast the freeway. Through the junkyard.", "mood": ""},
 				{"who": "Ronin", "text": "Everybody's meeting there. Come on.", "mood": ""},
 			])
-			Game.set_objective("10 of 12. (Hopkuna's trail: the junkyard. To be continued.)")
+			Game.set_objective("10 of 12. (Hopkuna's trail: the junkyard.)")
 		"neutral":
-			Game.set_objective("10 of 12 FRAGMENTS. (To be continued.)")
+			Game.set_objective("10 of 12. Next: the junkyard. (Take the bus.)")
 		_:
 			Game.set_objective("...")
 
@@ -385,7 +385,7 @@ func _after_ronin() -> void:
 	await Game.dialogue.say([
 		"* (A guitar pick, in the ash. Red. Bitten at\n*  the corner, the way he always bit them.)",
 		"* (You keep it.)",
-		{"who": "Relic", "tag": "", "face": false, "text": "* Eight."},
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
 	])
 	_engaged = false
 	Game.set_objective("...")

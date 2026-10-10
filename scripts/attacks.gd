@@ -76,6 +76,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	wait = HillsAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:
 		return wait
+	# The junkyard (junkyard_attacks.gd).
+	wait = JunkyardAttacks.spawn(pattern, enemy, parent, area, s, step)
+	if wait >= 0.0:
+		return wait
 	# The Corps, as bosses (corps_attacks.gd).
 	wait = CorpsAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:

@@ -342,6 +342,16 @@ func partner() -> String:
 	return id
 
 
+## With Hop: how many of the Corps are gone, as Relic counts them ("Nine.").
+func corps_dead_count() -> String:
+	var n := 0
+	for id in ["crayola", "ncwethan", "bigjoe", "nat", "supreme", "agent", "rooster", "ronin", "sansworth", "eggo", "muffinmage", "nassan"]:
+		if flags.get("beat_corps_" + id, false):
+			n += 1
+	var words := ["None.", "One.", "Two.", "Three.", "Four.", "Five.", "Six.", "Seven.", "Eight.", "Nine.", "Ten.", "Eleven.", "Twelve."]
+	return "* " + words[n]
+
+
 ## Corps: after the vote at the Harbor, Hop leaves that night.
 func hop_left() -> bool:
 	return flags.get("route", "") == "pacifist" and flags.get("hb_vote_done", false)
@@ -795,6 +805,7 @@ const AREA_NAMES := {
 	"res://scenes/harbor.tscn": "The Harbor",
 	"res://scenes/torrey_pines.tscn": "Torrey Pines",
 	"res://scenes/burned_hills.tscn": "The Burned Hills",
+	"res://scenes/junkyard.tscn": "The Junkyard",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

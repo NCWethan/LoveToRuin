@@ -270,6 +270,26 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- The junkyard ---
+	"junkdealer": {
+		"name": "Junk Dealer", "sprite": "junkdealer",
+		"talk": {
+			"lines": [["smug", "Welcome to Junk Town. Population: me.\nEverything's for sale. Everything's junk."], ["", "A kid in a fedora fought me for a taco once.\nHe won. Fair and square. I respect that kid."]],
+			"options": ["The kid in the fedora?", "What's for sale?"],
+			"answers": [["happy", "Scrappy little guy. Had a friend with a backpack\nthat clinked. I sold 'em a bottle cap. Good customers."], ["smug", "This hubcap. That hubcap. A tire.\nA different tire. Feelings, if you ask nice."]],
+		},
+		"challenged": ["angry", "A FIGHT? In MY yard?\nI've been waiting for this since the taco."],
+		"spared": ["happy", "Respect. Here, a bottle cap.\nOn the house. It's the shiniest one."],
+		"hp": 70, "atk": 5, "def": 2, "patterns": ["shiny_things", "dumpster_dive"],
+		"check": "* JUNK DEALER - ATK 5 DEF 2\n* A raccoon in overalls. Runs the junkyard.\n* Lost a taco fight once. Still thinks about it.",
+		"acts": [
+			{"name": "Haggle", "mercy": 50, "lines": ["* {actor} haggles over a hubcap.\n* The Junk Dealer's eyes light up. A WORTHY opponent."]},
+			{"name": "Mention Tacos", "mercy": 50, "lines": ["* {actor} mentions tacos.\n* The Junk Dealer goes very quiet. Then smiles."]},
+		],
+		"taunts": ["Mine!", "Shiny!", "No refunds!", "That's MY junk!"],
+		"flavor": ["* The Junk Dealer counts bottle caps.", "* The freeway roars overhead."],
+		"backdrop": Color(0.5, 0.45, 0.4), "style": "grid", "exp": 14, "money": 22,
+	},
 	# --- The burned hills ---
 	"firefighter": {
 		"name": "Firefighter", "sprite": "firefighter",

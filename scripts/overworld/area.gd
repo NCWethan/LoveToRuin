@@ -662,6 +662,7 @@ const BUS_ROUTE := [
 	["The Harbor", "res://scenes/harbor.tscn", "dt_fragment"],
 	["Torrey Pines", "res://scenes/torrey_pines.tscn", "hb_fragment"],
 	["The Burned Hills", "res://scenes/burned_hills.tscn", "tp_fragment"],
+	["The Junkyard", "res://scenes/junkyard.tscn", "bh_fragment"],
 ]
 ## Where the bus lets you off at the mall (the stop on the road).
 const MALL_BUS_SPOT := Vector2(640, 545)

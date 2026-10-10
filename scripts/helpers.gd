@@ -123,4 +123,9 @@ const PAGE_HINTS := {
 	"heat_shimmer": "wobbling heat, rising.", "the_tent": "a tent made of fire. Room for three.",
 	"ash_fall": "ash, falling like snow.", "burning_out": "embers, dying. Almost over.",
 	"hose_spray": "a hose, swinging.", "axe_chop": "an axe, three times.",
+	"car_fling": "a car. Flung. It breaks apart.", "crusher_press": "the crusher closing. One row left.",
+	"magnet_pull": "bolts dragged to the magnet, then flung.", "tire_roll": "tires, bouncing.",
+	"hubcaps": "hubcaps, bouncing off the walls.", "spring_coil": "springs. BOING.",
+	"compactor": "walls from all four sides. One gap.",
+	"shiny_things": "bottle caps, flicked.", "dumpster_dive": "junk, bursting up.",
 }
