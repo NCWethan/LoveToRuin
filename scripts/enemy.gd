@@ -67,6 +67,8 @@ var feeds_on_hits: bool = false
 var burnout_mercy: int = 0
 ## (Was it hit since the last player turn? For burnout_mercy.)
 var hit_this_round: bool = false
+## The last fight: every friend called in adds their voice (this much MERCY).
+var mercy_per_call: int = 0
 ## Supreme labels his own attacks with their odds of hitting you: pattern -> %.
 var odds: Dictionary = {}
 var course: int = 0

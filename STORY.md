@@ -321,10 +321,10 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 6 | **Agent** **(built)** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
 | 7 | **Rooster** **(built)** | Torrey Pines | He roasts you through the whole fight. The jokes fall apart as he gets scared. | *"You were my favorite person to roast. You always roasted back."* (not a joke) | **Top hat** |
 | 8 | **Ronin** **(built)** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
-| 9 | **Eggo** | The bunker, on the couch | He doesn't fight at all. Only FIGHT works; everything else is chained, like the glowbug. | *"...you could also just talk to us."* Then one last pun. It's perfect. Nobody laughs. (Toast the bunny hops away and is never seen again.) | **Cat-ear beanie** |
-| 10 | **MuffinMage** | The bunker kitchen | Calm, almost bored, salmon burger in hand. His face is never shown, not even now. | *"I warned you about the fragment. Should've warned you about yourself."* | **Salmon burger** (it never goes bad) |
+| 9 | **Eggo** **(built)** | The bunker, on the couch | He doesn't fight at all. Only FIGHT works; everything else is chained, like the glowbug. | *"...you could also just talk to us."* Then one last pun. It's perfect. Nobody laughs. (Toast the bunny hops away and is never seen again.) | **Cat-ear beanie** |
+| 10 | **MuffinMage** **(built)** | The bunker kitchen | Calm, almost bored, salmon burger in hand. His face is never shown, not even now. | *"I warned you about the fragment. Should've warned you about yourself."* | **Salmon burger** (it never goes bad) |
 | 11 | **Sansworth** **(built)** | The junkyard | He was going to drive everyone to safety. He's too dumb to run. The van never starts. | *"...Vroom?"* | **One of his 31 keys** |
-| 12 | **Nassan** | Vons, at the register | He doesn't fight. Only FIGHT works. He hands you his note, five pages, and asks you to read it while he waits. | *"I told you not to carry it alone."* | **His name tag** (NASSAN, hired Tuesday) |
+| 12 | **Nassan** **(built)** | Vons, at the register | He doesn't fight. Only FIGHT works. He hands you his note, five pages, and asks you to read it while he waits. | *"I told you not to carry it alone."* | **His name tag** (NASSAN, hired Tuesday) |
 
 After the last of them, the base is empty. The map table still has twelve circles on it. Someone has drawn a thirteenth, small, in the corner: Elric.
 
@@ -385,7 +385,7 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 
 ## 11. What to build next, in order
 
-1. ~~The first keepsake memories~~ **(built:** 1 to 10**)**
+1. ~~The first keepsake memories~~ **(built:** 1 to 11, and the last one at Sabre Springs**)**
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
 4. **Relic's lost collection:** the side quest. (The first piece is built: the pigeon feather from Old Town, which can go back to the Pigeon Man.)
@@ -396,5 +396,6 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 9. ~~Torrey Pines~~ **(built)**: the Glider, Rooster, Hop at the viewpoint, and Hopkuna takes everything.
 10. ~~The burned hills~~ **(built)**: Ember, Ronin, and the tent memory.
 11. ~~The junkyard~~ **(built)**: Scrap Heap, Sansworth's van, and Nassan's confession.
-12. **Hop's house** (fragment 11), **the bunker** and **Vons** (Genocide), then **Sabre Springs**.
-13. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+12. ~~Hop's house, the bunker, Vons, Sabre Springs~~ **(built)**: fragment 11, the last of the Corps, the last keepsake, the final fights, and all six endings.
+13. **Still to build:** the Pacifist "keepsakes come home" stretch (the townsfolk getting their pain back, the Corps sitting with them), the full lost-collection side quest, and the endgame epilogue lines for every townsperson.
+14. Then polish, in the order above, ending at Sabre Springs.

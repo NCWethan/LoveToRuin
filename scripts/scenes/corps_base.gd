@@ -225,6 +225,9 @@ func _add_lamps() -> void:
 
 
 func _place_people() -> void:
+	if _hunt():
+		_place_hunt()
+		return
 	for i in MEMBERS.size():
 		var member: Dictionary = MEMBERS[i]
 		# Whoever's out with Elric isn't in their room.
@@ -300,6 +303,9 @@ func _guest_arrival() -> bool:
 
 func _start() -> void:
 	await wait_for_fade()
+	if _hunt():
+		await _hunt_start()
+		return
 	if flag("base_arrived"):
 		return
 	Game.flags["base_arrived"] = true
@@ -501,6 +507,15 @@ func _ladder() -> void:
 
 
 func _map_table() -> void:
+	if _hunt():
+		if Game.corps_dead() >= 12:
+			await Game.dialogue.say([
+				"* (The map of the city. Twelve red circles.)",
+				"* (Someone has drawn a thirteenth, small,\n*  in the corner. It just says: ELRIC.)",
+			])
+		else:
+			await Game.dialogue.say(["* (The map. Twelve red circles.\n*  Nobody's crossing them out anymore.)"])
+		return
 	await Game.dialogue.say([
 		"* (A big map of the city, covered in notes.)",
 		"* (Twelve red circles. Three are crossed out.)",
@@ -649,6 +664,106 @@ func _rooster_mirror() -> void:
 
 func _kitchen() -> void:
 	await Game.dialogue.say(["* (A tiny kitchen. The fridge has a sign on it:\n*  \"EGGO'S EGGS. DO NOT TOUCH.\")", "* (Below it, in different handwriting:\n*  \"THEY'RE NOT EVEN REAL EGGS.\")"])
+
+
+# --- With Hop: the last of them, down here --------------------------------------------
+# On the Genocide path, the bunker is quiet. Every door is open, every room is
+# empty. Eggo is on the couch. MuffinMage is in the kitchen.
+
+const EGGO_COUCH := Vector2(6 * T, 22 * T + 10)
+const MUFFIN_KITCHEN := Vector2(33 * T, 7 * T)
+var _eggo: Character
+var _muffin: Character
+var _hunt_engaged: bool = false
+
+
+func _hunt() -> bool:
+	return Game.on_genocide_route()
+
+
+func _place_hunt() -> void:
+	partner = Cast.make(Game.partner())
+	add_character(partner, player.position + Vector2(-20, 0))
+	partner.follow = player
+	if not flag("beat_corps_eggo") and str(Game.battle_result.get("id", "")) != "corps_eggo":
+		_eggo = add_character(Cast.make("Eggo"), EGGO_COUCH)
+		_eggo.face(Vector2.DOWN)
+		_eggo.on_interact = func() -> void: await run_cutscene(_confront_eggo)
+	if not flag("beat_corps_muffinmage") and str(Game.battle_result.get("id", "")) != "corps_muffinmage":
+		_muffin = add_character(Cast.make("MuffinMage"), MUFFIN_KITCHEN)
+		_muffin.face(Vector2.LEFT)
+		_muffin.on_interact = func() -> void: await run_cutscene(_confront_muffin)
+
+
+func _hunt_start() -> void:
+	var id := str(Game.battle_result.get("id", ""))
+	if id in ["corps_eggo", "corps_muffinmage"]:
+		Game.battle_result = {}
+		await run_cutscene(_after_eggo if id == "corps_eggo" else _after_muffin)
+		return
+	if not flag("gb_bunker"):
+		Game.flags["gb_bunker"] = true
+		await run_cutscene(func() -> void:
+			await Game.dialogue.say([
+				"* (The bunker. The lights are on.\n*  Every door down the hall is open.)",
+				"* (Every room is empty. The beds are made.\n*  Nobody's coming back to them.)",
+				"* (Someone's on the couch. Someone's cooking.)",
+				{"who": "Relic", "tag": "", "face": false, "text": "* Two down here."},
+			]))
+
+
+func _confront_eggo() -> void:
+	if _hunt_engaged or not _eggo:
+		return
+	_hunt_engaged = true
+	await Game.dialogue.say([
+		{"who": "Eggo", "text": "Hey, Elric.", "mood": ""},
+		{"who": "Eggo", "text": "Hey, Hop. Long time.", "mood": "sad"},
+		{"who": "Eggo", "text": "I'm not getting up. I've been on this couch a while.\nIt's a good couch. Big Joe picked it.", "mood": ""},
+		{"who": "Eggo", "text": "The day we met, I thought you were Hopkuna's\nlackey. I hit you with an egg. You remember?", "mood": "happy"},
+		{"who": "Eggo", "text": "...I was wrong, then. I'm not wrong now.", "mood": "sad"},
+	])
+	await Game.start_battle("corps_eggo", SCENE, player.position)
+
+
+func _after_eggo() -> void:
+	var kept: Array = Game.flags.get("mementos", [])
+	if not "Cat-Ear Beanie" in kept:
+		kept.append("Cat-Ear Beanie")
+	Game.flags["mementos"] = kept
+	await Game.dialogue.say([
+		"* (His beanie is on the couch cushion. The one\n*  with the cat ears. It's still warm.)",
+		"* (You keep it.)",
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
+	])
+	_hunt_engaged = false
+
+
+func _confront_muffin() -> void:
+	if _hunt_engaged or not _muffin:
+		return
+	_hunt_engaged = true
+	await Game.dialogue.say([
+		"* (MuffinMage is at the stove, with his back to you.\n*  He doesn't turn around.)",
+		{"who": "MuffinMage", "text": "Mm. Salmon burger? There's an extra one.\nI always make an extra one. Habit.", "mood": ""},
+		{"who": "MuffinMage", "text": "...No? Okay.", "mood": ""},
+		{"who": "MuffinMage", "text": "Day one. At the mall. I told you that fragment\nwas bad news. You remember what you said?", "mood": ""},
+		{"who": "MuffinMage", "text": "Doesn't matter.", "mood": ""},
+	])
+	await Game.start_battle("corps_muffinmage", SCENE, player.position)
+
+
+func _after_muffin() -> void:
+	var kept: Array = Game.flags.get("mementos", [])
+	if not "Salmon Burger (Never Goes Bad)" in kept:
+		kept.append("Salmon Burger (Never Goes Bad)")
+	Game.flags["mementos"] = kept
+	await Game.dialogue.say([
+		"* (On the counter: the extra salmon burger,\n*  wrapped up neat. A note on it: FOR ELRIC.)",
+		"* (You keep it. It never goes bad.)",
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
+	])
+	_hunt_engaged = false
 
 
 # --- Drawing --------------------------------------------------------------------------

@@ -113,6 +113,13 @@ func _draw_dread_heart() -> void:
 		if stage >= 4:
 			bent = bent.rotated(p.y * 0.05 * sin(_time * 0.9))
 		heart.append(bent)
+	# (Bent too far, the outline can cross itself and can't be filled. Then draw it
+	# a little less bent, just for this frame.)
+	if Geometry2D.triangulate_polygon(heart).is_empty():
+		var calmer := PackedVector2Array()
+		for p in _smooth_heart():
+			calmer.append(p + Vector2(sin(p.y * 0.9 + _time * 1.7), cos(p.x * 0.8 + _time * 1.3) * 0.6) * minf(warp, 0.8))
+		heart = calmer
 	var body: Color = [Color(1, 0, 0), Color(0.92, 0.05, 0.1), Color(0.7, 0.12, 0.12), Color(0.35, 0.3, 0.12), Color(0.06, 0.28, 0.12)][stage]
 	draw_colored_polygon(heart, body)
 	if stage >= 4:

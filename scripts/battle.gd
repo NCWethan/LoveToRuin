@@ -348,6 +348,16 @@ func _start_player_turn() -> void:
 	actions.clear()
 	current_member = -1
 	_flavor = _data.flavor_text(turn)
+	# BOND: Bound by Our New Determination. Everyone's hands on Elric's shoulders.
+	if _bond_pending:
+		_bond_pending = false
+		for m in party:
+			m.hp = m.max_hp
+		for enemy in _active_enemies():
+			if enemy.mercy_per_call > 0:
+				enemy.mercy = mini(enemy.mercy + 25, 100)
+		_flavor = "* BOND. Bound by Our New Determination.\n* Twelve hands on your shoulders. Your SOUL burns brighter."
+		_add_popup("BOUND BY OUR NEW DETERMINATION", BOX_CENTER + Vector2(0, -150), Color(1.0, 0.85, 0.3), 20, true)
 	# Someone reads the next attack out loud (Supreme, at the Big Screen).
 	if _data.announcer != "":
 		_planned_patterns.clear()
@@ -626,6 +636,10 @@ func _run_next_action() -> void:
 		"MERCY":
 			_try_spare(member, action["target"])
 		"CALL":
+			# (The last fight: every friend who comes adds their voice to Elric's.)
+			for enemy in _active_enemies():
+				if enemy.mercy_per_call > 0:
+					enemy.mercy = mini(enemy.mercy + enemy.mercy_per_call, 100)
 			_start_call(member, action["helper"])
 
 
@@ -746,6 +760,9 @@ var _shield_up: bool = false
 var _nassan_here: bool = false
 ## Attacks Nat already read out: the enemies use these on their next turn.
 var _planned_patterns: Dictionary = {}
+## The BOND reveal (the last fight): has it happened, and is it waiting to be told?
+var _bond_revealed: bool = false
+var _bond_pending: bool = false
 ## Where the SOUL went this enemy turn, and the last one (every 0.1 seconds): the
 ## Big Screen's INSTANT REPLAY plays the last one back.
 var _soul_path: Array[Vector2] = []
@@ -1864,6 +1881,13 @@ func _pick_pattern(enemy: Enemy) -> String:
 		return enemy.patterns[enemy.course % enemy.patterns.size()]
 	# Nearly beaten: the finale joins in (and comes up more often than the rest).
 	if enemy.in_finale():
+		# (A finale that's for good: once it starts, it's every turn.)
+		if enemy.finale_chance >= 1.0:
+			if not enemy.finale_started:
+				enemy.finale_started = true
+				if not enemy.finale_taunts.is_empty():
+					enemy.taunts.assign(enemy.finale_taunts)
+			return enemy.finale_patterns[0]
 		if not enemy.finale_started:
 			enemy.finale_started = true
 			if not enemy.finale_taunts.is_empty():
@@ -2043,6 +2067,13 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 		member.hp = 1
 		Game.play_sfx("heal", 1.3)
 		_add_popup("HEART CARD!", _panel_position(member) + Vector2(0, -26), Color(1.0, 0.45, 0.6), 15)
+	# The last fight: at the lowest point, BOND.
+	if member.hp == 0 and _data.bond_reveal and not _bond_revealed and member.name == "Elric":
+		_bond_revealed = true
+		_bond_pending = true
+		member.hp = 1
+		Game.play_sfx("heal", 0.8)
+		_add_popup("BOND", BOX_CENTER + Vector2(0, -160), Color(1.0, 0.85, 0.3), 44, true)
 	member.shake = 0.4
 	if damage > 0 or soaked == 0:
 		_add_popup(str(damage), _panel_position(member), Color.RED)

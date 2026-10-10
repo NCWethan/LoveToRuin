@@ -30,6 +30,8 @@ extends Area
 ##      ever wanted to stay."
 ##  10  Westview Field, the night before the fire: the tent, room for three.
 ##      "Who's the third?" "Whoever shows up." The voice is quiet. Too quiet.
+##  11  The fire. The tent burning on Westview Field, and Hop in the middle of
+##      it, laughing with someone else's laugh. Relic holds on: "Hop. Let go."
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -80,6 +82,7 @@ func _spawn() -> Vector2:
 		8: return Vector2(6 * T, 12 * T + 10)
 		9: return Vector2(30 * T, 12 * T + 10)
 		10: return Vector2(4 * T, 18 * T)
+		11: return Vector2(4 * T, 18 * T)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -96,6 +99,7 @@ func build_map() -> void:
 		8: _build_carrier()
 		9: _build_cliff()
 		10: _build_tent_night()
+		11: _build_tent_night()
 		_: _build_road()
 
 
@@ -283,6 +287,18 @@ func _draw_decor() -> void:
 					_decor.draw_rect(Rect2(Vector2(12 * T + i * 14, 14 * T + (i % 2) * 8), Vector2(8, 8)), things[i])
 			else:
 				_decor.draw_rect(Rect2(Vector2(30 * T - 6, 12 * T + 2), Vector2(12, 14)), Color8(70, 110, 70))
+		11:
+			# The tent, on fire. Flames everywhere around it, and sparks going up.
+			for k in 40:
+				var at := Vector2(17 * T, 11 * T) + Vector2.from_angle(k * 0.71) * (30.0 + (k * 37) % 200)
+				var flick := 0.6 + 0.4 * sin(_card_time * 9.0 + k)
+				_decor.draw_circle(at, 6.0 + flick * 6.0, Color(1.0, 0.45 + 0.3 * flick, 0.15, 0.55))
+				_decor.draw_circle(at + Vector2(0, -4), 3.0 + flick * 2.0, Color(1.0, 0.9, 0.5, 0.7))
+			var tent := PackedVector2Array([Vector2(15 * T, 12 * T), Vector2(17 * T, 9 * T - 10), Vector2(19 * T, 12 * T)])
+			_decor.draw_colored_polygon(tent, Color8(60, 40, 30))
+			for k in 20:
+				var spark := Vector2(17 * T + sin(k * 3.1) * 120.0, 12 * T - fmod(_card_time * 60.0 + k * 31.0, 260.0))
+				_decor.draw_rect(Rect2(spark, Vector2(2, 2)), Color(1.0, 0.7, 0.3, 0.8))
 		10:
 			# The tent: big enough for three. A lantern. Stars. Very quiet.
 			var tent := PackedVector2Array([Vector2(15 * T, 12 * T), Vector2(17 * T, 9 * T - 10), Vector2(19 * T, 12 * T)])
@@ -371,6 +387,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# Into the fire, to Hop.
+	if memory == 11 and hop != null and player.position.distance_to(hop.position) < 40.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_fire)
 	# To the tent, where Hop is waiting.
 	if memory == 10 and hop != null and player.position.distance_to(hop.position) < 36.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -412,6 +432,7 @@ func _start() -> void:
 		8: await run_cutscene(_intro_carrier)
 		9: await run_cutscene(_intro_cliff)
 		10: await run_cutscene(_intro_tent)
+		11: await run_cutscene(_intro_fire)
 
 
 func _intro_road() -> void:
@@ -836,6 +857,47 @@ func _end_tent() -> void:
 		"* (It's very, very quiet.)",
 	])
 	await _finish(["* We made room for three.", "* Look who moved in."])
+
+
+# --- 11: The fire --------------------------------------------------------------------
+
+func _intro_fire() -> void:
+	var fire := CanvasModulate.new()
+	fire.color = Color(1.0, 0.7, 0.6)
+	add_child(fire)
+	hop = Cast.make("hopkuna")
+	hop.glow = true
+	hop.glow_color = Color(1.0, 0.15, 0.2, 0.6)
+	add_character(hop, Vector2(17 * T, 13 * T + 4))
+	hop.face(Vector2.DOWN)
+	Game.play_music("hopkuna", 1.0)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (You wake up because it's hot.)",
+		"* (The tent is on fire. The field is on fire.\n*  The hill behind the field is catching.)",
+		"* (Hop is standing in the middle of it. Laughing.\n*  It isn't his laugh.)",
+		{"who": "Hopkuna", "text": "FINALLY. Do you have ANY idea how long\nI've waited? Fifteen years in the dark.", "mood": ""},
+		{"who": "Hopkuna", "text": "And that little token of yours. Cute.\nIt held for a whole summer. I'm impressed.", "mood": ""},
+	])
+	Game.set_objective("(Get to Hop.)")
+
+
+func _end_fire() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hopkuna", "text": "Don't. Don't touch me, little wanderer.\nYou carry junk. You can't carry ME.", "mood": ""},
+		{"who": "Relic", "choices": ["(Grab him.)", "(Hold on.)"]},
+		"* (You grab him. Both arms. You don't let go.)",
+		{"who": "Relic", "text": "Hop. I know you're in there.", "mood": ""},
+		{"who": "Relic", "text": "Hop. Let go.", "mood": ""},
+		"* (For a second, his eyes are his eyes.)",
+		"* (Hop lets go.)",
+		"* (Everything Hopkuna is pours out of Hop, and into you.\n*  All of it. Fifteen years of it.)",
+		"* (It's so heavy. It's heavier than every bottle cap\n*  and feather and ticket stub put together.)",
+		"* (You hold it anyway.)",
+		"* (You feel yourself start to come apart.)",
+	])
+	await _finish(["* We held all of him.", "* Nobody held us."])
 
 
 # --- The end of a memory ---------------------------------------------------------

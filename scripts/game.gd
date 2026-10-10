@@ -342,12 +342,18 @@ func partner() -> String:
 	return id
 
 
-## With Hop: how many of the Corps are gone, as Relic counts them ("Nine.").
-func corps_dead_count() -> String:
+## With Hop: how many of the Corps are gone.
+func corps_dead() -> int:
 	var n := 0
 	for id in ["crayola", "ncwethan", "bigjoe", "nat", "supreme", "agent", "rooster", "ronin", "sansworth", "eggo", "muffinmage", "nassan"]:
 		if flags.get("beat_corps_" + id, false):
 			n += 1
+	return n
+
+
+## ...as Relic counts them ("Nine.").
+func corps_dead_count() -> String:
+	var n := corps_dead()
 	var words := ["None.", "One.", "Two.", "Three.", "Four.", "Five.", "Six.", "Seven.", "Eight.", "Nine.", "Ten.", "Eleven.", "Twelve."]
 	return "* " + words[n]
 
@@ -806,6 +812,7 @@ const AREA_NAMES := {
 	"res://scenes/torrey_pines.tscn": "Torrey Pines",
 	"res://scenes/burned_hills.tscn": "The Burned Hills",
 	"res://scenes/junkyard.tscn": "The Junkyard",
+	"res://scenes/sabre_springs.tscn": "Sabre Springs",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

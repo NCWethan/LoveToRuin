@@ -401,6 +401,10 @@ func _place_hotspots() -> void:
 
 func _start() -> void:
 	await wait_for_fade()
+	if str(Game.battle_result.get("id", "")) == "corps_nassan":
+		Game.battle_result = {}
+		await run_cutscene(_after_nassan)
+		return
 	if await handle_person_return():
 		return
 	if Game.on_genocide_route() and Game.daytime() and not flag("fled_jack"):
@@ -409,6 +413,27 @@ func _start() -> void:
 		await run_cutscene(_arrival)
 	elif not flag("seen_" + _time_of_day()):
 		await run_cutscene(_new_time_of_day)
+
+
+## With Hop: after Nassan. The last of them.
+func _after_nassan() -> void:
+	var kept: Array = Game.flags.get("mementos", [])
+	if not "Name Tag" in kept:
+		kept.append("Name Tag")
+	Game.flags["mementos"] = kept
+	await Game.dialogue.say([
+		"* (His name tag, on the floor by the register.
+*  NASSAN. HIRED TUESDAY.)",
+		"* (Next to it, his note. Five pages.
+*  You don't read it.)",
+		"* (You keep the name tag.)",
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
+		{"who": "Relic", "tag": "", "face": false, "text": "* That's all of them."},
+		{"who": "Hop", "text": "...", "mood": "sad"},
+		{"who": "Hop", "text": "Come home with me. I've got something for you.
+I kept it. I always kept it for you.", "mood": ""},
+	])
+	Game.set_objective("Hop's house.")
 
 
 func _physics_process(_delta: float) -> void:
@@ -513,6 +538,18 @@ func _use_save_point() -> void:
 # --- Shops ----------------------------------------------------------------
 
 func _shop_vons() -> void:
+	# With Hop, at the very end: Nassan is at the register. The last of them.
+	if Game.on_genocide_route() and Game.corps_dead() == 11 and not flag("beat_corps_nassan"):
+		await Game.dialogue.say([
+			"* (The doors slide open. The lights are on.\n*  The music is still playing. Nobody's shopping.)",
+			"* (At the only open register, in his apron and his\n*  name tag: Nassan.)",
+			{"who": "Nassan", "text": "Hi, Elric. Find everything okay?", "mood": ""},
+			{"who": "Nassan", "text": "I wrote you a note. Five pages. Took me all night.\nI'm not good at endings. I'm good at step one.", "mood": "sad"},
+			{"who": "Nassan", "text": "I told you not to carry it alone. Remember?\nYou didn't. You made Hop carry it with you.", "mood": "sad"},
+			{"who": "Nassan", "text": "...Okay. Step one.", "mood": ""},
+		])
+		await Game.start_battle("corps_nassan", SCENE, player.position)
+		return
 	if _stores_closed() and not Shops.gone("vons"):
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (Through the glass, someone is mopping the floor.)"])
 		return

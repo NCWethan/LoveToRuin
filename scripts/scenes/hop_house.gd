@@ -10,6 +10,13 @@ extends Area
 ##            it hint at Hopkuna (a covered mirror, tally marks, a note) and at
 ##            Relic (a photo, a jar of bottle caps, a calendar, a melted tent).
 ##
+## At the end (fragment 11): the jar of bottle caps on the windowsill, labeled KEEP
+## in Relic's handwriting. Hop found the eleventh fragment in the burned field at
+## dawn, five years ago, and never broke it and never told anyone. Picking it up
+## plays its KEEPSAKE (the fire: "Hop. Let go."). Then the windows go red: Hopkuna
+## takes it, and flies north to the last one. (Corps and own way: after the
+## junkyard. With Hop: after the last of the Corps, Hop gives it to them himself.)
+##
 ## Story flags (in Game.flags): hh_arrived, glowbug_done, hh_inside, hh_slept,
 ## hh_seen_morning, plus seen_<thing> for things Hop reacts to once.
 
@@ -39,6 +46,9 @@ const HOP_MORNING := Vector2(15 * T, 35 * T + 10)
 
 var hop: Character
 var glowbug: Character
+## Back from fragment 11's KEEPSAKE.
+var _from_memory: bool = false
+var _engaged: bool = false
 var _decor: Node2D
 var _font: Font
 
@@ -59,6 +69,7 @@ const WESTVIEW_FROM_HERE := Vector2(32 * T - 30, 370)
 
 
 func _ready() -> void:
+	_from_memory = not Game.keepsake_after.is_empty() and not Game.playing_relic
 	rooms.assign([_px(STREET), _px(HOUSE)])
 	setup_area(ENTRY)
 	if _visiting() or flag("glowbug_done"):
@@ -284,6 +295,15 @@ func _start() -> void:
 	await wait_for_fade()
 	if not is_inside_tree():
 		return
+	if _from_memory:
+		while is_blocked() or not Game.keepsake_after.is_empty():
+			await get_tree().process_frame
+		await run_cutscene(_hopkuna_takes_it)
+		return
+	if _endgame() and not flag("hh_end_arrived"):
+		Game.flags["hh_end_arrived"] = true
+		await run_cutscene(_endgame_arrival)
+		return
 	if _visiting():
 		if not flag("nb_arrived"):
 			Game.flags["nb_arrived"] = true
@@ -360,6 +380,9 @@ func _after_glowbug() -> void:
 
 
 func _front_door() -> void:
+	if _endgame() and not flag("hh_fragment11"):
+		await _endgame_door()
+		return
 	if _visiting():
 		if hop and Game.partner() == "Hop":
 			await Game.dialogue.say([{"who": "Hop", "text": "That's my place. It's a mess.\n...Maybe some other time.", "mood": "sad"}])
@@ -394,6 +417,134 @@ func _front_door() -> void:
 			{"who": "Hop", "text": "...Just don't go in my room. Okay?", "mood": "sad"},
 		])
 		Game.set_objective("Get some sleep. (The couch.)")
+
+
+# --- The end: fragment 11 ------------------------------------------------------------
+
+const SABRE_SCENE := "res://scenes/sabre_springs.tscn"
+
+
+## It's time: Corps or own way, after the junkyard; with Hop, after the last of the Corps.
+func _endgame() -> bool:
+	if Game.on_genocide_route():
+		return Game.corps_dead() >= 12
+	return flag("jy_heap_done")
+
+
+func _endgame_arrival() -> void:
+	if Game.on_genocide_route():
+		await Game.dialogue.say([
+			"* (Hop's street. Quiet. Quieter than it's ever been.\n*  Nobody's sprinklers are on.)",
+			{"who": "Hop", "text": "...Come inside.", "mood": ""},
+		])
+	else:
+		await Game.dialogue.say([
+			"* (Hop's street. His house is dark.)",
+			"* (The circle on Nassan's map was always right here.)",
+		])
+	Game.set_objective("Hop's house. (The jar on the windowsill.)")
+
+
+func _endgame_door() -> void:
+	Game.play_sfx("door")
+	if Game.on_genocide_route():
+		await Game.dialogue.say(["* (Hop opens the door. He goes in first.)"])
+	else:
+		await Game.dialogue.say(["* (The door's unlocked. Hop never locks it.)"])
+	await go_through_door(HOUSE_ENTRY)
+	if hop and is_instance_valid(hop):
+		hop.follow = null
+		hop.position = HOP_MORNING
+		hop.face(Vector2.DOWN)
+	var tint := get_node_or_null("Tint") as CanvasModulate
+	if tint:
+		tint.color = Color(0.82, 0.74, 0.66)
+	if not Game.on_genocide_route():
+		await Game.dialogue.say([
+			"* (Hop's house. One plate. One cup. One fork.)",
+			"* (He's not here. His hat is on the hook by the door.)",
+		])
+
+
+func _fragment_eleven() -> void:
+	if Game.on_genocide_route():
+		if hop:
+			hop.face(player.position - hop.position)
+		await Game.dialogue.say([
+			"* (Hop takes the jar down off the windowsill.)",
+			{"who": "Hop", "text": "Relic wrote that. KEEP. On the jar.\nFor their bottle caps. They had so many.", "mood": "happy"},
+			{"who": "Hop", "text": "I found it in the field. That morning.\nAfter. Lying in the ash, still warm.", "mood": "sad"},
+			{"who": "Hop", "text": "I never broke it. I never told anyone.\nI couldn't let go of it.", "mood": "sad"},
+			{"who": "Hop", "text": "I kept it for you.\nI always kept it for you.", "mood": "happy"},
+			"* (He puts something red and warm in your hands.)",
+		])
+	else:
+		await Game.dialogue.say([
+			"* (The jar of bottle caps on the windowsill.\n*  KEEP, in someone else's handwriting.)",
+			"* (You tip it out. Bottle caps. A ticket stub.\n*  A hair tie. A movie stub from five summers ago.)",
+			"* (At the bottom: something red. Warm.)",
+			"* (Hop found it in the burned field, at dawn,\n*  five years ago. He never broke it.\n*  He never told anyone.)",
+		])
+	Game.play_sfx("fragment")
+	await Game.dialogue.say(["* (You got the eleventh FRAGMENT.)"])
+	Game.flags["hh_fragment11"] = true
+	Game.flags["has_fragment_11"] = true
+	Game.flags["fragments"] = maxi(int(Game.flags.get("fragments", 10)), 11)
+	await Game.dialogue.say(["* (It's warmer than all the others.\n*  You close your eyes.)"])
+	await Game.play_keepsakes([11], SCENE, player.position, [
+		"* (The fire. Relic, holding all of it.)",
+		"* (\"Hop. Let go.\")",
+	])
+
+
+## Then the windows go red.
+func _hopkuna_takes_it() -> void:
+	var red := CanvasModulate.new()
+	red.color = Color(1.0, 0.55, 0.55)
+	add_child(red)
+	Game.play_sfx("black_flash")
+	if Game.on_genocide_route():
+		if hop:
+			hop.face(player.position - hop.position)
+		await Game.dialogue.say([
+			"* (Hop's hand closes around the fragment, over yours.)",
+			"* (It isn't Hop closing it.)",
+			{"who": "Hopkuna", "text": "MINE.", "mood": ""},
+			"* (Hopkuna tears it out of your hands. He's terrified.\n*  You can see it. He's never been scared before.)",
+			{"who": "Hopkuna", "text": "The last one. North. If I get there first,\nyou can't- you CAN'T-", "mood": ""},
+			"* (He goes through the window. He flies. North.)",
+			{"who": "Relic", "tag": "", "face": false, "text": "* Let him run.\n* We know where he's going."},
+		])
+		if hop:
+			hop.queue_free()
+			hop = null
+	else:
+		var hk := add_character(Cast.make("hopkuna"), player.position + Vector2(0, -60))
+		hk.glow = true
+		hk.glow_color = Color(1.0, 0.15, 0.2, 0.5)
+		hk.face(Vector2.DOWN)
+		await Game.dialogue.say([
+			"* (The windows go red.)",
+			"* (He's inside. He was always going to come here.)",
+			{"who": "Hopkuna", "text": "The one he hid from me. Five years.\nIn a JAR.", "mood": ""},
+			"* (The fragment tears out of your hands and into his.)",
+			{"who": "Hopkuna", "text": "...There you are. I can feel the last one now.\nNorth. Buried. The biggest one.", "mood": ""},
+			"* (He's gone, through the window, over the rooftops,\n*  toward Carmel Mountain Ranch.)",
+		])
+		hk.queue_free()
+		if Game.flags.get("route", "") == "pacifist":
+			await Game.dialogue.say([
+				"* (Outside: a horn. HONK HONK. A tan van, in the street,\n*  full of people.)",
+				{"who": "Sansworth", "text": "EVERYBODY IN THE VAN!", "mood": "happy"},
+			])
+		else:
+			await Game.dialogue.say([
+				"* (Outside, a van goes past, full of people,\n*  horn blaring, heading north.)",
+				"* (Nobody sees you in the window.)",
+				"* (You follow on foot. All night.)",
+			])
+	Game.set_objective("Sabre Springs. (Where it began.)")
+	await Game.change_scene(SABRE_SCENE)
 
 
 func _talk_to_hop() -> void:
@@ -536,6 +687,9 @@ func _calendar() -> void:
 
 
 func _jar_and_sink() -> void:
+	if _endgame() and not flag("hh_fragment11"):
+		await run_cutscene(_fragment_eleven)
+		return
 	await Game.dialogue.say([
 		"* (The sink. One plate. One cup. One fork.)",
 		"* (On the windowsill above it: a jar of bottle caps.\n*  Hop doesn't drink soda.)",

@@ -45,6 +45,9 @@ var announcer: String = ""
 ## Out in the open sky (the Glider): the box drifts on the wind during enemy
 ## turns, this many pixels side to side.
 var box_drift: float = 0.0
+## The last fight (Corps): the first time Elric would fall, they hang on at 1 HP,
+## and BOND shows what it stands for. Everyone is healed.
+var bond_reveal: bool = false
 ## No music at all.
 var silent: bool = false
 ## Buttons that can't be used: greyed out and chained. Trying one shows the next
