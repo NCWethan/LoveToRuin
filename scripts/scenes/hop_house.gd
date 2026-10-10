@@ -538,9 +538,13 @@ func _fragment_eleven() -> void:
 
 ## Then the windows go red.
 func _hopkuna_takes_it() -> void:
-	var red := CanvasModulate.new()
-	red.color = Color(1.0, 0.55, 0.55)
-	add_child(red)
+	# (Only one CanvasModulate works at a time: turn the night tint red, if there is one.)
+	var red := get_node_or_null("Tint") as CanvasModulate
+	if red == null:
+		red = CanvasModulate.new()
+		red.color = Color.WHITE
+		add_child(red)
+	red.color = red.color * Color(1.0, 0.55, 0.55)
 	Game.play_sfx("black_flash")
 	if Game.on_genocide_route():
 		if hop:

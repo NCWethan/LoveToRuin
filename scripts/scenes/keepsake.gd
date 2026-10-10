@@ -46,6 +46,8 @@ var memory: int = 1
 var hop: Character
 var _decor: Node2D
 var _font: Font
+## The memory filter (and the light of the moment, through _light).
+var _tint: CanvasModulate
 var _card: Control
 var _card_time: float = 0.0
 var _flags := {}
@@ -55,20 +57,31 @@ func _ready() -> void:
 	memory = Game.current_keepsake()
 	if memory < 1:
 		memory = 1
+	# The fire: no fireflies, no birds. Nothing alive comes near it.
+	if memory == 11:
+		ambience_off = ["birds", "butterflies", "fireflies"]
 	setup_area(_spawn())
 	_font = ThemeDB.fallback_font
-	var tint := CanvasModulate.new()
-	tint.color = TINT if memory != 1 else TINT * Color(1.0, 0.92, 0.85)
-	add_child(tint)
+	_tint = CanvasModulate.new()
+	_tint.color = TINT if memory != 1 else TINT * Color(1.0, 0.92, 0.85)
+	add_child(_tint)
 	_decor = Node2D.new()
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
 	Game.play_music("relic", 1.0)
 	_place()
+	_dress()
 	_add_title_card()
 	fit_camera_to_room()
 	_start.call_deferred()
+
+
+## The memory's light (night, dusk, dawn, fire), on top of the green memory tint.
+## (There can only be one CanvasModulate working at a time, so this changes the
+## one there is.)
+func _light(color: Color) -> void:
+	_tint.color = TINT * color
 
 
 func _spawn() -> Vector2:
@@ -87,6 +100,90 @@ func _spawn() -> Vector2:
 
 
 # --- The maps ---------------------------------------------------------------------
+
+## The gym, the museum steps, the ballpark and the tent all happen at night.
+func is_night() -> bool:
+	return memory in [2, 5, 7, 10, 11]
+
+
+## Set dressing (props.gd), sparse, the way you remember a place: a few things that
+## stuck. Kept off the paths the memories walk.
+func _dress() -> void:
+	var items: Array = []
+	match memory:
+		1:
+			items = [
+				["rock", Vector2(8 * T, 7 * T)],
+				["bush", Vector2(28 * T, 6 * T)],
+				["log", Vector2(22 * T, 19 * T), {"look": ["* (A log by the road. Relic sat on one like this\n*  in every town. Then got up and kept going.)"]}],
+				["mailbox", Vector2(36 * T, 8 * T + 14), {"look": ["* (A mailbox at the end of a long driveway.\n*  Somebody's home. Not yours. You never had one.)"]}],
+			]
+		2:
+			items = [
+				["cart", Vector2(10 * T, 20 * T), {"look": ["* (A cart of dodgeballs. Relic used two as a pillow.\n*  Not good. Better than the floor.)"]}],
+				["cone", Vector2(28 * T, 8 * T)],
+				["cone", Vector2(30 * T, 8 * T)],
+				["crates", Vector2(29 * T, 21 * T + 6)],
+			]
+		3:
+			items = [
+				["trash_can", Vector2(3 * T, 9 * T + 10)],
+				["trash_can", Vector2(12 * T, 8 * T + 10), {"look": ["* (A trash can. Two empty Jack in the Box bags\n*  on top. Somebody bought too many curly fries.)"]}],
+				["bike", Vector2(32 * T, 8 * T + 10), {"color": Color8(230, 120, 40), "walkable": true}],
+			]
+		4:
+			items = [
+				["cooler", Vector2(6 * T, 10 * T + 4)],
+				["umbrella_table", Vector2(27 * T, 9 * T), {"color": Color8(240, 200, 60)}],
+				["sandcastle", Vector2(34 * T, 12 * T), {"look": ["* (A sandcastle Hop built. It's lopsided. He named\n*  it Castle Relic. The tide took it an hour later.)"]}],
+				["buoy", Vector2(12 * T, 19 * T), {"walkable": true}],
+				["buoy", Vector2(30 * T, 20 * T), {"walkable": true}],
+			]
+		5:
+			items = [
+				["lamp", Vector2(6 * T, 12 * T + 4), {"lit": true}],
+				["lamp", Vector2(28 * T, 12 * T + 4), {"lit": true}],
+				["planter_box", Vector2(10 * T + 10, 9 * T + 14)],
+				["planter_box", Vector2(23 * T + 10, 9 * T + 14)],
+				["trash_can", Vector2(31 * T, 15 * T + 10)],
+			]
+		6:
+			items = [
+				["umbrella_table", Vector2(8 * T, 7 * T + 10), {"color": Color8(220, 90, 50)}],
+				["barrel", Vector2(17 * T, 6 * T + 10)],
+				["potted_plant", Vector2(21 * T, 6 * T + 10)],
+				["potted_plant", Vector2(32 * T, 6 * T + 10)],
+				["food_cart", Vector2(8 * T, 20 * T), {"color": Color8(230, 190, 70), "text": "ELOTES", "look": ["* (The elote cart. Five years ago it was here too.\n*  Hop bought two. Relic didn't know what it was.)", "* (Relic had three.)"]}],
+			]
+		7:
+			items = [
+				["cart", Vector2(6 * T, 18 * T)],
+				["cooler", Vector2(30 * T, 6 * T)],
+				["crate", Vector2(31 * T, 18 * T + 6)],
+			]
+		8:
+			items = [
+				["cone", Vector2(10 * T, 6 * T)],
+				["cone", Vector2(14 * T, 6 * T)],
+				["barrel", Vector2(32 * T, 10 * T)],
+				["pallet", Vector2(31 * T, 16 * T)],
+				["rope", Vector2(8 * T, 17 * T), {"walkable": true}],
+			]
+		9:
+			items = [
+				["rock", Vector2(14 * T, 8 * T)],
+				["bush", Vector2(19 * T, 6 * T)],
+				["log", Vector2(25 * T, 17 * T)],
+				["tree_small", Vector2(30 * T, 20 * T)],
+				["sign", Vector2(33 * T, 9 * T + 10), {"text": "GLIDERPORT", "color": Color8(110, 80, 50)}],
+			]
+		10, 11:
+			items = [
+				["bike", Vector2(12 * T, 11 * T + 10), {"color": Color8(230, 120, 40), "walkable": true}],
+				["cooler", Vector2(23 * T, 11 * T + 8)],
+				["log", Vector2(24 * T, 16 * T)],
+			]
+	add_dressing(items)
 
 func build_map() -> void:
 	match Game.current_keepsake():
@@ -477,6 +574,7 @@ func _end_road() -> void:
 # --- 2: The gym -----------------------------------------------------------------------
 
 func _intro_gym() -> void:
+	_light(Color(0.62, 0.64, 0.82))
 	await get_tree().create_timer(2.6).timeout
 	await Game.dialogue.say([
 		"* (Westview High. The side door doesn't lock right.)",
@@ -597,9 +695,7 @@ func _end_ocean() -> void:
 # --- 5: The museum steps ------------------------------------------------------------
 
 func _intro_steps() -> void:
-	var night := CanvasModulate.new()
-	night.color = Color(0.45, 0.6, 0.55)
-	add_child(night)
+	_light(Color(0.45, 0.6, 0.55))
 	hop = Cast.make("Hop")
 	add_character(hop, Vector2(17 * T, 10 * T + 10))
 	hop.face(Vector2.DOWN)
@@ -697,9 +793,7 @@ func _end_plaza() -> void:
 # --- 7: The ballpark, after midnight -----------------------------------------------
 
 func _intro_ballpark() -> void:
-	var night := CanvasModulate.new()
-	night.color = Color(0.4, 0.5, 0.6)
-	add_child(night)
+	_light(Color(0.4, 0.5, 0.6))
 	hop = Cast.make("Hop")
 	add_character(hop, Vector2(18 * T, 12 * T + 10))
 	hop.face(Vector2.DOWN)
@@ -750,9 +844,7 @@ func _end_ballpark() -> void:
 # --- 8: The flight deck, at sunset ------------------------------------------------
 
 func _intro_carrier() -> void:
-	var dusk := CanvasModulate.new()
-	dusk.color = Color(1.0, 0.85, 0.75)
-	add_child(dusk)
+	_light(Color(1.0, 0.85, 0.75))
 	hop = Cast.make("Hop")
 	add_character(hop, Vector2(18 * T, 19 * T + 6))
 	hop.face(Vector2.DOWN)
@@ -789,9 +881,7 @@ func _end_carrier() -> void:
 # --- 9: The cliff, at dawn ---------------------------------------------------------
 
 func _intro_cliff() -> void:
-	var dawn := CanvasModulate.new()
-	dawn.color = Color(0.85, 0.82, 0.95)
-	add_child(dawn)
+	_light(Color(0.85, 0.82, 0.95))
 	await get_tree().create_timer(2.6).timeout
 	await Game.dialogue.say([
 		"* (Torrey Pines, before the sun is all the way up.\n*  The end of the summer.)",
@@ -824,9 +914,7 @@ func _end_cliff() -> void:
 # --- 10: The tent -------------------------------------------------------------------
 
 func _intro_tent() -> void:
-	var night := CanvasModulate.new()
-	night.color = Color(0.5, 0.55, 0.75)
-	add_child(night)
+	_light(Color(0.5, 0.55, 0.75))
 	hop = Cast.make("Hop")
 	add_character(hop, Vector2(17 * T, 13 * T + 4))
 	hop.face(Vector2.LEFT)
@@ -862,9 +950,7 @@ func _end_tent() -> void:
 # --- 11: The fire --------------------------------------------------------------------
 
 func _intro_fire() -> void:
-	var fire := CanvasModulate.new()
-	fire.color = Color(1.0, 0.7, 0.6)
-	add_child(fire)
+	_light(Color(1.0, 0.7, 0.6))
 	hop = Cast.make("hopkuna")
 	hop.glow = true
 	hop.glow_color = Color(1.0, 0.15, 0.2, 0.6)

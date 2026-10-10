@@ -157,6 +157,27 @@ func reduce_flashing() -> bool:
 var resets: int = 0
 var met_hopkuna: bool = false
 var last_answer: String = ""
+## Every ending you've reached, in the order you first saw them, and the latest.
+## (The title screen remembers them.)
+var endings_seen: Array = []
+var last_ending: String = ""
+
+## All six, in order, with their names and colors (the ending's title card).
+const ENDINGS := {
+	"home": ["HOME", Color(0.85, 0.7, 1.0)],
+	"road": ["THE ROAD", Color(0.92, 0.9, 0.84)],
+	"gift": ["THE GIFT", Color(1.0, 0.88, 0.6)],
+	"bargain": ["THE BARGAIN", Color(1.0, 0.3, 0.3)],
+	"one": ["ONE", Color(0.45, 0.95, 0.55)],
+	"let_go": ["LET GO", Color(0.7, 0.7, 0.75)],
+}
+
+
+func record_ending(id: String) -> void:
+	if not id in endings_seen:
+		endings_seen.append(id)
+	last_ending = id
+	save_settings()
 
 
 ## Two audio buses, "Music" and "SFX", so each can have its own volume.
@@ -177,6 +198,8 @@ func load_settings() -> void:
 		resets = file.get_value("memory", "resets", 0)
 		met_hopkuna = file.get_value("memory", "met_hopkuna", false)
 		last_answer = file.get_value("memory", "last_answer", "")
+		endings_seen = file.get_value("memory", "endings_seen", [])
+		last_ending = file.get_value("memory", "last_ending", "")
 	apply_settings()
 
 
@@ -187,6 +210,8 @@ func save_settings() -> void:
 	file.set_value("memory", "resets", resets)
 	file.set_value("memory", "met_hopkuna", met_hopkuna)
 	file.set_value("memory", "last_answer", last_answer)
+	file.set_value("memory", "endings_seen", endings_seen)
+	file.set_value("memory", "last_ending", last_ending)
 	file.save(settings_path)
 
 

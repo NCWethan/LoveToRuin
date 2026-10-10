@@ -1,6 +1,12 @@
 extends Node2D
 ## The title screen. "REVOLUTION" appears, then its letters rearrange themselves
 ## into "LOVE TO RUIN" (the same ten letters!). Then the player picks Begin or Continue.
+##
+## Once you've finished it, the title remembers (Game.endings_seen, kept even after
+## a RESET): a line under the title for the last ending you saw, the endings you've
+## found along the bottom, and the fragments themselves change. After HOME one of
+## them is green, and a small purple light sits still under the title. After ONE,
+## they're all green. After LET GO, there are only eleven.
 
 const INTRO_SCENE := "res://scenes/intro.tscn"
 
@@ -109,6 +115,11 @@ func _confirm_reset() -> void:
 const RED := Color(0.9, 0.12, 0.2)
 ## Twelve fragments, like the twelve in the story.
 const FRAGMENTS := 12
+## The line under the title, after each ending.
+const AFTER := {
+	"home": "Welcome home.", "road": "The road goes on.", "gift": "Somebody's keeping them warm.",
+	"bargain": "The city is still burning.", "one": "It's just us now.", "let_go": "...",
+}
 
 
 func _draw() -> void:
@@ -147,10 +158,30 @@ func _draw() -> void:
 			var x := 320.0 + (i - (_options.size() - 1) / 2.0) * 180.0
 			var color := Color(1, 1, 0, fade) if i == _choice else Color(1, 1, 1, fade)
 			_draw_centered(_options[i], Vector2(x, 330), 22, color)
+		_draw_remembered(fade)
 		var summary := Game.save_summary()
 		if summary != "" and _options[_choice] in ["Continue", "Reset"]:
 			_draw_centered(summary, Vector2(320, 380), 14, Color(0.7, 0.7, 0.7, fade))
 		_draw_centered("Arrow keys or WASD to choose  -  ENTER to confirm", Vector2(320, 450), 12, Color(0.5, 0.5, 0.5, fade))
+
+
+## What the title remembers: the last ending's line, and the endings found so far.
+func _draw_remembered(fade: float) -> void:
+	if Game.endings_seen.is_empty():
+		return
+	var last: Array = Game.ENDINGS.get(Game.last_ending, ["", Color.WHITE])
+	if AFTER.has(Game.last_ending):
+		_draw_centered(AFTER[Game.last_ending], Vector2(320, TITLE_Y + 58), 14, Color(last[1], 0.75 * fade))
+	# Six marks along the bottom: filled in for the endings you've seen.
+	var ids := Game.ENDINGS.keys()
+	for i in ids.size():
+		var at := Vector2(320 + (i - 2.5) * 22.0, 402)
+		var color: Color = Game.ENDINGS[ids[i]][1]
+		if ids[i] in Game.endings_seen:
+			draw_circle(at, 4.0, Color(color, fade))
+		else:
+			draw_arc(at, 4.0, 0, TAU, 12, Color(0.4, 0.4, 0.4, fade), 1.0)
+	_draw_centered("ENDINGS  %d / %d" % [Game.endings_seen.size(), ids.size()], Vector2(320, 422), 11, Color(0.6, 0.6, 0.6, fade))
 
 
 ## A dim red glow behind the title that slowly breathes.
@@ -228,8 +259,17 @@ func _draw_fragments(amount: float) -> void:
 	if amount <= 0.0:
 		return
 	var center := Vector2(320, TITLE_Y - 16)
+	var seen := Game.endings_seen
+	# After HOME: a small purple light under the title that doesn't move.
+	if "home" in seen:
+		draw_circle(Vector2(320, TITLE_Y + 84), 3.0 + 0.6 * sin(_time * 2.0), Color(0.8, 0.6, 1.0, amount))
 	for i in FRAGMENTS:
+		# After LET GO, one of them is gone.
+		if i == FRAGMENTS - 1 and "let_go" in seen:
+			continue
 		var angle := _time * 0.18 + i * TAU / FRAGMENTS
+		# After ONE, they're all Relic's green; after HOME, just one of them.
+		var relic := "one" in seen or (i == 0 and "home" in seen)
 		# An ellipse: wide around the words, flatter top to bottom.
 		var at := center + Vector2(cos(angle) * 270.0, sin(angle) * 95.0)
 		# The ones "behind" the title (top of the ellipse) are dimmer and smaller.
@@ -241,6 +281,11 @@ func _draw_fragments(amount: float) -> void:
 			Vector2(0, -1.4), Vector2(0.7, -0.3), Vector2(0.45, 0.9), Vector2(-0.2, 1.3), Vector2(-0.75, 0.1)])
 		for p in shard.size():
 			shard[p] = at + shard[p].rotated(spin) * size
+		if relic:
+			draw_circle(at, size * 1.8, Color(0.3, 0.95, 0.45, 0.12 * glow * depth * amount))
+			draw_colored_polygon(shard, Color(0.08, 0.45, 0.18, amount * depth))
+			draw_polyline(shard + PackedVector2Array([shard[0]]), Color(0.45, 0.9 + 0.1 * glow, 0.55, amount * depth), 1.0)
+			continue
 		draw_circle(at, size * 1.8, Color(RED, 0.12 * glow * depth * amount))
 		draw_colored_polygon(shard, Color(0.55, 0.05, 0.12, amount * depth))
 		draw_polyline(shard + PackedVector2Array([shard[0]]), Color(1.0, 0.35 + 0.3 * glow, 0.4, amount * depth), 1.0)

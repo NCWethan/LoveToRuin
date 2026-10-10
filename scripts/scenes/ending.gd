@@ -9,7 +9,8 @@ extends Node2D
 ##   one       With Hop: Relic keeps Hop in the token. The Santa Ana wind. One.
 ##   let_go    With Hop, under 75 kills: Elric lets go. Relic fades. Harsh, quiet.
 ## Each is a few pages of text, one at a time (ENTER for the next), then its title,
-## and (on the paths with anyone left) where everyone is now.
+## and (on the paths with anyone left) where everyone is now. Then the credits roll
+## (hold ENTER to speed them up), and it's back to the title, which remembers.
 
 const SLIDE_FADE := 0.8
 
@@ -21,6 +22,11 @@ var _title: String = ""
 var _title_color: Color = Color.WHITE
 var _ending: String = "home"
 var _done: bool = false
+## The credits: lines of [text, size, color], scrolling up (_roll is how far).
+var _credits: Array = []
+var _rolling: bool = false
+var _roll: float = 0.0
+const ROLL_SPEED := 38.0
 
 
 func _ready() -> void:
@@ -35,11 +41,18 @@ func _ready() -> void:
 		"one": Game.play_music("genocide", 2.0)
 		_: Game.stop_music(2.0)
 	Game.flags["game_finished"] = true
+	Game.record_ending(_ending)
+	_credits = _build_credits()
 
 
 func _process(delta: float) -> void:
 	_time += delta
-	if _time > 1.2 and Input.is_action_just_pressed("confirm") and not Game.transitioning:
+	if _rolling:
+		_roll += delta * ROLL_SPEED * (4.0 if Input.is_action_pressed("confirm") else 1.0)
+		if _roll > _credits_height() + 520.0 and not _done:
+			_done = true
+			Game.change_scene(Game.TITLE_SCENE)
+	elif _time > 1.2 and Input.is_action_just_pressed("confirm") and not Game.transitioning:
 		_next()
 	queue_redraw()
 
@@ -49,13 +62,16 @@ func _next() -> void:
 	if _page < _pages.size():
 		_page += 1
 		return
-	if not _done:
-		_done = true
-		Game.change_scene(Game.TITLE_SCENE)
+	if not _rolling:
+		_rolling = true
+		_roll = 0.0
 
 
 func _draw() -> void:
 	draw_rect(Rect2(0, 0, 640, 480), Color.BLACK)
+	if _rolling:
+		_draw_credits()
+		return
 	var alpha := clampf(_time / SLIDE_FADE, 0.0, 1.0)
 	if _page < _pages.size():
 		var page: Dictionary = _pages[_page]
@@ -84,6 +100,90 @@ func _draw() -> void:
 			draw_circle(Vector2(320, 320), 5.0 + sin(_time * 2.0), Color(0.8, 0.6, 1.0, alpha))
 	if _time > 1.2:
 		draw_string(_font, Vector2(560, 465), "ENTER", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.3))
+
+
+# --- The credits ----------------------------------------------------------------
+
+const CAST := [
+	["Elric", "who woke up in a park"], ["Relic", "who was always there"], ["Hop", "who tried"], ["Hopkuna", "who wanted a body"],
+]
+## The REVOLUTION Corps, and their flags (beat_corps_<id>) if you killed them.
+const CORPS := [
+	["Eggo", "eggo"], ["Big Joe", "bigjoe"], ["MuffinMage", "muffinmage"], ["Nassan", "nassan"],
+	["N.C. Wethan", "ncwethan"], ["Sansworth", "sansworth"], ["Ronin", "ronin"], ["Rooster", "rooster"],
+	["Crayola", "crayola"], ["Supreme", "supreme"], ["Nat", "nat"], ["Agent", "agent"],
+]
+
+
+func _build_credits() -> Array:
+	var dim := Color(0.6, 0.6, 0.62)
+	var gold := Color(1.0, 0.85, 0.35)
+	var green := Color(0.45, 0.95, 0.55)
+	var ending: Array = Game.ENDINGS.get(_ending, ["", Color.WHITE])
+	var lines: Array = [
+		["LOVE TO RUIN", 34, Color.WHITE], ["", 16, dim],
+		[ending[0] if ending[0] != "ONE" else "", 18, ending[1]], ["", 40, dim],
+		["CREATED BY", 12, gold], ["NCWethan", 20, Color.WHITE], ["", 30, dim],
+		["STORY, CHARACTERS AND DIRECTION", 12, gold], ["NCWethan", 18, Color.WHITE], ["", 30, dim],
+		["PROGRAMMING, PIXEL ART AND MUSIC", 12, gold], ["NCWethan and Claude (Anthropic)", 16, Color.WHITE], ["", 30, dim],
+		["THE CAST", 12, gold], ["", 6, dim],
+	]
+	for who in CAST:
+		var color := green if who[0] == "Relic" else (Color(1.0, 0.35, 0.35) if who[0] == "Hopkuna" else Color.WHITE)
+		lines.append([who[0], 18, color])
+		lines.append([who[1], 12, dim])
+		lines.append(["", 8, dim])
+	lines.append(["", 22, dim])
+	lines.append(["THE REVOLUTION CORPS", 12, gold])
+	lines.append(["", 6, dim])
+	for member in CORPS:
+		if Game.flags.get("beat_corps_" + member[1], false):
+			lines.append([member[0], 16, Color(0.35, 0.35, 0.37), "gone"])
+		else:
+			lines.append([member[0], 16, Color.WHITE])
+	lines.append_array([
+		["", 30, dim],
+		["AND EVERYONE IN SAN DIEGO", 12, gold], ["", 6, dim],
+		["Doña Rosa, the Firefighter, the Hostess,", 14, Color.WHITE],
+		["the Ranger, the pelican, the junk dealer,", 14, Color.WHITE],
+		["the Glider, Ember, the Knight, Wally,", 14, Color.WHITE],
+		["a very small glowbug,", 14, Color.WHITE],
+		["and the goose.", 14, Color.WHITE],
+		["", 40, dim],
+		["MADE WITH", 12, gold], ["Godot Engine", 16, Color.WHITE], ["", 40, dim],
+	])
+	match _ending:
+		"home": lines.append(["Thank you for staying.", 18, Game.ENDINGS["home"][1]])
+		"one": lines.append(["Thank you for playing with us.", 18, green])
+		"let_go": lines.append(["Thank you for letting go.", 18, Color.WHITE])
+		_: lines.append(["Thank you for playing.", 18, Color.WHITE])
+	return lines
+
+
+func _credits_height() -> float:
+	var h := 0.0
+	for line in _credits:
+		h += line[1] + 10.0
+	return h
+
+
+func _draw_credits() -> void:
+	var y := 500.0 - _roll
+	for line in _credits:
+		var size: int = line[1]
+		y += size + 10.0
+		if y < -40.0 or y > 520.0 or line[0] == "":
+			continue
+		var text: String = line[0]
+		var w := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+		# Fade in from the bottom and out at the top.
+		var fade := clampf((480.0 - y) / 60.0, 0.0, 1.0) * clampf(y / 60.0, 0.0, 1.0)
+		var color: Color = line[2]
+		draw_string(_font, Vector2(320 - w / 2, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color(color, color.a * fade))
+		# The ones you killed: their names, struck through.
+		if line.size() > 3:
+			draw_line(Vector2(320 - w / 2 - 4, y - size * 0.35), Vector2(320 + w / 2 + 4, y - size * 0.35), Color(0.45, 0.95, 0.55, 0.6 * fade), 1.0)
+	draw_string(_font, Vector2(500, 465), "hold ENTER: faster", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.25))
 
 
 func _page_of(lines: Array, color: Color = Color.WHITE) -> Dictionary:

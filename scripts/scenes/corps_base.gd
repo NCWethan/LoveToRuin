@@ -52,6 +52,10 @@ var partner: Character
 ## Hop, waiting in the hall when someone else is coming along instead.
 var hop: Character
 var _decor: Node2D
+## The decor is split into parts (the hall, the corridor, each member's room), each
+## its own canvas item: [node, area]. Only the parts in view redraw each frame.
+## While a part draws, _decor points at it.
+var _decor_parts: Array = []
 var _font: Font
 var _time: float = 0.0
 ## Whose room Elric is in (-1: the hall or the corridor).
@@ -84,7 +88,10 @@ func _ready() -> void:
 	_decor = Node2D.new()
 	add_child(_decor)
 	move_child(_decor, world.get_index())
-	_decor.draw.connect(_draw_decor)
+	_add_decor_part(_px(HALL), _draw_hall)
+	_add_decor_part(_px(CORRIDOR), _draw_corridor)
+	for i in MEMBERS.size():
+		_add_decor_part(_px(room_rect(i)), _draw_member_room.bind(i))
 	_add_lamps()
 	_dress()
 	_place_people()
@@ -95,7 +102,21 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_time += delta
-	_decor.queue_redraw()
+	var view := Rect2(get_viewport().get_canvas_transform().affine_inverse() * Vector2.ZERO, Vector2(640, 480))
+	for part in _decor_parts:
+		if (part[1] as Rect2).intersects(view):
+			(part[0] as Node2D).queue_redraw()
+
+
+func _add_decor_part(area: Rect2, draw_part: Callable) -> void:
+	var part := Node2D.new()
+	_decor.add_child(part)
+	part.draw.connect(func() -> void:
+		var keep := _decor
+		_decor = part
+		draw_part.call()
+		_decor = keep)
+	_decor_parts.append([part, area.grow(4 * T)])
 
 
 # --- The map --------------------------------------------------------------------
@@ -791,25 +812,22 @@ func _after_muffin() -> void:
 
 # --- Drawing --------------------------------------------------------------------------
 
-func _draw_decor() -> void:
-	_draw_hall()
-	_draw_corridor()
-	for i in MEMBERS.size():
-		var r := _px(room_rect(i))
-		_room_extras(r, MEMBERS[i]["color"])
-		match MEMBERS[i]["id"]:
-			"BigJoe6": _draw_big_joe(r)
-			"Eggo": _draw_eggo(r)
-			"Nassan": _draw_nassan(r)
-			"Nat": _draw_nat(r)
-			"NCWethan": _draw_wethan(r)
-			"Ronin": _draw_ronin(r)
-			"Supreme": _draw_supreme(r)
-			"Crayola": _draw_crayola(r)
-			"Rooster": _draw_rooster(r)
-			"Agent": _draw_agent(r)
-			"MuffinMage": _draw_muffinmage(r)
-			"Sansworth": _draw_sansworth(r)
+func _draw_member_room(i: int) -> void:
+	var r := _px(room_rect(i))
+	_room_extras(r, MEMBERS[i]["color"])
+	match MEMBERS[i]["id"]:
+		"BigJoe6": _draw_big_joe(r)
+		"Eggo": _draw_eggo(r)
+		"Nassan": _draw_nassan(r)
+		"Nat": _draw_nat(r)
+		"NCWethan": _draw_wethan(r)
+		"Ronin": _draw_ronin(r)
+		"Supreme": _draw_supreme(r)
+		"Crayola": _draw_crayola(r)
+		"Rooster": _draw_rooster(r)
+		"Agent": _draw_agent(r)
+		"MuffinMage": _draw_muffinmage(r)
+		"Sansworth": _draw_sansworth(r)
 
 
 func _text(at: Vector2, text: String, size: int, color: Color) -> void:

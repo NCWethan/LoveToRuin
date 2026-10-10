@@ -30,11 +30,13 @@ func setup_area(default_spawn: Vector2) -> void:
 	room = Room.new()
 	add_child(room)
 	build_map()
-	room.build()
-	# Little things on the ground, everywhere (ground_details.gd).
+	# Little things on the ground, everywhere (ground_details.gd), baked in with
+	# the tiles.
 	var details := GroundDetails.new()
 	details.room = room
+	room.details = details
 	add_child(details)
+	room.build()
 
 	world = Node2D.new()
 	world.y_sort_enabled = true
