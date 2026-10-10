@@ -260,6 +260,66 @@ func _add_streetlights() -> void:
 
 # --- People ---------------------------------------------------------------
 
+## What the Corps says at the mall after the choice on Westview Field: one line
+## each for joining them, going your own way, and going with Hop.
+## [mood, text] per route.
+const AFTER_TALK := {
+	"Supreme": {
+		"pacifist": ["happy", "Recruit! I made you a spreadsheet.\nOne column. 'Elric: on the team.'"],
+		"neutral": ["smug", "Odds you'd walk away from the Corps: 31%.\nOdds you'd still come to the mall: 98%."],
+		"genocide": ["sad", "...I ran the numbers on you again.\nThey keep coming out wrong."],
+	},
+	"Crayola": {
+		"pacifist": ["happy", "You're... on the team now.\nThat's good. That's really good."],
+		"neutral": ["sad", "Oh. Hi. ...We still have a spot.\nIf you want it. No pressure."],
+		"genocide": ["shocked", "...I don't have a card trick for this."],
+	},
+	"NCWethan": {
+		"pacifist": ["happy", "ELRIC!! TEAMMATE!! KING ME!!"],
+		"neutral": ["happy", "HEY!! LONE WOLF!! WANNA PLAY CHECKERS\nALONE TOGETHER??"],
+		"genocide": ["sad", "...Why is everybody so quiet today?"],
+	},
+	"Ronin": {
+		"pacifist": ["smug", "Welcome to the Corps. I'm writing you\na theme song. It's mostly fire."],
+		"neutral": ["smug", "Going solo, huh? Respect.\nThe solo's the best part of any song."],
+		"genocide": ["angry", "Your eyes. ...Do me a favor and keep\nyour distance from the amp."],
+	},
+	"MuffinMage": {
+		"pacifist": ["", "Salmon burger Friday. You're invited now.\nIt's mandatory, actually."],
+		"neutral": ["", "Didn't pick a side. That's my move too.\n...Careful. It gets lonely."],
+		"genocide": ["", "I warned you about the fragment.\nYou didn't listen."],
+	},
+	"Rooster": {
+		"pacifist": ["smug", "Oh great, they let YOU in.\n...Welcome. Don't touch my mirror."],
+		"neutral": ["smug", "Look who couldn't commit.\nCouldn't pick a side, couldn't pick a color."],
+		"genocide": ["sad", "...I had a roast ready.\nI don't feel like using it."],
+	},
+	"Sansworth": {
+		"pacifist": ["happy", "Welcome to the team!\nHave you seen my car? It's a car."],
+		"neutral": ["happy", "You're going your own way? Can I come?\nI can't find my car anyway."],
+		"genocide": ["happy", "Hi! You look different!\nDid you get a haircut?"],
+	},
+	"Nat": {
+		"pacifist": ["smug", "The book has a new chapter now. You're in it.\nDon't let it go to your head."],
+		"neutral": ["", "Stories about wanderers end one of two ways.\nRead ahead, if you want."],
+		"genocide": ["sad", "...I've read about people like you.\nIt never ends well. For anyone."],
+	},
+	"Agent": {
+		"pacifist": ["smug", "Good choice. Statistically and otherwise."],
+		"neutral": ["", "You walked. Inefficient.\nThe offer stands."],
+		"genocide": ["angry", "Leave. Now.\nThat isn't advice."],
+	},
+}
+
+
+func _talk_after(who: String) -> void:
+	var route: String = Game.flags.get("route", "neutral")
+	if not route in ["pacifist", "neutral", "genocide"]:
+		route = "genocide"
+	var said: Array = AFTER_TALK[who][route]
+	var line := {"who": who, "text": said[1], "mood": said[0]}
+	await chat("after_" + who, [line], [[line]])
+
 func _place_people() -> void:
 	# Whoever's coming along (Hop, or a Corps member), unless Elric is on their own.
 	if not Game.walking_alone():
@@ -279,7 +339,13 @@ func _place_people() -> void:
 		# Once Nassan starts his shift, he's inside Vons (until it closes).
 		if who == "Nassan" and time == "day" and flag("heard_westview"):
 			continue
+		# (Whoever's coming along with Elric is with Elric, not standing around here.)
+		if flag("chapter1_done") and who == Game.partner() and not Game.walking_alone():
+			continue
 		var talk: Callable = day_talks[who] if time == "day" else _talk_later.bind(who)
+		# After the choice on Westview Field, everyone has something new to say.
+		if flag("chapter1_done") and AFTER_TALK.has(who):
+			talk = _talk_after.bind(who)
 		var npc := add_npc(who, spots[who], talk)
 		people[who] = npc
 		var wander: Dictionary = WANDERERS.get(time, {})
@@ -392,12 +458,12 @@ func _use_save_point() -> void:
 # --- Shops ----------------------------------------------------------------
 
 func _shop_vons() -> void:
-	if _stores_closed() and not Shops.gone():
+	if _stores_closed() and not Shops.gone("vons"):
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (Through the glass, someone is mopping the floor.)"])
 		return
 	await Game.shop.open(Shops.vons())
 	# The first time out of Vons with Nassan working there, Hop has thoughts.
-	if flag("heard_westview") and not flag("hop_saw_apron") and not Shops.gone():
+	if flag("heard_westview") and not flag("hop_saw_apron") and not Shops.gone("vons"):
 		Game.flags["hop_saw_apron"] = true
 		await Game.dialogue.say([
 			{"who": "Hop", "text": "Nassan. In an apron.\nWith a NAME TAG.", "mood": "shocked"},
@@ -410,7 +476,7 @@ func _shop_jack() -> void:
 
 
 func _shop_knotty() -> void:
-	if _stores_closed() and not Shops.gone():
+	if _stores_closed() and not Shops.gone("knotty"):
 		await Game.dialogue.say(["* (A sign on the door: CLOSED.)", "* (The chairs are up on the tables.)"])
 		return
 	await Game.shop.open(Shops.knotty())
@@ -418,7 +484,7 @@ func _shop_knotty() -> void:
 
 ## Games & Cards: BACK IN 5 MINUTES, for years... until the afternoon.
 func _shop_cards() -> void:
-	if not Shops.cards_open() and not Shops.gone():
+	if not Shops.cards_open() and not Shops.gone("cards"):
 		await Game.dialogue.say([
 			"* (A sign on the door says: BACK IN 5 MINUTES.)",
 			"* (The sign looks like it's been there for years.)",
@@ -426,7 +492,7 @@ func _shop_cards() -> void:
 		return
 	await Game.shop.open(Shops.cards())
 	# The first time it's actually open, Hop can't believe it.
-	if not flag("hop_saw_pip") and not Shops.gone():
+	if not flag("hop_saw_pip") and not Shops.gone("cards"):
 		Game.flags["hop_saw_pip"] = true
 		await Game.dialogue.say([
 			{"who": "Hop", "text": "That sign has said BACK IN 5 MINUTES\nsince I was in diapers.", "mood": "shocked"},

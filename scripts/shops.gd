@@ -37,8 +37,16 @@ static func _scared() -> bool:
 ## notes on the counter, and nobody is there to stop Elric from taking things.
 ## (Only on the Genocide route itself, which starts after Chapter 1. Killing a lot
 ## before then just makes the shopkeepers nervous.)
-static func gone() -> bool:
-	return Game.on_genocide_route()
+static func gone(scene: String) -> bool:
+	if not Game.on_genocide_route():
+		return false
+	return Game.flags.get("fled_" + scene, false) or int(Game.flags.get("kills", 0)) >= int(FLEE_KILLS.get(scene, 0))
+
+
+## On the Genocide route, how many kills it takes before each shopkeeper gives
+## up and leaves. (Dex, at Jack in the Box, is the first: he runs the first time
+## he sees Elric coming. See pq_mall.gd.) Nassan holds out longest.
+const FLEE_KILLS := {"jack": 999, "cards": 15, "knotty": 30, "vons": 50}
 
 
 ## The note each shopkeeper leaves behind (by their sprite name).

@@ -247,6 +247,10 @@ func _place_people() -> void:
 	add_character(dummy, Vector2(33 * T, 13 * T))
 	# Whoever's coming along follows Elric. If that isn't Hop, Hop hangs out on the
 	# couch in the hall.
+	# (Coming back on your own, the first time: Hop isn't with you yet. He runs in
+	# from the hall in the arrival scene.)
+	if _guest_arrival():
+		return
 	partner = Cast.make(Game.partner())
 	add_character(partner, player.position + Vector2(-20, 0))
 	partner.follow = player
@@ -289,6 +293,11 @@ func _place_hotspots() -> void:
 
 # --- Arriving ----------------------------------------------------------------------
 
+## Coming down the hatch for the first time after going your own way.
+func _guest_arrival() -> bool:
+	return not flag("base_arrived") and Game.flags.get("route", "") == "neutral"
+
+
 func _start() -> void:
 	await wait_for_fade()
 	if flag("base_arrived"):
@@ -306,6 +315,13 @@ func _start() -> void:
 				"* (It isn't locked. Somebody left it open for you.)",
 				{"who": "Nassan", "text": "The offer stood. And here you are."},
 				{"who": "BigJoe6", "text": "...Fine. But you're on dish duty.", "mood": "angry"},
+				"* (Running footsteps in the hall.)",
+			])
+			# Hop comes running in from the hall, and from now on he's with Elric.
+			partner = add_character(Cast.make("Hop"), HALL_DOOR_INSIDE)
+			await partner.walk_to(player.position + Vector2(-22, 0), 150.0)
+			partner.face(player.position - partner.position)
+			await Game.dialogue.say([
 				{"who": "Hop", "text": "ELRIC! You came back!", "mood": "happy"},
 				{"who": "Nassan", "text": "There's a spare bunk by the wall.\nEveryone's room is down the hall.\nTheir names are on the doors."},
 			])
@@ -328,6 +344,8 @@ func _start() -> void:
 		await nassan.walk_to(HALL_DOOR_INSIDE + Vector2(0, 20), 90.0)
 		big_joe.queue_free()
 		nassan.queue_free()
+		if partner and partner.follow == null:
+			partner.follow = player
 		Game.set_objective("Explore the Corps' base. Everyone has a room.")
 	)
 

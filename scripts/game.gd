@@ -342,8 +342,11 @@ func partner() -> String:
 ## to the Corps' base, or (going their own way) after wandering till morning.
 ## (Not on the Genocide route.)
 func daytime() -> bool:
-	if not flags.get("chapter1_done", false) or flags.get("route", "") == "genocide":
+	if not flags.get("chapter1_done", false):
 		return false
+	# Going with Hop: day comes after the night at his house.
+	if flags.get("route", "") in ["genocide", "with_hop"]:
+		return flags.get("hh_slept", false)
 	return flags.get("base_arrived", false) or flags.get("morning_after", false)
 
 
