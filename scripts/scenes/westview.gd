@@ -85,6 +85,7 @@ func _ready() -> void:
 			[_px(CLASSROOM), WestviewBattles.CLASSROOM_ENCOUNTERS],
 		]
 	setup_area(ENTRY)
+	_dress()
 	add_wild_encounters(SCENE, _px(OUTSIDE))
 	Game.play_music("mt_carmel" if _day else "westview")
 	_font = ThemeDB.fallback_font
@@ -109,6 +110,45 @@ static func _px(r: Rect2i) -> Rect2:
 
 
 # --- The map --------------------------------------------------------------
+
+func is_night() -> bool:
+	return not _day
+
+
+## Set dressing (props.gd): bikes and bins out front, lamps and a hydrant on the
+## street, a picnic table on the lawn; trash cans and a wet-floor cone in the
+## hall; a bookshelf in the classroom; the gym's equipment.
+func _dress() -> void:
+	var lit := not _day
+	add_dressing([
+		["bike_rack", Vector2(7 * T, 11 * T + 12), {"color": Color8(225, 175, 45), "look": ["* (A bike rack. One bike, painted black and gold.\n*  School spirit. Or a dare.)"]}],
+		["trash_can", Vector2(12 * T, 11 * T + 12)],
+		["recycling", Vector2(20 * T, 11 * T + 12)],
+		["picnic_table", Vector2(25 * T, 15 * T + 14), {"look": ["* (A picnic table. Carved into it: WOLVERINES 4EVER,\n*  and under it, smaller: mt carmel is better.)"]}],
+		["flower_bed", Vector2(8 * T, 13 * T), {"size": Vector2(70, 12), "walkable": true}],
+		["flower_bed", Vector2(24 * T, 12 * T + 8), {"size": Vector2(50, 12), "walkable": true}],
+		["lamp", Vector2(3 * T, 18 * T + 16), {"lit": lit}],
+		["hydrant", Vector2(9 * T, 18 * T + 16), {"look": ["* (A fire hydrant, painted gold. GO WOLVERINES\n*  is written on it in Sharpie.)"]}],
+		["lamp", Vector2(16 * T, 18 * T + 16), {"lit": lit}],
+		["mailbox", Vector2(22 * T, 18 * T + 16)],
+		["lamp", Vector2(29 * T, 18 * T + 16), {"lit": lit}],
+		# The hallway.
+		["potted_plant", Vector2(44 * T, 9 * T + 16)],
+		["trash_can", Vector2(52 * T, 9 * T + 16)],
+		["cone", Vector2(61 * T, 14 * T + 10), {"look": ["* (A WET FLOOR cone. The floor isn't wet.\n*  It hasn't been wet in a long time.)"]}],
+		["trash_can", Vector2(88 * T, 9 * T + 16)],
+		["potted_plant", Vector2(112 * T, 9 * T + 16)],
+		# The classroom.
+		["bookshelf", Vector2(62 * T + 10, 37 * T + 14), {"look": ["* (A bookshelf. TO KILL A MOCKINGBIRD, thirty copies.\n*  One of them is upside down. On purpose.)"]}],
+		["potted_plant", Vector2(45 * T + 10, 37 * T + 14)],
+		["trash_can", Vector2(66 * T, 48 * T + 12)],
+		# The gym.
+		["cart", Vector2(86 * T, 50 * T + 12), {"look": ["* (A cart of dodgeballs. One of them is flat.\n*  It's somehow the scariest one.)"]}],
+		["cone", Vector2(92 * T, 50 * T + 12)],
+		["cone", Vector2(94 * T, 50 * T + 12)],
+		["crates", Vector2(114 * T, 50 * T + 12), {"look": ["* (Boxes labeled PEP RALLY. One is labeled\n*  DO NOT OPEN: CONFETTI CANNON. It's open.)"]}],
+	])
+
 
 func build_map() -> void:
 	room.setup(120, 54, Room.VOID)

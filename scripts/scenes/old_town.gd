@@ -74,6 +74,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [DOOR_OUT, _casa_door], [INSIDE_EXIT, _leave_casa],
 			[CANDLE_DOOR, _candle_shop], [CHAIR, _empty_chair], [FEATHER_BENCH, _feather_bench],
 			[Vector2(5 * T + 10, 18 * T + 4), _wagon], [Vector2(25 * T + 10, 18 * T + 4), _flagpole],
@@ -116,6 +117,35 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): papel picado over the plaza, barrels and crates by the
+## shops, an elote cart, cactus pots, lamps along the road; in the Casa, a piano
+## nobody plays.
+func _dress() -> void:
+	add_dressing([
+		["barrel", Vector2(2 * T + 8, 7 * T + 12), {"look": ["* (A barrel of masa harina. Doña Rosa's.\n*  It's heavier than it looks. Everything here is.)"]}],
+		["barrel", Vector2(14 * T + 8, 7 * T + 12)],
+		["umbrella_table", Vector2(12 * T + 10, 9 * T + 6), {"color": Color8(220, 90, 50)}],
+		["crates", Vector2(29 * T + 6, 7 * T + 12), {"look": ["* (Crates of candles, stacked. One is labeled\n*  UNSCENTED. It smells like cinnamon anyway.)"]}],
+		["potted_plant", Vector2(20 * T, 7 * T + 10)],
+		["potted_plant", Vector2(23 * T, 7 * T + 10)],
+		["food_cart", Vector2(37 * T, 17 * T + 10), {"color": Color8(230, 190, 70), "text": "ELOTES", "look": ["* (An elote cart. Corn, mayo, cheese, chili, lime.\n*  The man who runs it is on a break. Forever?)"]}],
+		["flower_bed", Vector2(25 * T + 10, 13 * T + 8), {"size": Vector2(50, 10), "walkable": true}],
+		["rock", Vector2(8 * T, 13 * T)],
+		["bush", Vector2(52 * T, 18 * T)],
+		["bush", Vector2(13 * T, 18 * T), {"berries": true}],
+		["sign", Vector2(48 * T, 23 * T + 10), {"text": "SAN DIEGO AVE", "look": ["* (SAN DIEGO AVE. HISTORIC OLD TOWN.\n*  EST. 1769. PLEASE DRIVE SLOWLY.)"]}],
+		["lamp", Vector2(8 * T, 24 * T + 4)],
+		["lamp", Vector2(22 * T, 24 * T + 4)],
+		["lamp", Vector2(36 * T, 24 * T + 4)],
+		["hydrant", Vector2(30 * T, 24 * T + 4)],
+		["trash_can", Vector2(42 * T, 23 * T + 10)],
+		# The Casa's dining room.
+		["piano", Vector2(26 * T, 47 * T), {"look": ["* (An old upright piano. The keys are yellow.)", "* (When you're not looking, it plays one note.\n*  Always the same one. A low C.)"]}],
+		["potted_plant", Vector2(2 * T, 49 * T + 10)],
+		["bookshelf", Vector2(8 * T, 35 * T + 14), {"look": ["* (Old books with no titles on the spines.\n*  One of them is a ledger. Names, and dates.)"]}],
+	])
+
 
 func build_map() -> void:
 	room.setup(60, 52, Room.VOID)

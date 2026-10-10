@@ -105,7 +105,59 @@ func _ready() -> void:
 	_add_muffin_burger()
 	_place_people()
 	_place_hotspots()
+	_dress()
 	_start.call_deferred()
+
+
+func is_night() -> bool:
+	return _time_of_day() in ["night", "evening"]
+
+
+## Set dressing (props.gd): cars in the lot, carts by Vons, string lights over the
+## Knotty Barrel patio, a vending machine at the empty store, the sidewalk's
+## lamps and hydrant, bikes at Jack in the Box.
+func _dress() -> void:
+	var T := Room.TILE
+	var night := _time_of_day() == "night"
+	var items: Array = [
+		# By Vons: a line of carts, waiting.
+		["cart", Vector2(6 * T + 10, 8 * T + 14), {"walkable": true, "look": ["* (Shopping carts. One of them has a wobbly wheel.\n*  It's always the one you get.)"]}],
+		["cart", Vector2(7 * T + 6, 8 * T + 14), {"walkable": true}],
+		["trash_can", Vector2(16 * T, 8 * T + 14)],
+		["news_box", Vector2(23 * T + 10, 8 * T + 14), {"color": Color8(60, 100, 180), "look": ["* (A free newspaper. Page 1: MALL PARKING LOT\n*  \"MOST CONFUSING IN COUNTY.\" Page 2: a coupon.)"]}],
+		# The empty store, for lease: a vending machine that still works.
+		["vending", Vector2(36 * T + 6, 8 * T + 14), {"color": Color8(200, 50, 50), "look": ["* (A vending machine, humming. It still works.)", "* (B4 is labeled \"MYSTERY.\" The mystery is\n*  sold out.)"]}],
+		["potted_plant", Vector2(41 * T, 8 * T + 14)],
+		# String lights over the Knotty Barrel patio.
+		["string_lights", Vector2(24 * T, 9 * T + 2), {"size": Vector2(200, 0), "walkable": true}],
+		# Cars in the lot (none at night: everyone's gone home).
+		["puddle", Vector2(26 * T, 19 * T + 10), {"size": Vector2(30, 10)}],
+		# Over by Jack in the Box: bikes, a trash can.
+		["bike_rack", Vector2(45 * T + 10, 22 * T + 12), {"color": Color8(230, 120, 40), "look": ["* (A bike rack. One bike with a basket full of\n*  Jack in the Box napkins. Hundreds of them.)"]}],
+		["trash_can", Vector2(53 * T, 22 * T + 12)],
+		# The sidewalk along the road.
+		["lamp", Vector2(8 * T, 26 * T + 16), {"lit": night}],
+		["hydrant", Vector2(20 * T, 26 * T + 16), {"look": ["* (A fire hydrant, painted like a little guy\n*  with a mustache. Someone had a good day.)"]}],
+		["lamp", Vector2(26 * T, 26 * T + 16), {"lit": night}],
+		["news_box", Vector2(36 * T, 26 * T + 16), {"color": Color8(200, 60, 50)}],
+		["lamp", Vector2(44 * T, 26 * T + 16), {"lit": night}],
+		# Lamps in the planter islands.
+		["lamp", Vector2(7 * T + 10, 19 * T), {"lit": night, "walkable": true}],
+		["lamp", Vector2(19 * T + 10, 19 * T), {"lit": night, "walkable": true}],
+		["lamp", Vector2(36 * T + 10, 19 * T), {"lit": night, "walkable": true}],
+	]
+	if not night:
+		items.append_array([
+			["car_v", Vector2(4 * T, 11 * T + 10), {"color": Color8(200, 60, 55), "look": ["* (A red car with a bumper sticker:\n*  MY OTHER CAR IS ALSO IN THIS PARKING LOT.)"]}],
+			["car_v", Vector2(7 * T, 11 * T + 10), {"color": Color8(160, 160, 165)}],
+			["car_v", Vector2(22 * T, 11 * T + 10), {"color": Color8(60, 100, 180), "look": ["* (A blue car with a sunshade in the window.\n*  The sunshade has sunglasses on it.)"]}],
+			["car_v", Vector2(10 * T, 16 * T + 10), {"color": Color8(230, 230, 235)}],
+			["car_v", Vector2(28 * T, 16 * T + 10), {"color": Color8(90, 150, 90), "look": ["* (A green car. There's a dog in the back seat,\n*  watching you very seriously.)"]}],
+			["car_v", Vector2(31 * T, 16 * T + 10), {"color": Color8(230, 190, 70)}],
+			["car_v", Vector2(7 * T, 22 * T + 10), {"color": Color8(60, 60, 66)}],
+			["car_v", Vector2(43 * T, 22 * T + 10), {"color": Color8(140, 90, 160), "look": ["* (A purple car, parked across two spaces.\n*  Bold.)"]}],
+		])
+	add_dressing(items)
 
 
 func _time_of_day() -> String:

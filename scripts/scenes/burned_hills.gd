@@ -55,6 +55,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [LOOKOUT, _lookout], [Vector2(9 * T + 10, 30 * T + 4), _saplings],
 			[Vector2(36 * T + 10, 36 * T + 4), _trailhead_sign]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
@@ -83,6 +84,29 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): a fire engine and cones in the trailhead lot, a closed
+## sign at the fire road, the Firefighter's wheelbarrow of saplings, rocks and
+## fallen, blackened logs on the hill.
+func _dress() -> void:
+	add_dressing([
+		["van", Vector2(22 * T, 36 * T + 10), {"color": Color8(190, 40, 35), "look": ["* (A fire engine. ENGINE 33. The hoses are rolled\n*  up neat. They've been here a long time.)", "* (On the dash: a photo of a dog in a fire helmet.)"]}],
+		["cone", Vector2(30 * T + 6, 35 * T)],
+		["cone", Vector2(36 * T, 35 * T)],
+		["sign", Vector2(37 * T, 33 * T + 10), {"text": "FIRE ROAD CLOSED", "color": Color8(200, 120, 30), "look": ["* (FIRE ROAD CLOSED. AUTHORIZED PERSONNEL ONLY.)", "* (You're not authorized. You go anyway.)"]}],
+		["trash_can", Vector2(41 * T, 35 * T)],
+		["sign", Vector2(4 * T, 35 * T), {"text": "BLACK MOUNTAIN", "color": Color8(110, 80, 50), "look": ["* (BLACK MOUNTAIN OPEN SPACE.\n*  It wasn't always black.)"]}],
+		["wagon", Vector2(15 * T, 28 * T + 10), {"color": Color8(80, 120, 80), "look": ["* (A wheelbarrow full of saplings in little pots.\n*  Each one has a name tag. One says: GRACE.)"]}],
+		["barrel", Vector2(17 * T + 8, 28 * T + 4), {"look": ["* (A barrel of water for the saplings.\n*  There's a ladle hanging off the side.)"]}],
+		["rock", Vector2(40 * T, 30 * T)],
+		["rock", Vector2(28 * T, 18 * T)],
+		["rock", Vector2(4 * T, 20 * T)],
+		["rock", Vector2(42 * T, 4 * T)],
+		["log", Vector2(18 * T, 18 * T + 10), {"color": Color8(50, 40, 36), "look": ["* (A fallen tree, burned black. When you step close,\n*  it crunches like toast.)"]}],
+		["log", Vector2(44 * T, 22 * T), {"color": Color8(50, 40, 36)}],
+		["log", Vector2(4 * T, 10 * T), {"color": Color8(50, 40, 36)}],
+	])
+
 
 func build_map() -> void:
 	room.setup(48, 40, Room.SCORCHED)

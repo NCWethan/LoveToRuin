@@ -35,6 +35,7 @@ var _engaged: bool = false
 
 func _ready() -> void:
 	setup_area(ENTRY)
+	_dress()
 	add_wild_encounters(SCENE, Rect2(0, 8 * T, room.pixel_size().x, 12 * T))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
@@ -54,6 +55,34 @@ func _genocide() -> bool:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): towels and a sandcastle and a cooler on the sand, a
+## lifeguard tower, a rowboat pulled up, buoys bobbing; a sno-cone cart and bikes
+## on the boardwalk.
+func _dress() -> void:
+	add_dressing([
+		["towel", Vector2(7 * T, 12 * T), {"color": Color8(60, 120, 200), "walkable": true}],
+		["cooler", Vector2(9 * T + 6, 13 * T + 4), {"look": ["* (A cooler. Inside: juice boxes, one sandwich,
+*  and a crab that is NOT supposed to be in there.)"]}],
+		["towel", Vector2(43 * T, 13 * T), {"color": Color8(220, 70, 70), "walkable": true}],
+		["towel", Vector2(45 * T, 13 * T), {"color": Color8(240, 200, 60), "walkable": true}],
+		["sandcastle", Vector2(16 * T, 17 * T), {"look": ["* (A sandcastle, with a moat and a flag.
+*  A very small sign says: KING CRAB'S CASTLE. KEEP OUT.)"]}],
+		["lifeguard", Vector2(36 * T, 15 * T), {"look": ["* (The lifeguard tower. Nobody's on duty.
+*  A sign says: SWIM AT YOUR OWN RISK. SERIOUSLY.)"]}],
+		["rowboat", Vector2(55 * T, 18 * T + 6), {"color": Color8(200, 200, 205), "look": ["* (A rowboat, pulled up on the sand. Painted on the
+*  side: S.S. NOT TODAY.)"]}],
+		["buoy", Vector2(10 * T, 23 * T), {"walkable": true}],
+		["buoy", Vector2(30 * T, 25 * T), {"walkable": true}],
+		["buoy", Vector2(48 * T, 22 * T + 10), {"walkable": true}],
+		["food_cart", Vector2(42 * T, 5 * T + 14), {"color": Color8(80, 170, 220), "text": "SNO CONE", "look": ["* (A sno-cone cart. Flavors: CHERRY, BLUE,
+*  and MYSTERY. Mystery is also blue.)"]}],
+		["bike_rack", Vector2(52 * T, 5 * T + 14), {"color": Color8(240, 200, 60), "look": ["* (A bike rack. One beach cruiser, covered in
+*  stickers. Most of them say ALOHA.)"]}],
+		["trash_can", Vector2(30 * T, 7 * T + 16)],
+		["trash_can", Vector2(48 * T, 7 * T + 16)],
+	])
+
 
 func build_map() -> void:
 	room.setup(64, 30, Room.SAND)

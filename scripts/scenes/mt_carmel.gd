@@ -42,6 +42,7 @@ func _ready() -> void:
 	Game.play_music("mt_carmel")
 	_add_school_pride()
 	_place_characters()
+	_dress()
 	_start_story.call_deferred()
 
 
@@ -83,6 +84,44 @@ func _add_school_pride() -> void:
 	)
 	# Redraw every frame, so the glint can twinkle.
 	get_tree().process_frame.connect(paint.queue_redraw)
+
+
+## Set dressing (props.gd): cars in the lot, bikes by the doors, the sidewalk's
+## hydrant and newspaper box, the courtyard's picnic table and flower beds.
+func _dress() -> void:
+	var T := Room.TILE
+	add_dressing([
+		# The parking lot: a few cars in the stalls, a puddle, a stray cart.
+		["car_v", Vector2(4 * T, 15 * T + 10), {"color": Color8(200, 60, 55), "look": ["* (A red sedan. There's a parking ticket under\n*  the wiper. It's been there a while.)"]}],
+		["car_v", Vector2(10 * T, 15 * T + 10), {"color": Color8(60, 100, 180), "look": ["* (A blue hatchback. A STUDENT DRIVER magnet\n*  is stuck to the back. Crookedly.)"]}],
+		["car_v", Vector2(7 * T, 20 * T + 10), {"color": Color8(230, 230, 235), "look": ["* (A white minivan. Somebody wrote WASH ME\n*  in the dust. Somebody else wrote NO.)"]}],
+		["car_v", Vector2(13 * T, 20 * T + 10), {"color": Color8(90, 150, 90), "look": ["* (A green pickup. The bed is full of\n*  traffic cones. Coach's, probably.)"]}],
+		["puddle", Vector2(6 * T, 18 * T), {"size": Vector2(28, 10)}],
+		["cart", Vector2(12 * T, 18 * T + 10), {"look": ["* (A shopping cart, all the way from the PQ Mall.\n*  It must have been a long trip.)"]}],
+		# By the front doors: bikes, trash, recycling.
+		["bike_rack", Vector2(10 * T + 10, 12 * T + 8), {"color": Color8(60, 120, 200), "look": ["* (A bike rack. One bike, locked with three locks.\n*  Somebody's been burned before.)"]}],
+		["trash_can", Vector2(14 * T + 10, 12 * T + 8)],
+		["recycling", Vector2(20 * T + 10, 12 * T + 8), {"look": ["* (A recycling bin. It's full of trash.\n*  Nobody reads the sign.)"]}],
+		["sign", Vector2(33 * T, 12 * T + 8), {"text": "MT. CARMEL HIGH  EST. 1974", "color": Color8(170, 30, 35), "look": ["* (MT. CARMEL HIGH SCHOOL. HOME OF THE SUNDEVILS.)", "* (Someone stuck a googly eye on the sundevil.)"]}],
+		# The courtyard.
+		["flower_bed", Vector2(23 * T, 13 * T + 12), {"size": Vector2(60, 12), "walkable": true}],
+		["picnic_table", Vector2(26 * T, 21 * T + 10), {"look": ["* (A picnic table. Carved into it: initials, a heart,\n*  and a surprisingly good drawing of a horse.)"]}],
+		["trash_can", Vector2(22 * T, 22 * T + 8)],
+		["cone", Vector2(28 * T, 17 * T + 10)],
+		["cone", Vector2(28 * T, 20 * T + 12)],
+		# The lawn by the trees.
+		["bush", Vector2(34 * T, 6 * T), {"berries": true}],
+		["bush", Vector2(41 * T, 4 * T)],
+		["rock", Vector2(38 * T, 3 * T)],
+		["tree_small", Vector2(45 * T, 9 * T)],
+		# The sidewalk along the road.
+		["lamp", Vector2(6 * T, 24 * T + 2)],
+		["news_box", Vector2(12 * T, 24 * T + 2), {"color": Color8(200, 60, 50), "look": ["* (A newspaper box. Today's headline:\n*  LOCAL GOOSE CONTINUES REIGN OF TERROR.)"]}],
+		["hydrant", Vector2(24 * T, 24 * T + 2), {"look": ["* (A fire hydrant. A dog has clearly been here.)"]}],
+		["lamp", Vector2(30 * T, 24 * T + 2)],
+		["mailbox", Vector2(38 * T, 24 * T + 2), {"look": ["* (A mailbox. It says NO JUNK MAIL.\n*  It's full of junk mail.)"]}],
+		["lamp", Vector2(44 * T, 24 * T + 2)],
+	])
 
 
 func _flag(name: String) -> bool:

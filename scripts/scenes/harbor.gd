@@ -83,6 +83,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [GANGWAY_TOP, _gangway], [HANGAR_EXIT, _leave_hangar],
 			[LIFT_DOWN, _lift_up], [LIFT_UP, _lift_down], [Vector2(45 * T + 10, 26 * T + 4), _fish_stand],
 			[Vector2(6 * T + 10, 26 * T + 4), _seal_statue], [Vector2(10 * T + 10, 36 * T + 4), _old_plane]]:
@@ -125,6 +126,50 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+func is_night() -> bool:
+	return _night
+
+
+## Set dressing (props.gd): lobster traps, coiled rope, barrels and an anchor on the
+## pier; buoys and a rowboat on the water; lamps, an ice cream cart and bikes on the
+## promenade; crates and a sign in the hangar; cones and pallets on the flight deck.
+func _dress() -> void:
+	add_dressing([
+		["buoy", Vector2(12 * T, 12 * T), {"walkable": true}],
+		["buoy", Vector2(46 * T, 11 * T + 10), {"walkable": true}],
+		["rowboat", Vector2(20 * T, 12 * T), {"color": Color8(230, 230, 235), "walkable": true}],
+		["lobster_trap", Vector2(4 * T, 16 * T), {"look": ["* (A lobster trap. There's a crab in it.\n*  It's not a lobster. It seems embarrassed.)"]}],
+		["lobster_trap", Vector2(5 * T + 6, 16 * T + 12)],
+		["rope", Vector2(9 * T, 15 * T + 12), {"walkable": true}],
+		["rope", Vector2(50 * T, 15 * T + 12), {"walkable": true}],
+		["crates", Vector2(15 * T, 16 * T), {"look": ["* (Crates marked SURPLUS. One is open.\n*  It's full of rubber ducks in sailor hats.)"]}],
+		["barrel", Vector2(54 * T, 16 * T)],
+		["barrel", Vector2(55 * T, 16 * T + 8)],
+		["anchor", Vector2(42 * T, 19 * T + 6), {"look": ["* (An old anchor, painted black. The plaque:\n*  IT HELD HER STEADY FOR 47 YEARS.)"]}],
+		["lamp", Vector2(8 * T, 21 * T + 6), {"lit": _night}],
+		["lamp", Vector2(20 * T, 21 * T + 6), {"lit": _night}],
+		["lamp", Vector2(34 * T, 21 * T + 6), {"lit": _night}],
+		["lamp", Vector2(46 * T, 21 * T + 6), {"lit": _night}],
+		["trash_can", Vector2(15 * T, 24 * T + 10)],
+		["trash_can", Vector2(34 * T, 24 * T + 10)],
+		["food_cart", Vector2(40 * T, 27 * T + 8), {"color": Color8(240, 160, 190), "text": "ICE CREAM", "look": ["* (An ice cream cart. Today's special: ROCKY ROAD.\n*  Yesterday's special: ROCKY ROAD.)"]}],
+		["bike_rack", Vector2(25 * T, 27 * T + 10), {"color": Color8(60, 120, 200)}],
+		["news_box", Vector2(52 * T, 21 * T + 12), {"color": Color8(60, 100, 180), "look": ["* (THE HARBOR LOG. Headline: GHOST JET?\n*  NAVY SAYS \"NO COMMENT.\")"]}],
+		["hydrant", Vector2(18 * T, 27 * T + 12)],
+		# The hangar.
+		["crates", Vector2(34 * T, 48 * T), {"look": ["* (Crates of spare parts, stenciled with a squadron's\n*  name. Someone drew a little cat on one.)"]}],
+		["sign", Vector2(15 * T + 10, 41 * T + 14), {"text": "DO NOT CLIMB", "color": Color8(150, 40, 40), "look": ["* (PLEASE DO NOT CLIMB ON THE AIRCRAFT.)", "* (There are small footprints on the wing.)"]}],
+		["cart", Vector2(3 * T, 48 * T + 6)],
+		["barrel", Vector2(37 * T, 40 * T)],
+		# The flight deck.
+		["cone", Vector2(20 * T, 58 * T)],
+		["cone", Vector2(24 * T, 58 * T)],
+		["cone", Vector2(28 * T, 58 * T)],
+		["pallet", Vector2(54 * T, 58 * T + 10), {"look": ["* (A pallet of chocks and chains. Everything up here\n*  is tied down, except the wind.)"]}],
+		["barrel", Vector2(41 * T, 60 * T)],
+	])
+
 
 func build_map() -> void:
 	room.setup(60, 78, Room.VOID)

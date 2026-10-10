@@ -31,10 +31,19 @@ func setup_area(default_spawn: Vector2) -> void:
 	add_child(room)
 	build_map()
 	room.build()
+	# Little things on the ground, everywhere (ground_details.gd).
+	var details := GroundDetails.new()
+	details.room = room
+	add_child(details)
 
 	world = Node2D.new()
 	world.y_sort_enabled = true
 	add_child(world)
+	# Life in the background: birds, butterflies, leaves, glints on the water...
+	var life := Ambience.new()
+	life.area = self
+	life.room = room
+	add_child(life)
 	# (Relic's lost collection, lying around, once it's open. See collection.gd.)
 	_add_collection.call_deferred(default_spawn)
 
@@ -215,6 +224,62 @@ func describe_tile(cell: Vector2i, tile: int) -> Array:
 ## Override this to lay out the area's tiles on `room`.
 func build_map() -> void:
 	pass
+
+
+## Set dressing (props.gd): [[kind, position, {options}], ...]. Drawn on the
+## ground under the characters; the solid ones get walls, and any with "look" lines
+## can be examined.
+const CENTERED_PROPS := ["car", "car_v", "van", "picnic_table", "flower_bed", "towel", "rowboat", "puddle", "rock", "log", "well", "pallet", "string_lights"]
+var _dressing: Node2D
+var _dressing_items: Array = []
+var _dressing_time: float = 0.0
+
+
+func add_dressing(items: Array) -> void:
+	if _dressing == null:
+		_dressing = Node2D.new()
+		add_child(_dressing)
+		move_child(_dressing, world.get_index())
+		_dressing.draw.connect(func() -> void:
+			for item in _dressing_items:
+				Props.draw(_dressing, item[0], item[1], item[2] if item.size() > 2 else {}, _dressing_time))
+		var ticker := Timer.new()
+		ticker.wait_time = 0.05
+		ticker.autostart = true
+		ticker.timeout.connect(func() -> void:
+			_dressing_time += 0.05
+			_dressing.queue_redraw())
+		_dressing.add_child(ticker)
+	var body := StaticBody2D.new()
+	_dressing.add_child(body)
+	for item in items:
+		_dressing_items.append(item)
+		var kind: String = item[0]
+		var at: Vector2 = item[1]
+		var opt: Dictionary = item[2] if item.size() > 2 else {}
+		if Props.FOOTPRINTS.has(kind) and not opt.get("walkable", false):
+			var size: Vector2 = Props.FOOTPRINTS[kind]
+			var center := at if kind in CENTERED_PROPS else at + Vector2(0, -size.y / 2 + 2)
+			var shape := RectangleShape2D.new()
+			shape.size = size
+			var collision := CollisionShape2D.new()
+			collision.shape = shape
+			collision.position = center
+			body.add_child(collision)
+		if opt.has("look"):
+			var lines: Array = opt["look"]
+			world.add_child(Hotspot.create(at + Vector2(0, -4), func() -> void: await Game.dialogue.say(lines)))
+	_dressing.queue_redraw()
+
+
+## Is it night here? (Fireflies instead of butterflies, no birds.) Areas say so.
+func is_night() -> bool:
+	return false
+
+
+## Ambience an area doesn't want ("birds", "butterflies", "fireflies", "leaves",
+## "sparkles", "clouds", "dust").
+var ambience_off: Array = []
 
 
 func flag(name: String) -> bool:

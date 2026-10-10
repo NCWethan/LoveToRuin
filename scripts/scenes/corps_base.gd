@@ -86,6 +86,7 @@ func _ready() -> void:
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
 	_add_lamps()
+	_dress()
 	_place_people()
 	_place_hotspots()
 	fit_camera_to_room()
@@ -98,6 +99,28 @@ func _process(delta: float) -> void:
 
 
 # --- The map --------------------------------------------------------------------
+
+## Set dressing (props.gd): string lights under the hall's ceiling, an arcade
+## cabinet, supply crates, a bookshelf, a plant nobody waters; barrels and a few
+## odds and ends along the corridor.
+func _dress() -> void:
+	var items: Array = [
+		["string_lights", Vector2(20 * T, 3 * T + 4), {"size": Vector2(36 * T, 0), "walkable": true}],
+		["arcade", Vector2(12 * T, 4 * T + 10), {"color": Color8(60, 60, 140), "look": ["* (An arcade cabinet, rescued from the junkyard.\n*  HIGH SCORES: EGGO, EGGO, EGGO, EGGO, NAT.)"]}],
+		["crates", Vector2(28 * T, 6 * T), {"look": ["* (Supply crates: canned beans, batteries, bandages,\n*  and one labeled SNACKS (DO NOT TOUCH) - EGGO.)"]}],
+		["trash_can", Vector2(27 * T + 6, 8 * T)],
+		["potted_plant", Vector2(2 * T, 17 * T + 6), {"look": ["* (A fake plant. Someone waters it anyway.\n*  Every day. Nobody says who.)"]}],
+		["bookshelf", Vector2(14 * T, 24 * T + 8), {"look": ["* (Comics, field guides, a dictionary, and a binder\n*  labeled FRAGMENTS - DO NOT LOSE. It's empty.)"]}],
+		["barrel", Vector2(38 * T + 6, 24 * T + 8)],
+		["pallet", Vector2(24 * T, 23 * T + 6)],
+	]
+	for x in [15, 45, 75, 105, 135, 165]:
+		items.append(["barrel", Vector2(x * T + 10, 39 * T + 12)])
+	items.append(["potted_plant", Vector2(30 * T + 10, 39 * T + 12)])
+	items.append(["crate", Vector2(90 * T + 10, 39 * T + 14), {"look": ["* (A crate stenciled PROPERTY OF THE U.S. ARMY.\n*  Inside: forty years of dust, and a yo-yo.)"]}])
+	items.append(["trash_can", Vector2(150 * T + 10, 39 * T + 12)])
+	add_dressing(items)
+
 
 func build_map() -> void:
 	room.setup(184, 144, Room.VOID)

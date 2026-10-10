@@ -71,6 +71,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [GATE_OUT, _ballpark_gate], [INSIDE_EXIT, _leave_ballpark],
 			[DINER_DOOR, _diner], [HOTEL_DOOR, _hotel], [Vector2(32 * T, 21 * T + 4), _fountain],
 			[Vector2(22 * T + 10, 36 * T + 4), _outfield_wall]]:
@@ -121,6 +122,44 @@ func _trolley_x(at: float = -1.0) -> float:
 
 
 # --- The map -----------------------------------------------------------------------
+
+func is_night() -> bool:
+	return true
+
+
+## Set dressing (props.gd): parked cars and a taxi, a phone booth, newspaper boxes,
+## a trolley stop, lit lamps over the plaza, a dumpster in the alley; inside the
+## ballpark, a ball cart and the grounds crew's gear.
+func _dress() -> void:
+	add_dressing([
+		["car", Vector2(44 * T, 10 * T + 12), {"color": Color8(60, 60, 66), "look": ["* (A black car with tinted windows, parked\n*  under a NO PARKING sign. Of course.)"]}],
+		["car", Vector2(9 * T, 14 * T + 8), {"color": Color8(240, 200, 50), "look": ["* (A taxi. The light on top says OFF DUTY.\n*  The driver is asleep with his hat over his face.)"]}],
+		["car", Vector2(20 * T, 14 * T + 8), {"color": Color8(160, 160, 165)}],
+		["phone_booth", Vector2(38 * T + 10, 8 * T + 14), {"look": ["* (A phone booth. There's a quarter on the shelf\n*  and a number scratched in the glass.)", "* (You don't call it. Some numbers are a trap.)"]}],
+		["news_box", Vector2(13 * T + 6, 9 * T + 6), {"color": Color8(60, 100, 180), "look": ["* (THE CITY BEAT. Headline: BALLPARK LIGHTS\n*  LEFT ON ALL WEEK. \"WHO'S PAYING FOR THIS?\")"]}],
+		["news_box", Vector2(14 * T + 6, 9 * T + 6), {"color": Color8(200, 60, 50)}],
+		["hydrant", Vector2(25 * T + 10, 9 * T + 6)],
+		["trash_can", Vector2(3 * T, 9 * T + 6)],
+		["mailbox", Vector2(33 * T, 9 * T + 6)],
+		["sign", Vector2(44 * T, 16 * T + 12), {"text": "TROLLEY", "color": Color8(200, 40, 40), "look": ["* (TROLLEY STOP. Next trolley: 12:04 AM.\n*  It's 12:04 AM. It's been 12:04 AM for a while.)"]}],
+		["lamp", Vector2(3 * T + 10, 17 * T + 4), {"lit": true}],
+		["lamp", Vector2(29 * T, 17 * T + 4), {"lit": true}],
+		["lamp", Vector2(56 * T, 17 * T + 4), {"lit": true}],
+		["lamp", Vector2(20 * T, 25 * T + 16), {"lit": true}],
+		["lamp", Vector2(44 * T, 25 * T + 16), {"lit": true}],
+		["trash_can", Vector2(34 * T, 23 * T + 10)],
+		["bike_rack", Vector2(52 * T, 21 * T), {"color": Color8(200, 60, 55), "look": ["* (A rack of rental scooters. They all say\n*  0% BATTERY. Even the one that's charging.)"]}],
+		["dumpster", Vector2(59 * T, 27 * T + 10), {"look": ["* (A dumpster behind the diner. A cat lives here.\n*  It looks at you like you owe it rent.)"]}],
+		["trash_bag", Vector2(57 * T + 4, 28 * T), {"walkable": true}],
+		["bollard", Vector2(4 * T, 27 * T + 4)],
+		["bollard", Vector2(6 * T, 27 * T + 4)],
+		["puddle", Vector2(40 * T, 27 * T + 10), {"size": Vector2(34, 10)}],
+		# Inside the ballpark.
+		["cart", Vector2(36 * T, 54 * T + 10), {"look": ["* (A cart full of baseballs. Somebody signed one.\n*  It just says SORRY.)"]}],
+		["crates", Vector2(5 * T, 55 * T + 6), {"look": ["* (The grounds crew's boxes: chalk, rakes, and a\n*  tarp folded into a very neat square.)"]}],
+		["cooler", Vector2(39 * T, 54 * T + 10)],
+	])
+
 
 func build_map() -> void:
 	room.setup(64, 60, Room.VOID)

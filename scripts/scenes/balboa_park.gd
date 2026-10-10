@@ -54,6 +54,7 @@ func _ready() -> void:
 	_decor.draw.connect(_draw_decor)
 	Game.play_music("balboa")
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [DOOR_OUT, _museum_door], [INSIDE_EXIT, _leave_museum], [BOOK_DESK, _book]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	fit_camera_to_room()
@@ -73,6 +74,42 @@ func _route() -> String:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): the El Cid statue, lamps and planters along the Prado,
+## a cafe's umbrella tables, a churro cart, flowers by the fountain, a rock and a
+## log by the lily pond; inside, velvet ropes, a sign, and plants.
+func _dress() -> void:
+	add_dressing([
+		["statue", Vector2(12 * T, 8 * T + 10), {"look": ["* (A statue of a knight on a horse. The plaque says\n*  EL CID. Someone put a churro in his hand.)"]}],
+		["planter_box", Vector2(28 * T, 9 * T + 14)],
+		["planter_box", Vector2(36 * T, 9 * T + 14)],
+		["lamp", Vector2(6 * T, 10 * T + 4)],
+		["lamp", Vector2(18 * T, 10 * T + 4)],
+		["lamp", Vector2(46 * T, 10 * T + 4)],
+		["lamp", Vector2(56 * T, 10 * T + 4)],
+		["umbrella_table", Vector2(48 * T, 12 * T), {"color": Color8(200, 60, 55)}],
+		["umbrella_table", Vector2(51 * T + 10, 12 * T), {"color": Color8(240, 200, 60), "look": ["* (A cafe table. Someone left half a cup of coffee\n*  and a sketch of the museum. It's pretty good.)"]}],
+		["food_cart", Vector2(42 * T, 14 * T + 14), {"color": Color8(210, 140, 60), "text": "CHURROS", "look": ["* (A churro cart. The sign says FRESH CHURROS.\n*  The smell says FRESH CHURROS, louder.)"]}],
+		["trash_can", Vector2(22 * T, 14 * T + 10)],
+		["recycling", Vector2(23 * T, 14 * T + 10)],
+		["flower_bed", Vector2(25 * T, 18 * T + 10), {"size": Vector2(40, 12), "walkable": true}],
+		["flower_bed", Vector2(39 * T, 18 * T + 10), {"size": Vector2(40, 12), "walkable": true}],
+		["sign", Vector2(12 * T, 20 * T + 12), {"text": "LILY POND", "look": ["* (LILY POND. PLEASE DO NOT FEED THE KOI.)", "* (Under it, in pen: the koi have been fed.)"]}],
+		["rock", Vector2(20 * T, 22 * T + 10)],
+		["log", Vector2(22 * T, 27 * T + 4), {"look": ["* (A fallen log. A turtle is sunning itself on it.\n*  It doesn't care about you at all.)"]}],
+		["bush", Vector2(4 * T, 15 * T), {"berries": true}],
+		["bush", Vector2(44 * T, 22 * T)],
+		["bush", Vector2(58 * T, 18 * T)],
+		["tree_small", Vector2(36 * T, 26 * T)],
+		# Inside: plants by the door, ropes around the armor, a sign.
+		["potted_plant", Vector2(12 * T, 54 * T + 6)],
+		["potted_plant", Vector2(17 * T, 54 * T + 6)],
+		["sign", Vector2(8 * T + 10, 39 * T + 14), {"text": "PLEASE DON'T TOUCH", "color": Color8(150, 40, 40), "look": ["* (PLEASE DO NOT TOUCH THE ARMOR.)", "* (Someone touched the armor. There's a fingerprint\n*  on the helmet. It's yours, somehow.)"]}],
+		["potted_plant", Vector2(2 * T, 36 * T + 6)],
+		["potted_plant", Vector2(26 * T, 36 * T + 6)],
+		["trash_can", Vector2(26 * T, 54 * T + 6)],
+	])
+
 
 func build_map() -> void:
 	room.setup(64, 56, Room.VOID)

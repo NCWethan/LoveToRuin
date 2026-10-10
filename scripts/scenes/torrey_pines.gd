@@ -64,6 +64,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [LODGE_DOOR, _lodge], [Vector2(19 * T + 10, 4 * T + 4), _windsock],
 			[Vector2(18 * T + 10, 25 * T + 4), _plaque], [DORIS + Vector2(0, 24), _doris]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
@@ -93,6 +94,32 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): trail signs, the cliff warning, rocks and fallen logs
+## and scrub along the trail, a picnic table by the lodge, the gliderport's gear.
+func _dress() -> void:
+	add_dressing([
+		["sign", Vector2(33 * T + 4, 26 * T + 10), {"text": "GUY FLEMING TRAIL", "color": Color8(110, 80, 50), "look": ["* (GUY FLEMING TRAIL. 0.7 MI. EASY.)", "* (Someone crossed out EASY and wrote: LIAR.)"]}],
+		["sign", Vector2(16 * T + 12, 14 * T + 12), {"text": "CLIFF EDGE", "color": Color8(190, 50, 40), "look": ["* (DANGER: UNSTABLE CLIFF EDGE.\n*  STAY BEHIND THE RAIL.)", "* (The rail is very short. The cliff is very tall.)"]}],
+		["crates", Vector2(25 * T, 3 * T + 10), {"look": ["* (Harnesses, helmets, a folded wing.\n*  A tag says: RENTALS RETURN BY SUNSET.)"]}],
+		["picnic_table", Vector2(42 * T, 13 * T + 10), {"look": ["* (A picnic table with a view of the ocean.\n*  Someone carved a little whale into it.)"]}],
+		["trash_can", Vector2(52 * T + 10, 9 * T + 10)],
+		["potted_plant", Vector2(46 * T + 10, 9 * T + 6)],
+		["potted_plant", Vector2(50 * T + 10, 9 * T + 6)],
+		["rock", Vector2(26 * T, 14 * T)],
+		["rock", Vector2(34 * T, 18 * T)],
+		["rock", Vector2(48 * T, 25 * T + 10), {"look": ["* (A sandstone rock, carved by the wind into\n*  something that looks a lot like a face.)", "* (It looks disappointed in you.)"]}],
+		["rock", Vector2(60 * T, 10 * T)],
+		["log", Vector2(42 * T, 17 * T)],
+		["log", Vector2(55 * T, 25 * T)],
+		["bush", Vector2(28 * T, 9 * T + 10)],
+		["bush", Vector2(46 * T, 14 * T), {"berries": true}],
+		["bush", Vector2(60 * T, 21 * T)],
+		["bush", Vector2(23 * T, 26 * T + 4)],
+		["tree_small", Vector2(34 * T, 8 * T)],
+		["tree_small", Vector2(50 * T, 20 * T)],
+	])
+
 
 func build_map() -> void:
 	room.setup(64, 32, Room.GRASS)

@@ -54,6 +54,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [VAN_FRONT + Vector2(0, 10), _van], [Vector2(8 * T + 10, 6 * T + 4), _shack],
 			[Vector2(40 * T, 20 * T + 4), _car_stack]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
@@ -84,6 +85,32 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+## Set dressing (props.gd): wrecked cars, a couch and a fridge and a dead arcade
+## cabinet out between the piles, a dumpster by the shack, pallets, barrels, crates,
+## a stray cart, oil puddles.
+func _dress() -> void:
+	add_dressing([
+		["dumpster", Vector2(15 * T, 4 * T + 10)],
+		["trash_bag", Vector2(16 * T + 14, 6 * T + 6), {"walkable": true}],
+		["sign", Vector2(13 * T + 10, 7 * T + 4), {"text": "BEWARE OF DOG", "color": Color8(170, 40, 35), "look": ["* (BEWARE OF DOG.)", "* (There is no dog. There's a very old cat on the\n*  shack's roof, and it's looking at you.)"]}],
+		["couch", Vector2(26 * T, 9 * T), {"color": Color8(120, 90, 140), "look": ["* (A purple couch, out in the open. It's still\n*  comfy. There's 35 cents in the cushions.)"]}],
+		["fridge", Vector2(24 * T, 15 * T), {"look": ["* (An old fridge with no door. Magnets on the side:\n*  a pizza place, a dentist, a little Eiffel Tower.)"]}],
+		["arcade", Vector2(12 * T, 20 * T), {"look": ["* (An arcade cabinet. The screen is cracked.\n*  HIGH SCORE: RLC  999999.)"]}],
+		["cart", Vector2(31 * T, 14 * T)],
+		["pallet", Vector2(40 * T, 11 * T + 6)],
+		["crates", Vector2(52 * T, 4 * T)],
+		["barrel", Vector2(42 * T, 24 * T), {"look": ["* (A rusty barrel. Something sloshes inside.\n*  You decide not to find out what.)"]}],
+		["barrel", Vector2(43 * T + 4, 24 * T + 8)],
+		["car", Vector2(8 * T, 31 * T), {"color": Color8(140, 110, 90), "look": ["* (A rusted-out sedan with no wheels, sitting on\n*  cinderblocks. A bird lives in the glovebox.)"]}],
+		["car", Vector2(28 * T, 32 * T), {"color": Color8(170, 100, 60)}],
+		["car_v", Vector2(52 * T, 20 * T), {"color": Color8(110, 120, 110)}],
+		["puddle", Vector2(26 * T, 21 * T + 10), {"size": Vector2(30, 10)}],
+		["puddle", Vector2(48 * T, 25 * T), {"size": Vector2(24, 8)}],
+		["bike", Vector2(14 * T, 29 * T), {"color": Color8(200, 60, 55), "look": ["* (A kid's bike with one wheel bent into a taco.\n*  The bell still works. Ding.)"]}],
+		["lamp", Vector2(46 * T, 34 * T)],
+	])
+
 
 func build_map() -> void:
 	room.setup(56, 36, Room.ASPHALT)

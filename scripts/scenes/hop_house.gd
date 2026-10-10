@@ -95,6 +95,7 @@ func _ready() -> void:
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
 	_add_streetlights()
+	_dress()
 	_place_people()
 	_place_hotspots()
 	fit_camera_to_room()
@@ -111,6 +112,44 @@ func build_map() -> void:
 	room.setup(50, 50, Room.VOID)
 	_build_street()
 	_build_house()
+
+
+func is_night() -> bool:
+	if _visiting():
+		return not Game.daytime()
+	return not _morning()
+
+
+## Set dressing (props.gd): mailboxes and flower beds and a kid's bike along the
+## street, a car at the curb, trash day; a plant and a trash can inside.
+func _dress() -> void:
+	var T := Room.TILE
+	add_dressing([
+		["mailbox", Vector2(4 * T + 6, 12 * T + 16), {"look": ["* (A mailbox shaped like a fish. The fish is
+*  smiling. The fish has seen things.)"]}],
+		["flower_bed", Vector2(4 * T, 9 * T + 8), {"size": Vector2(40, 10), "walkable": true}],
+		["bike", Vector2(9 * T, 11 * T), {"color": Color8(230, 80, 120), "walkable": true, "look": ["* (A kid's bike with streamers, lying on the lawn.
+*  Training wheels. One of them is missing.)"]}],
+		["mailbox", Vector2(15 * T + 6, 12 * T + 16)],
+		["bush", Vector2(20 * T, 7 * T), {"berries": true}],
+		["mailbox", Vector2(26 * T + 6, 12 * T + 16), {"look": ["* (A mailbox. Someone taped a note to it:
+*  PLEASE STOP PUTTING SNAILS IN HERE. -MGMT)"]}],
+		["flower_bed", Vector2(30 * T, 9 * T + 8), {"size": Vector2(40, 10), "walkable": true}],
+		["mailbox", Vector2(40 * T + 6, 12 * T + 16), {"look": ["* (Hop's mailbox. There's just one name on it.)", "* (Someone scratched off a second name, a long
+*  time ago. You can't read what it was.)"]}],
+		["lamp", Vector2(8 * T, 13 * T + 4), {"lit": is_night(), "walkable": true}],
+		["lamp", Vector2(33 * T, 13 * T + 4), {"lit": is_night(), "walkable": true}],
+		["hydrant", Vector2(18 * T, 15 * T + 16)],
+		["bin_row", Vector2(34 * T, 15 * T + 16), {"look": ["* (Trash cans out at the curb. Tomorrow is trash day.
+*  It's always tomorrow.)"]}],
+		["car", Vector2(9 * T, 16 * T + 12), {"color": Color8(60, 100, 180), "look": ["* (A blue car, parked at the curb. A dreamcatcher
+*  hangs from the mirror.)"]}],
+		["car", Vector2(44 * T, 20 * T + 8), {"color": Color8(160, 160, 165)}],
+		# Inside Hop's house.
+		["trash_can", Vector2(11 * T + 6, 34 * T + 16)],
+		["potted_plant", Vector2(18 * T, 47 * T + 10), {"look": ["* (A potted plant. It's fake. It's still
+*  somehow dying.)"]}],
+	])
 
 
 func _build_street() -> void:

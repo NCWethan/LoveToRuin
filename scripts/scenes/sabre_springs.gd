@@ -52,6 +52,7 @@ func _ready() -> void:
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
 	_place_people()
+	_dress()
 	world.add_child(Hotspot.create(Vector2(8 * T + 10, 30 * T + 4), _sign))
 	Game.stop_music(1.0)
 	fit_camera_to_room()
@@ -77,6 +78,30 @@ func _process(delta: float) -> void:
 
 
 # --- The map -----------------------------------------------------------------------
+
+func is_night() -> bool:
+	return true
+
+
+## Set dressing (props.gd): lamps over the lot, picnic tables, a bike rack by the
+## ball field, rocks and a log along the creek. Everything kept clear of the middle,
+## where the ground is torn open.
+func _dress() -> void:
+	add_dressing([
+		["lamp", Vector2(26 * T + 6, 29 * T + 4), {"lit": true}],
+		["lamp", Vector2(47 * T, 29 * T + 4), {"lit": true}],
+		["picnic_table", Vector2(10 * T, 22 * T), {"look": ["* (A picnic table. Someone left a birthday hat on it.\n*  The party's long over.)"]}],
+		["picnic_table", Vector2(44 * T, 24 * T)],
+		["bike_rack", Vector2(12 * T, 13 * T + 6), {"color": Color8(60, 120, 200), "look": ["* (An empty bike rack. Everyone went home a long\n*  time ago. You feel like you've been here before.)"]}],
+		["sign", Vector2(21 * T, 3 * T + 4), {"text": "NO DOGS ON FIELD", "look": ["* (NO DOGS ON THE FIELD.)", "* (A paw print on the sign. Right on the NO.)"]}],
+		["rock", Vector2(5 * T + 6, 8 * T)],
+		["rock", Vector2(5 * T + 6, 24 * T)],
+		["log", Vector2(7 * T, 16 * T), {"look": ["* (A log by the creek. Carved into it, very old:\n*  E + R. Under it, newer: + H.)"]}],
+		["bush", Vector2(46 * T, 16 * T)],
+		["bush", Vector2(16 * T, 33 * T), {"berries": true}],
+		["tree_small", Vector2(24 * T, 33 * T)],
+	])
+
 
 func build_map() -> void:
 	room.setup(50, 36, Room.GRASS)

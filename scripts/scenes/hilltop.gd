@@ -87,6 +87,7 @@ func _ready() -> void:
 		add_wild_encounters(SCENE, Rect2(Vector2.ZERO, room.pixel_size()))
 	Game.play_music("hilltop")
 	_font = ThemeDB.fallback_font
+	_dress()
 
 	_night = CanvasModulate.new()
 	# (Chapter 2 visits are by day.)
@@ -137,6 +138,31 @@ var _blasted: bool = false
 ## While above 0, the shockwave ring is spreading out from the crater.
 var _shock_time: float = 0.0
 const SHOCK_LENGTH := 1.0
+
+
+func is_night() -> bool:
+	return not _day()
+
+
+## Set dressing (props.gd), around the edges of the park (the field itself stays
+## clear: too much happens there).
+func _dress() -> void:
+	var lit := not _day()
+	add_dressing([
+		["picnic_table", Vector2(13 * T, 3 * T + 10), {"look": ["* (A picnic table. Somebody left a checkers board
+*  on it, mid-game. Red is winning.)"]}],
+		["trash_can", Vector2(12 * T + 10, 23 * T + 14)],
+		["trash_can", Vector2(27 * T, 23 * T + 14)],
+		["lamp", Vector2(18 * T, 25 * T + 4), {"lit": lit}],
+		["lamp", Vector2(22 * T + 10, 25 * T + 4), {"lit": lit}],
+		["bush", Vector2(3 * T, 14 * T)],
+		["bush", Vector2(37 * T, 12 * T), {"berries": true}],
+		["bush", Vector2(37 * T, 20 * T)],
+		["rock", Vector2(30 * T, 3 * T)],
+		["sign", Vector2(3 * T, 21 * T), {"text": "DOGS ON LEASH", "look": ["* (DOGS MUST BE ON LEASH.)", "* (Under it, in marker: THE GOOSE MUST ALSO BE
+*  ON LEASH. PLEASE. SOMEBODY.)"]}],
+		["sign", Vector2(25 * T, 25 * T + 4), {"text": "WESTVIEW FIELD", "color": Color8(30, 30, 34), "look": ["* (WESTVIEW FIELD. PARK CLOSES AT DUSK.)", "* (Nobody here has ever left at dusk.)"]}],
+	])
 
 
 func build_map() -> void:
