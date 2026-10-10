@@ -3776,6 +3776,10 @@ const DIAMOND_SPACING := 36.0
 ##   spotlights  stadium lights sweeping, with confetti (Wally)
 ##   shards      red fragments falling past cracks of light (Hopkuna)
 ##   static      a fuzzy, flickering screen (the tent)
+##   skyline     the city at dusk, buildings sliding past, windows lit (town)
+##   waves       the ocean: a low sun, rolling waves, gulls (the beach)
+##   leaves      trees, and leaves blowing past (parks, the neighborhood)
+##   banners     a great hall: heraldry banners, crossed swords (the museum)
 func _draw_backdrop() -> void:
 	if state == State.GAME_OVER or _data == null:
 		return
@@ -3809,9 +3813,102 @@ func _draw_backdrop() -> void:
 			_backdrop_shards(color, t)
 		"static":
 			_backdrop_static(color, t)
+		"skyline":
+			_backdrop_skyline(color, t)
+		"waves":
+			_backdrop_waves(color, t)
+		"leaves":
+			_backdrop_leaves(color, t)
+		"banners":
+			_backdrop_banners(color, t)
 		_:
 			_backdrop_sigil(color, t)
 			_backdrop_diamonds(color, t)
+
+
+## The city at dusk (fights around town): two rows of buildings sliding past at
+## different speeds, windows blinking on and off, and a few clouds.
+func _backdrop_skyline(color: Color, t: float) -> void:
+	var bottom := BACKDROP.end.y
+	for c in 4:
+		var x := BACKDROP.position.x + fmod(c * 170.0 + t * 8.0, BACKDROP.size.x + 120.0) - 60.0
+		var at := Vector2(x, BACKDROP.position.y + 26 + (c % 2) * 20)
+		_backdrop.draw_set_transform(at, 0.0, Vector2(1.0, 0.35))
+		_backdrop.draw_circle(Vector2.ZERO, 46.0, Color(color.lightened(0.5), 0.08 * _edge_fade(at)))
+		_backdrop.draw_set_transform(Vector2.ZERO)
+	for layer in 2:
+		var speed := 12.0 if layer == 0 else 26.0
+		var shade := 0.18 if layer == 0 else 0.3
+		for i in 12:
+			var w := 34.0 + (i * 17 % 4) * 10.0
+			var h := 50.0 + ((i * 37 + layer * 11) % 7) * 14.0 - layer * 20.0
+			var x := BACKDROP.position.x + fmod(i * 58.0 + layer * 23.0 + t * speed, BACKDROP.size.x + 60.0) - 60.0
+			var rect := Rect2(x, bottom - h, w, h)
+			var fade := _edge_fade(rect.get_center())
+			_backdrop.draw_rect(rect, Color(color.darkened(0.3 + layer * 0.2), shade * fade))
+			for wy in int(h / 14.0):
+				for wx in int(w / 12.0):
+					var lit := (i * 7 + wx * 3 + wy * 5 + int(t * 0.7 + i)) % 5 == 0
+					if lit:
+						_backdrop.draw_rect(Rect2(x + 4 + wx * 12, bottom - h + 6 + wy * 14, 5, 6), Color(1.0, 0.85, 0.45, 0.35 * fade))
+
+
+## The beach: a low sun, the horizon, rows of waves rolling in, and gulls.
+func _backdrop_waves(color: Color, t: float) -> void:
+	var horizon := BACKDROP.position.y + 92.0
+	var sun := Vector2(BACKDROP.end.x - 120.0, horizon - 16.0)
+	for ring in 5:
+		_backdrop.draw_circle(sun, 46.0 - ring * 8.0, Color(1.0, 0.8, 0.45, 0.06 + ring * 0.03))
+	_backdrop.draw_line(Vector2(BACKDROP.position.x, horizon), Vector2(BACKDROP.end.x, horizon), Color(color.lightened(0.4), 0.3), 1.0)
+	for row in 7:
+		var y := horizon + 10.0 + row * 17.0
+		var points := PackedVector2Array()
+		for k in 41:
+			var x := BACKDROP.position.x + k * 15.0
+			points.append(Vector2(x, y + sin(x * 0.04 + t * (1.2 + row * 0.25) + row) * (2.0 + row * 0.6)))
+		_backdrop.draw_polyline(points, Color(color.lightened(0.3), 0.12 + row * 0.04), 1.0 + row * 0.25)
+	for g in 3:
+		var at := Vector2(BACKDROP.position.x + fmod(g * 210.0 + t * 30.0, BACKDROP.size.x), BACKDROP.position.y + 30 + g * 14 + sin(t * 2.0 + g) * 4.0)
+		var flap := sin(t * 6.0 + g) * 3.0
+		_backdrop.draw_polyline(PackedVector2Array([at + Vector2(-7, -flap), at, at + Vector2(7, -flap)]), Color(1, 1, 1, 0.4 * _edge_fade(at)), 1.5)
+
+
+## Parks and streets: round trees along the bottom, and leaves blowing across.
+func _backdrop_leaves(color: Color, t: float) -> void:
+	var bottom := BACKDROP.end.y
+	for i in 9:
+		var x := BACKDROP.position.x + 20 + i * 70.0 + (i % 2) * 18.0
+		var h := 70.0 + (i * 23 % 3) * 20.0
+		var fade := _edge_fade(Vector2(x, bottom - h))
+		_backdrop.draw_rect(Rect2(x - 3, bottom - h * 0.5, 6, h * 0.5), Color(color.darkened(0.5), 0.3 * fade))
+		_backdrop.draw_circle(Vector2(x, bottom - h * 0.6), 26.0 + (i % 3) * 6.0, Color(color.darkened(0.2), 0.25 * fade))
+	for k in 18:
+		var phase := fmod(t * (0.12 + (k % 5) * 0.02) + k * 0.137, 1.0)
+		var at := Vector2(BACKDROP.position.x + phase * (BACKDROP.size.x + 40.0) - 20.0, BACKDROP.position.y + 20 + fmod(k * 37.0 + phase * 90.0, BACKDROP.size.y - 40.0) + sin(t * 2.0 + k) * 8.0)
+		_backdrop.draw_set_transform(at, t * 2.0 + k, Vector2.ONE)
+		_backdrop.draw_rect(Rect2(-3, -1.5, 6, 3), Color(color.lightened(0.3), 0.5 * _edge_fade(at)))
+		_backdrop.draw_set_transform(Vector2.ZERO)
+
+
+## A great hall (the museum): heraldry banners hanging along the top, swaying a
+## little, and pairs of crossed swords between them, over a checkered floor.
+func _backdrop_banners(color: Color, t: float) -> void:
+	var top := BACKDROP.position.y
+	var horizon := top + 120.0
+	for row in 5:
+		var y := horizon + row * 19.0
+		_backdrop.draw_line(Vector2(BACKDROP.position.x, y), Vector2(BACKDROP.end.x, y), Color(color.lightened(0.2), 0.12), 1.0)
+	for k in 7:
+		var x := BACKDROP.position.x + 50 + k * 85.0
+		var sway := sin(t * 1.2 + k) * 3.0
+		var fade := _edge_fade(Vector2(x, top + 50))
+		var banner := PackedVector2Array([Vector2(x - 16, top + 4), Vector2(x + 16, top + 4), Vector2(x + 16 + sway, top + 78), Vector2(x + sway, top + 92), Vector2(x - 16 + sway, top + 78)])
+		_backdrop.draw_colored_polygon(banner, Color(color.darkened(0.15 if k % 2 == 0 else 0.4), 0.35 * fade))
+		_backdrop.draw_rect(Rect2(x - 6 + sway * 0.5, top + 30, 12, 14), Color(1.0, 0.85, 0.4, 0.3 * fade))
+		if k < 6:
+			var mid := Vector2(x + 42, top + 70)
+			_backdrop.draw_line(mid + Vector2(-14, -14), mid + Vector2(14, 14), Color(0.85, 0.88, 0.95, 0.25 * fade), 2.0)
+			_backdrop.draw_line(mid + Vector2(14, -14), mid + Vector2(-14, 14), Color(0.85, 0.88, 0.95, 0.25 * fade), 2.0)
 
 
 ## How visible something is at `point`: full in the middle, fading out near the edges.

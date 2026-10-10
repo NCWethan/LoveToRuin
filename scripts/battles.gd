@@ -15,6 +15,8 @@ static func create(id: String) -> BattleData:
 			return HilltopBattles.create(id)
 		"pop_quiz", "hall_pass", "mystery_meat", "tardy_bell", "overdue_book", "tent", "wally":
 			return WestviewBattles.create(id)
+		"knight", "duel_bigjoe", "corps_bigjoe":
+			return load("res://scripts/balboa_battles.gd").create(id)
 		"dipper", "corps_crayola", "corps_ncwethan":
 			return load("res://scripts/beach_battles.gd").create(id)
 		"glowbug":

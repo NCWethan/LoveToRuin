@@ -27,6 +27,7 @@ const JACK_DOOR := Vector2(1000, 430)
 ## The bus stop on the sidewalk by the road, and where it goes.
 const BUS_STOP := Vector2(640, 528)
 const BEACH_SCENE := "res://scenes/mission_beach.tscn"
+const BALBOA_SCENE := "res://scenes/balboa_park.tscn"
 ## The patio table by MuffinMage (Knotty Barrel), with his salmon burger on it.
 const MUFFIN_TABLE := Vector2(30 * 20 + 10, 10 * 20 + 6)
 
@@ -462,11 +463,14 @@ func _bus_stop() -> void:
 	if not flag("chapter1_done"):
 		await Game.dialogue.say(["* (A bus stop. The schedule is mostly stickers.)", "* (One of them says MISSION BEACH.)"])
 		return
-	var go := await Game.dialogue.ask("* (A bus stop. Take the bus to Mission Beach?)", ["Ride", "Not now"])
-	if go != 0:
+	var options := ["Mission Beach", "Not now"]
+	if flag("mb_fragment"):
+		options = ["Mission Beach", "Balboa Park", "Not now"]
+	var go := await Game.dialogue.ask("* (A bus stop. Where to?)", options)
+	if go == options.size() - 1:
 		return
 	Game.play_sfx("door")
-	await Game.change_scene(BEACH_SCENE)
+	await Game.change_scene(BEACH_SCENE if go == 0 else BALBOA_SCENE)
 
 
 func _head_east() -> void:

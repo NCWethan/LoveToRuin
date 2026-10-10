@@ -503,6 +503,9 @@ const GLYPHS := {
 	"paper": ["WW", "WW"],
 	"dust": ["L"],
 	"heart_card": ["WWW", "WRW", "WWW"],
+	"helmet": [".GGG.", "GGGGG", "GKKKG", "GGGGG", ".G.G."],
+	"gauntlet": ["G.G.G", "GGGGG", "GGGG.", ".GG.."],
+	"kite_shield": ["RRRRR", "RYRYR", "RRRRR", ".RRR.", "..R.."],
 }
 
 

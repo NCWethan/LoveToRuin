@@ -79,7 +79,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Gnarly!", "Watch this!", "Ribbit, bro."],
 		"flavor": ["* The skater rolls back and forth.", "* There's a scrape on both of his elbows."],
-		"backdrop": Color(0.3, 0.75, 0.75), "style": "stripes", "exp": 9, "money": 6,
+		"backdrop": Color(0.3, 0.75, 0.75), "style": "skyline", "exp": 9, "money": 6,
 	},
 	"waiting": {
 		"name": "Waiting Ghost", "sprite": "waiting",
@@ -98,7 +98,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Ugh.", "Leave me alone.", "Where IS she?"],
 		"flavor": ["* The ghost checks their phone. Again.", "* Their phone is at 3%. It's been at 3% for years."],
-		"backdrop": Color(0.65, 0.5, 0.9), "style": "grid", "exp": 8, "money": 5,
+		"backdrop": Color(0.65, 0.5, 0.9), "style": "skyline", "exp": 8, "money": 5,
 	},
 
 	# --- PQ Mall ---
@@ -124,7 +124,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Halt!", "Freeze!", "That's a violation!"],
 		"flavor": ["* The Mall Cop polishes his badge.", "* He's guarding the parking lot. From you."],
-		"backdrop": Color(0.3, 0.4, 0.8), "style": "stripes", "exp": 14, "money": 15,
+		"backdrop": Color(0.3, 0.4, 0.8), "style": "skyline", "exp": 14, "money": 15,
 	},
 	"mom": {
 		"name": "Busy Mom", "sprite": "mom",
@@ -143,7 +143,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Don't make me count to three.", "One...", "Two..."],
 		"flavor": ["* The Busy Mom juggles six bags at once.", "* A coupon falls out of her pouch."],
-		"backdrop": Color(0.95, 0.55, 0.7), "style": "bubbles", "exp": 12, "money": 14,
+		"backdrop": Color(0.95, 0.55, 0.7), "style": "skyline", "exp": 12, "money": 14,
 	},
 	"pigeons": {
 		"name": "Pigeon Man", "sprite": "pigeons",
@@ -162,7 +162,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Coo.", "The Geralds are watching.", "Back in my day..."],
 		"flavor": ["* A Gerald lands on the old man's head.", "* It smells like breadcrumbs."],
-		"backdrop": Color(0.7, 0.7, 0.72), "style": "stars", "exp": 10, "money": 9,
+		"backdrop": Color(0.7, 0.7, 0.72), "style": "leaves", "exp": 10, "money": 9,
 	},
 	"teen": {
 		"name": "Teen on Phone", "sprite": "teen",
@@ -181,7 +181,7 @@ const PEOPLE := {
 		],
 		"taunts": ["lol", "brb", "k."],
 		"flavor": ["* The teen types with three tentacles at once.", "* Their phone buzzes. And buzzes."],
-		"backdrop": Color(0.75, 0.5, 0.95), "style": "grid", "exp": 8, "money": 6,
+		"backdrop": Color(0.75, 0.5, 0.95), "style": "skyline", "exp": 8, "money": 6,
 	},
 	"jogger": {
 		"name": "Jogger", "sprite": "jogger",
@@ -200,7 +200,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Keep up!", "Feel the burn!", "Hydrate!"],
 		"flavor": ["* The jogger jogs in place.", "* They're wearing three fitness trackers. On one leg."],
-		"backdrop": Color(0.35, 0.8, 0.95), "style": "stripes", "exp": 11, "money": 8,
+		"backdrop": Color(0.35, 0.8, 0.95), "style": "skyline", "exp": 11, "money": 8,
 	},
 
 	# --- Westview High (at night) ---
@@ -266,7 +266,7 @@ const PEOPLE := {
 		],
 		"taunts": ["Biscuit, no!", "Good boy!", "Sit! ...Not you."],
 		"flavor": ["* Biscuit is wagging.", "* Biscuit is looking at the middle of the field. Then away."],
-		"backdrop": Color(0.4, 0.75, 0.35), "style": "stars", "exp": 10, "money": 8,
+		"backdrop": Color(0.4, 0.75, 0.35), "style": "leaves", "exp": 10, "money": 8,
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---

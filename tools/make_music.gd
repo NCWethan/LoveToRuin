@@ -23,6 +23,89 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# Balboa Park: warm and old-fashioned, a little Spanish guitar in it.
+	# Arpeggios under a slow, singing melody in D minor and F.
+	"balboa": {
+		"bpm": 104,
+		"lead_wave": "triangle",
+		"lead": [
+			"A4 . . . D5 . . . F5 . E5 . D5 . . .",
+			"C5 . . . A4 . . . A#4 . . . A4 . . .",
+			"A4 . . . D5 . . . F5 . G5 . A5 . . .",
+			"G5 . F5 . E5 . . . - - - - - - - -",
+			"F5 . . . A5 . . . G5 . F5 . E5 . . .",
+			"D5 . . . F5 . . . E5 . D5 . C#5 . . .",
+			"D5 . E5 . F5 . D5 . A#4 . A4 . G4 . A4 .",
+			"D4 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"D3 A3 D4 F4 A4 F4 D4 A3 D3 A3 D4 F4 A4 F4 D4 A3",
+			"F3 C4 F4 A4 C5 A4 F4 C4 G3 D4 G4 A#4 D5 A#4 G4 D4",
+			"D3 A3 D4 F4 A4 F4 D4 A3 D3 A3 D4 F4 A4 F4 D4 A3",
+			"C3 G3 C4 E4 G4 E4 C4 G3 A2 E3 A3 C#4 E4 C#4 A3 E3",
+			"F3 C4 F4 A4 C5 A4 F4 C4 F3 C4 F4 A4 C5 A4 F4 C4",
+			"D3 A3 D4 F4 A4 F4 D4 A3 A2 E3 A3 C#4 E4 C#4 A3 E3",
+			"A#2 F3 A#3 D4 F4 D4 A#3 F3 G2 D3 G3 A#3 D4 A#3 G3 D3",
+			"D3 A3 D4 F4 A4 F4 D4 A3 D3 . . . - - - -",
+		],
+		"bass": [
+			"D2 . . . . . . . D2 . . . . . . .",
+			"F2 . . . . . . . G2 . . . . . . .",
+			"D2 . . . . . . . D2 . . . . . . .",
+			"C2 . . . . . . . A1 . . . . . . .",
+			"F2 . . . . . . . F2 . . . . . . .",
+			"D2 . . . . . . . A1 . . . . . . .",
+			"A#1 . . . . . . . G1 . . . . . . .",
+			"D2 . . . . . . . - - - - - - - -",
+		],
+	},
+
+	# The Empty Knight: a march, in A minor, heavy on the snare.
+	"knight": {
+		"bpm": 132,
+		"lead_wave": "saw",
+		"lead": [
+			"A4 . . A4 C5 . . . E5 . . . D5 . C5 .",
+			"B4 . . B4 D5 . . . G5 . . . F5 . E5 .",
+			"A4 . . A4 C5 . . . E5 . . . A5 . G5 .",
+			"F5 . E5 . D5 . C5 . B4 . . . E4 . . .",
+			"C5 . . C5 E5 . . . A5 . . . G5 . F5 .",
+			"D5 . . D5 F5 . . . A5 . . . G5 . E5 .",
+			"F5 . E5 . D5 . C5 . B4 . A4 . G#4 . B4 .",
+			"A4 . . . E4 . . . A4 . . . - - - -",
+		],
+		"harm": [
+			"E4 . . E4 A4 . . . C5 . . . B4 . A4 .",
+			"G4 . . G4 B4 . . . D5 . . . D5 . C5 .",
+			"E4 . . E4 A4 . . . C5 . . . E5 . E5 .",
+			"D5 . C5 . B4 . A4 . G#4 . . . B3 . . .",
+			"A4 . . A4 C5 . . . E5 . . . E5 . D5 .",
+			"A#4 . . A#4 D5 . . . F5 . . . E5 . C5 .",
+			"D5 . C5 . B4 . A4 . G#4 . E4 . E4 . G#4 .",
+			"E4 . . . B3 . . . E4 . . . - - - -",
+		],
+		"bass": [
+			"A2 . A2 . A2 . A2 . A2 . A2 . A2 . A2 .",
+			"G2 . G2 . G2 . G2 . G2 . G2 . G2 . G2 .",
+			"A2 . A2 . A2 . A2 . A2 . A2 . A2 . A2 .",
+			"D2 . . . E2 . . . E2 . . . E2 . . .",
+			"F2 . F2 . F2 . F2 . F2 . F2 . F2 . F2 .",
+			"D2 . D2 . D2 . D2 . D2 . D2 . D2 . D2 .",
+			"D2 . . . E2 . . . E2 . . . E2 . . .",
+			"A2 . . . E2 . . . A2 . . . - - - -",
+		],
+		"drums": [
+			"K - S S K - S - K - S S K S S S",
+			"K - S S K - S - K - S S K S S S",
+			"K - S S K - S - K - S S K S S S",
+			"K - S - K - S - K S S S S S S S",
+			"K - S S K - S - K - S S K S S S",
+			"K - S S K - S - K - S S K S S S",
+			"K - S S K - S - K - S S K S S S",
+			"K - - - S - - - K - - - S S S S",
+		],
+	},
+
 	# Mission Beach: a sunny little surf tune in G, with a twangy lead.
 	"beach": {
 		"bpm": 150,

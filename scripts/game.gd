@@ -604,6 +604,7 @@ var playing_relic: bool = false
 ## Lines to show once Elric is back from the keepsake memories.
 var keepsake_after: Array = []
 var _keepsake_return: Array = []
+var _keepsake_objective: String = ""
 const KEEPSAKE_SCENE := "res://scenes/keepsake.tscn"
 
 
@@ -612,6 +613,8 @@ const KEEPSAKE_SCENE := "res://scenes/keepsake.tscn"
 func play_keepsakes(ids: Array, return_scene: String, spawn: Vector2, after: Array = []) -> void:
 	flags["keepsake_queue"] = ids.duplicate()
 	_keepsake_return = [return_scene, spawn]
+	# (The memories set their own objectives; put back the real one after.)
+	_keepsake_objective = str(flags.get("objective", ""))
 	keepsake_after = after
 	playing_relic = true
 	await change_scene(KEEPSAKE_SCENE)
@@ -634,6 +637,7 @@ func next_keepsake() -> void:
 		return
 	flags.erase("keepsake_queue")
 	playing_relic = false
+	flags["objective"] = _keepsake_objective
 	var back: Array = _keepsake_return if not _keepsake_return.is_empty() else [TITLE_SCENE, null]
 	_keepsake_return = []
 	await change_scene(back[0], back[1])
@@ -776,6 +780,7 @@ const AREA_NAMES := {
 	"res://scenes/hilltop.tscn": "Westview Field",
 	"res://scenes/hop_house.tscn": "Hop's House",
 	"res://scenes/mission_beach.tscn": "Mission Beach",
+	"res://scenes/balboa_park.tscn": "Balboa Park",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

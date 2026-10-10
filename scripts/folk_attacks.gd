@@ -63,6 +63,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"loop_track": return _loop_track(enemy, parent, area, s, step)
 		"come_back": return _come_back(enemy, parent, area, s, step)
 		"near_miss": return _near_miss(enemy, parent, area, s, step)
+		# --- Balboa Park ---
+		"sword_sweep": return _sword_sweep(enemy, parent, area, s, step)
+		"armor_rain": return _armor_rain(enemy, parent, area, s, step)
+		"shield_charge": return _shield_charge(enemy, parent, area, s, step)
 	return -1.0
 
 
@@ -832,3 +836,39 @@ static func _near_miss(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, s
 			x = soul.x - (x - soul.x)
 	Attacks._beam(enemy, parent, area, Vector2(x, area.get_center().y), Vector2.DOWN, 0.4, Color(0.45, 0.85, 1.0))
 	return 0.35
+
+
+# --- The Empty Knight (Balboa Park) -------------------------------------------------
+
+## SWORD SWEEP: the Knight's sword cuts across the box in a wide arc from one top
+## corner: three slashes fanning out, one after another, the last through the SOUL.
+static func _sword_sweep(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var pivot := Vector2(area.position.x if left else area.end.x, area.position.y)
+	var aim := (soul - pivot).angle()
+	for i in 3:
+		var angle := aim + (-0.5 + i * 0.25) * (1.0 if left else -1.0)
+		Attacks._beam(enemy, parent, area, pivot + Vector2.from_angle(angle) * 10.0, Vector2.from_angle(angle), 0.45 + i * 0.22, Color(0.85, 0.88, 0.95))
+	return 1.4
+
+
+## ARMOR RAIN: pieces of armor fall from the rack: helmets and gauntlets, tumbling.
+static func _armor_rain(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := Attacks._aim_x(area, soul, step, 3)
+	var piece := _glyph(enemy, parent, area, Vector2(x, area.position.y + 4), "helmet" if step % 2 == 0 else "gauntlet", 10.0)
+	piece.velocity = Vector2(randf_range(-30, 30), 40)
+	piece.acceleration = Vector2(0, 260)
+	piece.spin = 6.0
+	return 0.33
+
+
+## SHIELD CHARGE: the Knight charges behind its kite shield along your row, plants
+## it, and charges back the other way.
+static func _shield_charge(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var y := clampf(soul.y, area.position.y + 10, area.end.y - 10)
+	var shield := _glyph(enemy, parent, area, Vector2(_side_x(area, left, 8.0), y), "kite_shield", 14.0)
+	shield.delay = 0.5
+	shield.velocity = Vector2(320 if left else -320, 0)
+	shield.acceleration = Vector2(-340 if left else 340, 0)
+	return 1.0

@@ -2317,6 +2317,30 @@ $wildArt = [ordered]@{
         "6...6...6...6...6...6...",
         "6...6...6...6...6...6..."
     )
+    # The Empty Knight (Balboa Park): a polished suit of armor with a dark, empty
+    # visor and a red glow in the breastplate, holding a sword.
+    'empty_knight' = @(
+        "..........GGG...........",
+        ".........GGGGG..........",
+        "........GGGGGGG.........",
+        "........GKKKKKG.........",
+        "........GKFKFKG.........",
+        "........GGGGGGG.........",
+        ".........GgGgG..........",
+        "......GGGGGGGGGGG.......",
+        ".....GGGGGGGGGGGGG...W..",
+        ".....GGGGGFfFGGGGG...W..",
+        ".....GgGGGFcFGGGgG...W..",
+        ".....GgGGGGGGGGGgG...W..",
+        ".....GgGgggggggGgG..AAA.",
+        ".....GG.GGGGGGG.GG...D..",
+        "........GGGgGGG.........",
+        "........GGG.GGG.........",
+        "........GGG.GGG.........",
+        "........GGG.GGG.........",
+        ".......gGGG.GGGg........",
+        ".......ggg...ggg........"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

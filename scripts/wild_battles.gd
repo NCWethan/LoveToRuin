@@ -17,7 +17,7 @@ const CREATURES := {
 		],
 		"taunts": ["*rattle*", "*squeak squeak*", "*CLANK*"],
 		"flavor": ["* The Runaway Cart's wheel wobbles.", "* There's a single coupon in its child seat."],
-		"backdrop": Color(0.75, 0.35, 0.3), "style": "grid", "exp": 6, "money": 5,
+		"backdrop": Color(0.75, 0.35, 0.3), "style": "skyline", "exp": 6, "money": 5,
 	},
 	"receipt": {
 		"name": "Receipt", "sprite": "wild_receipt",
@@ -30,7 +30,7 @@ const CREATURES := {
 		],
 		"taunts": ["SAVE 10%!", "THANK YOU!", "SURVEY!!"],
 		"flavor": ["* The Receipt keeps printing.", "* Take our survey for a chance to win!"],
-		"backdrop": Color(0.8, 0.8, 0.8), "style": "grid", "exp": 5, "money": 4,
+		"backdrop": Color(0.8, 0.8, 0.8), "style": "skyline", "exp": 5, "money": 4,
 	},
 	"balloon": {
 		"name": "Lost Balloon", "sprite": "wild_balloon",
@@ -43,7 +43,7 @@ const CREATURES := {
 		],
 		"taunts": ["...", "*squeak*", "(bob)"],
 		"flavor": ["* The Lost Balloon bobs sadly.", "* Its string trails behind it."],
-		"backdrop": Color(0.9, 0.4, 0.5), "style": "bubbles", "exp": 5, "money": 2,
+		"backdrop": Color(0.9, 0.4, 0.5), "style": "skyline", "exp": 5, "money": 2,
 	},
 	"goose": {
 		"name": "Goose", "sprite": "wild_goose",
@@ -56,7 +56,7 @@ const CREATURES := {
 		],
 		"taunts": ["HONK", "HONK!!", "hiss"],
 		"flavor": ["* The Goose spreads its wings.", "* The Goose is looking directly at you."],
-		"backdrop": Color(0.4, 0.65, 0.35), "style": "rings", "exp": 8, "money": 3,
+		"backdrop": Color(0.4, 0.65, 0.35), "style": "leaves", "exp": 8, "money": 3,
 	},
 	"sprinkler": {
 		"name": "Sprinkler", "sprite": "wild_sprinkler",
@@ -69,7 +69,7 @@ const CREATURES := {
 		],
 		"taunts": ["tick tick tick", "*fsssh*", "tick tick"],
 		"flavor": ["* The Sprinkler ticks around.", "* Everything nearby is soaked."],
-		"backdrop": Color(0.3, 0.6, 0.8), "style": "bubbles", "exp": 6, "money": 2,
+		"backdrop": Color(0.3, 0.6, 0.8), "style": "leaves", "exp": 6, "money": 2,
 	},
 	"gnome": {
 		"name": "Garden Gnome", "sprite": "wild_gnome",
@@ -82,7 +82,7 @@ const CREATURES := {
 		],
 		"taunts": ["...", "(stares)", "(doesn't move)"],
 		"flavor": ["* The Garden Gnome hasn't blinked.", "* Its tiny shovel is very sharp."],
-		"backdrop": Color(0.35, 0.55, 0.3), "style": "stars", "exp": 7, "money": 4,
+		"backdrop": Color(0.35, 0.55, 0.3), "style": "leaves", "exp": 7, "money": 4,
 	},
 	"flamingo": {
 		"name": "Lawn Flamingo", "sprite": "wild_flamingo",
@@ -95,7 +95,7 @@ const CREATURES := {
 		],
 		"taunts": ["*clack*", "Fabulous.", "*wobble*"],
 		"flavor": ["* The Lawn Flamingo balances perfectly.", "* It's very, very pink."],
-		"backdrop": Color(0.95, 0.5, 0.7), "style": "spotlights", "exp": 6, "money": 4,
+		"backdrop": Color(0.95, 0.5, 0.7), "style": "leaves", "exp": 6, "money": 4,
 	},
 	"seagull": {
 		"name": "Hungry Seagull", "sprite": "wild_seagull",
@@ -108,7 +108,7 @@ const CREATURES := {
 		],
 		"taunts": ["MINE", "MINE!", "Fry?"],
 		"flavor": ["* The Hungry Seagull eyes your pockets.", "* It smells like the beach."],
-		"backdrop": Color(0.45, 0.7, 0.9), "style": "rings", "exp": 6, "money": 3,
+		"backdrop": Color(0.45, 0.7, 0.9), "style": "waves", "exp": 6, "money": 3,
 	},
 	"squirrel": {
 		"name": "Squirrel", "sprite": "wild_squirrel",
@@ -121,7 +121,7 @@ const CREATURES := {
 		],
 		"taunts": ["chk chk!", "!!", "chk?"],
 		"flavor": ["* The Squirrel twitches its tail.", "* It has an acorn in each cheek."],
-		"backdrop": Color(0.6, 0.45, 0.25), "style": "stars", "exp": 5, "money": 2,
+		"backdrop": Color(0.6, 0.45, 0.25), "style": "leaves", "exp": 5, "money": 2,
 	},
 	"bag": {
 		"name": "Plastic Bag", "sprite": "wild_bag",
@@ -146,6 +146,7 @@ const ZONES := {
 	"res://scenes/hilltop.tscn": ["goose", "sprinkler", "balloon"],
 	"res://scenes/hop_house.tscn": ["gnome", "flamingo", "bag"],
 	"res://scenes/mission_beach.tscn": ["seagull", "balloon", "bag"],
+	"res://scenes/balboa_park.tscn": ["squirrel", "balloon", "goose"],
 }
 
 

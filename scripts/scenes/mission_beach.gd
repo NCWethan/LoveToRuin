@@ -29,6 +29,8 @@ var crayola: Character
 var wethan: Character
 var _decor: Node2D
 var _font: Font
+## A fight is starting: don't start it again during the fade.
+var _engaged: bool = false
 
 
 func _ready() -> void:
@@ -194,7 +196,7 @@ func _start() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if is_blocked():
+	if is_blocked() or _engaged:
 		return
 	check_random_encounter(SCENE)
 	# Going with Hop: get close, and they're waiting for you.
@@ -230,10 +232,17 @@ func _arrival() -> void:
 
 
 func _bus_stop() -> void:
-	var go := await Game.dialogue.ask("* (The bus back to the PQ Mall?)", ["Ride", "Not now"])
+	var options := ["PQ Mall", "Not now"]
+	if flag("mb_fragment"):
+		options = ["PQ Mall", "Balboa Park", "Not now"]
+	var go := await Game.dialogue.ask("* (A bus stop. Where to?)", options)
+	if go == options.size() - 1:
+		return
+	Game.play_sfx("door")
 	if go == 0:
-		Game.play_sfx("door")
 		await Game.change_scene(MALL_SCENE, Vector2(640, 545))
+	else:
+		await Game.change_scene("res://scenes/balboa_park.tscn")
 
 
 func _coaster_gate() -> void:
@@ -295,7 +304,7 @@ func _after_dipper(spared: bool) -> void:
 		"* (The ocean. A boy in a fedora teaching someone\n*  to bodysurf. Badly.)",
 		"* (Laughing so hard you swallow half the Pacific.)",
 	]
-	Game.set_objective("4 of 12 FRAGMENTS. (The rest is still being written.)")
+	Game.set_objective("4 of 12. (Nassan's map: Balboa Park. Take the bus.)")
 	await Game.dialogue.say(["* (The fragment is warm in your hand.\n*  You close your eyes.)"])
 	await Game.play_keepsakes([4], SCENE, player.position, after)
 
@@ -316,8 +325,9 @@ func _give_card() -> void:
 
 ## Crayola and N.C. Wethan are waiting on the sand.
 func _confront() -> void:
-	if not crayola or not is_instance_valid(crayola):
+	if not crayola or not is_instance_valid(crayola) or _engaged:
 		return
+	_engaged = true
 	crayola.face(player.position - crayola.position)
 	await Game.dialogue.say([
 		{"who": "Crayola", "text": "...Elric? Is that... you?", "mood": "shocked"},

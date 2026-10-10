@@ -107,7 +107,7 @@ On every path, the fragments play their memories in the same order (by how many 
 | 2 | Westview High **(built)** | Wally Wolverine | — | Sneaking into Westview's gym to sleep. The trophy case. Relic looks at their own reflection for a long time. |
 | 3 | Westview Field **(built)** | Hopkuna | — | A boy in a fedora with two orders of curly fries: *"You look like you've never had these. Tragic."* The first day of the summer. |
 | 4 | **Mission Beach** boardwalk **(built)** | **The Dipper**, the old wooden roller coaster | **Crayola & N.C. Wethan** (they swim here) | Relic's first time seeing the ocean. Hop teaches them to bodysurf, badly. *"Everything's so BIG here."* |
-| 5 | **Balboa Park**, the museum | **The Empty Knight**, a suit of armor from an exhibit | **Big Joe** | On the museum steps at night, Hop tells Relic about the voice inside him. Relic isn't scared: *"Everybody's got something in them they didn't ask for."* |
+| 5 | **Balboa Park**, the museum **(built)** | **The Empty Knight**, a suit of armor from an exhibit | **Big Joe** | On the museum steps at night, Hop tells Relic about the voice inside him. Relic isn't scared: *"Everybody's got something in them they didn't ask for."* |
 | 6 | **Old Town**, a haunted adobe house | **The Hostess**, a ghost still setting the table for guests | **Nat** | Relic holds an old man's hand on a park bench. A grief lifts out of him and into a pigeon feather. He looks at the pigeons and laughs for the first time in a year. (This is Pigeon Man. His wife was Geraldine.) |
 | 7 | **Downtown**, the ballpark | **The Big Screen**, the scoreboard | **Supreme** | Hop wakes up screaming again. Relic takes his nightmares into the only thing in their pocket: a Jack in the Box curly-fry token. |
 | 8 | **The Harbor**, the old aircraft carrier | **Flight Deck**, a jet on the carrier | **Agent & Eggo** | *"If you ever want him gone, I could try."* Hop says no. He's scared of who he'd be without the voice. |
@@ -389,5 +389,6 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
 4. **Relic's lost collection:** the side quest, and its first few keepsakes.
-5. **Balboa Park** (fragment 5): the Empty Knight, Big Joe, and the missing page of Nat's book.
-6. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+5. ~~Balboa Park~~ **(built)**: the Empty Knight, Big Joe, and the missing page.
+6. **Old Town** (fragment 6): the Hostess, Nat, and the reveal that Relic's collection was the townsfolk's pain.
+7. Then one fragment area at a time, in the order above, ending at Sabre Springs.

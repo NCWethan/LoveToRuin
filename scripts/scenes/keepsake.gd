@@ -14,6 +14,8 @@ extends Area
 ##      and where the name "Relic" came from.
 ##   4  Mission Beach: the first time Relic sees the ocean. Hop teaches them to
 ##      bodysurf, badly.
+##   5  Balboa Park, the museum steps at night: Hop tells Relic about the voice
+##      inside him. "Everybody's got something in them they didn't ask for."
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -58,6 +60,7 @@ func _spawn() -> Vector2:
 		2: return Vector2(2 * T + 10, 14 * T + 10)
 		3: return Vector2(8 * T, 11 * T + 10)
 		4: return Vector2(10 * T, 5 * T + 10)
+		5: return Vector2(4 * T, 14 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -68,6 +71,7 @@ func build_map() -> void:
 		2: _build_gym()
 		3: _build_field()
 		4: _build_ocean()
+		5: _build_steps()
 		_: _build_road()
 
 
@@ -94,6 +98,20 @@ func _build_gym() -> void:
 	room.fill(0, 14, 1, 1, Room.DOOR)
 	room.fill(5, 6, 3, 1, Room.PROP)     # the trophy case
 	room.fill(22, 15, 5, 2, Room.PROP)   # the mats
+
+
+## Balboa Park after closing: the Prado, and the museum steps.
+func _build_steps() -> void:
+	room.setup(34, 24, Room.GRASS)
+	room.fill(0, 0, 34, 1, Room.TREE)
+	room.fill(0, 23, 34, 1, Room.TREE)
+	room.fill(9, 2, 16, 1, Room.ROOF)
+	room.fill(9, 3, 16, 6, Room.STUCCO)
+	room.fill(16, 8, 2, 1, Room.DOOR)
+	room.fill(12, 9, 10, 3, Room.SIDEWALK)   # the steps
+	room.fill(0, 12, 34, 4, Room.PATIO)
+	for spot in [Vector2i(3, 5), Vector2i(29, 4), Vector2i(5, 19), Vector2i(27, 20)]:
+		room.set_tile(spot.x, spot.y, Room.TREE)
 
 
 ## Mission Beach, one afternoon that summer.
@@ -145,6 +163,12 @@ func _draw_decor() -> void:
 			# A backpack, if Relic has set it down.
 			if _flags.get("bag_down", false):
 				_decor.draw_rect(Rect2(21 * T + 6, 16 * T, 10, 12), Color8(70, 110, 70))
+		5:
+			# The steps (lines across them), and the stars.
+			for k in 3:
+				_decor.draw_line(Vector2(12 * T, (9 + k) * T), Vector2(22 * T, (9 + k) * T), Color8(150, 150, 142), 2.0)
+			for k in 30:
+				_decor.draw_rect(Rect2(Vector2((k * 113) % 680, (k * 47) % 40), Vector2(2, 2)), Color(1, 1, 1, 0.6))
 		4:
 			# Two towels on the sand, and Relic's backpack on one of them.
 			_decor.draw_rect(Rect2(14 * T, 7 * T, 2 * T, 3 * T), Color8(230, 90, 90))
@@ -211,6 +235,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 1 and player.position.x > 39 * T and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_road)
+	# Up to the steps, where Hop is sitting.
+	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_steps)
 	# Down to the water.
 	if memory == 4 and hop != null and player.position.y > 13 * T and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -226,6 +254,7 @@ func _start() -> void:
 		2: await run_cutscene(_intro_gym)
 		3: await run_cutscene(_intro_field)
 		4: await run_cutscene(_intro_ocean)
+		5: await run_cutscene(_intro_steps)
 
 
 func _intro_road() -> void:
@@ -385,6 +414,41 @@ func _end_ocean() -> void:
 		"* (For one whole afternoon, the backpack\n*  sits on the towel, and you forget about it.)",
 	])
 	await _finish(["* We laughed. We forgot what we were carrying.\n* For one day."])
+
+
+# --- 5: The museum steps ------------------------------------------------------------
+
+func _intro_steps() -> void:
+	var night := CanvasModulate.new()
+	night.color = Color(0.45, 0.6, 0.55)
+	add_child(night)
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(17 * T, 10 * T + 10))
+	hop.face(Vector2.DOWN)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (Balboa Park, after closing. The museum steps\n*  are still warm from the sun.)",
+		"* (Hop has been quiet all night. That isn't like him.)",
+	])
+	Game.set_objective("(Sit with Hop on the steps.)")
+
+
+func _end_steps() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "Can I tell you something weird?\nLike. Actually weird.", "mood": "sad"},
+		{"who": "Relic", "choices": ["...Yeah.", "(Sit down next to him.)"]},
+		{"who": "Hop", "text": "There's... something inside me. A voice.\nIt's been there my whole life.", "mood": "sad"},
+		{"who": "Hop", "text": "It doesn't talk much. But when it does,\nit likes bad things. Fire. People getting hurt.", "mood": "sad"},
+		{"who": "Hop", "text": "I've never told anyone. Not my dad.\nNot anybody.", "mood": "sad"},
+		"* (He's waiting for you to get up and leave.)",
+		{"who": "Relic", "text": "Everybody's got something in them\nthey didn't ask for.", "mood": ""},
+		{"who": "Hop", "text": "...That's it? You're not freaked out?", "mood": "shocked"},
+		{"who": "Relic", "text": "I carry a backpack full of other people's junk.\nI'm not one to judge.", "mood": "smug"},
+		"* (Hop laughs. It's the first time all night.)",
+		{"who": "Hop", "text": "...Thanks, Relic.", "mood": "happy"},
+	])
+	await _finish(["* He told us everything.\n* We kept every word."])
 
 
 # --- The end of a memory ---------------------------------------------------------

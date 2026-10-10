@@ -31,7 +31,7 @@ static func _dipper() -> BattleData:
 	data.id = "dipper"
 	data.music = "dipper"
 	data.backdrop = Color(0.75, 0.5, 0.3)
-	data.backdrop_style = "stripes"
+	data.backdrop_style = "waves"
 	data.intro = ["* CLACK. CLACK. CLACK.\n* The Dipper rolls up to meet you!"]
 	var e := Enemy.new()
 	e.name = "The Dipper"
@@ -71,7 +71,7 @@ static func _corps(e: Enemy, intro: String) -> BattleData:
 	data.music = ""
 	data.silent = true
 	data.backdrop = Color(0.3, 0.45, 0.6)
-	data.backdrop_style = "bubbles"
+	data.backdrop_style = "waves"
 	data.intro = [intro]
 	data.locked_buttons.assign(["MERCY"])
 	data.locked_lines.assign(RELIC_LINES)
