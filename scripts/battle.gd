@@ -2041,7 +2041,8 @@ func _flee_offset(index: int) -> float:
 const TENT_LINES := [
 	"* ...",
 	"* We were here, too.",
-	"* Three of us.",
+	"* Two of us.",
+	"* There were two, when there were meant to be three.",
 	"* We remember.",
 ]
 const TENT_SCREAM := "DID YOU THINK WE WOULD FORGET?"
@@ -2072,9 +2073,9 @@ var _locked_tries: int = 0
 var _frozen_at: float = 0.0
 ## Relic's color (the tent's words are theirs).
 const RELIC_GREEN := Color(0.45, 0.95, 0.55)
-## How open the three pairs of eyes are (0 to 1). They open with "Three of us."
+## How open the two pairs of eyes are (0 to 1). They open with "Two of us."
 ## and stay open until the screen goes black.
-var _three_eyes: float = 0.0
+var _two_eyes: float = 0.0
 
 ## The jumpscare: two glowing red eyes in the dark.
 ## The eyes, in their own pixels: each one an oval this many pixels across and
@@ -2091,7 +2092,7 @@ func _tent_silence() -> void:
 	state = State.EVENT
 	_tent_phase = "silence"
 	_tent_time = 0.0
-	_three_eyes = 0.0
+	_two_eyes = 0.0
 
 
 func _process_tent(delta: float) -> void:
@@ -2134,8 +2135,8 @@ func _draw_tent() -> void:
 	if _tent_phase == "scream":
 		# Everything darkens, and the words appear, slowly, one by one. Silently.
 		_overlay.draw_rect(Rect2(0, 0, 640, 480), Color(0, 0, 0, clampf(_tent_time * 0.6, 0.0, 0.85)))
-		# The three pairs of eyes are still there, watching, in the dark.
-		_draw_three_of_us(_three_eyes)
+		# The two pairs of eyes are still there, watching, in the dark.
+		_draw_two_of_us(_two_eyes)
 		var size := 28
 		var words := TENT_SCREAM.split(" ")
 		var gap := _font.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
@@ -2151,11 +2152,11 @@ func _draw_tent() -> void:
 		if _tent_phase == "wind":
 			_draw_jumpscare(_tent_time)
 	elif _tent_phase == "silence":
-		# They open as "Three of us." types out, and stay open after it.
-		if _text.begins_with("* Three of us"):
-			_three_eyes = maxf(_three_eyes, clampf(_typed / maxf(_text.length(), 1.0), 0.0, 1.0))
-		if _three_eyes > 0.0:
-			_draw_three_of_us(_three_eyes)
+		# They open as "Two of us." types out, and stay open after it.
+		if _text.begins_with("* Two of us"):
+			_two_eyes = maxf(_two_eyes, clampf(_typed / maxf(_text.length(), 1.0), 0.0, 1.0))
+		if _two_eyes > 0.0:
+			_draw_two_of_us(_two_eyes)
 
 
 ## The end, over black: two glowing green eyes (Relic's), huge, right in the
@@ -2186,13 +2187,13 @@ func _start_wind(length: float = TENT_WIND_TIME, volume: float = 0.35) -> void:
 	fade.tween_callback(player.stop)
 
 
-## "Three of us.": three pairs of eyes open in the dark above the text. In front,
-## green: Relic. Behind, red (Hopkuna) and purple (Elric, the color of their skin).
+## "Two of us.": two pairs of eyes open in the dark above the text. In front,
+## green: Relic. Behind, red: Hopkuna. (The two who ended up in the fragments.
+## The tent was meant for three: the third, Hop, was left behind.)
 ## `shown` is how open they are (0 to 1).
-func _draw_three_of_us(shown: float) -> void:
-	_draw_eyes(Vector2(290, 60), 4.5, 0.55 * shown)
-	_draw_eyes(Vector2(440, 60), 4.5, 0.55 * shown, Color(0.85, 0.6, 1.0), Color(0.45, 0.15, 0.75))
-	_draw_eyes(Vector2(365, 82), 6.0, shown, Color(0.5, 1.0, 0.6), Color(0.05, 0.55, 0.2))
+func _draw_two_of_us(shown: float) -> void:
+	_draw_eyes(Vector2(420, 58), 4.5, 0.55 * shown)
+	_draw_eyes(Vector2(320, 82), 6.0, shown, Color(0.5, 1.0, 0.6), Color(0.05, 0.55, 0.2))
 
 
 ## Two tall oval eyes, glowing, made of chunky square pixels (`cell` screen pixels
