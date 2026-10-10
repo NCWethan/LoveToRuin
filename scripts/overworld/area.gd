@@ -35,6 +35,8 @@ func setup_area(default_spawn: Vector2) -> void:
 	world = Node2D.new()
 	world.y_sort_enabled = true
 	add_child(world)
+	# (Relic's lost collection, lying around, once it's open. See collection.gd.)
+	_add_collection.call_deferred(default_spawn)
 
 	player = Player.new()
 	player.position = Game.spawn_position if Game.spawn_position != null else default_spawn
@@ -310,15 +312,22 @@ func talk_to_person(id: String, talk: Dictionary, scene_path: String) -> void:
 	await Game.dialogue.say(lines)
 	var options: Array = talk["options"].duplicate()
 	# (The feather from the Old Town bench, if Elric has it.)
-	var feather: bool = id == "pigeons" and flag("has_feather") and not flag("feather_returned") and not Game.on_genocide_route()
+	var feather: bool = id == "pigeons" and flag("has_feather") and not flag("feather_returned") and not flag("feather_kept") and not Game.on_genocide_route()
 	if feather:
 		options.append("(The feather.)")
+	# (Something else from Relic's collection that's theirs.)
+	var item := Collection.carried_for(id)
+	if item != "":
+		options.append("(The %s.)" % str(Collection.ITEMS[item]["name"]).to_lower())
 	options.append("Challenge")
 	var choice := await Game.dialogue.ask("* (What do you say?)", options)
 	if choice == options.size() - 1:
 		await challenge(id, scene_path)
 		return
-	if feather and choice == options.size() - 2:
+	if item != "" and choice == options.size() - 2:
+		await _return_item(item)
+		return
+	if feather and choice == talk["options"].size():
 		await _return_feather()
 		return
 	await Game.dialogue.say([Townsfolk.line(person, talk["answers"][choice])])
@@ -335,6 +344,8 @@ func _return_feather() -> void:
 	])
 	var give := await Game.dialogue.ask("* (It's heavy. It's his. Give it back?)", ["Give it back", "Keep carrying it"])
 	if give != 0:
+		Game.flags["feather_kept"] = true
+		Game.update_stats()
 		await Game.dialogue.say([
 			"* (You put it back in your pocket.)",
 			"* (Maybe some things are better carried by someone\n*  else. Relic thought so.)",
@@ -369,6 +380,86 @@ func _return_feather() -> void:
 	await Game.dialogue.say(["* (Your BOND went up by 5.)"])
 	if Game.objective().contains("Pigeon Man"):
 		Game.set_objective("6 of 12. Next: Downtown. (Take the bus.)")
+
+
+## Something from Relic's lost collection, back to whoever it belongs to (see
+## collection.gd). Or not: Elric can keep carrying it, like Relic did.
+func _return_item(id: String) -> void:
+	var item: Dictionary = Collection.ITEMS[id]
+	var give := await Game.dialogue.ask("* (You hold out the %s.\n*  It's heavy. It's theirs. Give it back?)" % str(item["name"]).to_lower(), ["Give it back", "Keep carrying it"])
+	var kept: Array = Game.flags.get("mementos", [])
+	if give != 0:
+		Game.flags["kc_" + id] = "kept"
+		Game.update_stats()
+		await Game.dialogue.say([
+			"* (You put it back in your pocket.)",
+			"* (You'll carry it for them. Like Relic did.\n*  It's heavy. It'll stay heavy.)",
+			"* (Your max HP went down by 2.)",
+		])
+		return
+	Game.flags["kc_" + id] = "returned"
+	kept.erase(item["name"])
+	Game.flags["mementos"] = kept
+	var lines: Array = item["back"].duplicate()
+	if Game.walking_alone():
+		lines.append("* (You stay with them for a while. Nobody says much.)")
+	else:
+		lines.append("* (You and %s stay with them for a while.\n*  Nobody says much. It helps anyway.)" % DialogueBox.display_name(Game.partner()))
+	await Game.dialogue.say(lines)
+	Game.bond += 3
+	Game.update_stats()
+	Game.play_sfx("heal")
+	await Game.dialogue.say(["* (Your BOND went up by 3.)"])
+
+
+## Relic's lost collection: the things lying around in this area, glinting green.
+func _add_collection(entry: Vector2) -> void:
+	var path := scene_file_path
+	for id in Collection.waiting_in(path):
+		var at: Vector2 = entry + Collection.ITEMS[id]["offset"]
+		var glint := Node2D.new()
+		glint.position = at
+		var t0 := randf() * 4.0
+		glint.draw.connect(func() -> void:
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 300.0 + t0)
+			glint.draw_circle(Vector2.ZERO, 9.0 + pulse * 4.0, Color(0.45, 0.95, 0.55, 0.25))
+			glint.draw_circle(Vector2.ZERO, 3.5, Color(0.7, 1.0, 0.75, 0.6 + 0.4 * pulse))
+			glint.draw_line(Vector2(-6, 0), Vector2(6, 0), Color(1, 1, 1, 0.5 * pulse), 1.0)
+			glint.draw_line(Vector2(0, -6), Vector2(0, 6), Color(1, 1, 1, 0.5 * pulse), 1.0))
+		glint.set_process(true)
+		var redraw := Timer.new()
+		redraw.wait_time = 0.05
+		redraw.autostart = true
+		redraw.timeout.connect(glint.queue_redraw)
+		glint.add_child(redraw)
+		world.add_child(glint)
+		var spot := Hotspot.create(at, func() -> void: await _pick_up(id, glint))
+		world.add_child(spot)
+
+
+func _pick_up(id: String, glint: Node2D) -> void:
+	if Collection.state(id) != "":
+		return
+	var item: Dictionary = Collection.ITEMS[id]
+	Game.flags["kc_" + id] = "found"
+	if is_instance_valid(glint):
+		glint.queue_free()
+	var kept: Array = Game.flags.get("mementos", [])
+	if not item["name"] in kept:
+		kept.append(item["name"])
+	Game.flags["mementos"] = kept
+	Game.play_sfx("item")
+	var lines: Array = item["find"].duplicate()
+	if Game.on_genocide_route():
+		lines.append({"who": "Relic", "tag": "", "face": false, "text": "* Ours.\n* We're collecting again."})
+	else:
+		lines.append("* (It's heavy. Way too heavy for what it is.)")
+		if not flag("kc_explained"):
+			Game.flags["kc_explained"] = true
+			lines.append("* (Relic's collection. Every piece of it is somebody's\n*  pain, waiting for them to come back for it.)")
+		var owner_name: String = Townsfolk.profile(item["owner"])["name"]
+		lines.append("* (You think it might belong to... %s?)" % owner_name)
+	await Game.dialogue.say(lines)
 
 
 ## Challenges someone (not in the Corps) to a fight.

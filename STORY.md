@@ -397,5 +397,5 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 10. ~~The burned hills~~ **(built)**: Ember, Ronin, and the tent memory.
 11. ~~The junkyard~~ **(built)**: Scrap Heap, Sansworth's van, and Nassan's confession.
 12. ~~Hop's house, the bunker, Vons, Sabre Springs~~ **(built)**: fragment 11, the last of the Corps, the last keepsake, the final fights, and all six endings.
-13. ~~The keepsakes come home~~ **(built, at the PQ Mall)**. **Still to build:** the full lost-collection side quest, and the endgame epilogue lines for every townsperson.
+13. ~~The keepsakes come home~~ **(built, at the PQ Mall)**. Relic's lost collection and the epilogue for every townsperson are **(built)** too.
 14. Then polish, in the order above, ending at Sabre Springs.

@@ -315,6 +315,9 @@ func update_stats() -> void:
 	for member in party:
 		var base: Array = BASE_STATS.get(member.id, [member.max_hp, member.attack])
 		var new_max: int = base[0] + HP_PER_LV * (lv() - 1) + HP_PER_BOND_LV * (bond_level() - 1)
+		# Every piece of Relic's collection Elric keeps carrying: a little heavier.
+		if member.id == "Elric":
+			new_max = maxi(new_max - 2 * Collection.kept_count(), 10)
 		var attack: int = base[1] + ATTACK_PER_LV * (lv() - 1) + ATTACK_PER_BOND_LV * (bond_level() - 1)
 		var defense := 0
 		for item in worn_by(member.name).values():

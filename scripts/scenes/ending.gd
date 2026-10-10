@@ -162,6 +162,72 @@ func _build() -> void:
 			_title_color = Color(0.7, 0.7, 0.75)
 
 
+## What became of everyone in town, by what Elric did: [usually, if Elric gave
+## back what Relic was carrying for them]. (Gone, if Elric killed them; and a line
+## of their own if Elric kept their keepsake instead.)
+const TOWN := {
+	"coach": ["Coach Ramirez still yells. Less, lately.", "Coach Ramirez found his keys. All of them. He has one key ring now, and he never loses it."],
+	"janitor": ["The Janitor still finds raccoons in the dumpsters. He's named all of them.", ""],
+	"skater": ["The Skater finally landed the kickflip. Nobody saw. He knows.", ""],
+	"waiting": ["The Waiting Ghost is still at the stop, waiting for a ride.", "The bus stop at Mt. Carmel is empty now. Someone finally went home."],
+	"mallcop": ["The Mall Cop still patrols the lot. He waves at everyone.", ""],
+	"mom": ["The Busy Mom is still busy. She stops for coffee now, though.", ""],
+	"teen": ["The Teen texted their old friend back. They talk every day.", ""],
+	"jogger": ["The Jogger runs the same loop every morning. Faster, lately.", ""],
+	"nightjanitor": ["The Night Janitor still cleans Westview's halls. They end now.", ""],
+	"guard": ["The Crossing Guard still holds up the sign. Cars still stop.", ""],
+	"dogwalker": ["The Dog Walker walks six dogs on Westview Field.", "The Dog Walker walks six dogs. And on Sundays, she visits Peanut's tree."],
+	"junkdealer": ["The Junk Dealer still talks about the taco fight.", ""],
+	"firefighter": ["The Firefighter still plants a tree every weekend.", "The Firefighter planted a tree for Reyes. It's the tallest one on the hill."],
+	"ranger": ["The Park Ranger finished his tree count. He counted Doris twice.", ""],
+	"hiker": ["The Hiker went up the trail eleven times yesterday.", ""],
+	"birder": ["The Birdwatcher saw the falcon. Finally. Six years.", ""],
+	"sailor": ["The Old Sailor still tells the squid story.", "The Old Sailor tells a new story on the tours now. A true one, about the Mary Ellen."],
+	"tourist": ["The Tourist went home with 4,000 photos of one seal.", "The Tourist went home with one photo: the ocean, for Grandma."],
+	"pelican": ["The Pelican's fish business is still terrible. Lunch is still great.", ""],
+	"hotdog": ["The Hot Dog Vendor got a tip jar. It's always full.", ""],
+	"statue": ["The Living Statue broke his record. Ten hours.", "The Living Statue plays chess in the plaza now, every day. He is very, very good."],
+	"superfan": ["The Superfan never misses a game. They lost again.", "The Superfan sits in Section 112. He saves the seat next to him."],
+	"rosa": ["Doña Rosa still makes the best tortillas in Old Town.", "Doña Rosa called Texas. She talks to Lucía every Sunday now."],
+	"cactus": ["The Mariachi Cactus learned a fifth song. It's the first song, slower.", ""],
+	"guide": ["The Tour Guide still hasn't seen a ghost. He's fine with that.", ""],
+	"student": ["The Student passed the test.", ""],
+}
+
+
+## The town, three to a page.
+func _town_pages() -> Array:
+	var entries: Array = []
+	for id in TOWN:
+		var item := ""
+		for key in Collection.ITEMS:
+			if Collection.ITEMS[key]["owner"] == id:
+				item = key
+		var line: String = TOWN[id][0]
+		if Townsfolk.is_gone(id):
+			line = "%s isn't around anymore." % Townsfolk.profile(id)["name"]
+		elif item != "" and Collection.state(item) == "returned" and TOWN[id][1] != "":
+			line = TOWN[id][1]
+		elif item != "" and Collection.state(item) == "kept":
+			line += " (Elric still carries something of theirs.)"
+		entries.append(line)
+	var pages: Array = []
+	for i in range(0, entries.size(), 3):
+		var chunk: Array = []
+		for line in entries.slice(i, i + 3):
+			# (Long lines, wrapped in two.)
+			var text: String = line
+			if text.length() > 52:
+				var cut: int = text.rfind(" ", 52)
+				chunk.append(text.substr(0, cut))
+				chunk.append(text.substr(cut + 1))
+			else:
+				chunk.append(line)
+			chunk.append("")
+		pages.append(_page_of(chunk))
+	return pages
+
+
 ## Where everyone is now (like a phone call): a line for each of the Corps, and for
 ## the townsfolk Elric helped.
 func _epilogue() -> Array:
@@ -173,6 +239,7 @@ func _epilogue() -> Array:
 	lines.append(_page_of(["Supreme updated the odds. 100%.", "He rounded up." if home else "He's not sure he believes them."]))
 	lines.append(_page_of(["Nat finally read the last page.", "He says it ended well." if home else "He won't say how it ended."]))
 	lines.append(_page_of(["Sansworth drives everyone everywhere.", "He still doesn't know which key it is."]))
+	lines.append_array(_town_pages())
 	if Game.flags.get("feather_returned", false):
 		lines.append(_page_of(["\"Some kid gave me back the worst year of my life.", "Funny thing. I'm glad they did.\"", "- the man who feeds the pigeons"]))
 	if Game.flags.get("ot_dinner_done", false) and Game.flags.get("ot_candles_out", false) == false:

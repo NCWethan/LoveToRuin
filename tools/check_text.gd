@@ -19,7 +19,9 @@ const FONT_SIZE := 16
 ## box is about 380 across; item descriptions are narration (CHECK, in the bag);
 ## the opening story and Rock Paper Scissors use the whole screen.
 const NARROW_FILES := {"res://scripts/shops.gd": 372.0, "res://scripts/ui/shop_menu.gd": 372.0,
-	"res://scripts/items.gd": NARRATION_WIDTH, "res://scripts/scenes/intro.gd": 600.0, "res://scripts/ui/rps_game.gd": 600.0}
+	"res://scripts/items.gd": NARRATION_WIDTH, "res://scripts/scenes/intro.gd": 600.0, "res://scripts/ui/rps_game.gd": 600.0,
+	# (The ending screen wraps its own long lines.)
+	"res://scripts/scenes/ending.gd": 1200.0}
 
 
 func _initialize() -> void:

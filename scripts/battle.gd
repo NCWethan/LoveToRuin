@@ -351,8 +351,6 @@ func _start_player_turn() -> void:
 	# BOND: Bound by Our New Determination. Everyone's hands on Elric's shoulders.
 	if _bond_pending:
 		_bond_pending = false
-		for m in party:
-			m.hp = m.max_hp
 		for enemy in _active_enemies():
 			if enemy.mercy_per_call > 0:
 				enemy.mercy = mini(enemy.mercy + 25, 100)
@@ -2071,7 +2069,9 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 	if member.hp == 0 and _data.bond_reveal and not _bond_revealed and member.name == "Elric":
 		_bond_revealed = true
 		_bond_pending = true
-		member.hp = 1
+		# (Everyone, healed, right now: twelve hands on your shoulders.)
+		for m in party:
+			m.hp = m.max_hp
 		Game.play_sfx("heal", 0.8)
 		_add_popup("BOND", BOX_CENTER + Vector2(0, -160), Color(1.0, 0.85, 0.3), 44, true)
 	member.shake = 0.4
