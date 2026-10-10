@@ -72,7 +72,7 @@ static func _duel(genocide: bool) -> BattleData:
 	data.backdrop_style = "banners"
 	var e := Enemy.new()
 	e.name = "Big Joe"
-	e.max_hp = 230 if genocide else 200
+	e.max_hp = CorpsAttacks.boss_hp(230 if genocide else 200)
 	e.hp = e.max_hp
 	e.attack = 7 if genocide else 6
 	e.defense = 2

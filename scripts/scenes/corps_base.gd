@@ -528,7 +528,7 @@ func _couch() -> void:
 				"* (\"- H\")",
 				"* (He took nothing. Not even his hat.)",
 			])
-			Game.set_objective("Hop's gone. (To be continued.)")
+			Game.set_objective("Find Hop. (Torrey Pines? Take the bus.)")
 			return
 		await Game.dialogue.say(["* (The couch. The blanket is still folded.\n*  Nobody's sat on it since.)"])
 		return

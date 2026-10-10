@@ -42,6 +42,9 @@ var watcher: String = ""
 ## Someone on your side who reads the enemy's next attack out loud at the start of
 ## every turn (Supreme, at the Big Screen). The attack is locked in.
 var announcer: String = ""
+## Out in the open sky (the Glider): the box drifts on the wind during enemy
+## turns, this many pixels side to side.
+var box_drift: float = 0.0
 ## No music at all.
 var silent: bool = false
 ## Buttons that can't be used: greyed out and chained. Trying one shows the next

@@ -80,8 +80,8 @@ static func _agent() -> BattleData:
 	data.locked_lines.assign(RELIC_LINES)
 	var e := Enemy.new()
 	e.name = "Agent"
-	e.max_hp = 260
-	e.hp = 260
+	e.max_hp = CorpsAttacks.boss_hp(260)
+	e.hp = e.max_hp
 	e.attack = 8
 	e.defense = 3
 	e.position = Vector2(470, 140)

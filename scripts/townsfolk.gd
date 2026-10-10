@@ -270,6 +270,64 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- Torrey Pines ---
+	"ranger": {
+		"name": "Park Ranger", "sprite": "ranger",
+		"talk": {
+			"lines": [["", "Welcome to Torrey Pines. Stay on the trail.\nDon't feed the gulls. Don't touch the pines."], ["smug", "There are only a few thousand of these trees left\nin the world. I know every one. By name."]],
+			"options": ["What's that one called?", "What about the glider?"],
+			"answers": [["happy", "That's Doris. She's four hundred years old.\nShe's my best friend. Don't tell the others."], ["sad", "Five years it's been up there. Nobody in it.\nI write it a ticket every week. It never pays."]],
+		},
+		"challenged": ["angry", "Off. The. Trail.\nThat's a CITATION, buddy."],
+		"spared": ["happy", "Respectful. Quiet. Stayed on the trail.\nYou'd make a fine ranger. In about fifty years."],
+		"hp": 75, "atk": 4, "def": 4, "patterns": ["rule_signs", "slow_and_steady"],
+		"check": "* PARK RANGER - ATK 4 DEF 4\n* A tortoise. Has worked here for ninety years.\n* Is in no hurry. About anything.",
+		"acts": [
+			{"name": "Stay on Trail", "mercy": 50, "lines": ["* {actor} stays exactly on the trail.\n* The Ranger nods. Very, very slowly."]},
+			{"name": "Ask About Trees", "mercy": 50, "lines": ["* {actor} asks about the trees.\n* Forty minutes later, he's still going. He's happy."]},
+		],
+		"taunts": ["Stay on the trail.", "Citation.", "Slowly, now.", "Doris is watching."],
+		"flavor": ["* The Park Ranger writes you a ticket. Slowly.", "* The wind smells like pine."],
+		"backdrop": Color(0.35, 0.55, 0.35), "style": "cliffs", "exp": 14, "money": 15,
+	},
+	"hiker": {
+		"name": "Hiker", "sprite": "hiker",
+		"talk": {
+			"lines": [["happy", "Morning! Third time up the trail today!\nGoats don't get tired. That's a myth. We LOVE hills."], ["", "Want some trail mix? It's the good kind.\nThe raisins are optional. I took them out."]],
+			"options": ["Sure, I'll take some.", "Third time?"],
+			"answers": [["happy", "Here! A whole bag. Keep it.\nYou look like you've been walking a long way."], ["smug", "Up, down, up, down, up.\nIt's called CARDIO. Look into it."]],
+		},
+		"challenged": ["happy", "A challenge! On a CLIFF! This is the best\nday of my life! Again!"],
+		"spared": ["happy", "GOOD hike. Good hike.\nSee you at the top. And the bottom. And the top."],
+		"hp": 60, "atk": 5, "def": 2, "patterns": ["rockslide", "trail_mix_toss"],
+		"check": "* HIKER - ATK 5 DEF 2\n* A mountain goat with a very good backpack.\n* Has never once been out of breath.",
+		"acts": [
+			{"name": "Share Snacks", "mercy": 50, "lines": ["* {actor} offers some snacks.\n* The Hiker offers MORE snacks back. A snack-off."]},
+			{"name": "Stretch", "mercy": 50, "lines": ["* {actor} stretches like a real hiker.\n* \"YES. Good form! GOOD FORM!\""]},
+		],
+		"taunts": ["Uphill!", "Feel the burn!", "Trail mix!", "Goats are great!"],
+		"flavor": ["* The Hiker is doing lunges.", "* A pebble tumbles down the cliff."],
+		"backdrop": Color(0.75, 0.6, 0.4), "style": "cliffs", "exp": 12, "money": 10,
+	},
+	"birder": {
+		"name": "Birdwatcher", "sprite": "birder",
+		"talk": {
+			"lines": [["", "Shh. SHH. There's a peregrine falcon nesting\non the cliff. Six years I've been waiting."], ["shocked", "...Oh. It's the glider again. Every time.\nEvery single time, it's the glider."]],
+			"options": ["Seen anything good?", "Isn't an owl a bird?"],
+			"answers": [["happy", "A brown pelican! A whimbrel! A guy in\na hat who said he was a rooster!"], ["smug", "I'm not WATCHING myself. That'd be weird.\nI have a mirror for that."]],
+		},
+		"challenged": ["angry", "You scared off the falcon.\nSIX. YEARS."],
+		"spared": ["happy", "You're on my list now.\nThe GOOD list. Rare sighting. Very rare."],
+		"hp": 55, "atk": 4, "def": 1, "patterns": ["binocular_scan", "field_guide"],
+		"check": "* BIRDWATCHER - ATK 4 DEF 1\n* An owl with enormous binoculars.\n* Up all night. Up all day. Waiting for a falcon.",
+		"acts": [
+			{"name": "Point at Bird", "mercy": 50, "lines": ["* {actor} points at a bird.\n* \"...Is that- that's a GULL. But thank you.\""]},
+			{"name": "Whisper", "mercy": 50, "lines": ["* {actor} whispers, so the birds won't hear.\n* The Birdwatcher whispers back. Best friends."]},
+		],
+		"taunts": ["Shh!", "Look! ...No.", "Hoo.", "SIX YEARS."],
+		"flavor": ["* The Birdwatcher's binoculars glint.", "* Somewhere, a falcon. Maybe."],
+		"backdrop": Color(0.55, 0.45, 0.35), "style": "cliffs", "exp": 11, "money": 9,
+	},
 	# --- The Harbor ---
 	"sailor": {
 		"name": "Old Sailor", "sprite": "sailor",

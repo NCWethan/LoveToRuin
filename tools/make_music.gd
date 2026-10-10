@@ -23,6 +23,90 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# Torrey Pines: the cliffs, the wind, the ocean a long way down. Airy and slow,
+	# in D, with the bright raised fourth that sounds like open sky.
+	"torrey": {
+		"bpm": 92,
+		"lead_wave": "triangle",
+		"lead": [
+			"A5 . . . . . G#5 . F#5 . . . E5 . . .",
+			"F#5 . . . . . . . D5 . . . . . . .",
+			"E5 . . . G#5 . . . B5 . . . A5 . . .",
+			"A5 . . . . . . . - - - - - - - -",
+			"D6 . . . . . C#6 . B5 . . . A5 . . .",
+			"G#5 . . . . . . . E5 . . . F#5 . . .",
+			"G#5 . . . A5 . . . B5 . . . C#6 . . .",
+			"D6 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"D4 . F#4 . A4 . F#4 . D4 . F#4 . A4 . F#4 .",
+			"B3 . D4 . F#4 . D4 . B3 . D4 . F#4 . D4 .",
+			"E4 . G#4 . B4 . G#4 . E4 . A4 . C#5 . A4 .",
+			"D4 . F#4 . A4 . F#4 . D4 . F#4 . A4 . F#4 .",
+			"G4 . B4 . D5 . B4 . G4 . B4 . D5 . B4 .",
+			"E4 . G#4 . B4 . G#4 . E4 . G#4 . B4 . G#4 .",
+			"E4 . G#4 . B4 . G#4 . A4 . C#5 . E5 . C#5 .",
+			"D4 . F#4 . A4 . . . - - - - - - - -",
+		],
+		"bass": [
+			"D2 . . . . . . . D2 . . . . . . .",
+			"B1 . . . . . . . B1 . . . . . . .",
+			"E2 . . . . . . . A1 . . . . . . .",
+			"D2 . . . . . . . D2 . . . . . . .",
+			"G2 . . . . . . . G2 . . . . . . .",
+			"E2 . . . . . . . E2 . . . . . . .",
+			"E2 . . . . . . . A1 . . . . . . .",
+			"D2 . . . . . . . - - - - - - - -",
+		],
+	},
+
+	# The Glider: a soaring waltz in F, the wind in it. It goes up, and up, and
+	# never quite comes back down to the tonic until the very end.
+	"glider": {
+		"bpm": 138,
+		"lead_wave": "triangle",
+		"lead": [
+			"C5 . . F5 . . A5 . . C6 . . A5 . . .",
+			"Bb5 . . G5 . . E5 . . C5 . . . . . .",
+			"D5 . . F5 . . Bb5 . . D6 . . Bb5 . . .",
+			"C6 . . A5 . . F5 . . C5 . . . . . .",
+			"C5 . . E5 . . G5 . . C6 . . E6 . . .",
+			"D6 . . C6 . . Bb5 . . A5 . . G5 . . .",
+			"A5 . . Bb5 . . C6 . . D6 . . E6 . . .",
+			"F6 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"F4 . A4 . C5 . F4 . A4 . C5 . F4 . A4 .",
+			"G4 . C5 . E5 . G4 . C5 . E5 . G4 . C5 .",
+			"Bb4 . D5 . F5 . Bb4 . D5 . F5 . Bb4 . D5 .",
+			"F4 . A4 . C5 . F4 . A4 . C5 . F4 . A4 .",
+			"E4 . G4 . C5 . E4 . G4 . C5 . E4 . G4 .",
+			"G4 . Bb4 . D5 . G4 . Bb4 . D5 . G4 . Bb4 .",
+			"F4 . A4 . C5 . G4 . Bb4 . C5 . G4 . Bb4 .",
+			"A4 . C5 . F5 . . . - - - - - - - -",
+		],
+		"bass": [
+			"F2 . . C3 . . C3 . . F2 . . C3 . . .",
+			"C2 . . G2 . . G2 . . C2 . . G2 . . .",
+			"Bb1 . . F2 . . F2 . . Bb1 . . F2 . . .",
+			"F2 . . C3 . . C3 . . F2 . . C3 . . .",
+			"C2 . . G2 . . G2 . . C2 . . G2 . . .",
+			"G1 . . D2 . . D2 . . C2 . . G2 . . .",
+			"F2 . . C3 . . C2 . . G2 . . C2 . . .",
+			"F2 . . . . . . . - - - - - - - -",
+		],
+		"drums": [
+			"K - - H - - H - - K - - H - - -",
+			"K - - H - - H - - K - - H - - -",
+			"K - - H - - H - - K - - H - - -",
+			"K - - H - - H - - K - - S - S -",
+			"K - - H - - H - - K - - H - - -",
+			"K - - H - - H - - K - - H - - -",
+			"K - - S - - S - - K - - S S S S",
+			"K - - - - - - - - - - - - - - -",
+		],
+	},
+
 	# The Harbor: a sea shanty in G, the kind you stamp your feet to, with a
 	# squeezebox harmony and a bass that rolls like the deck.
 	"harbor": {

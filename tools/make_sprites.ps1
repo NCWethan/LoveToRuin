@@ -2578,6 +2578,72 @@ $wildArt = [ordered]@{
         "........}..}",
         ".......}}.}}"
     )
+    # The Glider (Torrey Pines): a hang glider with nobody in the harness, wing
+    # striped red and yellow, hanging in the wind. It won't come down.
+    'glider' = @(
+        "...........RR",
+        ".........RRYYRR",
+        ".......RRYYRRYYRR",
+        ".....RRYYRRYYRRYYRR",
+        "...RRYYRRYYRRYYRRYYRR",
+        ".RRYYRRYYRRYYRRYYRRYYRR",
+        "RKKKKKKKKKKKKKKKKKKKKKKR",
+        "...........gg",
+        "..........g..g",
+        ".........g....g",
+        "........gggggggg",
+        "...........DD",
+        "..........DIID",
+        "...........DD"
+    )
+    # The Park Ranger (Torrey Pines): a tortoise in a ranger hat. Slow. Thorough.
+    'ranger' = @(
+        "......bbbbbbbb",
+        "....bbbbbbbbbbbb",
+        ".......[[[[[[",
+        "......[[K[[K[[",
+        "......[[[[[[[[",
+        ".......[[[[[[",
+        "....666666666666",
+        "...66866686668666",
+        "...6886888688868866",
+        "..[66666666666666[",
+        "...O[OOOOOOOOOO[O",
+        "....[[........[["
+    )
+    # The Hiker (Torrey Pines): a mountain goat with a backpack and poles.
+    'hiker' = @(
+        ".....W......W",
+        "......W....W",
+        "......WWWWWW",
+        ".....WWKWWKWW",
+        ".....WWWWWWWW",
+        "......WWppWW",
+        ".......WWWW..R",
+        "....WEEEEEEERRR",
+        "...GWEEEEEEERRR",
+        "...GWEEEEEEERRR",
+        "...G.EEEEEEE..",
+        "...G.OOOOOOO",
+        "....WW.....WW",
+        "....DD.....DD"
+    )
+    # The Birdwatcher (Torrey Pines): an owl with enormous binoculars.
+    'birder' = @(
+        "....6........6",
+        "....66666666666",
+        "...6699996699966",
+        "...69KKK9669KKK96",
+        "...69KyK9669KyK96",
+        "...69KKK9669KKK96",
+        "...6699996}99966",
+        "....666666}66666",
+        "...66999999999966",
+        "...669999999999966",
+        "....6699999999966",
+        ".....66666666666",
+        "......}}.....}}"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

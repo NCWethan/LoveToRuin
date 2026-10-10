@@ -68,6 +68,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	wait = HarborAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:
 		return wait
+	# Torrey Pines (torrey_attacks.gd).
+	wait = TorreyAttacks.spawn(pattern, enemy, parent, area, s, step)
+	if wait >= 0.0:
+		return wait
 	# The Corps, as bosses (corps_attacks.gd).
 	wait = CorpsAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:

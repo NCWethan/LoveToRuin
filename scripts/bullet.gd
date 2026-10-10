@@ -523,6 +523,9 @@ const GLYPHS := {
 	"spoon": [".GG", "GWG", ".GG", ".G.", ".G.", ".G."],
 	"fish": ["..CC..C", ".CCCCCC", "CKCCCC.", ".CCCCCC", "..CC..C"],
 	"dart": ["R.....", "RRKKKKW", "R....."],
+	"pinecone": [".b.", "bTb", "TbT", "bTb", ".b."],
+	"tophat": [".KKKKK.", ".KKKKK.", ".KRRRK.", "KKKKKKK"],
+	"mic": [".gg.", "gGGg", ".gg.", "..K.", "..K."],
 }
 
 

@@ -25,6 +25,9 @@ extends Area
 ##      the Box curly-fry token, and wears it on a cord from then on.
 ##   8  The Harbor, the carrier's flight deck at sunset: "If you ever want him
 ##      gone, I could try." Hop says no. "Ask me again someday."
+##   9  Torrey Pines at dawn: Relic, packed to leave town like every town before,
+##      at the edge of the cliff a long time. Then unpacking. "First place I
+##      ever wanted to stay."
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -73,6 +76,7 @@ func _spawn() -> Vector2:
 		6: return Vector2(3 * T, 12 * T + 10)
 		7: return Vector2(15 * T, 14 * T + 10)
 		8: return Vector2(6 * T, 12 * T + 10)
+		9: return Vector2(30 * T, 12 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -87,6 +91,7 @@ func build_map() -> void:
 		6: _build_plaza()
 		7: _build_ballpark()
 		8: _build_carrier()
+		9: _build_cliff()
 		_: _build_road()
 
 
@@ -160,6 +165,18 @@ func _build_carrier() -> void:
 	room.setup(36, 24, Room.WATER)
 	room.fill(1, 4, 34, 16, Room.ASPHALT)
 	room.fill(26, 5, 4, 4, Room.WALL)
+
+
+## Torrey Pines at dawn, five years ago: the cliff, the pines, the sea.
+func _build_cliff() -> void:
+	room.setup(36, 24, Room.GRASS)
+	room.fill(0, 0, 6, 24, Room.WATER)
+	room.fill(6, 0, 3, 24, Room.ADOBE)
+	room.fill(0, 0, 36, 1, Room.TREE)
+	room.fill(0, 23, 36, 1, Room.TREE)
+	room.fill(35, 0, 1, 24, Room.TREE)
+	for spot in [Vector2i(16, 4), Vector2i(24, 6), Vector2i(28, 18), Vector2i(20, 19), Vector2i(31, 4)]:
+		room.set_tile(spot.x, spot.y, Room.TREE)
 
 
 ## Mission Beach, one afternoon that summer.
@@ -240,6 +257,18 @@ func _draw_decor() -> void:
 			for k in 12:
 				_decor.draw_rect(Rect2(2 * T + k * 56, 12 * T - 2, 28, 4), Color(1, 1, 1, 0.6))
 			_decor.draw_string(_font, Vector2(4 * T, 8 * T), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, Color(1, 1, 1, 0.5))
+		9:
+			# The sun coming up behind you; the sea still dark. The backpack, packed
+			# (or unpacked, its things laid out on the grass).
+			for k in 20:
+				var y := fmod(k * 41.0 + _card_time * 10.0, 24.0 * T)
+				_decor.draw_line(Vector2(T + (k % 4) * 24, y), Vector2(T + (k % 4) * 24 + 16, y), Color(1, 1, 1, 0.3), 1.0)
+			if _flags.get("unpacked", false):
+				var things := [Color8(200, 60, 50), Color8(240, 200, 80), Color8(120, 160, 220), Color8(200, 200, 200), Color8(150, 150, 160), Color8(110, 90, 60)]
+				for i in things.size():
+					_decor.draw_rect(Rect2(Vector2(12 * T + i * 14, 14 * T + (i % 2) * 8), Vector2(8, 8)), things[i])
+			else:
+				_decor.draw_rect(Rect2(Vector2(30 * T - 6, 12 * T + 2), Vector2(12, 14)), Color8(70, 110, 70))
 		5:
 			# The steps (lines across them), and the stars.
 			for k in 3:
@@ -316,6 +345,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# Out to the edge of the cliff.
+	if memory == 9 and player.position.x < 10 * T + 10 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_cliff)
 	# Out to the edge of the deck, where Hop is sitting.
 	if memory == 8 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -347,6 +380,7 @@ func _start() -> void:
 		6: await run_cutscene(_intro_plaza)
 		7: await run_cutscene(_intro_ballpark)
 		8: await run_cutscene(_intro_carrier)
+		9: await run_cutscene(_intro_cliff)
 
 
 func _intro_road() -> void:
@@ -698,6 +732,41 @@ func _end_carrier() -> void:
 		"* (The sun goes into the sea.)",
 	])
 	await _finish(["* We offered.", "* He said no. He should've said yes.\n* We should've asked again."])
+
+
+# --- 9: The cliff, at dawn ---------------------------------------------------------
+
+func _intro_cliff() -> void:
+	var dawn := CanvasModulate.new()
+	dawn.color = Color(0.85, 0.82, 0.95)
+	add_child(dawn)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (Torrey Pines, before the sun is all the way up.\n*  The end of the summer.)",
+		"* (The backpack's packed. Everything you own.\n*  It clinks when you pick it up.)",
+		"* (This is how it always goes. A town. A summer.\n*  Then the road.)",
+		"* (Hop's still asleep, across the city.\n*  You didn't say goodbye. You never do.)",
+	])
+	Game.set_objective("(Go to the edge.)")
+
+
+func _end_cliff() -> void:
+	await Game.dialogue.say([
+		"* (The edge of the cliff. The ocean, all the way out.)",
+		"* (The road north is right there, behind you.)",
+		"* (You stand here for a long time.)",
+		{"who": "Relic", "choices": ["(Go.)", "(Stay.)"]},
+		"* (You take the backpack off.)",
+		"* (You open it, and take things out, one at a time,\n*  and set them in the grass. A bottle cap. A ticket.\n*  A feather you'll come back for. A token, still cold.)",
+	])
+	_flags["unpacked"] = true
+	_decor.queue_redraw()
+	await Game.dialogue.say([
+		{"who": "Relic", "text": "...Huh.", "mood": ""},
+		{"who": "Relic", "text": "First place I ever wanted to stay.", "mood": "happy"},
+		"* (Far away, up the trail, someone is yelling your\n*  name. With his mouth full. Something about fries.)",
+	])
+	await _finish(["* First place we ever wanted to stay.", "* Look what it did to us."])
 
 
 # --- The end of a memory ---------------------------------------------------------

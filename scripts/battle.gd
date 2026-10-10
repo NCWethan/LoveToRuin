@@ -1850,6 +1850,8 @@ func _pick_pattern(enemy: Enemy) -> String:
 	if enemy.in_finale():
 		if not enemy.finale_started:
 			enemy.finale_started = true
+			if not enemy.finale_taunts.is_empty():
+				enemy.taunts.assign(enemy.finale_taunts)
 			_last_patterns[enemy] = enemy.finale_patterns[0]
 			return enemy.finale_patterns[0]
 		if randf() < enemy.finale_chance:
@@ -1870,6 +1872,10 @@ func _pick_pattern(enemy: Enemy) -> String:
 func _process_enemy_turn(delta: float) -> void:
 	_enemy_timer -= delta
 	_soul_path_timer -= delta
+	# Out in the open sky, the box drifts on the wind.
+	if _data.box_drift > 0.0:
+		var drift_t := ENEMY_TURN_TIME - _enemy_timer
+		box.center = BOX_CENTER + Vector2(sin(drift_t * 1.1) * _data.box_drift, sin(drift_t * 0.7 + 1.0) * _data.box_drift * 0.4)
 	if _soul_path_timer <= 0.0:
 		_soul_path_timer = 0.1
 		_soul_path.append(soul.global_position)
@@ -2072,6 +2078,8 @@ func _end_enemy_turn() -> void:
 	for member in party:
 		member.defending = false
 	create_tween().tween_property(box, "size", TEXT_BOX_SIZE, 0.25)
+	if box.center != BOX_CENTER:
+		create_tween().tween_property(box, "center", BOX_CENTER, 0.25)
 	# In a fight you can't win, lasting long enough ends it.
 	if _data.survive_turns > 0 and enemy_turn >= _data.survive_turns:
 		_survived()
@@ -4058,6 +4066,8 @@ func _draw_backdrop() -> void:
 			_backdrop_stadium(color, t)
 		"carrier":
 			_backdrop_carrier(color, t)
+		"cliffs":
+			_backdrop_cliffs(color, t)
 		_:
 			_backdrop_sigil(color, t)
 			_backdrop_diamonds(color, t)
@@ -4196,6 +4206,29 @@ func _backdrop_dining(color: Color, t: float) -> void:
 		var flicker := 1.0 + sin(t * 13.0 + k * 2.1) * 0.25
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 4.0 * flicker, Color(1.0, 0.8, 0.35, 0.55))
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 14.0 * flicker, Color(1.0, 0.7, 0.3, 0.08))
+
+
+## Torrey Pines: open sky, clouds drifting past, the sea far below, and the edge of
+## the cliff with a torrey pine leaning out over it.
+func _backdrop_cliffs(color: Color, t: float) -> void:
+	var sea := BACKDROP.end.y - 40
+	_backdrop.draw_rect(Rect2(BACKDROP.position.x, sea, BACKDROP.size.x, 40), Color(0.2, 0.4, 0.6, 0.25))
+	for k in 14:
+		var x := BACKDROP.position.x + fmod(k * 47.0 + t * 8.0, BACKDROP.size.x)
+		_backdrop.draw_line(Vector2(x, sea + 6 + (k % 3) * 9), Vector2(x + 14, sea + 6 + (k % 3) * 9), Color(1, 1, 1, 0.12), 1.0)
+	# Clouds, blowing by.
+	for c in 4:
+		var x := BACKDROP.position.x + fmod(c * 170.0 + t * (14.0 + c * 4.0), BACKDROP.size.x + 120.0) - 60.0
+		var y := BACKDROP.position.y + 24 + c * 26
+		for puff in 4:
+			_backdrop.draw_circle(Vector2(x + puff * 16, y + (6 if puff % 2 == 0 else 0)), 12.0, Color(1, 1, 1, 0.08))
+	# The cliff edge, with a torrey pine leaning out.
+	var edge := PackedVector2Array([Vector2(BACKDROP.position.x, sea - 30), Vector2(BACKDROP.position.x + 90, sea - 34), Vector2(BACKDROP.position.x + 120, sea + 40), Vector2(BACKDROP.position.x, sea + 40)])
+	_backdrop.draw_colored_polygon(edge, Color(color.darkened(0.3), 0.35))
+	var trunk := Vector2(BACKDROP.position.x + 60, sea - 32)
+	_backdrop.draw_line(trunk, trunk + Vector2(30, -50), Color(0.4, 0.3, 0.2, 0.4), 4.0)
+	for k in 5:
+		_backdrop.draw_circle(trunk + Vector2(24 + k * 6, -46 - (k % 2) * 8), 9.0, Color(0.25, 0.45, 0.3, 0.3))
 
 
 ## The flight deck of the old carrier: the runway stripes running away to the

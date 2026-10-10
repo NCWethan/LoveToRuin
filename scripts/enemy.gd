@@ -57,6 +57,10 @@ var finale_chance: float = 0.4
 ## The attack they just used (some ACTs only work right after a certain one: see
 ## an act's "when").
 var last_pattern: String = ""
+## What they say once the finale starts (Rooster: the jokes fall apart).
+var finale_taunts: Array[String] = []
+## ACTs marked "once" that have been used (they don't work twice).
+var _used_once: Array = []
 ## Supreme labels his own attacks with their odds of hitting you: pattern -> %.
 var odds: Dictionary = {}
 var course: int = 0
@@ -143,6 +147,11 @@ func do_act(index: int, actor: String) -> Array[String]:
 		return [check_text]
 
 	var act: Dictionary = acts[index - 1]
+	# Some ACTs only work once (Rooster admitting he's scared of heights).
+	if act.get("once", false):
+		if act["name"] in _used_once:
+			return [str(act.get("again", "* It already did all it could.")).format({"name": name, "actor": actor})]
+		_used_once.append(act["name"])
 	# Some ACTs only work right after a certain attack (Flight Deck: guide it in
 	# right after its landing approach).
 	if act.has("when") and act["when"] != last_pattern:

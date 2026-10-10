@@ -150,6 +150,7 @@ const ZONES := {
 	"res://scenes/old_town.tscn": ["seagull", "bag", "squirrel"],
 	"res://scenes/downtown.tscn": ["seagull", "bag", "cart"],
 	"res://scenes/harbor.tscn": ["seagull", "balloon", "bag"],
+	"res://scenes/torrey_pines.tscn": ["seagull", "squirrel", "goose"],
 }
 
 

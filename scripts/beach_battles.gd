@@ -82,8 +82,8 @@ static func _corps(e: Enemy, intro: String) -> BattleData:
 static func _crayola() -> Enemy:
 	var e := Enemy.new()
 	e.name = "Crayola"
-	e.max_hp = 170
-	e.hp = 170
+	e.max_hp = CorpsAttacks.boss_hp(170)
+	e.hp = e.max_hp
 	e.attack = 5
 	e.defense = 1
 	e.position = Vector2(470, 140)
@@ -112,8 +112,8 @@ static func _crayola() -> Enemy:
 static func _ncwethan() -> Enemy:
 	var e := Enemy.new()
 	e.name = "N.C. Wethan"
-	e.max_hp = 200
-	e.hp = 200
+	e.max_hp = CorpsAttacks.boss_hp(200)
+	e.hp = e.max_hp
 	e.attack = 6
 	e.defense = 2
 	e.position = Vector2(470, 140)

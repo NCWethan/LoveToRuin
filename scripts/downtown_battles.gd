@@ -77,8 +77,8 @@ static func _supreme() -> BattleData:
 	data.locked_lines.assign(RELIC_LINES)
 	var e := Enemy.new()
 	e.name = "Supreme"
-	e.max_hp = 220
-	e.hp = 220
+	e.max_hp = CorpsAttacks.boss_hp(220)
+	e.hp = e.max_hp
 	e.attack = 7
 	e.defense = 2
 	e.position = Vector2(470, 140)

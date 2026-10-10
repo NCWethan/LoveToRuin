@@ -528,7 +528,7 @@ func _after_memory() -> void:
 			await Game.dialogue.say([
 				"* (Down on the pier, the Corps is packing up.\n*  Agent is on the phone. He looks at you, and away.)",
 			])
-			Game.set_objective("8 of 12 FRAGMENTS. (To be continued.)")
+			Game.set_objective("8 of 12. Next: Torrey Pines. (Take the bus.)")
 		_:
 			Game.set_objective("...")
 

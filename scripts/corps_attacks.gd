@@ -49,6 +49,12 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 	return -1.0
 
 
+## A Corps boss's HP: their own, plus more for every LV Elric has gained, so
+## they stay a real fight however strong Elric has gotten.
+static func boss_hp(base: int) -> int:
+	return base + 18 * (Game.lv() - 1)
+
+
 ## How much faster everything comes as the fight goes on (and once they're
 ## nearly beaten). 1.0 at the start, down to about 0.7.
 static func _pace(enemy: Enemy) -> float:

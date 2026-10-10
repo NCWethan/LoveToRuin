@@ -78,8 +78,8 @@ static func _nat() -> BattleData:
 	data.locked_lines.assign(RELIC_LINES)
 	var e := Enemy.new()
 	e.name = "Nat"
-	e.max_hp = 210
-	e.hp = 210
+	e.max_hp = CorpsAttacks.boss_hp(210)
+	e.hp = e.max_hp
 	e.attack = 6
 	e.defense = 2
 	e.position = Vector2(470, 140)
