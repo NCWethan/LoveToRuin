@@ -1049,8 +1049,9 @@ func _morning() -> void:
 	var rest_of_night: Array = [
 		"* (By morning, your feet bring you back to\n*  Westview Field anyway.)",
 		"* (The Corps' hatch is right there, by the shelter.\n*  Nobody's watching it.)",
+		"* (Last night, Nassan's map had a circle on the beach.\n*  MISSION BEACH. The bus stops at the PQ Mall.)",
 	]
-	Game.set_objective("Go anywhere. (The Corps' hatch is by the shelter.)")
+	Game.set_objective(BEACH_OBJECTIVE)
 	await Game.dialogue.say([
 		"* (You wander the city all night.)",
 		"* (Down streets you don't know.\n*  Past shops with their lights off.)",

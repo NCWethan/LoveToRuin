@@ -299,6 +299,18 @@ func _after_keepsakes() -> void:
 	Game.keepsake_after = []
 	await wait_for_fade()
 	await run_cutscene(func() -> void: await Game.dialogue.say(lines))
+	_point_to_the_beach()
+
+
+## Chapter 2 begins: if Elric hasn't been to Mission Beach yet (and isn't on the
+## night walk to Hop's, which says so itself), say where the next fragment is.
+func _point_to_the_beach() -> void:
+	if Game.flags.get("chapter1_done", false) and not Game.flags.get("mb_fragment", false) \
+			and Game.flags.get("route", "") != "with_hop" and Game.flags.get("route", "") != "genocide":
+		Game.set_objective(BEACH_OBJECTIVE)
+
+
+const BEACH_OBJECTIVE := "Next: Mission Beach. (Bus stop at the PQ Mall.)"
 
 
 ## Waits until the fade-in after a scene change has finished.

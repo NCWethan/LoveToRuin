@@ -564,7 +564,8 @@ func _map_table() -> void:
 		"* (A big map of the city, covered in notes.)",
 		"* (Twelve red circles. Three are crossed out.)",
 		"* (Someone has drawn a tiny crown next to Rooster's\n*  neighborhood. In Rooster's handwriting.)",
-	])
+	] + (NEXT_FRAGMENT if not flag("mb_fragment") else []))
+	_point_to_the_beach()
 
 
 func _monitors() -> void:
@@ -636,6 +637,11 @@ const DREAM_END := [
 	"* (You wake up.)",
 	"* (Your hand is closed tight around nothing.)",
 ]
+## (Before the beach: where the next one is.)
+const NEXT_FRAGMENT := [
+	"* (On the map table, one of the red circles is on\n*  the coast. A note in Nassan's writing: MISSION BEACH.)",
+	"* (The bus to the beach stops at the PQ Mall.)",
+]
 
 
 func _dream() -> void:
@@ -678,14 +684,16 @@ func _dream() -> void:
 	if first_keepsakes:
 		lines.append({"who": "Relic", "tag": "???", "face": false, "text": "...Here. Let me show you."})
 	await Game.dialogue.say(lines)
+	var next: Array = NEXT_FRAGMENT if not flag("mb_fragment") else []
 	if first_keepsakes:
-		await Game.play_keepsakes([1, 2, 3], SCENE, player.position, KEEPSAKES_AFTER + DREAM_END)
+		await Game.play_keepsakes([1, 2, 3], SCENE, player.position, KEEPSAKES_AFTER + DREAM_END + next)
 		return
 	await Game.fade_out(1.2)
 	dark.queue_free()
 	Game.play_music("bunker")
 	await Game.fade_in(1.0)
-	await Game.dialogue.say(DREAM_END)
+	await Game.dialogue.say(DREAM_END + next)
+	_point_to_the_beach()
 
 
 ## Rooster's mirror. The first time, the reflection isn't quite Elric for a second
