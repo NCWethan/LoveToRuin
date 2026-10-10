@@ -317,6 +317,14 @@ func _process_text() -> void:
 
 func _start_player_turn() -> void:
 	turn += 1
+	# The Seven of Hearts (Crayola's card): whoever holds it heals a little each turn.
+	if turn > 1:
+		for member in party:
+			if not member.is_down() and Game.card_of(member.name) == "Seven of Hearts":
+				var healed := mini(Items.SEVEN_OF_HEARTS_HEAL, member.max_hp - member.hp)
+				if healed > 0:
+					member.hp += healed
+					_add_popup("+%d" % healed, _panel_position(member), Color.GREEN)
 	actions.clear()
 	current_member = -1
 	_flavor = _data.flavor_text(turn)
@@ -1507,6 +1515,8 @@ func _process_fight_anim(delta: float) -> void:
 		if _deaths_are_real():
 			# Cracks into green pieces, and the wind carries them away.
 			target.shattered = true
+			if target.last_words != "":
+				lines.append(target.last_words)
 			Game.play_sfx("crack" if Game.has_sfx("crack") else "thud")
 			_start_wind(SHATTER_WIND_TIME, 0.22)
 			lines.append("* %s cracked into pieces.\n* The wind carried them away." % target.name)

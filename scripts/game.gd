@@ -775,6 +775,7 @@ const AREA_NAMES := {
 	"res://scenes/westview.tscn": "Westview High",
 	"res://scenes/hilltop.tscn": "Westview Field",
 	"res://scenes/hop_house.tscn": "Hop's House",
+	"res://scenes/mission_beach.tscn": "Mission Beach",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

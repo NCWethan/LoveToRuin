@@ -30,6 +30,8 @@ const FRONT_DOOR := Vector2(42 * T, 9 * T + 6)
 const HOUSE_ENTRY := Vector2(10 * T, 47 * T)
 ## The couch (where Elric sleeps), and where Hop stands at night / in the morning.
 const COUCH := Vector2(5 * T, 43 * T + 10)
+## Just outside Hop's front door, on the street side.
+const OUTSIDE_DOOR := Vector2(42 * T, 10 * T + 14)
 ## Where Elric gets up in the morning: just in front of the couch (not on it).
 const WAKE_SPOT := Vector2(5 * T, 46 * T + 14)
 const HOP_NIGHT := Vector2(14 * T, 39 * T)
@@ -308,7 +310,10 @@ func _physics_process(_delta: float) -> void:
 	if not flag("glowbug_done") and _px(STREET).has_point(player.position) and player.position.x > GLOWBUG_AT_X:
 		run_cutscene(_glowbug)
 	elif _px(STREET).has_point(player.position) and player.position.x < 10.0:
-		run_cutscene(_wrong_way)
+		if _morning():
+			run_cutscene(func() -> void: await Game.change_scene(WESTVIEW_SCENE, WESTVIEW_FROM_HERE))
+		else:
+			run_cutscene(_wrong_way)
 
 
 func _arrival() -> void:
@@ -362,6 +367,9 @@ func _front_door() -> void:
 			await Game.dialogue.say(["* (The smallest house on the street.\n*  The door's locked. Nobody answers.)"])
 		return
 	if not flag("glowbug_done"):
+		return
+	if _morning():
+		await Game.dialogue.say([{"who": "Hop", "text": "...Let's not go back in. Not yet.", "mood": "sad"}])
 		return
 	if not flag("hh_inside"):
 		Game.flags["hh_inside"] = true
@@ -442,9 +450,13 @@ func _wake_up() -> void:
 		"* (Morning light comes in through the blinds.)",
 		{"who": "Hop", "text": "...Morning.", "mood": "sad"},
 		{"who": "Hop", "text": "I made pancakes. They're... pancake-shaped.\nMostly.", "mood": ""},
+		"* (He puts the only plate in front of you.)",
 		"* (He doesn't sit down. He eats standing up, by\n*  the sink, as far from you as the kitchen allows.)",
+		{"who": "Hop", "text": "...Your eyes.", "mood": "shocked"},
+		{"who": "Hop", "text": "Are they... green? Were they always green?", "mood": "shocked"},
+		{"who": "Hop", "text": "...Ha. Weird lighting in here.\nI should get a new bulb.", "mood": "sad"},
 	])
-	Game.set_objective("...")
+	Game.set_objective("Head out with Hop. (The front door.)")
 
 
 func _leave_house() -> void:
@@ -452,9 +464,37 @@ func _leave_house() -> void:
 		await Game.dialogue.say([{"who": "Hop", "text": "...It's late. Stay in. Please.", "mood": "sad"}])
 		return
 	var go := await Game.dialogue.ask("* (Head out?)", ["Go", "Not yet"])
-	if go == 0:
-		Game.save_game(SCENE, HOUSE_ENTRY)
-		await Game.change_scene(DEMO_END_SCENE)
+	if go != 0:
+		return
+	# Out the front door, with Hop.
+	hop.on_interact = Callable()
+	hop.remove_from_group("interactable")
+	Game.play_sfx("door")
+	await go_through_door(OUTSIDE_DOOR)
+	hop.position = OUTSIDE_DOOR + Vector2(-22, 0)
+	hop.follow = player
+	if not flag("hh_out"):
+		Game.flags["hh_out"] = true
+		await _first_warning()
+	Game.save_game(SCENE, OUTSIDE_DOOR)
+
+
+## Out on the porch, the first morning: the voice inside Hop says something.
+func _first_warning() -> void:
+	await get_tree().create_timer(0.6).timeout
+	hop.follow = null
+	await Game.dialogue.say([
+		"* (On the porch, Hop stops.\n*  His hand goes to his chest.)",
+		{"who": "Hopkuna", "face": false, "text": "...Hop."},
+		{"who": "Hopkuna", "face": false, "text": "That isn't your friend."},
+		{"who": "Hop", "text": "Shut up.", "mood": "angry"},
+		{"who": "Elric", "choices": ["...Hop?", "(Say nothing.)"]},
+		{"who": "Hop", "text": "...Not you. Nothing. Talking to myself.", "mood": "sad"},
+		{"who": "Hop", "text": "Nassan's map had a circle on the beach.\nMission Beach. That's the next one.", "mood": ""},
+		{"who": "Hop", "text": "There's a bus from the PQ Mall.\n...Let's just go.", "mood": "sad"},
+	])
+	hop.follow = player
+	Game.set_objective("Take the bus at the PQ Mall to Mission Beach.")
 
 
 # --- Looking around Hop's house -----------------------------------------------------

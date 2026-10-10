@@ -12,6 +12,8 @@ extends Area
 ##   2  Sneaking into Westview's gym to sleep. The trophy case.
 ##   3  Westview Field, the first morning: a boy with two orders of curly fries,
 ##      and where the name "Relic" came from.
+##   4  Mission Beach: the first time Relic sees the ocean. Hop teaches them to
+##      bodysurf, badly.
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -55,6 +57,7 @@ func _spawn() -> Vector2:
 	match memory:
 		2: return Vector2(2 * T + 10, 14 * T + 10)
 		3: return Vector2(8 * T, 11 * T + 10)
+		4: return Vector2(10 * T, 5 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -64,6 +67,7 @@ func build_map() -> void:
 	match Game.current_keepsake():
 		2: _build_gym()
 		3: _build_field()
+		4: _build_ocean()
 		_: _build_road()
 
 
@@ -90,6 +94,15 @@ func _build_gym() -> void:
 	room.fill(0, 14, 1, 1, Room.DOOR)
 	room.fill(5, 6, 3, 1, Room.PROP)     # the trophy case
 	room.fill(22, 15, 5, 2, Room.PROP)   # the mats
+
+
+## Mission Beach, one afternoon that summer.
+func _build_ocean() -> void:
+	room.setup(40, 24, Room.SAND)
+	room.fill(0, 0, 40, 2, Room.BOARDWALK)
+	room.fill(0, 15, 40, 9, Room.WATER)
+	for spot in [Vector2i(4, 4), Vector2i(31, 6), Vector2i(36, 3)]:
+		room.set_tile(spot.x, spot.y, Room.PALM)
 
 
 ## Westview Field, the first morning of the summer.
@@ -132,6 +145,11 @@ func _draw_decor() -> void:
 			# A backpack, if Relic has set it down.
 			if _flags.get("bag_down", false):
 				_decor.draw_rect(Rect2(21 * T + 6, 16 * T, 10, 12), Color8(70, 110, 70))
+		4:
+			# Two towels on the sand, and Relic's backpack on one of them.
+			_decor.draw_rect(Rect2(14 * T, 7 * T, 2 * T, 3 * T), Color8(230, 90, 90))
+			_decor.draw_rect(Rect2(17 * T, 7 * T, 2 * T, 3 * T), Color8(80, 140, 220))
+			_decor.draw_rect(Rect2(14 * T + 12, 7 * T + 10, 10, 12), Color8(70, 110, 70))
 		3:
 			# The picnic shelter (years before anyone painted REVOLUTION on it).
 			var roof := Rect2(4 * T - 6, 6 * T - 14, 7 * T + 12, 22)
@@ -193,6 +211,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 1 and player.position.x > 39 * T and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_road)
+	# Down to the water.
+	if memory == 4 and hop != null and player.position.y > 13 * T and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_ocean)
 
 
 # --- 1: The road ---------------------------------------------------------------------
@@ -203,6 +225,7 @@ func _start() -> void:
 		1: await run_cutscene(_intro_road)
 		2: await run_cutscene(_intro_gym)
 		3: await run_cutscene(_intro_field)
+		4: await run_cutscene(_intro_ocean)
 
 
 func _intro_road() -> void:
@@ -331,6 +354,37 @@ func _backpack() -> void:
 		{"who": "Relic", "text": "...Same time tomorrow.", "mood": "happy"},
 	])
 	await _finish(["* See how happy we were?\n* Then they let us burn."])
+
+
+# --- 4: The ocean --------------------------------------------------------------------
+
+func _intro_ocean() -> void:
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(20 * T, 12 * T))
+	hop.face(Vector2.UP)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (Mission Beach. Hop said it was \"no big deal.\")",
+		"* (You've never seen the ocean before.)",
+		"* (It doesn't end. It just keeps going.)",
+		{"who": "Hop", "text": "C'MON! The water's warm! ...Ish!", "mood": "happy"},
+	])
+	Game.set_objective("(Go down to the water.)")
+
+
+func _end_ocean() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Relic", "text": "...Everything's so BIG here.", "mood": "shocked"},
+		{"who": "Hop", "text": "Wait till you're IN it.\nI'll teach you to bodysurf. I'm basically a pro.", "mood": "smug"},
+		"* (He is not a pro.)",
+		"* (You get knocked over by every single wave.\n*  You come up coughing, with sand in your hood.)",
+		"* (You've never laughed this hard.\n*  You didn't know you could.)",
+		{"who": "Hop", "text": "You're a natural! At DROWNING!", "mood": "happy"},
+		{"who": "Relic", "text": "...Again.", "mood": "happy"},
+		"* (For one whole afternoon, the backpack\n*  sits on the towel, and you forget about it.)",
+	])
+	await _finish(["* We laughed. We forgot what we were carrying.\n* For one day."])
 
 
 # --- The end of a memory ---------------------------------------------------------

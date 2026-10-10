@@ -37,6 +37,8 @@ var bullet_speed: float = 100.0
 var spare_refusal: String = ""
 ## If set, shown after every FIGHT hit (e.g. "It barely leaves a mark.").
 var hit_line: String = ""
+## What they say as they die (shown before they shatter). Mostly for the Corps.
+var last_words: String = ""
 ## How many turns this enemy has attacked so far (some attacks speed up over time).
 var fury: int = 0
 

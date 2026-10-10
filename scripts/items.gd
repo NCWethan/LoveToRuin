@@ -27,6 +27,7 @@ const DESCRIPTIONS := {
 	"Cleats": "Left under the Mt. Carmel bleachers. Good grip.",
 	"Foam Finger": "Wally's giant foam finger. WE'RE NUMBER ONE.",
 	"Lucky Card": "An ace of spades, a little bent. Pip swears it's lucky. It is.",
+	"Seven of Hearts": "Crayola's card, from the trick at the mall.\n* On the back, in crayon: \"for Elric\".",
 	"Heart Card": "A queen of hearts. Hold it close and your heart keeps going.",
 	"Clover Card": "A four-leaf clover pressed under plastic. Money finds you.",
 	"Snack Card": "A rare holo hamburger card. Food tastes better around it.",
@@ -45,7 +46,10 @@ const CARDS := {
 	"Clover Card": "+50% money from battles",
 	"Snack Card": "Food heals 50% more",
 	"Clock Card": "Enemy attacks move 15% slower",
+	"Seven of Hearts": "Heal 7 HP at the start of every turn",
 }
+## How much the Seven of Hearts heals, every turn.
+const SEVEN_OF_HEARTS_HEAL := 7
 const LUCKY_CHANCE := 1.0 / 6.0
 const CLOVER_MONEY := 1.5
 const SNACK_HEALING := 1.5

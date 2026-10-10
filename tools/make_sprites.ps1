@@ -2297,6 +2297,26 @@ $wildArt = [ordered]@{
         "......99966",
         ".......8..8"
     )
+    # The Dipper (Mission Beach): the old wooden roller coaster's front car, with
+    # headlight eyes and a lap bar for a mouth, on its track.
+    'dipper' = @(
+        "........................",
+        "....RRRRRRRRRRRRRRRR....",
+        "...RRRRRRRRRRRRRRRRRR...",
+        "...RWWWRRRRRRRRRRWWWR...",
+        "...RWKWRRRRRRRRRRWKWR...",
+        "...RWWWRRRRRRRRRRWWWR...",
+        "...RRRRRRRRRRRRRRRRRR...",
+        "...RRRRDDDDDDDDDDRRRR...",
+        "...RRRRRRRRRRRRRRRRRR...",
+        "...RRRRRRyyyyyyRRRRRR...",
+        "..DDDDDDDDDDDDDDDDDDDD..",
+        "..DKKD............DKKD..",
+        "..DDDD............DDDD..",
+        "888888888888888888888888",
+        "6...6...6...6...6...6...",
+        "6...6...6...6...6...6..."
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

@@ -389,6 +389,12 @@ func _draw_panel() -> void:
 	# Your items.
 	_box(LIST)
 	_text("BAG   (%d / %d)" % [Game.items.size(), Game.MAX_ITEMS], Vector2(LIST.position.x + 14, LIST.position.y + 26), Color.YELLOW)
+	# Things Elric has kept (Game.flags["mementos"]): they can't be used, sold or
+	# dropped. They're just there.
+	var kept: Array = Game.flags.get("mementos", [])
+	if not kept.is_empty():
+		var kept_text := "KEPT: " + ", ".join(kept)
+		_panel.draw_string(_font, Vector2(LIST.position.x + 130, LIST.position.y + 24), kept_text, HORIZONTAL_ALIGNMENT_LEFT, LIST.size.x - 144, 11, Color(0.45, 0.95, 0.55))
 	if Game.items.is_empty():
 		_text("(Your bag is empty.)", Vector2(LIST.position.x + 40, LIST.position.y + 60), Color.GRAY)
 	for i in Game.items.size():

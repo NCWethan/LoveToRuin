@@ -502,6 +502,7 @@ const GLYPHS := {
 	"tennis": [".NN.", "NYNN", "NNYN", ".NN."],
 	"paper": ["WW", "WW"],
 	"dust": ["L"],
+	"heart_card": ["WWW", "WRW", "WWW"],
 }
 
 

@@ -12,13 +12,13 @@ enum { GRASS, SIDEWALK, ASPHALT, PARKING_LINE, WALL, WINDOW, DOOR, TREE, FENCE,
 	STUCCO, GLASS, PLANTER, PATIO, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, HALL_FLOOR, LOCKER, CHALKBOARD, DESK, GYM_FLOOR, GYM_LINE, GATE,
 	BUNKER_FLOOR, BUNKER_WALL, BUNKER_DOOR, PROP, SCORCHED, STUMP,
-	HOUSE_FLOOR, HOUSE_WALL, HOUSE_PROP }
+	HOUSE_FLOOR, HOUSE_WALL, HOUSE_PROP, SAND, WATER, BOARDWALK }
 
 ## Tiles the player can't walk through.
 const SOLID := [WALL, WINDOW, DOOR, TREE, FENCE, BLEACHERS, BENCH, ROOF,
 	STUCCO, GLASS, PLANTER, TABLE, PALM, WOOD_WALL, RED_WALL,
 	VOID, INTERIOR_WALL, LOCKER, CHALKBOARD, DESK, GATE,
-	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP, HOUSE_WALL, HOUSE_PROP]
+	BUNKER_WALL, BUNKER_DOOR, PROP, STUMP, HOUSE_WALL, HOUSE_PROP, WATER]
 
 var width: int = 0
 var height: int = 0
@@ -257,6 +257,27 @@ func _draw_tile(x: int, y: int, tile: int) -> void:
 		DIRT:
 			draw_rect(r, Color8(150, 120, 80))
 			_specks(x, y, r, Color8(130, 100, 65), 3)
+		SAND:
+			# Warm beach sand, with a few shells and footprints.
+			draw_rect(r, Color8(236, 214, 160))
+			_specks(x, y, r, Color8(214, 190, 136), 4)
+			if _hash(x, y, 7) % 23 == 0:
+				draw_rect(Rect2(p + Vector2(6, 9), Vector2(4, 3)), Color8(250, 236, 226))
+		WATER:
+			# The ocean: deep blue, with white lines of foam that get busier near
+			# the shore (the row of water just below the sand).
+			var shore := get_tile(x, y - 1) == SAND
+			draw_rect(r, Color8(40, 110, 170) if not shore else Color8(70, 150, 200))
+			var wave := _hash(x, y, 3) % 3
+			draw_rect(Rect2(p + Vector2(2 + wave * 4, 6 + wave * 3), Vector2(8, 1)), Color(1, 1, 1, 0.35))
+			if shore:
+				draw_rect(Rect2(p, Vector2(TILE, 3)), Color(1, 1, 1, 0.75))
+		BOARDWALK:
+			# Sun-bleached wooden planks, running along the beach.
+			draw_rect(r, Color8(176, 140, 98))
+			for k in 4:
+				draw_rect(Rect2(p + Vector2(k * 5, 0), Vector2(1, TILE)), Color8(146, 112, 76))
+			draw_rect(Rect2(p + Vector2((x * 3) % 5 * 5 + 2, 4 + (y % 3) * 5), Vector2(1, 1)), Color8(110, 84, 58))
 		STUCCO:
 			# Cream shopping-center wall.
 			draw_rect(r, Color8(222, 208, 178))

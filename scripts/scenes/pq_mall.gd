@@ -22,6 +22,11 @@ const WEST_EXIT_X := 15.0
 const ROAD_Y := 500.0
 ## The sidewalk path running up the right side of the lot, past Jack in the Box.
 const SIDE_PATH_X := 870.0
+## Jack in the Box's door (where Dex runs out, on the Genocide path).
+const JACK_DOOR := Vector2(1000, 430)
+## The bus stop on the sidewalk by the road, and where it goes.
+const BUS_STOP := Vector2(640, 528)
+const BEACH_SCENE := "res://scenes/mission_beach.tscn"
 ## The patio table by MuffinMage (Knotty Barrel), with his salmon burger on it.
 const MUFFIN_TABLE := Vector2(30 * 20 + 10, 10 * 20 + 6)
 
@@ -181,6 +186,18 @@ func build_map() -> void:
 
 
 ## Store names on the roofs.
+## The bus stop sign: a pole with a blue sign and a little bench.
+func _add_bus_stop_sign() -> void:
+	var sign_node := Node2D.new()
+	sign_node.position = BUS_STOP
+	sign_node.draw.connect(func() -> void:
+		sign_node.draw_rect(Rect2(-1, -38, 3, 38), Color8(150, 150, 156))
+		sign_node.draw_rect(Rect2(-9, -46, 20, 12), Color8(40, 90, 190))
+		sign_node.draw_string(ThemeDB.fallback_font, Vector2(-7, -36), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+		sign_node.draw_rect(Rect2(10, -10, 22, 5), Color8(110, 80, 50)))
+	world.add_child(sign_node)
+
+
 ## A salmon burger on MuffinMage's table on the Knotty Barrel patio.
 func _add_muffin_burger() -> void:
 	var plate := Node2D.new()
@@ -364,6 +381,8 @@ func _place_people() -> void:
 	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
 	star.on_interact = _use_save_point
 	add_storage_box(Vector2(752, 178))
+	world.add_child(Hotspot.create(BUS_STOP + Vector2(0, -4), _bus_stop))
+	_add_bus_stop_sign()
 	add_character(star, Vector2(710, 178))
 
 
@@ -383,7 +402,9 @@ func _start() -> void:
 	await wait_for_fade()
 	if await handle_person_return():
 		return
-	if not flag("mall_arrived"):
+	if Game.on_genocide_route() and Game.daytime() and not flag("fled_jack"):
+		await run_cutscene(_dex_runs)
+	elif not flag("mall_arrived"):
 		await run_cutscene(_arrival)
 	elif not flag("seen_" + _time_of_day()):
 		await run_cutscene(_new_time_of_day)
@@ -409,6 +430,43 @@ func _arrival() -> void:
 	])
 	Game.flags["mall_arrived"] = true
 	Game.set_objective("Ask around the mall about the fragments.")
+
+
+## Going with Hop: the first shopkeeper to run. Dex sees Elric through the window
+## of Jack in the Box, drops the tray, and leaves out the side door. He doesn't
+## come back. (The other shops empty out as the killing goes on: Shops.gone().)
+func _dex_runs() -> void:
+	Game.flags["fled_jack"] = true
+	var dex := Cast.make("dex")
+	add_character(dex, JACK_DOOR)
+	dex.face(Vector2.DOWN)
+	await get_tree().create_timer(0.5).timeout
+	await Game.dialogue.say([
+		"* (At Jack in the Box, Dex looks up from the register.)",
+		"* (He sees you through the window.)",
+		"* (He drops the tray.)",
+	])
+	Game.play_sfx("thud")
+	await dex.walk_to(JACK_DOOR + Vector2(180, 0), 210.0)
+	dex.queue_free()
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "...Dex?", "mood": "shocked"},
+		{"who": "Hop", "text": "He's never run from anything. He fought a raccoon\nfor a taco once. He WON.", "mood": "sad"},
+		{"who": "Relic", "tag": "", "face": false, "text": "* He ran from us.\n* Smart."},
+	])
+
+
+## The bus stop on the road along the bottom of the lot. After the choice on
+## Westview Field, the bus goes to Mission Beach (the next fragment).
+func _bus_stop() -> void:
+	if not flag("chapter1_done"):
+		await Game.dialogue.say(["* (A bus stop. The schedule is mostly stickers.)", "* (One of them says MISSION BEACH.)"])
+		return
+	var go := await Game.dialogue.ask("* (A bus stop. Take the bus to Mission Beach?)", ["Ride", "Not now"])
+	if go != 0:
+		return
+	Game.play_sfx("door")
+	await Game.change_scene(BEACH_SCENE)
 
 
 func _head_east() -> void:

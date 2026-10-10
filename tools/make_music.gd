@@ -23,6 +23,98 @@ const RATE := 22050
 const OUT_DIR := "res://audio/music/"
 
 const SONGS := {
+	# Mission Beach: a sunny little surf tune in G, with a twangy lead.
+	"beach": {
+		"bpm": 150,
+		"lead": [
+			"G4 . B4 . D5 . . . B4 . D5 . E5 . D5 .",
+			"C5 . E5 . G5 . . . E5 . D5 . C5 . . .",
+			"G4 . B4 . D5 . . . B4 . D5 . E5 . G5 .",
+			"A5 . G5 . E5 . D5 . C5 . . . - - - -",
+			"E5 . E5 . D5 . B4 . D5 . . . G4 . . .",
+			"C5 . C5 . B4 . A4 . B4 . . . D5 . . .",
+			"E5 . D5 . B4 . G4 . A4 . B4 . C5 . A4 .",
+			"G4 . . . . . . . - - - - - - - -",
+		],
+		"harm": [
+			"B3 . D4 . G4 . D4 . B3 . D4 . G4 . D4 .",
+			"C4 . E4 . G4 . E4 . C4 . E4 . G4 . E4 .",
+			"B3 . D4 . G4 . D4 . B3 . D4 . G4 . D4 .",
+			"D4 . F#4 . A4 . F#4 . D4 . F#4 . A4 . F#4 .",
+			"B3 . D4 . G4 . D4 . B3 . D4 . G4 . D4 .",
+			"C4 . E4 . A4 . E4 . C4 . E4 . A4 . E4 .",
+			"C4 . E4 . G4 . E4 . D4 . F#4 . A4 . F#4 .",
+			"B3 . D4 . G4 . . . - - - - - - - -",
+		],
+		"bass": [
+			"G2 . . G2 . . D3 . G2 . . G2 . . D3 .",
+			"C3 . . C3 . . G2 . C3 . . C3 . . G2 .",
+			"G2 . . G2 . . D3 . G2 . . G2 . . D3 .",
+			"D3 . . D3 . . A2 . D3 . . D3 . . A2 .",
+			"G2 . . G2 . . D3 . G2 . . G2 . . D3 .",
+			"A2 . . A2 . . E3 . A2 . . A2 . . E3 .",
+			"C3 . . C3 . . G2 . D3 . . D3 . . A2 .",
+			"G2 . . . D3 . . . G2 . . . - - - -",
+		],
+		"drums": [
+			"K - H - S - H H K - H - S - H -",
+			"K - H - S - H H K K H - S - H -",
+			"K - H - S - H H K - H - S - H -",
+			"K - H - S - H H K K H - S S S -",
+			"K - H - S - H H K - H - S - H -",
+			"K - H - S - H H K K H - S - H -",
+			"K - H - S - H H K - H - S - H -",
+			"K - - - S - - - K - - - S S S S",
+		],
+	},
+
+	# The Dipper: the coaster climbing (CLACK, CLACK, CLACK on the drums) and then
+	# the drop, over and over. Fast and a little out of control.
+	"dipper": {
+		"bpm": 168,
+		"lead_wave": "saw",
+		"lead": [
+			"E4 . . . F4 . . . F#4 . . . G4 . . .",
+			"G#4 . . . A4 . . . A#4 . . . B4 . . .",
+			"E5 . D5 . B4 . A4 . G4 . E4 . D4 . B3 .",
+			"E4 . G4 . B4 . E5 . D5 . B4 . G4 . . .",
+			"A4 . . . A#4 . . . B4 . . . C5 . . .",
+			"C#5 . . . D5 . . . D#5 . . . E5 . . .",
+			"A5 . G5 . E5 . D5 . B4 . A4 . G4 . E4 .",
+			"E4 . . . B4 . . . E5 . . . - - - -",
+		],
+		"harm": [
+			"B3 . . . C4 . . . C#4 . . . D4 . . .",
+			"D#4 . . . E4 . . . F4 . . . F#4 . . .",
+			"B4 . A4 . G4 . E4 . D4 . B3 . A3 . G3 .",
+			"B3 . E4 . G4 . B4 . A4 . G4 . E4 . . .",
+			"E4 . . . F4 . . . F#4 . . . G4 . . .",
+			"G#4 . . . A4 . . . A#4 . . . B4 . . .",
+			"E5 . D5 . B4 . A4 . G4 . E4 . D4 . B3 .",
+			"B3 . . . E4 . . . G4 . . . - - - -",
+		],
+		"bass": [
+			"E2 . E2 . E2 . E2 . E2 . E2 . E2 . E2 .",
+			"E2 . E2 . E2 . E2 . E2 . E2 . E2 . E2 .",
+			"E2 . . . E3 . . . E2 . . . E3 . . .",
+			"G2 . . . A2 . . . B2 . . . E2 . . .",
+			"A2 . A2 . A2 . A2 . A2 . A2 . A2 . A2 .",
+			"A2 . A2 . A2 . A2 . A2 . A2 . A2 . A2 .",
+			"A2 . . . A3 . . . E2 . . . E3 . . .",
+			"E2 . . . B2 . . . E2 . . . - - - -",
+		],
+		"drums": [
+			"S - - - S - - - S - - - S - - -",
+			"S - - - S - - - S - - - S - S -",
+			"K - H K S - H - K - H K S - H -",
+			"K - H K S - H - K K H - S S S S",
+			"S - - - S - - - S - - - S - - -",
+			"S - - - S - - - S - - - S - S -",
+			"K - H K S - H - K - H K S - H -",
+			"K - - - S - - - K - - - S S S S",
+		],
+	},
+
 	# Relic's theme. Lonely and gentle, in A minor: a soft triangle melody that keeps
 	# reaching up and settling back down, like someone looking for someone. (Slowed
 	# and drowned in reverb, it's the battle music once Elric has become Relic: see

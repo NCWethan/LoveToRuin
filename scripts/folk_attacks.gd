@@ -57,6 +57,12 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"squirrel_dash": return _squirrel_dash(enemy, parent, area, s, step)
 		"bag_drift": return _bag_drift(enemy, parent, area, s, step)
 		"gust": return _gust(enemy, parent, area, s, step)
+		# --- Mission Beach ---
+		"coaster_cars": return _coaster_cars(enemy, parent, area, s, step)
+		"the_drop": return _the_drop(enemy, parent, area, s, step)
+		"loop_track": return _loop_track(enemy, parent, area, s, step)
+		"come_back": return _come_back(enemy, parent, area, s, step)
+		"near_miss": return _near_miss(enemy, parent, area, s, step)
 	return -1.0
 
 
@@ -737,3 +743,92 @@ static func _gust(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: 
 			leaf.spin = 5.0
 		y += 12.0
 	return 1.0
+
+
+# --- The Dipper (Mission Beach) ------------------------------------------------------
+
+## COASTER CARS: a train of cars rattles across the box along a wavy track (they
+## rise and dip as they go). The track runs through the SOUL's row.
+static func _coaster_cars(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var y := Attacks._aim_y(area, soul, step, 1, 14.0)
+	for i in 4:
+		var car := _glyph(enemy, parent, area, Vector2(_side_x(area, left, 8.0) - (i * 16.0 if left else -i * 16.0), y), "cart", 11.0)
+		car.velocity = Vector2(170 if left else -170, 0)
+		car.zigzag = 3.0
+	return 1.0
+
+
+## THE DROP: CLACK... CLACK... CLACK... (the cars climb in at the top, faint),
+## then they all come down at once, fast, with one gap.
+static func _the_drop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var low := area.position.x + 8
+	var high := area.end.x - 8
+	var gap := Attacks._away_from(randf_range(low, high), soul.x, low, high)
+	var x := low
+	while x <= high:
+		if absf(x - gap) > 13.0:
+			var car := _glyph(enemy, parent, area, Vector2(x, area.position.y + 6), "cart", 10.0)
+			car.delay = 0.9
+			car.velocity = Vector2(0, 60)
+			car.acceleration = Vector2(0, 420)
+		x += 14.0
+	return 1.5
+
+
+## LOOP: the track loops around the SOUL; a ring of cars with one opening, closing in.
+static func _loop_track(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var ring := Attacks._bullet(enemy, parent, area, soul)
+	ring.shape = "ring"
+	ring.size = 5.0
+	ring.color = Color(0.85, 0.3, 0.25)
+	ring.delay = 0.3
+	ring.radius = 90.0
+	ring.ring_speed = -55.0
+	ring.gap_angle = randf() * TAU
+	ring.gap_width = 0.75
+	ring.lifetime = 1.6
+	return 1.2
+
+
+# --- Crayola (Genocide) -------------------------------------------------------------
+
+## A tiny 3x5 font, for spelling with cards.
+const LETTERS := {
+	"C": ["###", "#..", "#..", "#..", "###"], "O": ["###", "#.#", "#.#", "#.#", "###"],
+	"M": ["#.#", "###", "#.#", "#.#", "#.#"], "E": ["###", "#..", "##.", "#..", "###"],
+	"B": ["##.", "#.#", "##.", "#.#", "##."], "A": [".#.", "#.#", "###", "#.#", "#.#"],
+	"K": ["#.#", "##.", "#..", "##.", "#.#"],
+}
+
+## COME BACK: Crayola's cards (every one the Seven of Hearts) gather into letters,
+## one at a time, across the top of the box, and then drift down. They spell
+## COME BACK.
+static func _come_back(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var word := "COMEBACK"
+	var letter: String = word[step % word.length()]
+	var col := step % 4
+	var row := (step % 8) / 4
+	var origin := area.position + Vector2(18 + col * 36, 10 + row * 0)
+	var rows: Array = LETTERS[letter]
+	for y in rows.size():
+		for x in 3:
+			if str(rows[y])[x] == "#":
+				var card := _glyph(enemy, parent, area, origin + Vector2(x * 7, y * 7), "heart_card", 6.0)
+				card.delay = 0.5
+				card.velocity = Vector2(0, 38 + (step % 8) * 4)
+	return 0.75
+
+
+# --- N.C. Wethan (Genocide) ---------------------------------------------------------
+
+## NEAR MISS: lightning cracks down all over the box, everywhere except where you
+## are. He isn't aiming at you. He never was.
+static func _near_miss(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := randf_range(area.position.x + 8, area.end.x - 8)
+	if absf(x - soul.x) < 30.0:
+		x = soul.x + (34.0 if x >= soul.x else -34.0)
+		if x < area.position.x + 6 or x > area.end.x - 6:
+			x = soul.x - (x - soul.x)
+	Attacks._beam(enemy, parent, area, Vector2(x, area.get_center().y), Vector2.DOWN, 0.4, Color(0.45, 0.85, 1.0))
+	return 0.35
