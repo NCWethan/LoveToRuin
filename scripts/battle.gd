@@ -666,6 +666,28 @@ const MAX_OVERHEAL := 26
 ## long the beam lasts.
 const BEAM_TIME := 0.75
 const STRAVANT_TURNS := 3
+## Supreme: how long the target stays ANALYZED, and how much harder FIGHT hits it.
+const ANALYZED_TURNS := 3
+const ANALYZED_BONUS := 1.5
+## Rooster: how long the target stays ROASTED, and the chance it roasts him back.
+const ROASTED_TURNS := 2
+const ROAST_BACK_CHANCE := 0.25
+## Agent: how much shorter and slower the next enemy turn is.
+const AGENT_SHORTER := 0.6
+const AGENT_SLOW := 0.8
+## MuffinMage: the heal, and FED (more at the end of each enemy turn).
+const GRILL_HEAL := 10
+const FED_TURNS := 3
+const FED_HEAL := 4
+## Crayola: the cards.
+const CARD_SUITS := ["HEARTS", "SPADES", "DIAMONDS", "CLUBS"]
+const CARD_MONEY := 15
+const CARD_MERCY := 20
+## Agent called this turn: the next enemy turn is shorter and slower.
+var _agent_plan: bool = false
+## What Crayola drew, and what Rooster's target did (for the battle text).
+var _card_drawn: String = ""
+var _roasted_back: bool = false
 ## Nat's FOOTNOTE: how much closer the enemy gets to being spared.
 const NAT_MERCY := 15
 ## Nassan's plan: how much longer the SOUL is safe after a hit while he's here.
@@ -821,6 +843,74 @@ func _process_call(delta: float) -> void:
 			Game.play_sfx("heal")
 			_add_popup("+%d" % BENEDICT_OVERHEAL, _panel_position(eater) + Vector2(60, 0), Color(0.4, 0.7, 1.0), 22, true)
 			_add_popup(info["move"], Vector2(150, 40), info["color"], 18, true)
+		elif info.get("kind", "") == "analyze":
+			target.statuses["ANALYZED"] = ANALYZED_TURNS
+			target.flash = 0.3
+			Game.play_sfx("ping")
+			_add_popup(info["move"], target.position + Vector2(0, -95), info["color"], 16)
+			_add_popup("DEF 0", target.position + Vector2(0, -30), info["color"], 22, true)
+		elif info.get("kind", "") == "card":
+			_card_drawn = CARD_SUITS.pick_random()
+			Game.play_sfx("item", 1.2)
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 18, true)
+			match _card_drawn:
+				"HEARTS":
+					for member in party:
+						if not member.is_down():
+							var healed := mini(12, member.max_hp - member.hp)
+							member.hp += healed
+							if healed > 0:
+								_add_popup("+%d" % healed, _panel_position(member), Color.GREEN)
+				"SPADES":
+					var damage := 10 + Game.lv() * 2 + randi() % 4
+					_call["damage"] = maxi(mini(damage, target.hp - 1), 0)
+					target.hp -= _call["damage"]
+					target.shake = 0.5
+					target.flash = 0.2
+					Game.play_sfx("punch_hit")
+					_add_popup(str(_call["damage"]), target.position + Vector2(0, -30), Color(1, 0.25, 0.25), 26, true)
+				"DIAMONDS":
+					Game.money += CARD_MONEY
+					_add_popup("+$%d" % CARD_MONEY, Vector2(150, 70), YELLOW, 20, true)
+				"CLUBS":
+					if target.spare_refusal == "":
+						target.mercy = mini(target.mercy + CARD_MERCY, 100)
+						_add_popup("+%d%% MERCY" % CARD_MERCY, target.position + Vector2(70, 10), YELLOW, 18, true)
+		elif info.get("kind", "") == "roast":
+			_roasted_back = randf() < ROAST_BACK_CHANCE
+			if not _roasted_back:
+				target.statuses["ROASTED"] = ROASTED_TURNS
+				target.shake = 0.4
+				target.mood = "sad" if target.mood == "" else target.mood
+				Game.play_sfx("bonk", 1.4)
+				_add_popup("OOOOH!", target.position + Vector2(0, -95), info["color"], 22, true)
+			else:
+				Game.play_sfx("miss")
+				_add_popup("...WOW.", Vector2(290, 120), info["color"], 20, true)
+		elif info.get("kind", "") == "plan":
+			_agent_plan = true
+			Game.play_sfx("select")
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 16, true)
+		elif info.get("kind", "") == "grill":
+			Game.play_sfx("heal")
+			for member in party:
+				if member.is_down():
+					continue
+				var healed := mini(GRILL_HEAL, member.max_hp - member.hp)
+				member.hp += healed
+				for bad in ["STICKY", "SHAKEN", "DIZZY", "QUEASY", "BURN"]:
+					member.statuses.erase(bad)
+				member.statuses["FED"] = FED_TURNS
+				if healed > 0:
+					_add_popup("+%d" % healed, _panel_position(member), Color.GREEN)
+			_add_popup(info["move"], Vector2(150, 40), info["color"], 16, true)
+		elif info.get("kind", "") == "honk":
+			Game.play_sfx("alert", 0.7)
+			Game.play_sfx("bonk", 0.5)
+			for enemy in _active_enemies():
+				enemy.statuses["STARTLED"] = 1
+				enemy.shake = 0.6
+			_add_popup("HONK!!", Vector2(400, 60), info["color"], 30, true)
 		elif shield:
 			# Big Joe plants his shield in front of the party.
 			_shield_up = true
@@ -859,6 +949,27 @@ func _process_call(delta: float) -> void:
 			line = "* %s used %s!\n* %s is %d%% closer to being spared." % [helper_name, info["move"], target.name, NAT_MERCY]
 	elif stays:
 		line = "* %s used %s!\n* This turn, every hit leaves you safe for twice as long." % [helper_name, info["move"]]
+	elif info.get("kind", "") == "analyze":
+		line = "* %s used %s!\n* %s is ANALYZED: FIGHT ignores its DEF\n*  and hits 50%% harder, for %d turns." % [helper_name, info["move"], target.name, ANALYZED_TURNS]
+	elif info.get("kind", "") == "card":
+		var what := ""
+		match _card_drawn:
+			"HEARTS": what = "Everyone heals 12 HP."
+			"SPADES": what = "%s took %d damage." % [target.name, _call["damage"]]
+			"DIAMONDS": what = "You found $%d." % CARD_MONEY
+			"CLUBS": what = ("%s is %d%% closer to being spared." % [target.name, CARD_MERCY]) if target.spare_refusal == "" else "(%s doesn't care for card tricks.)" % target.name
+		line = "* %s fans out the deck. You pick... the %s.\n* %s" % [helper_name, "Seven of " + _card_drawn.capitalize(), what]
+	elif info.get("kind", "") == "roast":
+		if _roasted_back:
+			line = "* %s roasted %s.\n* %s roasted him back. It was better.\n* (Rooster storms off. \"...WHATEVER.\")" % [helper_name, target.name, target.name]
+		else:
+			line = "* %s roasted %s! It was brutal.\n* %s is ROASTED: its hits do half damage\n*  for %d turns." % [helper_name, target.name, target.name, ROASTED_TURNS]
+	elif info.get("kind", "") == "plan":
+		line = "* %s used %s!\n* \"Your next move is shorter. And slower.\n*  You just don't know it yet.\"" % [helper_name, info["move"]]
+	elif info.get("kind", "") == "grill":
+		line = "* %s used %s!\n* Everyone heals %d HP, shakes off bad effects,\n*  and is FED (+%d HP every turn, for %d turns)." % [helper_name, info["move"], GRILL_HEAL, FED_HEAL, FED_TURNS]
+	elif info.get("kind", "") == "honk":
+		line = "* %s used %s!\n* Every enemy is STARTLED, and skips its next attack.\n* (He was honking at a car. There's no car.)" % [helper_name, info["move"]]
 	elif food:
 		var eater: PartyMember = _call["member"]
 		line = "* %s served %s The-Eggo Benedict!\n* %s gained %d overheal HP!" % [helper_name, eater.name, eater.name, BENEDICT_OVERHEAL]
@@ -868,9 +979,16 @@ func _process_call(delta: float) -> void:
 	var goodbye := "* %s stays by your side for this turn." % helper_name if stays else "* %s waved and ran off." % helper_name
 	if reads:
 		goodbye = "* %s wandered off, still reading." % helper_name
+	elif info.get("kind", "") == "roast" and _roasted_back:
+		goodbye = ""
+	elif info.get("kind", "") == "honk":
+		goodbye = "* %s ran off, still honking." % helper_name
+	elif info.get("kind", "") == "grill":
+		goodbye = "* %s packed up the grill. \"Later.\"" % helper_name
 	var after: Array = [line]
 	after.append_array(_nat_pages)
-	after.append(goodbye)
+	if goodbye != "":
+		after.append(goodbye)
 	_show_messages(after, _run_next_action)
 
 
@@ -883,7 +1001,7 @@ func _draw_call() -> void:
 	var target: Enemy = _call["target"]
 	var info: Dictionary = _helpers().HELPERS[_call["id"]]
 	var shield: bool = info.get("kind", "hit") == "shield"
-	var food: bool = info.get("kind", "hit") == "food"
+	var food: bool = info.get("kind", "hit") in ["food", "grill"]
 	if info.get("kind", "hit") == "lightning":
 		_draw_stravant(t, target, _call["sprite"])
 		return
@@ -914,9 +1032,23 @@ func _draw_call() -> void:
 	_overlay.draw_texture_rect(texture, Rect2(Vector2(-size.x / 2, -size.y), size), false)
 	_overlay.draw_set_transform(Vector2.ZERO)
 	var since := t - CALL_HIT_TIME
+	# Crayola's card, held up over the target for a moment.
+	if info.get("kind", "") == "card" and since >= 0.0 and since < 1.0 and _card_drawn != "":
+		var at := target.position + Vector2(-16, -120 - since * 10.0)
+		_overlay.draw_rect(Rect2(at, Vector2(32, 44)), Color(1, 1, 1))
+		_overlay.draw_rect(Rect2(at, Vector2(32, 44)), Color(0.2, 0.2, 0.25), false, 2.0)
+		var suit_color := Color(0.85, 0.15, 0.2) if _card_drawn in ["HEARTS", "DIAMONDS"] else Color(0.1, 0.1, 0.12)
+		_draw_centered("7", at + Vector2(16, 18), 16, suit_color)
+		_draw_centered({"HEARTS": "H", "SPADES": "S", "DIAMONDS": "D", "CLUBS": "C"}[_card_drawn], at + Vector2(16, 38), 14, suit_color)
 	if since < 0.0 or since > 0.4:
 		return
 	var fade := 1.0 - since / 0.4
+	if info.get("kind", "") == "grill":
+		# A little grill over the party, smoking.
+		for k in 5:
+			var puff := Vector2(130 + k * 14, 70 - since * 80.0 - k * 4)
+			_overlay.draw_circle(puff, 6.0 + since * 10.0, Color(0.9, 0.9, 0.9, 0.5 * fade))
+		return
 	if food:
 		# The plate: two eggs Benedict, steaming, then a sparkle as it's eaten.
 		# Over the head of whoever called him.
@@ -1414,6 +1546,9 @@ func _start_attack_anim(damage: int, accuracy: float) -> void:
 	_lucky = not _black_flash and Game.card_of(member.name) == "Lucky Card" and randf() < Items.LUCKY_CHANCE
 	if _lucky:
 		damage *= 2
+	# Supreme's THREAT ASSESSMENT: DEF doesn't count, and it hits 50% harder.
+	if _bar_target and _bar_target.statuses.has("ANALYZED"):
+		damage = roundi((damage + _bar_target.defense) * ANALYZED_BONUS)
 	# The glowbug: far, far more than it takes. 18-5-12-9-3: R-E-L-I-C.
 	if _data.id == "glowbug":
 		damage = 1851293
@@ -1598,6 +1733,14 @@ func _start_enemy_turn() -> void:
 	_text = ""
 	_enemy_timer = ENEMY_TURN_TIME
 	_attackers = _data.who_attacks(enemy_turn)
+	# Sansworth's HONK: anyone STARTLED sits this one out.
+	_attackers = _attackers.filter(func(e: Enemy) -> bool: return not e.statuses.has("STARTLED"))
+	# Agent saw it coming: this turn is shorter (and slower, below).
+	if _agent_plan:
+		_enemy_timer = ENEMY_TURN_TIME * AGENT_SHORTER
+	# Nobody attacking at all (everyone STARTLED): a quick, quiet turn.
+	if _attackers.is_empty():
+		_enemy_timer = 1.2
 	enemy_turn += 1
 
 	_spawn_timers.clear()
@@ -1664,6 +1807,8 @@ func _process_enemy_turn(delta: float) -> void:
 					slow *= STRAVANT_SLOW
 				if Game.party_has_card("Clock Card"):
 					slow *= Items.CLOCK_SLOW
+				if _agent_plan:
+					slow *= AGENT_SLOW
 				if slow < 1.0:
 					for k in range(before, get_child_count()):
 						var thrown := get_child(k) as Bullet
@@ -1770,6 +1915,9 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 	# Defense (from accessories) softens every hit; defending halves what's left.
 	var after_defense := maxi(1, amount - member.defense)
 	var damage := ceili(after_defense / 2.0) if member.defending else after_defense
+	# ROASTED (Rooster): too embarrassed to hit hard.
+	if source is Enemy and (source as Enemy).statuses.has("ROASTED"):
+		damage = ceili(damage / 2.0)
 	if _shield_up:
 		damage = roundi(damage * SHIELD_LETS_THROUGH)
 	# Overheal soaks up the hit first: Ronin's purple, then Eggo's blue.
@@ -1808,9 +1956,18 @@ func _hurt_party(amount: int, source: Object = null) -> void:
 
 
 func _end_enemy_turn() -> void:
-	# Big Joe's shield only lasts one turn, and Nassan heads off after his.
+	# Big Joe's shield only lasts one turn, and Nassan heads off after his. Agent's
+	# plan was for this turn only.
 	_shield_up = false
 	_nassan_here = false
+	_agent_plan = false
+	# FED (MuffinMage): a little HP back at the end of every enemy turn.
+	for member in party:
+		if member.statuses.has("FED") and not member.is_down():
+			var healed := mini(FED_HEAL, member.max_hp - member.hp)
+			if healed > 0:
+				member.hp += healed
+				_add_popup("+%d" % healed, _panel_position(member), _effects().EFFECTS["FED"]["color"])
 	# Status effects: BURN hurts (never below 1 HP), then everyone's count down.
 	for member in party:
 		if member.statuses.has("BURN") and not member.is_down():

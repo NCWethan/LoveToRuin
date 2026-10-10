@@ -14,10 +14,17 @@ extends RefCounted
 ##             "lightning" (N.C. Wethan: damage, and STRAVANT on the enemy: its
 ##             attacks are slower for 3 turns. Only below half HP), or "riff"
 ##             (Ronin: plays his guitar; after the riff, everyone gets 5 purple
-##             overheal and AMPED, a faster SOUL)
+##             overheal and AMPED, a faster SOUL), "analyze" (Supreme: the target is
+##             ANALYZED, so FIGHT ignores its DEF and hits 50% harder), "card"
+##             (Crayola: pick a card, any card: a random suit, a random good thing),
+##             "roast" (Rooster: the target is ROASTED and hits for half; or it
+##             roasts him back and he storms off), "plan" (Agent: the next enemy
+##             turn is shorter and slower), "grill" (MuffinMage: everyone heals,
+##             loses their bad effects, and is FED), or "honk" (Sansworth: every
+##             enemy is STARTLED and skips its next attack)
 ##   cooldown  turns before they can be called again (default 3, the shared wait)
 ##   charges   how many times they can be called per battle (default: no limit)
-## Members without a decided ability yet use a placeholder hit.
+## (A placeholder hit is still there for anyone without a move.)
 
 const CORPS := ["BigJoe6", "Eggo", "Nassan", "Nat", "NCWethan", "Ronin", "Supreme", "Crayola", "Rooster", "Agent", "MuffinMage", "Sansworth"]
 
@@ -43,12 +50,24 @@ const HELPERS := {
 	# Ronin plugs in and plays his riff (the whole thing). When it's over, everyone
 	# gets 5 overheal (purple; it stacks with Eggo's blue) and is AMPED for 2 turns.
 	"Ronin": {"color": Color(1.0, 0.55, 0.15), "line": "Ronin plugs in. \"THIS ONE'S FOR YOU GUYS!!\"", "move": "POWER RIFF", "kind": "riff"},
-	"Supreme": {"color": Color(0.8, 0.82, 0.9), "line": "Supreme arrives with a spreadsheet!", "move": "STATISTICAL STRIKE"},
-	"Crayola": {"color": Color(1.0, 0.55, 0.8), "line": "Crayola shyly steps in!", "move": "CARD FLICK"},
-	"Rooster": {"color": Color(1.0, 0.3, 0.3), "line": "Rooster struts in!", "move": "ROAST"},
-	"Agent": {"color": Color(0.7, 0.5, 1.0), "line": "Agent walks in, already calculating!", "move": "THE ODDS"},
-	"MuffinMage": {"color": Color(0.95, 0.5, 0.2), "line": "MuffinMage drops in, mid-salmon-burger. \"Yo.\"", "move": "BRAIN FOOD"},
-	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "line": "Sansworth runs in going \"VROOM.\" He doesn't have a car.", "move": "HONK"},
+	# Supreme runs the numbers on the target: it's ANALYZED for 3 turns, and every
+	# FIGHT hit on it ignores its DEF and does 50% more. 2 charges.
+	"Supreme": {"color": Color(0.8, 0.82, 0.9), "line": "Supreme arrives with spreadsheet #4.\n* \"I've run the numbers on this one.\"", "move": "THREAT ASSESSMENT", "kind": "analyze", "charges": 2},
+	# Crayola does his card trick: pick a card. Hearts heals everyone, Spades hits
+	# the target, Diamonds is money, Clubs talks it down a little. 2 charges.
+	"Crayola": {"color": Color(1.0, 0.55, 0.8), "line": "Crayola shyly steps in, shuffling.\n* \"...Pick a card?\"", "move": "PICK A CARD", "kind": "card", "charges": 2},
+	# Rooster roasts the target: ROASTED for 2 turns, too embarrassed to hit hard
+	# (half damage). One time in four, it roasts him back, and he storms off.
+	"Rooster": {"color": Color(1.0, 0.3, 0.3), "line": "Rooster struts in, adjusting his top hat.\n* \"Oh, this'll be EASY.\"", "move": "ROAST", "kind": "roast"},
+	# Agent calls the next enemy turn before it happens: it's 40% shorter, and
+	# everything in it moves 20% slower. 4 turns between calls.
+	"Agent": {"color": Color(0.7, 0.5, 1.0), "line": "Agent walks in. \"Three moves ahead.\"", "move": "THREE MOVES AHEAD", "kind": "plan", "cooldown": 4},
+	# MuffinMage grills for everyone: +10 HP each, bad effects gone, and FED for 3
+	# turns (+4 HP at the end of every enemy turn). 2 charges.
+	"MuffinMage": {"color": Color(0.95, 0.5, 0.2), "line": "MuffinMage drops in with a tiny grill.\n* \"Yo. It's Friday somewhere.\"", "move": "SALMON BURGER FRIDAY", "kind": "grill", "charges": 2},
+	# Sansworth honks the horn of a car he doesn't have. Every enemy is STARTLED
+	# and skips its next attack. 1 charge.
+	"Sansworth": {"color": Color(0.7, 0.7, 0.75), "line": "Sansworth runs in going \"VROOM.\"\n* He doesn't have a car. He has a horn.", "move": "HONK", "kind": "honk", "charges": 1},
 }
 
 ## What Nat reads out about each attack ("its next attack: ...").

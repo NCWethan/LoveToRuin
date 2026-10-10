@@ -9,6 +9,9 @@ extends RefCounted
 const EFFECTS := {
 	# On enemies.
 	"STRAVANT": {"color": Color(0.35, 0.55, 1.0), "what": "Struck by Stravant's Lightning: its attacks move slower."},
+	"ANALYZED": {"color": Color(0.8, 0.82, 0.9), "what": "Supreme ran the numbers: FIGHT ignores its DEF and hits 50% harder."},
+	"ROASTED": {"color": Color(1.0, 0.35, 0.3), "what": "Roasted by Rooster: too embarrassed to hit hard (half damage)."},
+	"STARTLED": {"color": Color(0.85, 0.85, 0.9), "what": "HONK! Too startled to attack this turn."},
 	# On the party.
 	"STICKY": {"color": Color(1.0, 0.8, 0.2), "what": "Covered in goo: the SOUL moves 30% slower."},
 	"SHAKEN": {"color": Color(0.8, 0.8, 0.9), "what": "Rattled: FIGHT does 30% less damage."},
@@ -17,6 +20,7 @@ const EFFECTS := {
 	"BURN": {"color": Color(1.0, 0.45, 0.15), "what": "On fire: lose 2 HP at the end of every enemy turn."},
 	# Good ones, from friends.
 	"AMPED": {"color": Color(0.75, 0.45, 1.0), "what": "Pumped up by Ronin's riff: the SOUL moves 30% faster."},
+	"FED": {"color": Color(0.95, 0.55, 0.25), "what": "Full of salmon burger: +4 HP at the end of every enemy turn."},
 }
 
 ## What each enemy can do to you: [effect, chance per hit (0 to 1), turns].
