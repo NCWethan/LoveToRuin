@@ -270,6 +270,64 @@ const PEOPLE := {
 	},
 
 	# --- Westview's students (by day; see westview.gd) ---
+	# --- Downtown ---
+	"hotdog": {
+		"name": "Hot Dog Vendor", "sprite": "hotdog",
+		"talk": {
+			"lines": [["happy", "HOT DOGS! Get your HOT DOGS!\n...Yes, I'm a dachshund. No, it's not weird."], ["smug", "It's a little weird."]],
+			"options": ["One hot dog, please.", "Isn't that... a conflict?"],
+			"answers": [["happy", "Mustard? Relish? Existential dread?\nThe dread's free. Comes with every order."], ["sad", "Every day, kid. Every single day.\nBut the tips are good."]],
+		},
+		"challenged": ["angry", "You wanna go? I've got tongs,\nI've got mustard, and I've got NOTHING to lose."],
+		"spared": ["happy", "Here. On the house.\nDon't tell my manager. I'm my manager."],
+		"hp": 55, "atk": 4, "def": 1, "patterns": ["hot_dog_toss", "mustard_squirt"],
+		"check": "* HOT DOG VENDOR - ATK 4 DEF 1\n* Has sold hot dogs outside the ballpark for 11 years.\n* Doesn't think about it. Tries not to.",
+		"acts": [
+			{"name": "Buy One", "mercy": 50, "lines": ["* {actor} buys a hot dog, extra mustard.\n* The vendor's tail wags. He can't help it."]},
+			{"name": "Tip", "mercy": 50, "lines": ["* {actor} leaves a tip.\n* \"...A TIP? Nobody tips the hot dog guy.\""]},
+		],
+		"taunts": ["HOT DOGS!", "Mustard's on me!", "Extra relish!", "Don't make it weird."],
+		"flavor": ["* The Hot Dog Vendor waves his tongs.", "* Smells like ballpark."],
+		"backdrop": Color(0.85, 0.35, 0.25), "style": "skyline", "exp": 12, "money": 14,
+	},
+	"statue": {
+		"name": "Living Statue", "sprite": "statue",
+		"talk": {
+			"lines": [["", "..."], ["", "......"], ["", "(He doesn't move. Not even his eyes.)"]],
+			"options": ["(Put a coin in the jar.)", "(Make a face at him.)"],
+			"answers": [["happy", "(He winks. Just once. Then he's stone again.)"], ["", "(Nothing. Not even a twitch.\n His eyebrow, maybe. Maybe not.)"]],
+		},
+		"challenged": ["", "(For the first time in three hours,\n the Living Statue moves.)"],
+		"spared": ["happy", "(He bows. Then freezes, mid-bow,\n for the rest of the afternoon.)"],
+		"hp": 60, "atk": 4, "def": 3, "patterns": ["frozen_pose", "tip_jar"],
+		"check": "* LIVING STATUE - ATK 4 DEF 3\n* Painted silver, head to toe. Hasn't moved since noon.\n* His record is nine hours. He wants ten.",
+		"acts": [
+			{"name": "Tip", "mercy": 50, "lines": ["* {actor} drops a coin in the tip jar.\n* *clink* The statue changes pose. Very slowly."]},
+			{"name": "Hold Still", "mercy": 50, "lines": ["* {actor} holds very, very still.\n* The statue respects it. Deeply."]},
+		],
+		"taunts": ["...", "......", "(...)", "(blink)"],
+		"flavor": ["* The Living Statue is perfectly still.", "* A pigeon lands on the Living Statue's head.\n* He allows it."],
+		"backdrop": Color(0.6, 0.62, 0.68), "style": "skyline", "exp": 12, "money": 16,
+	},
+	"superfan": {
+		"name": "Superfan", "sprite": "superfan",
+		"talk": {
+			"lines": [["happy", "LET'S GO! LET'S GO! ...Oh, there's no game today?"], ["smug", "There's always a game. In your HEART."]],
+			"options": ["Who's your team?", "Do they ever win?"],
+			"answers": [["happy", "The home team! Whoever that is!\nI just like the yelling!"], ["sad", "...Not since I was an egg.\nBUT THIS IS THE YEAR."]],
+		},
+		"challenged": ["happy", "A RIVAL?! FINALLY!\nPLAY BALL!"],
+		"spared": ["happy", "GOOD GAME! GOOD GAME!\n(He shakes your hand. With his whole wing.)"],
+		"hp": 50, "atk": 3, "def": 1, "patterns": ["rally_towel", "peanut_shells"],
+		"check": "* SUPERFAN - ATK 3 DEF 1\n* A parrot in a jersey. Has never missed a game.\n* The team has never won one he's seen.",
+		"acts": [
+			{"name": "Cheer", "mercy": 50, "lines": ["* {actor} cheers.\n* The Superfan cheers LOUDER. It's a competition now."]},
+			{"name": "Do the Wave", "mercy": 50, "lines": ["* {actor} does the wave, alone.\n* The Superfan joins in. Two-person wave. Historic."]},
+		],
+		"taunts": ["LET'S GO!", "CHARGE!", "BOOOO! (affectionate)", "PLAY BALL!"],
+		"flavor": ["* The Superfan swings his rally towel.", "* Peanut shells, everywhere."],
+		"backdrop": Color(0.25, 0.45, 0.8), "style": "skyline", "exp": 10, "money": 9,
+	},
 	# --- Old Town ---
 	"rosa": {
 		"name": "Doña Rosa", "sprite": "rosa",

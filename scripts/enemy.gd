@@ -49,6 +49,8 @@ var finale_patterns: Array[String] = []
 var finale_line: String = ""
 var finale_started: bool = false
 var finale_announced: bool = false
+## Supreme labels his own attacks with their odds of hitting you: pattern -> %.
+var odds: Dictionary = {}
 var course: int = 0
 ## How many turns this enemy has attacked so far (some attacks speed up over time).
 var fury: int = 0

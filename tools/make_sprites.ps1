@@ -2421,6 +2421,88 @@ $wildArt = [ordered]@{
         ".........}..}",
         "........}}.}}"
     )
+    # The Big Screen (Downtown): the ballpark's scoreboard, on two steel legs,
+    # with a face made of light bulbs. Its smile is a scoreline.
+    'big_screen' = @(
+        "KKKKKKKKKKKKKKKKKKKKKK",
+        "KDDDDDDDDDDDDDDDDDDDDK",
+        "KDCCCCCCCCCCCCCCCCCCDK",
+        "KDCCiiiCCCCCCCCiiiCCDK",
+        "KDCiYYYiCCCCCCiYYYiCDK",
+        "KDCiYKYiCCCCCCiYKYiCDK",
+        "KDCiYYYiCCCCCCiYYYiCDK",
+        "KDCCiiiCCCCCCCCiiiCCDK",
+        "KDCCCCCCCCCCCCCCCCCCDK",
+        "KDCCIICIICCCCCC>>C>>DK",
+        "KDCCCICCICCCCCCC>CC>DK",
+        "KDCCIICIICCYYCC>>C>>DK",
+        "KDCCICCCICCCCCCC>CC>DK",
+        "KDCCIICIICCCCCC>>C>>DK",
+        "KDCCCCCCCCCCCCCCCCCCDK",
+        "KDDDDDDDDDDDDDDDDDDDDK",
+        "KKKKKKKKKKKKKKKKKKKKKK",
+        ".....GG........GG",
+        ".....GG........GG",
+        ".....GG........GG",
+        "....gGGg......gGGg"
+    )
+    # The Hot Dog Vendor (Downtown): a dachshund in a paper hat and an apron.
+    'hotdog' = @(
+        "........WWWWWW",
+        ".......WRRRRRRW",
+        "......66666666",
+        ".....6669999666",
+        ".....69K9999K96",
+        "8....69999999996",
+        "88...6699998K99",
+        ".8....66699999",
+        "..666WWWWWWWW666",
+        "..666WWWWYWWW666",
+        "..9.6WW%%%%%WW6.9",
+        "....6WWWWWWWWW6",
+        "....66666666666",
+        "....8.8.....8.8"
+    )
+    # The Living Statue (Downtown): a busker painted silver from head to toe, who
+    # has not moved in three hours. There's a tip jar.
+    'statue' = @(
+        "......gGGGGg",
+        ".....GGGGGGGG",
+        ".....GgGGGGgG",
+        ".....GGGGGGGG",
+        "......GGggGG",
+        ".......GGGG",
+        "..GGGGGGGGGGGGGG",
+        ".GG.GGGGGGGGGG.GG",
+        ".G..GNNNNNNNNG..G",
+        "....GNNNNNNNNG",
+        "....GNNNNNNNNG",
+        "....GGGGGGGGGG",
+        "....GGG....GGG",
+        "....GGG....GGG",
+        "...gggg....gggg",
+        "..............WW",
+        ".............WAAW",
+        ".............WWWW"
+    )
+    # The Superfan (Downtown): a parrot in a jersey, never missed a game.
+    'superfan' = @(
+        "........RRR",
+        ".......RRRRRR",
+        "......11111111",
+        ".....1111W1111",
+        ".....111WKW111}}",
+        ".....11111111}}}",
+        "......111111..}",
+        ".....uWWuWWuWWu",
+        "...1uWWuW7WuWWu1",
+        "...1uWWuW7WuWWu1",
+        "....uWWuWWuWWuW",
+        "....uWWuWWuWWuW",
+        ".....JJJJJJJJJ",
+        ".....JJJ...JJJ",
+        ".....}}}...}}}"
+    )
     'wild_bag' = @(
         "........WW....WW",
         ".......W..W..W..W",

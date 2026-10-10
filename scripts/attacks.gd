@@ -60,6 +60,10 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, soul
 	var wait := FolkAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:
 		return wait
+	# Downtown (downtown_attacks.gd).
+	wait = DowntownAttacks.spawn(pattern, enemy, parent, area, s, step)
+	if wait >= 0.0:
+		return wait
 	# The Corps, as bosses (corps_attacks.gd).
 	wait = CorpsAttacks.spawn(pattern, enemy, parent, area, s, step)
 	if wait >= 0.0:

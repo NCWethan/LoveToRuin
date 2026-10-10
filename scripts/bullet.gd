@@ -516,6 +516,9 @@ const GLYPHS := {
 	"flan": [".YYY.", "YYYYY", "bbbbb"],
 	"soup": [".b.", "bTb", ".b."],
 	"corner": ["WWW", "WW.", "W.."],
+	"hotdog": [".TTTTTT.", "TRRRRRRT", "TYRYRYRT", ".TTTTTT."],
+	"towel": ["YYYYY", "YKKYY", "YYYYY", "Y.Y.Y"],
+	"peanut": [".TT.", "TbTT", "TTbT", ".TT."],
 }
 
 

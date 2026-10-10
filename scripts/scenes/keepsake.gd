@@ -20,6 +20,9 @@ extends Area
 ##      his grief into a pigeon feather, and he laughs at the pigeons ("That one
 ##      looks like a Gerald"). Hop finds out what the backpack is really full of.
 ##      The feather goes between the slats of the bench: "I'll come back for it."
+##   7  Downtown, the empty ballpark after midnight: Hop wakes up screaming. Relic
+##      puts his nightmares into the only thing left in their pocket, a Jack in
+##      the Box curly-fry token, and wears it on a cord from then on.
 ##
 ## On the Genocide path, Relic narrates the end of each one, bitterly ("we").
 
@@ -66,6 +69,7 @@ func _spawn() -> Vector2:
 		4: return Vector2(10 * T, 5 * T + 10)
 		5: return Vector2(4 * T, 14 * T + 10)
 		6: return Vector2(3 * T, 12 * T + 10)
+		7: return Vector2(15 * T, 14 * T + 10)
 	return Vector2(2 * T, 9 * T + 12)
 
 
@@ -78,6 +82,7 @@ func build_map() -> void:
 		4: _build_ocean()
 		5: _build_steps()
 		6: _build_plaza()
+		7: _build_ballpark()
 		_: _build_road()
 
 
@@ -133,6 +138,17 @@ func _build_plaza() -> void:
 	room.fill(15, 13, 2, 1, Room.BENCH)     # the bench
 	room.fill(23, 13, 2, 1, Room.BENCH)
 	room.set_tile(19, 15, Room.PROP)        # the flagpole
+
+
+## The ballpark after midnight, five years ago: the outfield grass, the empty
+## stands, the scoreboard dark.
+func _build_ballpark() -> void:
+	room.setup(36, 24, Room.FIELD)
+	room.fill(0, 0, 36, 3, Room.BLEACHERS)
+	room.fill(0, 3, 36, 1, Room.FENCE)
+	room.fill(0, 21, 36, 3, Room.BLEACHERS)
+	room.fill(0, 0, 1, 24, Room.BLEACHERS)
+	room.fill(35, 0, 1, 24, Room.BLEACHERS)
 
 
 ## Mission Beach, one afternoon that summer.
@@ -195,6 +211,17 @@ func _draw_decor() -> void:
 				_decor.draw_circle(spot * T + Vector2(4, -4), 2.5, Color8(110, 120, 140))
 			if _flags.get("feather", false):
 				_decor.draw_line(Vector2(15 * T + 14, 13 * T + 6), Vector2(16 * T + 4, 13 * T - 2), Color8(150, 150, 160), 3.0)
+		7:
+			# The dark scoreboard, the stars, two sleeping bags, and the token (if it
+			# hasn't been used yet) glinting on Relic's bag.
+			_decor.draw_rect(Rect2(12 * T, 0, 12 * T, 3 * T - 4), Color8(16, 16, 22))
+			_decor.draw_string(_font, Vector2(14 * T, 2 * T - 2), "HOME 0   VISITORS 0", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1, 0.85, 0.3, 0.12))
+			for k in 40:
+				_decor.draw_rect(Rect2(Vector2((k * 97) % 720, 4 + (k * 31) % 50), Vector2(2, 2)), Color(1, 1, 1, 0.5))
+			_decor.draw_rect(Rect2(17 * T, 11 * T, 2 * T, 3 * T), Color8(200, 60, 60))
+			_decor.draw_rect(Rect2(14 * T, 11 * T, 2 * T, 3 * T), Color8(60, 110, 70))
+			if not _flags.get("token_used", false):
+				_decor.draw_circle(Vector2(14 * T + 10, 13 * T + 4), 3.0, Color8(240, 200, 80))
 		5:
 			# The steps (lines across them), and the stars.
 			for k in 3:
@@ -271,6 +298,10 @@ func _physics_process(_delta: float) -> void:
 	if memory == 5 and hop != null and player.position.distance_to(hop.position) < 34.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
 		run_cutscene(_end_steps)
+	# Hop, after his nightmare.
+	if memory == 7 and hop != null and _flags.get("screamed", false) and player.position.distance_to(hop.position) < 36.0 and not _flags.get("ended", false):
+		_flags["ended"] = true
+		run_cutscene(_end_ballpark)
 	# The old man on the bench.
 	if memory == 6 and _flags.has("man") and player.position.distance_to(_flags["man"]) < 40.0 and not _flags.get("ended", false):
 		_flags["ended"] = true
@@ -292,6 +323,7 @@ func _start() -> void:
 		4: await run_cutscene(_intro_ocean)
 		5: await run_cutscene(_intro_steps)
 		6: await run_cutscene(_intro_plaza)
+		7: await run_cutscene(_intro_ballpark)
 
 
 func _intro_road() -> void:
@@ -551,6 +583,59 @@ func _end_plaza() -> void:
 		"* (Hop hands you a churro. It's still warm.)",
 	])
 	await _finish(["* We carried his wife for him. Five years.\n* He never even knew.", "* We said we'd come back for it."])
+
+
+# --- 7: The ballpark, after midnight -----------------------------------------------
+
+func _intro_ballpark() -> void:
+	var night := CanvasModulate.new()
+	night.color = Color(0.4, 0.5, 0.6)
+	add_child(night)
+	hop = Cast.make("Hop")
+	add_character(hop, Vector2(18 * T, 12 * T + 10))
+	hop.face(Vector2.DOWN)
+	await get_tree().create_timer(2.6).timeout
+	await Game.dialogue.say([
+		"* (The ballpark, after midnight. You climbed the fence.\n*  Hop said it was the best place in the city for stars.)",
+		"* (He was right. He fell asleep an hour ago.\n*  You didn't. You don't, much.)",
+	])
+	await get_tree().create_timer(1.2).timeout
+	Game.play_sfx("hurt", 0.7)
+	await Game.dialogue.say([
+		"* (Hop sits straight up and SCREAMS.)",
+		{"who": "Hop", "text": "- no no no NO, get OUT, get out of my-", "mood": "shocked"},
+		"* (He's shaking. He doesn't know where he is.)",
+	])
+	_flags["screamed"] = true
+	Game.set_objective("(Go to Hop.)")
+
+
+func _end_ballpark() -> void:
+	hop.face(player.position - hop.position)
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "It was the voice. It was- there was fire,\nand it was ME, it was my hands, and everyone was-", "mood": "sad"},
+		{"who": "Hop", "text": "Every night. EVERY night, Relic.\nIt's getting worse.", "mood": "sad"},
+		{"who": "Relic", "choices": ["(Sit down next to him.)", "...Give me your hand."]},
+		"* (You check your pockets. A bottle cap: no, that's\n*  somebody else's. A ticket stub: somebody else's.)",
+		"* (The only empty thing left: a token from Jack in the Box.\n*  GOOD FOR ONE FREE CURLY FRIES.)",
+		{"who": "Relic", "text": "Hold this. Hold it tight. Think about the dream.", "mood": ""},
+		"* (He holds it. You put your hands around his.)",
+		"* (Something moves. Out of him, into the token.\n*  It's hot, then heavy, then very, very cold.)",
+	])
+	_flags["token_used"] = true
+	_decor.queue_redraw()
+	await Game.dialogue.say([
+		{"who": "Hop", "text": "...", "mood": "shocked"},
+		{"who": "Hop", "text": "It's quiet.", "mood": "shocked"},
+		{"who": "Hop", "text": "It's never quiet. Relic, it's NEVER quiet.\nWhat did you DO?", "mood": "sad"},
+		{"who": "Relic", "text": "Put it somewhere else. Go back to sleep.", "mood": ""},
+		{"who": "Hop", "text": "...Will you stay up?", "mood": "sad"},
+		{"who": "Relic", "text": "Someone has to.", "mood": "happy"},
+		"* (You thread the token onto a cord, and hang it\n*  around your neck. It's still cold.)",
+		"* (Hop is asleep in about ten seconds.)",
+		"* (You watch the dark scoreboard until the sun comes up.)",
+	])
+	await _finish(["* He slept like a baby.", "* We wore his nightmares around our neck.\n* We never really slept again."])
 
 
 # --- The end of a memory ---------------------------------------------------------

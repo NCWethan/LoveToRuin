@@ -627,13 +627,13 @@ func _feather_bench() -> void:
 			"* (He's gone. You did that.)",
 			"* (You keep it. There's nobody to give it back to.)",
 		])
-		Game.set_objective("6 of 12 FRAGMENTS.")
+		Game.set_objective("6 of 12. Next: Downtown. (Take the bus.)")
 		return
 	await Game.dialogue.say([
 		"* (You can feel what's in it: an old man's grief,\n*  five years old, waiting for somebody to come back.)",
 		"* (It isn't yours. It's his.)",
 	])
-	Game.set_objective("6 of 12. (The Pigeon Man is at the PQ Mall.)")
+	Game.set_objective("6 of 12. Next: Downtown. (And the Pigeon Man, at the mall?)")
 
 
 func _bus_stop() -> void:

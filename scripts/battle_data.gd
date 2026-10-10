@@ -39,6 +39,9 @@ var event: String = ""
 ## Someone standing behind the party who doesn't fight: drawn there, worried,
 ## and never given a turn (e.g. Hop, at the glowbug).
 var watcher: String = ""
+## Someone on your side who reads the enemy's next attack out loud at the start of
+## every turn (Supreme, at the Big Screen). The attack is locked in.
+var announcer: String = ""
 ## No music at all.
 var silent: bool = false
 ## Buttons that can't be used: greyed out and chained. Trying one shows the next

@@ -782,6 +782,7 @@ const AREA_NAMES := {
 	"res://scenes/mission_beach.tscn": "Mission Beach",
 	"res://scenes/balboa_park.tscn": "Balboa Park",
 	"res://scenes/old_town.tscn": "Old Town",
+	"res://scenes/downtown.tscn": "Downtown",
 	"res://scenes/corps_base.tscn": "REVOLUTION Base",
 }
 

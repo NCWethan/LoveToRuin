@@ -368,7 +368,7 @@ func _return_feather() -> void:
 	Game.play_sfx("heal")
 	await Game.dialogue.say(["* (Your BOND went up by 5.)"])
 	if Game.objective().contains("Pigeon Man"):
-		Game.set_objective("6 of 12 FRAGMENTS.")
+		Game.set_objective("6 of 12. Next: Downtown. (Take the bus.)")
 
 
 ## Challenges someone (not in the Corps) to a fight.
@@ -658,6 +658,7 @@ const BUS_ROUTE := [
 	["Mission Beach", "res://scenes/mission_beach.tscn", "chapter1_done"],
 	["Balboa Park", "res://scenes/balboa_park.tscn", "mb_fragment"],
 	["Old Town", "res://scenes/old_town.tscn", "bp_fragment"],
+	["Downtown", "res://scenes/downtown.tscn", "ot_fragment"],
 ]
 ## Where the bus lets you off at the mall (the stop on the road).
 const MALL_BUS_SPOT := Vector2(640, 545)

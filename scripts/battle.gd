@@ -342,6 +342,13 @@ func _start_player_turn() -> void:
 	actions.clear()
 	current_member = -1
 	_flavor = _data.flavor_text(turn)
+	# Someone reads the next attack out loud (Supreme, at the Big Screen).
+	if _data.announcer != "":
+		_planned_patterns.clear()
+		for enemy in _active_enemies():
+			var next := _pick_pattern(enemy)
+			_planned_patterns[enemy] = next
+			_flavor = "* %s: \"Next up: %s.\n*  %s\"" % [DialogueBox.display_name(_data.announcer), DowntownAttacks.LABELS.get(next, next.to_upper()), DowntownAttacks.HINTS.get(next, "Good luck.")]
 	# A boss nearly beaten: their finale is coming, and they say so.
 	for enemy in _active_enemies():
 		if enemy.finale_line != "" and not enemy.finale_announced and enemy.hp * 3 < enemy.max_hp:
@@ -733,6 +740,11 @@ var _shield_up: bool = false
 var _nassan_here: bool = false
 ## Attacks Nat already read out: the enemies use these on their next turn.
 var _planned_patterns: Dictionary = {}
+## Where the SOUL went this enemy turn, and the last one (every 0.1 seconds): the
+## Big Screen's INSTANT REPLAY plays the last one back.
+var _soul_path: Array[Vector2] = []
+var _last_soul_path: Array[Vector2] = []
+var _soul_path_timer: float = 0.0
 ## What Nat read out, shown after his move.
 var _nat_pages: Array[String] = []
 var _nassan_sprite: Texture2D
@@ -1789,6 +1801,9 @@ func _start_enemy_turn() -> void:
 	if _attackers.is_empty():
 		_enemy_timer = 1.2
 	enemy_turn += 1
+	_last_soul_path = _soul_path.duplicate()
+	_soul_path.clear()
+	_soul_path_timer = 0.0
 
 	_spawn_timers.clear()
 	_spawn_steps.clear()
@@ -1807,6 +1822,11 @@ func _start_enemy_turn() -> void:
 	_planned_patterns.clear()
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
+		# Supreme: every attack labeled with its odds of hitting you.
+		if not enemy.odds.is_empty() and _turn_patterns.has(enemy):
+			var label: String = DowntownAttacks.LABELS.get(_turn_patterns[enemy], "")
+			if label != "":
+				_speech[enemy] = "%s: %d%%" % [label, int(enemy.odds.get(_turn_patterns[enemy], 50))]
 
 	create_tween().tween_property(box, "size", ATTACK_BOX_SIZE, 0.25)
 	soul.global_position = BOX_CENTER
@@ -1848,6 +1868,10 @@ func _pick_pattern(enemy: Enemy) -> String:
 
 func _process_enemy_turn(delta: float) -> void:
 	_enemy_timer -= delta
+	_soul_path_timer -= delta
+	if _soul_path_timer <= 0.0:
+		_soul_path_timer = 0.1
+		_soul_path.append(soul.global_position)
 	if _pressed("cancel"):
 		_switch_soul()
 
@@ -4029,6 +4053,8 @@ func _draw_backdrop() -> void:
 			_backdrop_plaza(color, t)
 		"dining":
 			_backdrop_dining(color, t)
+		"stadium":
+			_backdrop_stadium(color, t)
 		_:
 			_backdrop_sigil(color, t)
 			_backdrop_diamonds(color, t)
@@ -4167,6 +4193,35 @@ func _backdrop_dining(color: Color, t: float) -> void:
 		var flicker := 1.0 + sin(t * 13.0 + k * 2.1) * 0.25
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 4.0 * flicker, Color(1.0, 0.8, 0.35, 0.55))
 		_backdrop.draw_circle(at + Vector2(0, -h - 4), 14.0 * flicker, Color(1.0, 0.7, 0.3, 0.08))
+
+
+## The ballpark at night: light towers glaring down, rows and rows of empty seats,
+## and the crowd that isn't there (now and then, a seat flips up by itself).
+func _backdrop_stadium(color: Color, t: float) -> void:
+	var floor_y := BACKDROP.end.y - 6
+	# Rows of empty seats, rising toward the back.
+	for row in 6:
+		var y := floor_y - 22 - row * 18
+		var dim := 0.22 - row * 0.025
+		var x := BACKDROP.position.x + 8 + (row % 2) * 7
+		var k := 0
+		while x < BACKDROP.end.x - 8:
+			var up := sin(t * 2.0 - x * 0.04 + row) > 0.96
+			_backdrop.draw_rect(Rect2(x, y - (5 if up else 0), 10, 8), Color(color.lightened(0.2), dim * (1.6 if up else 1.0)))
+			x += 14
+			k += 1
+	# The light towers, glaring.
+	for side in [BACKDROP.position.x + 40, BACKDROP.end.x - 40]:
+		_backdrop.draw_rect(Rect2(side - 2, BACKDROP.position.y + 20, 4, 120), Color(0.6, 0.6, 0.65, 0.3))
+		for b in 3:
+			for c in 4:
+				var glow := 0.5 + 0.5 * sin(t * 3.0 + b + c)
+				_backdrop.draw_circle(Vector2(side - 15 + c * 10, BACKDROP.position.y + 14 + b * 8), 3.5, Color(1.0, 0.97, 0.85, 0.35 + 0.2 * glow))
+		_backdrop.draw_circle(Vector2(side, BACKDROP.position.y + 24), 60.0, Color(1.0, 0.95, 0.8, 0.05))
+	# The foul lines, white, meeting at home plate.
+	var home := Vector2(BACKDROP.get_center().x, floor_y + 4)
+	_backdrop.draw_line(home, Vector2(BACKDROP.position.x + 10, floor_y - 70), Color(1, 1, 1, 0.15), 2.0)
+	_backdrop.draw_line(home, Vector2(BACKDROP.end.x - 10, floor_y - 70), Color(1, 1, 1, 0.15), 2.0)
 
 
 ## How visible something is at `point`: full in the middle, fading out near the edges.

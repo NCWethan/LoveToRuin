@@ -109,7 +109,7 @@ On every path, the fragments play their memories in the same order (by how many 
 | 4 | **Mission Beach** boardwalk **(built)** | **The Dipper**, the old wooden roller coaster | **Crayola & N.C. Wethan** (they swim here) | Relic's first time seeing the ocean. Hop teaches them to bodysurf, badly. *"Everything's so BIG here."* |
 | 5 | **Balboa Park**, the museum **(built)** | **The Empty Knight**, a suit of armor from an exhibit | **Big Joe** | On the museum steps at night, Hop tells Relic about the voice inside him. Relic isn't scared: *"Everybody's got something in them they didn't ask for."* |
 | 6 | **Old Town**, a haunted adobe house **(built)** | **The Hostess**, a ghost still setting the table for guests | **Nat** | Relic holds an old man's hand on a park bench. A grief lifts out of him and into a pigeon feather. He looks at the pigeons and laughs for the first time in a year. (This is Pigeon Man. His wife was Geraldine.) |
-| 7 | **Downtown**, the ballpark | **The Big Screen**, the scoreboard | **Supreme** | Hop wakes up screaming again. Relic takes his nightmares into the only thing in their pocket: a Jack in the Box curly-fry token. |
+| 7 | **Downtown**, the ballpark **(built)** | **The Big Screen**, the scoreboard | **Supreme** | Hop wakes up screaming again. Relic takes his nightmares into the only thing in their pocket: a Jack in the Box curly-fry token. |
 | 8 | **The Harbor**, the old aircraft carrier | **Flight Deck**, a jet on the carrier | **Agent & Eggo** | *"If you ever want him gone, I could try."* Hop says no. He's scared of who he'd be without the voice. |
 | 9 | **Torrey Pines**, the cliffs over the ocean | **The Glider**, a hang glider that won't come down | **Rooster** | Relic packs their backpack to leave San Diego, like every town before. They stand on the cliff a long time. Then they unpack. *"First place I ever wanted to stay."* |
 | 10 | **The burned hills** east of the city, where the fire came from | **Ember**, what's left of the fire itself | **Ronin** | The three-person tent. *"Room for three. You, me, and him."* The wind comes in hot off the hills. |
@@ -317,7 +317,7 @@ On this path, every one of them has to die. **It should hurt the player more tha
 | 2 | **N.C. Wethan** | Mission Beach | He stands over Crayola and won't move. His lightning hits everything around you and never you. | *"...KING ME?"* (quietly, for once) | **Checker piece** |
 | 3 | **Big Joe** | Balboa Park | A duel, by the rules. He never strikes while you're down. You do. | *"Justice was supposed to... ...Tell Eggo I'm sorry I was loud."* | **Cracked helmet crest** |
 | 4 | **Nat** **(built)** | Old Town | He reads your next attack out loud, every turn, so you'll know he saw it coming. | *"Page 213. The last page. ...I always wanted to know how it ended."* | **His book** (the last page is blank) |
-| 5 | **Supreme** | Downtown | A bullet-hell made of statistics. Every attack is labeled with its odds of hitting you. | *"I kept the odds you'd stop above zero. ...I rounded up."* | **Spreadsheet printout** |
+| 5 | **Supreme** **(built)** | Downtown | A bullet-hell made of statistics. Every attack is labeled with its odds of hitting you. | *"I kept the odds you'd stop above zero. ...I rounded up."* | **Spreadsheet printout** |
 | 6 | **Agent** | The Harbor | The hardest fight in the game. He predicts your movement, like the Rock Paper Scissors round, and counters it. | *"I ran it a thousand times. You never did this in any of them. ...That's the one variable I'd change."* | **Bullseye dart** |
 | 7 | **Rooster** | Torrey Pines | He roasts you through the whole fight. The jokes fall apart as he gets scared. | *"You were my favorite person to roast. You always roasted back."* (not a joke) | **Top hat** |
 | 8 | **Ronin** | The burned hills | He plays his POWER RIFF, the last time. The battle music doesn't step aside. He doesn't finish it. | (no words: the held note rings out after him) | **Guitar pick** |
@@ -385,11 +385,12 @@ Returning their keepsakes is the quiet heart of Pacifist and Neutral, and killin
 
 ## 11. What to build next, in order
 
-1. ~~The first keepsake memories~~ **(built:** 1 to 6**)**
+1. ~~The first keepsake memories~~ **(built:** 1 to 7**)**
 2. ~~The Genocide morning, out the door~~ **(built)**
 3. ~~Mission Beach and the Dipper~~ **(built)**, with Crayola and N.C. Wethan on all three paths.
 4. **Relic's lost collection:** the side quest. (The first piece is built: the pigeon feather from Old Town, which can go back to the Pigeon Man.)
 5. ~~Balboa Park~~ **(built)**: the Empty Knight, Big Joe, and the missing page.
 6. ~~Old Town~~ **(built)**: the Hostess, Nat, and the reveal that Relic's collection was the townsfolk's pain.
-7. **Downtown** (fragment 7): the Big Screen, Supreme and the 0.4%.
-8. Then one fragment area at a time, in the order above, ending at Sabre Springs.
+7. ~~Downtown~~ **(built)**: the Big Screen, Supreme and the 0.4%.
+8. **The Harbor** (fragment 8): Flight Deck, Agent and Eggo, and the offer closing.
+9. Then one fragment area at a time, in the order above, ending at Sabre Springs.
