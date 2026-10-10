@@ -2822,7 +2822,7 @@ function Get-Pixel([string[]]$rows, [int]$y, [int]$x) {
     return [string]$rows[$y][$x]
 }
 
-function Dread-Rows([string[]]$rows, [int]$stage) {
+function Dread-Rows([string[]]$rows, [int]$stage, [bool]$smile = $true) {
     $p = [string[]]$rows.Clone()
     $xoff = [int](($p[0].Length - 24) / 2)
     $skin = $dreadSkin[$stage]
@@ -2871,7 +2871,7 @@ function Dread-Rows([string[]]$rows, [int]$stage) {
         Set-Pixel $p $y $x '>'
         if ($stage -eq 2 -and (Get-Pixel $p ($y + 1) $x) -eq $skin) { Set-Pixel $p ($y + 1) $x '=' }
     }
-    if ($front -and $stage -ge 2) {
+    if ($front -and $stage -ge 2 -and $smile) {
         # A wide, thin, closed smile, dipping a row lower.
         Set-Pixel $p 9 (11 + $xoff) $skin; Set-Pixel $p 9 (12 + $xoff) $skin
         Set-Pixel $p 10 (11 + $xoff) 'K'; Set-Pixel $p 10 (12 + $xoff) 'K'
@@ -2915,6 +2915,15 @@ foreach ($stage in 1..4) {
             if (-not $name.StartsWith('elric')) { continue }
             $to["elric_dread$stage" + $name.Substring(5)] = Dread-Rows $from[$name] $stage
         }
+    }
+}
+# Relic, alive (for the keepsake memories): the same look as the last stage of
+# dread, but their own face: no smile that isn't theirs. Saved as "relic...".
+foreach ($set in @(@($sprites, $dreadSprites), @($walkFrames, $dreadSprites), @($runFrames, $dreadSprites), @($portraits, $dreadPortraits), @($poses, $dreadPoses))) {
+    $from = $set[0]; $to = $set[1]
+    foreach ($name in @($from.Keys)) {
+        if (-not $name.StartsWith('elric')) { continue }
+        $to["relic" + $name.Substring(5)] = Dread-Rows $from[$name] 4 $false
     }
 }
 

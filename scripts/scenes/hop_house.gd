@@ -426,10 +426,13 @@ func _couch() -> void:
 	await Game.dialogue.say([
 		"* (You lie down on Hop's couch.)",
 		"* (Across the room, Hop doesn't sleep.\n*  You can hear him sitting in the dark.)",
-		"* (You don't dream.)",
+		"* (You dream. But not your own dreams.)",
 	])
 	Game.heal_party()
 	Game.save_game(SCENE, WAKE_SPOT)
+	if int(Game.flags.get("keepsakes_seen", 0)) < 3:
+		await Game.play_keepsakes([1, 2, 3], SCENE, WAKE_SPOT)
+		return
 	await Game.change_scene(SCENE, WAKE_SPOT)
 
 

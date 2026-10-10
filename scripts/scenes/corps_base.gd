@@ -549,6 +549,11 @@ const DREAM_NEUTRAL := [
 	{"who": "Relic", "tag": "???", "face": false, "text": "It doesn't stop the pull.\nIt just makes you lonely while it pulls."},
 	{"who": "Relic", "tag": "???", "face": false, "text": "Don't stop. Not yet.\nThere's more of me out there."},
 ]
+## Waking up from the first three keepsakes.
+const KEEPSAKES_AFTER := [
+	"* (A road at dawn. A gym at night.\n*  A boy with two orders of curly fries.)",
+	"* (None of it happened to you.\n*  You remember all of it.)",
+]
 const DREAM_END := [
 	"* (You wake up.)",
 	"* (Your hand is closed tight around nothing.)",
@@ -590,7 +595,14 @@ func _dream() -> void:
 	var said: String = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"][clampi(count, 0, 12)]
 	lines.insert(4, {"who": "Relic", "tag": "???", "face": false, "text": "The pieces. I can feel every one of them.\n%s now." % said})
 	lines.append_array(DREAM_PACIFIST if Game.flags.get("route", "") == "pacifist" else DREAM_NEUTRAL)
+	# The first time: the fragments show Elric what's inside them.
+	var first_keepsakes: bool = int(Game.flags.get("keepsakes_seen", 0)) < 3
+	if first_keepsakes:
+		lines.append({"who": "Relic", "tag": "???", "face": false, "text": "...Here. Let me show you."})
 	await Game.dialogue.say(lines)
+	if first_keepsakes:
+		await Game.play_keepsakes([1, 2, 3], SCENE, player.position, KEEPSAKES_AFTER + DREAM_END)
+		return
 	await Game.fade_out(1.2)
 	dark.queue_free()
 	Game.play_music("bunker")

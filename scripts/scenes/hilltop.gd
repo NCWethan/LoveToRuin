@@ -1020,13 +1020,27 @@ func _group_hug() -> void:
 ## Going their own way: Elric wanders all night, and ends up back here anyway.
 func _morning() -> void:
 	Game.flags["seen_morning"] = true
+	var rest_of_night: Array = [
+		"* (By morning, your feet bring you back to\n*  Westview Field anyway.)",
+		"* (The Corps' hatch is right there, by the shelter.\n*  Nobody's watching it.)",
+	]
+	Game.set_objective("Go anywhere. (The Corps' hatch is by the shelter.)")
 	await Game.dialogue.say([
 		"* (You wander the city all night.)",
 		"* (Down streets you don't know.\n*  Past shops with their lights off.)",
-		"* (By morning, your feet bring you back to\n*  Westview Field anyway.)",
-		"* (The Corps' hatch is right there, by the shelter.\n*  Nobody's watching it.)",
 	])
-	Game.set_objective("Go anywhere. (The Corps' hatch is by the shelter.)")
+	# Somewhere along the way, the fragments show Elric what's inside them.
+	if int(Game.flags.get("keepsakes_seen", 0)) < 3:
+		await Game.dialogue.say([
+			"* (Somewhere around 3 AM, you sit down on a curb.)",
+			"* (The fragments in your backpack are warm.\n*  You close your eyes, just for a second.)",
+		])
+		await Game.play_keepsakes([1, 2, 3], SCENE, MORNING_SPOT, [
+			"* (A road at dawn. A gym at night.\n*  A boy with two orders of curly fries.)",
+			"* (None of it happened to you.\n*  You remember all of it.)",
+		] + rest_of_night)
+		return
+	await Game.dialogue.say(rest_of_night)
 
 
 func _ending_neutral() -> void:

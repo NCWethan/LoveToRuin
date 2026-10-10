@@ -598,7 +598,50 @@ func on_genocide_route() -> bool:
 
 ## (1: green eyes. 2: halfway. 3: nearly gone. 4: Relic, in the flesh.) The Genocide route
 ## starts halfway; only the very end of the killing makes Elric into Relic.
+## True while a keepsake memory is playing: Elric is Relic, years ago (see
+## scripts/scenes/keepsake.gd). Nothing of now (dread, the haze) shows.
+var playing_relic: bool = false
+## Lines to show once Elric is back from the keepsake memories.
+var keepsake_after: Array = []
+var _keepsake_return: Array = []
+const KEEPSAKE_SCENE := "res://scenes/keepsake.tscn"
+
+
+## Plays keepsake memories (by number, in order), then brings Elric back to
+## `return_scene` at `spawn`, and shows `after` there.
+func play_keepsakes(ids: Array, return_scene: String, spawn: Vector2, after: Array = []) -> void:
+	flags["keepsake_queue"] = ids.duplicate()
+	_keepsake_return = [return_scene, spawn]
+	keepsake_after = after
+	playing_relic = true
+	await change_scene(KEEPSAKE_SCENE)
+
+
+## The memory that's playing now (0 if none).
+func current_keepsake() -> int:
+	var queue: Array = flags.get("keepsake_queue", [])
+	return int(queue[0]) if not queue.is_empty() else 0
+
+
+## Called when a memory ends: the next one, or back to the present.
+func next_keepsake() -> void:
+	var queue: Array = flags.get("keepsake_queue", [])
+	if not queue.is_empty():
+		flags["keepsakes_seen"] = maxi(int(flags.get("keepsakes_seen", 0)), int(queue[0]))
+		queue.pop_front()
+	if not queue.is_empty():
+		await change_scene(KEEPSAKE_SCENE)
+		return
+	flags.erase("keepsake_queue")
+	playing_relic = false
+	var back: Array = _keepsake_return if not _keepsake_return.is_empty() else [TITLE_SCENE, null]
+	_keepsake_return = []
+	await change_scene(back[0], back[1])
+
+
 func dread() -> int:
+	if playing_relic:
+		return 0
 	var kills := int(flags.get("kills", 0))
 	var stage := 0
 	for needed in DREAD_KILLS:
@@ -612,6 +655,8 @@ func dread() -> int:
 ## The start of a character's picture file names: "hop" for Hop, and for Elric
 ## "elric", or "elric_dread1" to "elric_dread4" (Relic) as they get worse.
 func sprite_base(who: String) -> String:
+	if who == "Elric" and playing_relic:
+		return "relic"
 	if who == "Elric" and dread() > 0:
 		return "elric_dread%d" % dread()
 	return who.to_lower()

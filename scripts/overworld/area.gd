@@ -72,6 +72,10 @@ func setup_area(default_spawn: Vector2) -> void:
 	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vignette_layer.add_child(vignette)
 
+	# Back from the keepsake memories: whatever comes after them.
+	if not Game.keepsake_after.is_empty() and not Game.playing_relic:
+		_after_keepsakes.call_deferred()
+
 	# Music goes eerie near fragments (checked every frame).
 	get_tree().process_frame.connect(_check_fragment_music)
 
@@ -218,6 +222,14 @@ func flag(name: String) -> bool:
 ## True while something else is happening (dialogue, a fade, a cutscene).
 func is_blocked() -> bool:
 	return Game.busy or Game.transitioning or _cutscene_running
+
+
+## The lines waiting for Elric after the keepsake memories (Game.keepsake_after).
+func _after_keepsakes() -> void:
+	var lines: Array = Game.keepsake_after
+	Game.keepsake_after = []
+	await wait_for_fade()
+	await run_cutscene(func() -> void: await Game.dialogue.say(lines))
 
 
 ## Waits until the fade-in after a scene change has finished.
