@@ -212,6 +212,9 @@ func _pump() -> void:
 	if _fires_left() == 0:
 		await Game.dialogue.say(["* (The pump panel. Every fire on the road is out.\n*  The engine ticks as it cools.)"])
 		return
+	if not flag("bh_pump_seen"):
+		Game.flags["bh_pump_seen"] = true
+		await Game.dialogue.say(["* (Next to the panel, an arrow painted on the engine:\n*  SEE DIAGRAM. It points along the side of the truck.)"])
 	while true:
 		var v := _valves()
 		var options: Array = []

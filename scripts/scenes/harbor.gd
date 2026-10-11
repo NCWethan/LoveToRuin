@@ -537,6 +537,8 @@ func _locker() -> void:
 		await Game.dialogue.say(["* (The flags are up: 4, 1, G, O. The elevator's\n*  light is green.)"])
 		return
 	await Game.dialogue.say(["* (The flag locker. Six signal flags, rolled up neat,\n*  and a hoist that runs up over the elevator.)"])
+	if not flag("hb_engine_seen"):
+		await Game.dialogue.say(["* (Taped inside the door: WHICH FLAG IS WHICH?\n*  SEE THE CHART BELOW DECKS. (HATCH BY THE CRATES.))"])
 	while true:
 		var hoist: Array = Game.flags.get("hb_hoist", [])
 		var names: Array = []

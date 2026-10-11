@@ -36,10 +36,10 @@ const SANSWORTH_SPOT := Vector2(10 * T + 10, 25 * T)
 const NASSAN_SPOT := Vector2(44 * T, 28 * T)
 ## The crane's cab: its own little room on the map. The ladder up is by the crane.
 const CAB := Rect2i(58, 3, 10, 9)
-const CAB_LADDER := Vector2(31 * T + 10, 12 * T + 10)
+const CAB_LADDER := Vector2(28 * T + 14, 12 * T + 8)
 const CAB_ENTRY := Vector2(63 * T, 9 * T + 10)
 const CAB_EXIT := Vector2(63 * T, 11 * T - 2)
-const OUTSIDE_CAB := Vector2(31 * T + 10, 13 * T + 14)
+const OUTSIDE_CAB := Vector2(28 * T + 14, 13 * T + 16)
 const LEVERS := ["Yellow", "Red", "Black"]
 const LEVER_SPOTS := [Vector2(60 * T + 10, 6 * T + 4), Vector2(62 * T + 10, 6 * T + 4), Vector2(64 * T + 10, 6 * T + 4)]
 const RHYME := Vector2(66 * T + 10, 6 * T + 4)
@@ -50,6 +50,8 @@ const CAR_WALL := [Rect2i(1, 22, 12, 1), Rect2i(12, 23, 1, 12)]
 
 var partner: Character
 var heap: Character
+## Scrap Heap after its fight: back to sorting (or stopped), and its cab's ladder.
+var crane: Character
 var sansworth: Character
 var nassan: Character
 var _decor: Node2D
@@ -182,6 +184,15 @@ func _draw_decor() -> void:
 	# (The heaps and the crushed cars are on the static layer: _draw_scenery.)
 	_draw_car_wall()
 	_draw_cab()
+	# The ladder up Scrap Heap's side to its cab (until the cars are moved).
+	if flag("jy_heap_done") and not _cleared():
+		var foot := CAB_LADDER + Vector2(0, 2)
+		_decor.draw_line(foot + Vector2(-5, 0), foot + Vector2(-5, -26), Color8(200, 170, 60), 2.0)
+		_decor.draw_line(foot + Vector2(5, 0), foot + Vector2(5, -26), Color8(200, 170, 60), 2.0)
+		for k in 4:
+			_decor.draw_line(foot + Vector2(-5, -4 - k * 6), foot + Vector2(5, -4 - k * 6), Color8(230, 200, 90), 2.0)
+		var bob := sin(_time * 4.0) * 2.0
+		_decor.draw_colored_polygon(PackedVector2Array([foot + Vector2(-4, -36 + bob), foot + Vector2(4, -36 + bob), foot + Vector2(0, -30 + bob)]), Color8(250, 220, 80))
 	# The van: tan, boxy, a tarp half off it, flat tires. (Running, it shakes.)
 	var shake := Vector2(sin(_time * 40.0) * 1.0, 0) if _van_running >= 0.0 else Vector2.ZERO
 	var van := Rect2(VAN.position + shake, VAN.size)
@@ -230,6 +241,13 @@ func _place_people() -> void:
 		heap.glow = true
 		heap.glow_color = Color(1.0, 0.85, 0.5, 0.3)
 		add_character(heap, HEAP_SPOT)
+	else:
+		# After its fight, it's still here: sorting quietly, or stopped for good.
+		crane = Cast.make("scrap_heap")
+		if Game.battle_result.get("id", "") == "scrap_heap" and Game.battle_result.get("spared", []).is_empty() or flag("jy_heap_stopped"):
+			crane.modulate = Color(0.55, 0.55, 0.58)
+		crane.on_interact = _talk_crane
+		add_character(crane, HEAP_SPOT)
 
 
 func _talk_sansworth() -> void:
@@ -264,6 +282,13 @@ func _talk_nassan() -> void:
 ## The cars have been moved off the back corner (or it's past that in the story).
 func _cleared() -> bool:
 	return flag("jy_cleared") or flag("jy_van") or flag("jy_nassan") or flag("beat_corps_sansworth")
+
+
+func _talk_crane() -> void:
+	if flag("jy_heap_stopped"):
+		await Game.dialogue.say(["* (Scrap Heap. It doesn't move. Its headlights are\n*  dark.)", "* (The ladder up to its cab is still there.)" if not _cleared() else "* (It's very quiet.)"])
+	else:
+		await Game.dialogue.say(["* (Scrap Heap, sorting. It moves a hubcap from one\n*  pile to another, very carefully.)", "* (A ladder runs up its side to the cab.)" if not _cleared() else "* (It hums at you. Friendly. Probably.)"])
 
 
 func _cab_ladder() -> void:
@@ -485,6 +510,7 @@ func _after_heap(spared: bool) -> void:
 			"* (It goes back to sorting. It moves a tire\n*  out of your way. Then a whole car.)",
 		])
 	else:
+		Game.flags["jy_heap_stopped"] = true
 		await Game.dialogue.say(["* (Scrap Heap shudders, and stops. Steam hisses out\n*  of it. It doesn't move again.)"])
 		if _genocide():
 			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Scrap."}])
