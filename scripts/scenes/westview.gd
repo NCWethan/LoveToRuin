@@ -781,7 +781,8 @@ func _claim_fragment() -> void:
 		{"who": "Hop", "text": "...Sorry. Spaced out. Must be the late night.", "mood": "sad"},
 		{"who": "Hop", "text": "Two down, huh?", "mood": "smug"},
 		{"who": "Hop", "text": "I mean! Two fragments! Wow! Go team!", "mood": "happy"},
-		{"who": "Elric", "choices": ["...Are you okay?", "...Hop? What was that?"]},
+		{"who": "Elric", "choices": ["...Are you okay?", "...Hop? What was that?"], "replies": [
+			[], [{"who": "Hop", "text": "What was what? Nothing! I said nothing.", "mood": "shocked"}]]},
 		{"who": "Hop", "text": "Never better! Let's get out of here before\nthe bleachers come alive too.", "mood": "happy"},
 		"* (There's an emergency exit on the far wall.)",
 	])

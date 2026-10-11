@@ -38,6 +38,35 @@ static func display_name(who: String) -> String:
 	return DISPLAY_NAMES.get(who, who)
 
 
+## Names that keep their capital letter even in Eggo's lowercase.
+const PROPER_NAMES := ["Elric", "Hop", "Hopkuna", "Relic", "Toast", "Gerald", "Gloria", "Nassan", "Big", "Joe",
+	"Crayola", "Supreme", "Nat", "Agent", "Rooster", "Ronin", "Sansworth", "MuffinMage", "Muffin", "Eggo", "N.C.",
+	"Wethan", "Revolution", "REVOLUTION", "Corps", "Westview", "Torrey", "Balboa", "Mission", "Beach", "Old", "Town",
+	"Downtown", "Harbor", "Sabre", "Springs", "Carmel", "Mt.", "PQ", "Mall", "Vons", "Jack", "Box", "Dipper", "Rosa"]
+
+
+## Eggo talks the way he types: chill, all lowercase. Sentence starts and "I"
+## go lowercase; names stay capitalized, and so does anything he SHOUTS.
+static func eggo_voice(text: String) -> String:
+	var words := RegEx.create_from_string("[A-Za-z][A-Za-z.'-]*")
+	var out := text
+	# (Backwards, so changing one word doesn't move the ones before it.)
+	var found := words.search_all(text)
+	found.reverse()
+	for m in found:
+		var word := m.get_string()
+		var bare := word.rstrip(".'-")
+		if bare in PROPER_NAMES or bare.trim_suffix("'s") in PROPER_NAMES:
+			continue
+		# Shouting (two capitals in a row, like "NO" or "EGG-CELLENT") stays.
+		if word.length() > 1 and word[1] >= "A" and word[1] <= "Z":
+			continue
+		if word[0] >= "A" and word[0] <= "Z":
+			var at := m.get_start()
+			out = out.substr(0, at) + word[0].to_lower() + out.substr(at + 1)
+	return out
+
+
 ## Name tag color and voice pitch for each speaker. Anyone not listed uses white / normal.
 const SPEAKERS := {
 	"Elric": {"color": Color(0.8, 0.65, 1.0), "pitch": 1.25},
@@ -104,9 +133,13 @@ func say(lines: Array) -> void:
 	Game.busy = true
 	_panel.visible = true
 	var previous = null
-	for line in lines:
+	var queue: Array = lines.duplicate()
+	while not queue.is_empty():
+		var line = queue.pop_front()
 		# A line with "choices" (Elric's lines): the player picks what Elric says.
 		# The line being answered stays on screen with the options under it.
+		# "replies" (optional): what's said back to each option, before the
+		# conversation carries on, so the answer fits what was picked.
 		if line is Dictionary and line.has("choices"):
 			var options: Array = line["choices"]
 			_show(previous if previous != null else "* (What do you say?)")
@@ -116,6 +149,9 @@ func say(lines: Array) -> void:
 			await _advanced
 			var picked := _choice
 			_choices = []
+			var replies: Array = line.get("replies", [])
+			if picked < replies.size():
+				queue = (replies[picked] as Array) + queue
 			line = {"who": line.get("who", ""), "text": options[picked], "mood": line.get("mood", "")}
 		_show(line)
 		await _advanced
@@ -154,6 +190,8 @@ func _show(line) -> void:
 		_tag = line.get("tag", display_name(_who))
 		# "mood" picks a facial expression: happy, angry, sad, shocked or smug.
 		_mood = line.get("mood", "")
+		if _who == "Eggo":
+			_text = eggo_voice(_text)
 		if nervous and not _who in ["", "Elric", "Hop", "Hopkuna"]:
 			_mood = "shocked"
 			if _text.length() > 1 and _text[0] == _text[0].to_upper() and _text[0] != _text[0].to_lower():
@@ -194,10 +232,24 @@ func _process(delta: float) -> void:
 	_last_beep = shown
 
 	if _finished() and not _choices.is_empty():
-		var back := "ui_up" if _choices_stacked() else "ui_left"
-		var forward := "ui_down" if _choices_stacked() else "ui_right"
-		if Input.is_action_just_pressed(back) or Input.is_action_just_pressed(forward):
-			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed(forward) else -1), 0, _choices.size())
+		if _choices_stacked():
+			# A grid, filled a column at a time: Up/Down within a column,
+			# Left/Right to the next column over.
+			var rows: int = _choice_layout()["rows"]
+			var moved := _choice
+			if Input.is_action_just_pressed("ui_down"):
+				moved = wrapi(_choice + 1, 0, _choices.size())
+			elif Input.is_action_just_pressed("ui_up"):
+				moved = wrapi(_choice - 1, 0, _choices.size())
+			elif Input.is_action_just_pressed("ui_right") and rows < _choices.size():
+				moved = _choice + rows if _choice + rows < _choices.size() else _choice % rows
+			elif Input.is_action_just_pressed("ui_left") and rows < _choices.size():
+				moved = _choice - rows if _choice - rows >= 0 else mini(_choices.size() - 1, ((_choices.size() - 1) / rows) * rows + _choice % rows)
+			if moved != _choice:
+				_choice = moved
+				Game.play_sfx("move")
+		elif Input.is_action_just_pressed("ui_left") or Input.is_action_just_pressed("ui_right"):
+			_choice = wrapi(_choice + (1 if Input.is_action_just_pressed("ui_right") else -1), 0, _choices.size())
 			Game.play_sfx("move")
 
 	# A hidden quarter-second pause after each ENTER that does something, so the
@@ -247,19 +299,45 @@ func _draw_box() -> void:
 		_panel.draw_string(_font, _box.position + Vector2(text_left, 28 + i * LINE_HEIGHT), lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, Color.WHITE)
 
 	if _finished() and not _choices.is_empty():
+		var layout := _choice_layout()
 		for i in _choices.size():
 			var at: Vector2
+			var size: int = FONT_SIZE
 			if _choices_stacked():
-				# One option per line, under the question.
-				at = _box.position + Vector2(text_left + 30, 28 + (lines.size() + i) * LINE_HEIGHT)
+				# Under the question, in as many columns as it takes to stay
+				# inside the box (filled a column at a time).
+				var rows: int = layout["rows"]
+				at = layout["start"] + Vector2((i / rows) * float(layout["column"]), (i % rows) * LINE_HEIGHT)
+				size = layout["size"]
 			else:
 				# Side by side along the bottom.
 				var spacing := minf(200.0, (_box.size.x - 140.0) / _choices.size())
 				at = Vector2(_box.position.x + 120 + i * spacing, _box.end.y - 20)
 			var color := Color.YELLOW if i == _choice else Color.WHITE
-			_panel.draw_string(_font, at, str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, color)
+			_panel.draw_string(_font, at, str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 			if i == _choice:
 				_draw_heart(at + Vector2(-18, -6))
+
+
+## Where stacked choices go: under the question, as many rows as fit in the box,
+## and as many columns as that takes. {rows, start, column (width), size (font)}.
+## If the columns are too narrow for the longest option, the font shrinks a little.
+func _choice_layout() -> Dictionary:
+	var text_left := PORTRAIT_SPACE if (_show_face and Cast.portrait(_who, _mood) != null) else 16.0
+	var lines := _text.split("\n").size()
+	var first := 28 + lines * LINE_HEIGHT
+	var rows := maxi(1, int((_box.size.y - 8 - first) / LINE_HEIGHT) + 1)
+	var columns := ceili(_choices.size() / float(rows))
+	rows = ceili(_choices.size() / float(columns))
+	var width := _box.size.x - text_left - 30 - 8
+	var column := width / columns
+	var size := FONT_SIZE
+	var longest := 0.0
+	for choice in _choices:
+		longest = maxf(longest, _font.get_string_size(str(choice), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x)
+	if columns > 1 and longest + 26 > column:
+		size = maxi(11, floori(FONT_SIZE * (column - 26) / longest))
+	return {"rows": rows, "start": _box.position + Vector2(text_left + 30, first), "column": column, "size": size}
 
 
 ## Long or many choices are listed one per line (Up/Down) instead of side by side

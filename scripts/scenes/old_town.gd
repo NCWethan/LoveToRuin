@@ -372,8 +372,9 @@ func _talk_nat() -> void:
 				{"who": "Nat", "text": "Nobody came. A storm, maybe. A feud.\nThe book doesn't say.", "mood": "sad"},
 				{"who": "Nat", "text": "She set the table again the next night.\nAnd the next. ...They say she still does.", "mood": "sad"},
 				{"who": "Nat", "text": "The fragment's in there. I can feel it from here.\nLike a page you haven't read yet.", "mood": ""},
-				{"who": "Elric", "choices": ["Are you coming in?", "You okay?"]},
-				{"who": "Nat", "text": "Me? No. I know too much history to get\nattached to anything.", "mood": ""},
+				{"who": "Elric", "choices": ["Are you coming in?", "You okay?"], "replies": [
+					[{"who": "Nat", "text": "Me? No. I know too much history to get\nattached to anything.", "mood": ""}],
+					[{"who": "Nat", "text": "Me? Fine. Just not going in there.\nI know too much history to get attached.", "mood": ""}]]},
 				{"who": "Nat", "text": "...That's a lie. I just don't like ghosts.", "mood": "smug"},
 				{"who": "Nat", "text": "Tip, though. Ghosts want to be NOTICED.\nIf she brings you something, say something nice.", "mood": ""},
 				{"who": "Nat", "text": "About the thing she brought. Not something else.\nNobody likes that.", "mood": ""},

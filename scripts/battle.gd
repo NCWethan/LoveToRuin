@@ -201,6 +201,14 @@ func _ready() -> void:
 			if member.name in _data.party_only:
 				fighting.append(member)
 		party = fighting
+	# Hop can't fight once he's left the Corps (after the vote at the Harbor), and
+	# never against Hopkuna: that's him.
+	if Game.hop_left() or _data.id.begins_with("hopkuna"):
+		var no_hop: Array[PartyMember] = []
+		for member in party:
+			if member.id != "Hop":
+				no_hop.append(member)
+		party = no_hop
 	# With Hop, from the glowbug on: Hop never fights again. He stands back,
 	# behind Elric, and watches. (Every fight: the Corps, the townsfolk, the wild.)
 	if Game.on_genocide_route() and Game.flags.get("glowbug_done", false) and party.any(func(m: PartyMember) -> bool: return m.name == "Hop"):
@@ -1854,6 +1862,8 @@ func _start_enemy_turn() -> void:
 	_planned_patterns.clear()
 	for enemy in _active_enemies():
 		_speech[enemy] = enemy.taunt()
+		if enemy.name == "Eggo":
+			_speech[enemy] = DialogueBox.eggo_voice(_speech[enemy])
 		# Supreme: every attack labeled with its odds of hitting you.
 		if not enemy.odds.is_empty() and _turn_patterns.has(enemy):
 			var label: String = Attacks.label_of(_turn_patterns[enemy])

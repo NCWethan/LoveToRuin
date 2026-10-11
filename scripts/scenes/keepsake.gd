@@ -860,8 +860,9 @@ func _end_carrier() -> void:
 	hop.face(player.position - hop.position)
 	await Game.dialogue.say([
 		{"who": "Hop", "text": "It was loud last night. The voice.\nEven with the token. It's getting around it.", "mood": "sad"},
-		{"who": "Relic", "choices": ["(Listen.)", "...How loud?"]},
-		{"who": "Hop", "text": "Loud enough.", "mood": "sad"},
+		{"who": "Relic", "choices": ["(Listen.)", "...How loud?"], "replies": [
+			[{"who": "Hop", "text": "So loud I couldn't hear the ocean.", "mood": "sad"}],
+			[{"who": "Hop", "text": "Loud enough.", "mood": "sad"}]]},
 		"* (You look at your hands. You know what they can do.\n*  You've done it a hundred times. Never with anything this big.)",
 		{"who": "Relic", "text": "Hop. If you ever want him gone...", "mood": ""},
 		{"who": "Relic", "text": "I could try.", "mood": ""},
@@ -897,7 +898,8 @@ func _end_cliff() -> void:
 		"* (The edge of the cliff. The ocean, all the way out.)",
 		"* (The road north is right there, behind you.)",
 		"* (You stand here for a long time.)",
-		{"who": "Relic", "choices": ["(Go.)", "(Stay.)"]},
+		{"who": "Relic", "choices": ["(Go.)", "(Stay.)"], "replies": [
+			["* (You turn toward the road. Your feet don't move.)", "* (They never did. Not here.)"], []]},
 		"* (You take the backpack off.)",
 		"* (You open it, and take things out, one at a time,\n*  and set them in the grass. A bottle cap. A ticket.\n*  A feather you'll come back for. A token, still cold.)",
 	])

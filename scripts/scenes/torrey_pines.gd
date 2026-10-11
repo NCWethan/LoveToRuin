@@ -68,7 +68,12 @@ func _ready() -> void:
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [LODGE_DOOR, _lodge], [Vector2(19 * T + 10, 4 * T + 4), _windsock],
 			[Vector2(18 * T + 10, 25 * T + 4), _plaque], [DORIS + Vector2(0, 24), _doris]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
-	Game.play_music("torrey")
+	if str(Game.battle_result.get("id", "")) == "hopkuna_cliffs":
+		Game.play_music("hopkuna_reveal", 0.2)
+	elif flag("tp_stolen"):
+		Game.play_music("eerie")
+	else:
+		Game.play_music("torrey")
 	fit_camera_to_room()
 	_start.call_deferred()
 
@@ -266,8 +271,9 @@ func _talk_hop() -> void:
 				{"who": "Hop", "text": "There was someone before you. Their name was Relic.\nThey came here with a backpack that clinked.", "mood": "sad"},
 				{"who": "Hop", "text": "We had one summer. The best one. And then the voice\ngot out, and there was fire, and they held it all.", "mood": "sad"},
 				{"who": "Hop", "text": "They broke. Twelve pieces. You've been picking\nthem up. ...You walk just like them. You know that?", "mood": "sad"},
-				{"who": "Elric", "choices": ["...I know.", "Why are you telling me now?"]},
-				{"who": "Hop", "text": "Because you keep walking away. And so did they.\nAnd I never told them to stay.", "mood": "sad"},
+				{"who": "Elric", "choices": ["...I know.", "Why are you telling me now?"], "replies": [
+					[{"who": "Hop", "text": "...Yeah. I figured you did.", "mood": "sad"}, {"who": "Hop", "text": "You keep walking away. And so did they.\nAnd I never told them to stay.", "mood": "sad"}],
+					[{"who": "Hop", "text": "Because you keep walking away. And so did they.\nAnd I never told them to stay.", "mood": "sad"}]]},
 				{"who": "Hop", "text": "...I wish you'd come with us.", "mood": "sad"},
 			])
 		_:
@@ -441,9 +447,13 @@ func _hopkuna_strikes() -> void:
 		{"who": "Hop", "text": "You got it. You- Elric, put it away.\nPut it AWAY. He can feel it. He can feel ALL of them-", "mood": "shocked"},
 		"* (Hop doubles over.)",
 		{"who": "Hop", "text": "No. No no no. Not here. Not NOW-", "mood": "shocked"},
+	])
+	Game.stop_music(0.6)
+	await Game.dialogue.say([
 		"* (He stands back up. He's smiling.)",
 		"* (His eyes are red.)",
 	])
+	Game.play_music("hopkuna_reveal", 0.3)
 	var where := hop.position
 	hop.queue_free()
 	hop = add_character(Cast.make("hopkuna"), where)
@@ -474,11 +484,13 @@ func _after_hopkuna() -> void:
 		"* (Every fragment in your pockets tears loose,\n*  all at once, and flies to it.)",
 		{"who": "Hopkuna", "text": "Nine. Of course, some of them are just dust now.\nYour friends were so helpful.", "mood": ""},
 		{"who": "Hopkuna", "text": "The rest, I'll find myself. I know where they are.\nI've always known where they are.", "mood": ""},
-		"* (He steps off the edge of the cliff.)",
-		"* (He doesn't fall. He flies. North, over the\n*  pines, until he's a red speck, and then nothing.)",
 	])
-	hop.queue_free()
-	hop = null
+	await _hopkuna_flies_away()
+	Game.play_music("eerie", 2.0)
+	await Game.dialogue.say([
+		"* (He stepped off the edge of the cliff.)",
+		"* (He didn't fall. He flew. North, over the\n*  pines, until he was a red speck, and then nothing.)",
+	])
 	if rooster and is_instance_valid(rooster):
 		rooster.face(player.position - rooster.position)
 		await Game.dialogue.say([
@@ -488,6 +500,27 @@ func _after_hopkuna() -> void:
 		])
 	Game.flags["tp_left"] = true
 	Game.set_objective("Hopkuna has them. (Next: the burned hills.)")
+
+
+## Hopkuna walks to the edge of the cliff, steps off, and rises: up and away to
+## the north, getting smaller, a red glow trailing after him, until he's gone.
+func _hopkuna_flies_away() -> void:
+	if not hop or not is_instance_valid(hop):
+		return
+	var edge := Vector2(16 * T, hop.position.y)
+	await hop.walk_to(edge, 70.0)
+	hop.face(Vector2.LEFT)
+	await get_tree().create_timer(0.6).timeout
+	Game.play_sfx("black_flash")
+	var flight := create_tween()
+	flight.tween_property(hop, "position", hop.position + Vector2(-30, -20), 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	flight.tween_property(hop, "position", Vector2(hop.position.x - 10, -60), 2.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	flight.parallel().tween_property(hop, "scale", Vector2(0.35, 0.35), 2.4)
+	flight.parallel().tween_property(hop, "modulate:a", 0.0, 2.4).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	await flight.finished
+	hop.queue_free()
+	hop = null
+	await get_tree().create_timer(0.8).timeout
 
 
 # --- With Hop: Rooster -------------------------------------------------------------

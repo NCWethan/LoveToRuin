@@ -212,6 +212,7 @@ Pronouns: any/all · Co-founder of Revolution
 **Personality**
 - Chill.
 - Talks briefly.
+- Types the way he talks: all lowercase ("yo.", "toast says hi."). Names stay capitalized, and so does anything he SHOUTS. (The dialogue box does this for every Eggo line: `DialogueBox.eggo_voice`.)
 - Cracks puns whenever he finds a good moment.
 
 **Appearance** (based on his Roblox avatar — [reference image](art/reference/eggo.png))
@@ -735,7 +736,8 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] Music: an overly ambitious, epic theme for Rock Paper Scissors; Wally's fight song is now a faster, more serious chase theme.
 - [x] **Status effects:** shown as little colored tags with the turns left (under an enemy, or under a party member's HP), counting down at the end of every enemy turn. Enemies: STRAVANT (from N.C. Wethan). The party, from enemy hits (a chance per hit): STICKY (SOUL 30% slower; Eggo, Wally), SHAKEN (FIGHT does 30% less; Big Joe, Overdue Book), DIZZY (the FIGHT bar moves faster; Pop Quiz, Hall Pass, Tardy Bell), QUEASY (food heals half; Mystery Meat), BURN (lose 2 HP each enemy turn, never below 1; Hopkuna). They don't carry over between battles.
 - [x] **Encyclopedia** (in the bag): every enemy in the game down the left ("???" until you've met them), and a page for each one you've met: picture, HP/ATK/DEF, description, attacks, what status effect it can cause (with its chance and turns), and its ACTs. Ones you haven't met say "Haven't seen yet."
-- [x] **Elric picks what to say:** whenever Elric speaks, the line they're answering stays up with two options under it ("You're working for Hopkuna, aren't you?" → "Who?" / "...I'm not."). Both lead on to the same next line.
+- [x] **Elric picks what to say:** whenever Elric speaks, the line they're answering stays up with two options under it ("You're working for Hopkuna, aren't you?" → "Who?" / "...I'm not."). When the two picks would get different answers, each gets its own reply first (`"replies"` on the choice line), and then the conversation carries on.
+- [x] **Long choice lists** (the bus, item lists) never run off the box: past what fits under the question, they go into columns (Up/Down within a column, Left/Right across), and the text only shrinks if the columns are very narrow.
 - [x] **Gear is one of a kind:** weapons and things to wear in shops can only be bought once; then they show SOLD OUT.
 - [x] **The team screen** (TEAM in the bag, once Hop has joined): a card for each member with their picture, HP, ATK and DEF, and what's in each slot (Weapon, Torso, Shoes). A/D picks a member, W/S a slot, ENTER takes that item off (it goes back in the bag). At the base, "Change partner" is there too. Picking who wears something from the bag uses A/D (the names are side by side).
 - [x] Rock Paper Scissors: N.C. Wethan's and Ronin's throws are random every game (their tells still give them away). Agent still plays the odds against your throws.

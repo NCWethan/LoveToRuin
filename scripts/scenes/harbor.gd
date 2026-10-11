@@ -642,14 +642,16 @@ func _confession() -> void:
 		{"who": "Hop", "text": "Relic held him. Hopkuna. All of him.\nAnd it was too heavy, and they broke.", "mood": "sad"},
 		{"who": "Hop", "text": "Twelve pieces. All over the city.\nAnd I killed the last one who had it.", "mood": "sad"},
 		"* (The ocean is very loud.)",
-		{"who": "Elric", "choices": ["It wasn't you.", "...Why didn't you tell me?"]},
+		{"who": "Elric", "choices": ["It wasn't you.", "...Why didn't you tell me?"], "replies": [
+			[{"who": "Hop", "text": "...It was my hands, Elric.\nAnd I never even told you. You know why?", "mood": "sad"}], []]},
 		{"who": "Hop", "text": "Because you look like them. You walk like them.\nYou stand on the edge of things like them.", "mood": "sad"},
 		{"who": "Hop", "text": "I couldn't tell you. I didn't want you\nto be a replacement.", "mood": "sad"},
 		{"who": "Hop", "text": "I wanted you to be you.", "mood": "sad"},
 		"* (He wipes his face with his sleeve, hard.)",
 		{"who": "Hop", "text": "...They're voting. On me. Down there.\nAgent wants me sealed up somewhere. He's right.", "mood": "sad"},
-		{"who": "Elric", "choices": ["I'll speak for you.", "He's not right."]},
-		{"who": "Hop", "text": "...You'd do that?", "mood": "shocked"},
+		{"who": "Elric", "choices": ["I'll speak for you.", "He's not right."], "replies": [
+			[{"who": "Hop", "text": "...You'd do that?", "mood": "shocked"}],
+			[{"who": "Hop", "text": "He is. He's always right.", "mood": "sad"}, {"who": "Hop", "text": "...Nobody's ever said that out loud before, though.", "mood": "shocked"}]]},
 		{"who": "Hop", "text": "Okay. Okay. Let's go hear it.", "mood": "sad"},
 	])
 	await _vote()
@@ -765,9 +767,13 @@ func _vote() -> void:
 	Game.flags["hb_vote_done"] = true
 	Game.flags["hb_feeding"] = true
 	# (Hop can't come along anymore: he leaves tonight. Whoever's next is the partner.)
-	if Game.partner() == "Hop":
+	# (Checks the stored partner: partner() already says Big Joe once Hop has left.)
+	if str(Game.flags.get("partner", "Hop")) == "Hop":
 		Game.set_partner("BigJoe6")
-	Game.set_objective("Get some sleep. (The base.)")
+	else:
+		Game._build_partner()
+	# #1: the couch, not the bunk (Hop's note is waiting there).
+	Game.set_objective("Get some sleep. (The couch in the base.)")
 	await Game.change_scene(BASE_SCENE)
 
 

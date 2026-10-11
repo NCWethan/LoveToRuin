@@ -682,8 +682,9 @@ func _first_warning() -> void:
 		{"who": "Hopkuna", "face": false, "text": "...Hop."},
 		{"who": "Hopkuna", "face": false, "text": "That isn't your friend."},
 		{"who": "Hop", "text": "Shut up.", "mood": "angry"},
-		{"who": "Elric", "choices": ["...Hop?", "(Say nothing.)"]},
-		{"who": "Hop", "text": "...Not you. Nothing. Talking to myself.", "mood": "sad"},
+		{"who": "Elric", "choices": ["...Hop?", "(Say nothing.)"], "replies": [
+			[{"who": "Hop", "text": "...Not you. Nothing. Talking to myself.", "mood": "sad"}],
+			["* (Hop sees you looking at him.)", {"who": "Hop", "text": "...That wasn't to you. Talking to myself.", "mood": "sad"}]]},
 		{"who": "Hop", "text": "Nassan's map had a circle on the beach.\nMission Beach. That's the next one.", "mood": ""},
 		{"who": "Hop", "text": "There's a bus from the PQ Mall.\n...Let's just go.", "mood": "sad"},
 	])
