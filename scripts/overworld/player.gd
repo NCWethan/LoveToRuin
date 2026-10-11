@@ -126,7 +126,21 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("confirm"):
 		_interact()
 	elif Input.is_action_just_pressed("menu"):
-		Game.bag.open()
+		if Game.playing_relic:
+			_relic_backpack()
+		else:
+			Game.bag.open()
+
+
+## In a KEEPSAKE memory, Elric isn't here: it's Relic, five years ago. Their
+## backpack isn't Elric's bag (no party, no items to use), but Settings still work.
+func _relic_backpack() -> void:
+	Game.busy = true
+	var choice := await Game.dialogue.ask("* (Relic's backpack. It clinks.\n*  Bottle caps, ticket stubs. Nothing here is yours.)", ["Close", "Settings"])
+	if choice == 1:
+		await Game.settings_menu.open()
+	await get_tree().process_frame
+	Game.busy = false
 
 
 ## Sprinting drains the stamina bar; it refills a moment after you stop. Draining
