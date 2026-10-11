@@ -67,7 +67,7 @@ func _ready() -> void:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	add_static_layer(_draw_arcade)
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (Salt, sunscreen, and somewhere, churros.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (Salt, sunscreen, and somewhere, churros.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

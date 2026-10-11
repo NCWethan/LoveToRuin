@@ -113,7 +113,7 @@ func _ready() -> void:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	_play_music_here()
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (The gulls are arguing over a french fry.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (The gulls are arguing over a french fry.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

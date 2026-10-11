@@ -88,7 +88,7 @@ func _ready() -> void:
 	if flag("jy_van"):
 		_van_running = 0.0
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (The freeway hums, like the ocean.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (The freeway hums, like the ocean.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

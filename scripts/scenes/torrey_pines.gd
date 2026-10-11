@@ -98,7 +98,7 @@ func _ready() -> void:
 	else:
 		Game.play_music("torrey")
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (The wind off the ocean smells like pine.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (The wind off the ocean smells like pine.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

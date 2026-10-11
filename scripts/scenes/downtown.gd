@@ -22,7 +22,7 @@ extends Area
 ## The ballpark's gate has no power (Chapter 2: the road to each fragment). The
 ## service panel is in the Hotel Grande's basement: six breakers, and a chart
 ## scrawled on the wall. The main trips over 30 amps; the gate needs breaker 3,
-## the diner's coffee (1) must stay on, and you'll want the light (6).
+## the diner's neon sign (1) must stay on, and you'll want the light (6).
 ##
 ## Story flags: dt_arrived, dt_inside, dt_basement_seen, dt_breakers (which are
 ## on), dt_power, dt_screen_done, dt_fragment, dt_odds, has_fragment_7.
@@ -55,7 +55,7 @@ const OUTSIDE_HOTEL := Vector2(6 * T + 10, 9 * T + 2)
 const PANEL := Vector2(56 * T + 10, 35 * T + 4)
 const CHART := Vector2(52 * T + 10, 35 * T + 4)
 ## The breakers: what each one runs, and how many amps it draws.
-const BREAKERS := [["DINER", 10], ["HOTEL SIGN", 10], ["BALLPARK GATE", 15], ["TROLLEY BELL", 5], ["ELEVATOR", 25], ["THIS LIGHT", 5]]
+const BREAKERS := [["DINER SIGN", 10], ["HOTEL SIGN", 10], ["BALLPARK GATE", 15], ["TROLLEY BELL", 5], ["ELEVATOR", 25], ["THIS LIGHT", 5]]
 const MAX_AMPS := 30
 
 var partner: Character
@@ -96,7 +96,7 @@ func _ready() -> void:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	_play_music_here()
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (The trolley rings its bell, far away.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (The trolley rings its bell, far away.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 
@@ -437,7 +437,7 @@ func _chart() -> void:
 	await Game.dialogue.say([
 		"* (Scrawled on the wall in marker:)",
 		"* (\"PANEL B. THE MAIN TRIPS OVER 30 AMPS!!!\")",
-		"* (\"1 DINER ........ 10   NEVER OFF. - MARGE\n*  2 HOTEL SIGN ... 10\n*  3 BALLPARK GATE  15\")",
+		"* (\"1 DINER SIGN ... 10   NEVER OFF. - MARGE\n*  2 HOTEL SIGN ... 10\n*  3 BALLPARK GATE  15\")",
 		"* (\"4 TROLLEY BELL .  5\n*  5 ELEVATOR ..... 25   BROKEN ANYWAY\n*  6 THIS LIGHT ...  5   you'll want this\")",
 	])
 
@@ -488,7 +488,7 @@ func _try_main() -> void:
 	if not on[0]:
 		await Game.dialogue.say([
 			"* (CLUNK. The MAIN holds. The bulb comes on.)",
-			"* (Upstairs, faintly: \"WHO TURNED OFF MY COFFEE.\")",
+			"* (Up the street, faintly: \"WHO TURNED OFF MY SIGN.\")",
 			"* (Heavy footsteps. The basement door bangs open.\n*  A waitress flips breaker 1 back on and glares at you.)",
 			"* (BANG. The MAIN trips. She leaves.\n*  Breaker 1 stays on.)",
 		])
@@ -498,7 +498,7 @@ func _try_main() -> void:
 		_shade.queue_redraw()
 		return
 	if not on[2]:
-		await Game.dialogue.say(["* (CLUNK. The MAIN holds. The bulb comes on.\n*  The diner's still got coffee.)", "* (...But nothing's running up at the ballpark.\n*  Breaker 3 is off.)"])
+		await Game.dialogue.say(["* (CLUNK. The MAIN holds. The bulb comes on.\n*  The diner's sign is still buzzing.)", "* (...But nothing's running up at the ballpark.\n*  Breaker 3 is off.)"])
 		return
 	Game.flags["dt_power"] = true
 	Game.play_sfx("save")
@@ -628,7 +628,7 @@ func _ballpark_gate() -> void:
 		Game.flags["dt_gate_seen"] = true
 		await Game.dialogue.say([
 			"* (The ballpark's gate is a big steel shutter, rolled\n*  all the way down. Its motor's dead.)",
-			"* (A sign taped to it: POWER OUT ON THIS BLOCK.\n*  SERVICE PANEL: HOTEL GRANDE, BASEMENT.)",
+			"* (A sign taped to it: PANEL B TRIPPED. GATE MOTOR\n*  DOWN. SERVICE: HOTEL GRANDE, BASEMENT.)",
 		])
 		if _route() == "pacifist" and Game.partner() != "Supreme":
 			await Game.dialogue.say([{"who": "Supreme", "text": "(over the phone) Oh, I climbed the fence.\nDon't. You'd lose. Flip the breakers, it's faster.", "mood": "smug"}])

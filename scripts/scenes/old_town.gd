@@ -106,7 +106,7 @@ func _ready() -> void:
 		world.add_child(Hotspot.create(_card_spot(seat), _place_card.bind(seat)))
 	_play_music_here()
 	# A SAVE point by the bus stop.
-	add_save_point(ENTRY + Vector2(-46, -6), "* (Somewhere, a trumpet. Badly. Happily.)")
+	add_save_point(ENTRY + Vector2(42, -4), "* (Somewhere, a trumpet. Badly. Happily.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 
@@ -642,7 +642,7 @@ func _sideboard() -> void:
 		await Game.dialogue.say(["* (Twelve invitations, in neat handwriting.\n*  Every one of them is crossed out but one.)"])
 		return
 	await Game.dialogue.say([
-		"* (Four invitations, in neat handwriting, each with\n*  a note on the back in the same hand:)",
+		"* (Twelve invitations, in neat handwriting. Four have\n*  a note on the back, in the same hand:)",
 		"* (\"Don Esteban Ruiz.\" On the back: \"At my right\n*  hand, as always.\")",
 		"* (\"Señora Lupe Ortega.\" On the back: \"Across from\n*  Don Esteban. They argue. I LOVE it.\")",
 		"* (\"Marisol Ortega, age 9.\" On the back: \"Right\n*  next to her mother, where I can see her.\")",
@@ -651,7 +651,7 @@ func _sideboard() -> void:
 	if not flag("ot_cards"):
 		Game.flags["ot_cards"] = true
 		Game.play_sfx("item")
-		await Game.dialogue.say(["* (Under them: four place cards, with the same names.\n*  You take them.)", "* (You got the PLACE CARDS.)"])
+		await Game.dialogue.say(["* (Under them: place cards. Only four have names on\n*  them so far. You take those.)", "* (You got the PLACE CARDS.)"])
 		if not flag("ot_table_set"):
 			Game.set_objective("Set the place cards. (Who sat where?)")
 
@@ -746,6 +746,8 @@ func _not_ready() -> void:
 			"* The Hostess: \"Not in the DARK, dear! The candles!\"",
 			"* \"Rodrigo, next door, has the matches. He's just\n*  stepped out. Back in five minutes.\"",
 			"* (She says it like she's said it before.\n*  For a long time.)",
+		] if not flag("ot_matches") else [
+			"* The Hostess: \"Matches! Oh, you FOUND some.\n*  Light them, dear. Start with the candelabra.\"",
 		])
 	else:
 		await Game.dialogue.say([
