@@ -163,8 +163,10 @@ static func _unbound() -> BattleData:
 		return ["* Somewhere inside, Hop is listening.", "* \"Thirteen of us,\" Agent says. \"I did the math.\"", "* The grass is burning in a ring around the park."][turn % 3]
 	var e: Enemy = data.enemies[0]
 	e.name = "Hopkuna"
-	e.attack = 9
-	e.bullet_speed = 130.0
+	# (Hard, but winnable: it was hitting for 9 a hit, two turns to a knockout.)
+	e.attack = 6
+	e.bullet_speed = 108.0
+	e.pace = 1.45
 	e.patterns.assign(["cleave", "red_arrows", "slash_grid", "burst", "fire_arrow", "ember_rain", "cage", "twelve_tattoos", "everything"])
 	e.spare_refusal = ""
 	e.mercy_per_call = 8
@@ -206,8 +208,9 @@ static func _underdog() -> BattleData:
 	e.max_hp = CorpsAttacks.boss_hp(500)
 	e.hp = e.max_hp
 	e.defense = 3
-	e.attack = 10
-	e.bullet_speed = 140.0
+	e.attack = 7
+	e.bullet_speed = 112.0
+	e.pace = 1.45
 	e.hit_line = ""
 	e.patterns.assign(["cleave", "red_arrows", "slash_grid", "burst", "fire_arrow", "ember_rain", "cage", "twelve_tattoos"])
 	e.finale_patterns.assign(["last_stand"])

@@ -32,6 +32,9 @@ var acts: Array[Dictionary] = []
 var patterns: Array[String] = []
 ## Speed for its simple bullets, in pixels per second.
 var bullet_speed: float = 100.0
+## How long between its waves of bullets (1 = as the pattern says; 1.4 = 40% more
+## breathing room between them).
+var pace: float = 1.0
 
 ## If set, MERCY doesn't work on this enemy and this is shown instead.
 var spare_refusal: String = ""

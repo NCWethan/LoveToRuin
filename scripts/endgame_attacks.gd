@@ -298,10 +298,11 @@ static func _price_check(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2,
 static func _twelve_tattoos(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var angle := (step % 12) * TAU / 12.0
 	var color := Attacks.HOPKUNA_RED if (step / 12) % 2 == 0 else Color(0.45, 0.95, 0.55)
-	Attacks._beam(enemy, parent, area, area.get_center() + Vector2.from_angle(angle + PI / 2) * (soul - area.get_center()).length() * 0.0, Vector2.from_angle(angle), 0.45, color)
-	if step % 3 == 2:
-		Attacks._beam(enemy, parent, area, soul, Vector2.from_angle(angle + PI / 2), 0.6, color)
-	return 0.35
+	# (A long enough warning to read each one, and room between them.)
+	Attacks._beam(enemy, parent, area, area.get_center(), Vector2.from_angle(angle), 0.65, color)
+	if step % 4 == 3:
+		Attacks._beam(enemy, parent, area, soul, Vector2.from_angle(angle + PI / 2), 0.8, color)
+	return 0.5
 
 
 ## EVERYTHING: everything from the whole game, a little of each. Cleave, the

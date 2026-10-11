@@ -1955,7 +1955,7 @@ func _process_enemy_turn(delta: float) -> void:
 						if thrown:
 							thrown.time_scale = slow
 					wait /= slow
-				_spawn_timers[enemy] = wait * crowding
+				_spawn_timers[enemy] = wait * crowding * enemy.pace
 				_spawn_steps[enemy] += 1
 				_last_spawn[enemy] = ENEMY_TURN_TIME - _enemy_timer
 
