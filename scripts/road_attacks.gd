@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- Old Town ---
+		"weed_roll": return _weed_roll(enemy, parent, area, s, step)
+		"weed_gust": return _weed_gust(enemy, parent, area, s, step)
+		"pinata_candy": return _pinata_candy(enemy, parent, area, s, step)
+		"pinata_swing": return _pinata_swing(enemy, parent, area, s, step)
+		"wax_drip": return _wax_drip(enemy, parent, area, s, step)
+		"wax_flame": return _wax_flame(enemy, parent, area, s, step)
 	return -1.0
 
 
@@ -170,3 +177,74 @@ static func _tour_flash(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, 
 		spark.delay = 0.45
 		spark.velocity = Vector2.from_angle(k * TAU / 8.0) * 110.0
 	return 0.55
+
+
+# --- Tumbleweed --------------------------------------------------------------------------
+
+## ROLL: tumbleweeds bounce in from the side along your row, spinning.
+static func _weed_roll(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var y := clampf(soul.y + randf_range(-10, 10), area.position.y + 10, area.end.y - 10)
+	var weed := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, y), "weed", 10.0)
+	weed.delay = 0.3
+	weed.velocity = Vector2(160 if left else -160, 0)
+	weed.zigzag = 45.0
+	weed.spin = 6.0 if left else -6.0
+	return 0.55
+
+
+## GUST: a gust of grit sweeps across the whole box, with one gap to hide in.
+static func _weed_gust(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var rows := int(area.size.y / 12.0)
+	var gap := clampi(int((soul.y - area.position.y) / 12.0) + randi_range(-1, 1), 0, rows - 2)
+	for k in rows:
+		if k == gap or k == gap + 1:
+			continue
+		var grit := _glyph(enemy, parent, area, Vector2(area.position.x + 4 if left else area.end.x - 4, area.position.y + 6 + k * 12), "dust", 6.0)
+		grit.delay = 0.35
+		grit.velocity = Vector2(190 if left else -190, 0)
+	return 1.2
+
+
+# --- Piñata ------------------------------------------------------------------------------
+
+## CANDY: the piñata splits, and candy sprays down in a fan around you.
+static func _pinata_candy(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var origin := Vector2(clampf(soul.x + randf_range(-30, 30), area.position.x + 10, area.end.x - 10), area.position.y + 4)
+	for k in 7:
+		var candy := _glyph(enemy, parent, area, origin, "candy", 7.0)
+		candy.delay = 0.35
+		candy.velocity = Vector2.from_angle(PI / 2 + (k - 3) * 0.32) * randf_range(110, 140)
+		candy.spin = 4.0
+	return 0.9
+
+
+## SWING: the stick swings through: a slash across the box, through where you are.
+static func _pinata_swing(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var angle := 0.55 if step % 2 == 0 else -0.55
+	Attacks._beam(enemy, parent, area, soul, Vector2.from_angle(angle), 0.55, Color(0.95, 0.75, 0.4))
+	return 0.8
+
+
+# --- Wax Ghost ---------------------------------------------------------------------------
+
+## DRIP: hot wax drips from above: where you are, and either side.
+static func _wax_drip(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	for k in 3:
+		var x := clampf(soul.x + (k - 1) * 26.0, area.position.x + 6, area.end.x - 6)
+		var drip := _glyph(enemy, parent, area, Vector2(x, area.position.y + 4), "wax", 8.0)
+		drip.delay = 0.3 + k * 0.15
+		drip.velocity = Vector2(0, 150)
+	return 0.75
+
+
+## FLAME: little flames drift in from the sides and lean toward you.
+static func _wax_flame(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var start := Vector2(area.position.x + 6 if left else area.end.x - 6, randf_range(area.position.y + 10, area.end.y - 10))
+	var flame := _glyph(enemy, parent, area, start, "flame", 8.0)
+	flame.delay = 0.25
+	flame.velocity = (soul - start).normalized() * 95.0
+	flame.sway = 30.0
+	return 0.5

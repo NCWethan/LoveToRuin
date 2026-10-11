@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: Old Town ---
+	"tumbleweed": {
+		"name": "Tumbleweed", "sprite": "wild_tumbleweed",
+		"intro": "* A Tumbleweed rolls up.\n* It stops. Right in front of you. On purpose.",
+		"hp": 92, "atk": 8, "def": 3, "patterns": ["weed_roll", "weed_gust"],
+		"check": "* TUMBLEWEED - ATK 8 DEF 3\n* Has rolled here all the way from Arizona. Won't say why.",
+		"acts": [
+			{"name": "Whistle", "mercy": 50, "lines": ["* {actor} whistles a lonesome tune.\n* The Tumbleweed rolls back and forth, slowly. It's dancing."]},
+			{"name": "Untangle", "mercy": 40, "lines": ["* {actor} picks a candy wrapper out of it.\n* It feels lighter. It rolls a happy little circle."]},
+		],
+		"taunts": ["*rustle*", "*tumble*", "..."],
+		"flavor": ["* The Tumbleweed drifts in a wind you can't feel.", "* There's a sock in the Tumbleweed.\n* Nobody asks."],
+		"backdrop": Color(0.75, 0.55, 0.35), "style": "plaza", "exp": 19, "money": 12,
+	},
+	"pinata": {
+		"name": "Piñata", "sprite": "wild_pinata",
+		"intro": "* A Piñata swings down from the papel picado!\n* It's FULL.",
+		"hp": 104, "atk": 8, "def": 4, "patterns": ["pinata_candy", "pinata_swing"],
+		"check": "* PIÑATA - ATK 8 DEF 4\n* Survived three birthday parties. Has opinions about sticks.",
+		"acts": [
+			{"name": "Sing", "mercy": 50, "lines": ["* {actor} sings \"Dale, dale, dale.\"\n* The Piñata sways along. It knows all the words."]},
+			{"name": "Put Stick Down", "mercy": 40, "lines": ["* {actor} puts down the stick. Nobody had a stick.\n* The Piñata relaxes anyway."]},
+		],
+		"taunts": ["DALE DALE", "*crinkle*", "NOT THE STICK"],
+		"flavor": ["* The Piñata twirls on its string.", "* Candy rattles inside the Piñata. It's a little smug about it."],
+		"backdrop": Color(0.85, 0.35, 0.55), "style": "banners", "exp": 21, "money": 18,
+	},
+	"wax_ghost": {
+		"name": "Wax Ghost", "sprite": "wild_wax_ghost",
+		"intro": "* A Wax Ghost drips out of the shadows.\n* Its little flame flickers at you.",
+		"hp": 96, "atk": 9, "def": 2, "patterns": ["wax_drip", "wax_flame"],
+		"check": "* WAX GHOST - ATK 9 DEF 2\n* Was a candle. Burned all the way down. Kept going.",
+		"acts": [
+			{"name": "Shield Flame", "mercy": 50, "lines": ["* {actor} cups their hands around its little flame.\n* It stops flickering. It feels safe."]},
+			{"name": "Make a Wish", "mercy": 40, "lines": ["* {actor} makes a wish, and doesn't blow.\n* The Wax Ghost has waited a long time for that."]},
+		],
+		"taunts": ["*drip*", "*fssss*", "...warm..."],
+		"flavor": ["* The Wax Ghost drips on the floor. The drips crawl back.", "* Its flame leans toward you, like it's listening."],
+		"backdrop": Color(0.45, 0.3, 0.55), "style": "stars", "exp": 22, "money": 14,
+	},
 	# --- Chapter 2: Balboa Park ---
 	"peacock": {
 		"name": "Peacock", "sprite": "wild_peacock",
@@ -227,7 +267,7 @@ const ZONES := {
 	"res://scenes/hop_house.tscn": ["gnome", "flamingo", "bag"],
 	"res://scenes/mission_beach.tscn": ["sand_crab", "jellyfish", "beach_kite"],
 	"res://scenes/balboa_park.tscn": ["peacock", "marble_bust", "tour_group"],
-	"res://scenes/old_town.tscn": ["seagull", "bag", "squirrel"],
+	"res://scenes/old_town.tscn": ["tumbleweed", "pinata", "wax_ghost"],
 	"res://scenes/downtown.tscn": ["seagull", "bag", "cart"],
 	"res://scenes/harbor.tscn": ["seagull", "balloon", "bag"],
 	"res://scenes/torrey_pines.tscn": ["seagull", "squirrel", "goose"],

@@ -18,7 +18,13 @@ extends Area
 ##   Own way    Nat is on a bench by the Casa. He won't stop you.
 ##   With Hop   Nat is sitting on the Casa's steps, reading. He's read ahead.
 ##
-## Story flags: ot_arrived, ot_inside, ot_dinner_done, ot_candles_out,
+## Before she'll serve, the Hostess needs her table ready (Chapter 2: the road to
+## each fragment): the candles lit (the matches are in the candle shop, in the
+## drawer under the one that sticks), and the four guests' name cards at their
+## places (the invitations on the sideboard say where everyone sat).
+##
+## Story flags: ot_arrived, ot_inside, ot_matches, ot_candles_lit, ot_cards,
+## ot_seat_<seat> (a guest's name), ot_table_set, ot_dinner_done, ot_candles_out,
 ## ot_fragment, has_fragment_6, has_feather.
 
 const SCENE := "res://scenes/old_town.tscn"
@@ -45,6 +51,17 @@ const NAT_STEPS := Vector2(44 * T + 10, 11 * T)
 ## The candles on the table (x positions, in tiles) and the candelabra.
 const CANDLES := [8, 11, 14, 18, 21]
 const CANDELABRA := Vector2(15 * T + 10, 42 * T)
+## The candle shop: its own little room on the map.
+const SHOP := Rect2i(33, 33, 18, 13)
+const SHOP_ENTRY := Vector2(41 * T + 10, 43 * T + 10)
+const SHOP_EXIT := Vector2(41 * T + 10, 45 * T - 2)
+const OUTSIDE_SHOP := Vector2(21 * T + 10, 8 * T + 2)
+const DRAWERS := Vector2(39 * T + 10, 40 * T + 4)
+const SHOP_NOTE := Vector2(42 * T + 10, 40 * T + 4)
+## The four guests, and where each one sat (the seats: N = the clock's side of
+## the table, S = the window's side; 0 at the foot, 4 next to the Hostess).
+const GUESTS := ["Don Esteban", "Señora Lupe", "Marisol", "Father Tomás"]
+const GUEST_SEATS := {"Don Esteban": "N4", "Señora Lupe": "S4", "Marisol": "S3", "Father Tomás": "N2"}
 
 var partner: Character
 var nat: Character
@@ -61,9 +78,10 @@ var _from_memory: bool = false
 
 func _ready() -> void:
 	_from_memory = not Game.keepsake_after.is_empty() and not Game.playing_relic
-	rooms.assign([_px(OUTSIDE), _px(INSIDE)])
+	rooms.assign([_px(OUTSIDE), _px(INSIDE), _px(SHOP)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(T, 11 * T, 58 * T, 13 * T))
+	add_wild_encounters(SCENE, _px(SHOP))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)
@@ -79,8 +97,13 @@ func _ready() -> void:
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [DOOR_OUT, _casa_door], [INSIDE_EXIT, _leave_casa],
 			[CANDLE_DOOR, _candle_shop], [CHAIR, _empty_chair], [FEATHER_BENCH, _feather_bench],
 			[Vector2(5 * T + 10, 18 * T + 4), _wagon], [Vector2(25 * T + 10, 18 * T + 4), _flagpole],
-			[Vector2(3 * T + 10, 36 * T + 4), _clock], [Vector2(22 * T + 10, 36 * T + 4), _sideboard]]:
+			[Vector2(3 * T + 10, 36 * T + 4), _clock], [Vector2(22 * T + 10, 36 * T + 4), _sideboard],
+			[SHOP_EXIT, _leave_shop], [DRAWERS, _drawers], [SHOP_NOTE, _shop_note], [CANDELABRA, _candelabra],
+			[Vector2(36 * T + 10, 36 * T + 4), _shelf.bind(0)], [Vector2(44 * T + 10, 36 * T + 4), _shelf.bind(1)],
+			[Vector2(48 * T + 10, 36 * T + 4), _shelf.bind(2)]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	for seat in _seats():
+		world.add_child(Hotspot.create(_card_spot(seat), _place_card.bind(seat)))
 	_play_music_here()
 	fit_camera_to_room()
 	_start.call_deferred()
@@ -98,8 +121,13 @@ func _route() -> String:
 	return str(Game.flags.get("route", ""))
 
 
+## In the Casa (not the candle shop).
 func _inside() -> bool:
-	return player.position.y > 32 * T
+	return _px(INSIDE).has_point(player.position)
+
+
+func _in_shop() -> bool:
+	return _px(SHOP).has_point(player.position)
 
 
 ## The plaza tune outside; inside, nothing but a clock (until dinner).
@@ -196,6 +224,14 @@ func build_map() -> void:
 	room.fill(7, 41, 16, 3, Room.HOUSE_PROP)  # the table
 	room.set_tile(3, 35, Room.HOUSE_PROP)     # the grandfather clock
 	room.fill(20, 35, 5, 1, Room.HOUSE_PROP)  # the sideboard
+	# The candle shop: shelves of candles all around, the counter in the middle.
+	room.fill(SHOP.position.x, SHOP.position.y, SHOP.size.x, SHOP.size.y, Room.INTERIOR_WALL)
+	room.fill(34, 35, 16, 10, Room.HOUSE_FLOOR)
+	room.fill(35, 35, 14, 1, Room.HOUSE_PROP)  # the shelves along the back
+	room.fill(34, 37, 1, 6, Room.HOUSE_PROP)   # and down the sides
+	room.fill(49, 37, 1, 6, Room.HOUSE_PROP)
+	room.fill(37, 39, 7, 1, Room.HOUSE_PROP)   # the counter
+	room.set_tile(41, 45, Room.DOOR)
 
 
 ## What never changes: the papel picado, the signs, Rosa's counter, the Casa's
@@ -220,6 +256,7 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	Scenery.stone_well(ci, Vector2(11 * T + 10, 21 * T + 10))
 	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
 	_draw_dining_room(ci)
+	_draw_candle_shop(ci)
 
 
 func _draw_decor() -> void:
@@ -286,7 +323,7 @@ func _draw_dining_room(ci: CanvasItem) -> void:
 ## The candles on the table (flickering, or out), and the candelabra in the middle
 ## with the fragment glowing in it.
 func _draw_candles() -> void:
-	var out := flag("ot_candles_out")
+	var out := flag("ot_candles_out") or not _candles_lit()
 	for x in CANDLES:
 		var at := Vector2(x * T + 10, 42 * T + 4)
 		_decor.draw_rect(Rect2(at + Vector2(-3, -1), Vector2(6, 2)), Color8(200, 170, 80))
@@ -313,6 +350,10 @@ func _draw_candles() -> void:
 ## Dusk over Old Town; and inside, once the candles are out, the dark.
 func _draw_shade() -> void:
 	_shade.draw_rect(_px(OUTSIDE), Color(0.35, 0.15, 0.3, 0.12))
+	if not _candles_lit():
+		# Before the candles: dark, but for her own glow.
+		_shade.draw_rect(_px(INSIDE), Color(0.02, 0.0, 0.05, 0.45))
+	_draw_cards()
 	if flag("ot_candles_out"):
 		_shade.draw_rect(_px(INSIDE), Color(0.02, 0.0, 0.05, 0.55))
 		var pulse := 0.6 + 0.4 * sin(_time * 4.0)
@@ -389,6 +430,9 @@ func _talk_nat() -> void:
 func _talk_hostess() -> void:
 	if not _inside():
 		return
+	if not _table_ready():
+		await _not_ready()
+		return
 	await Game.dialogue.say([
 		"* The Hostess: \"Sit, sit! The soup's getting cold!\"",
 		"* (It has been getting cold since 1874.)",
@@ -399,10 +443,311 @@ func _talk_hostess() -> void:
 # --- Things --------------------------------------------------------------------------
 
 func _candle_shop() -> void:
+	if not flag("ot_shop_seen"):
+		await Game.dialogue.say([
+			"* (A sign in the door: BACK IN 5 MIN.)",
+			"* (The sign is very, very old. The door isn't locked.)",
+		])
+	Game.play_sfx("door")
+	await go_through_door(SHOP_ENTRY)
+	fit_camera_to_room()
+	if not flag("ot_shop_seen"):
+		Game.flags["ot_shop_seen"] = true
+		await Game.dialogue.say([
+			"* (Candles. Hundreds of them. Tall ones, short ones,\n*  ones shaped like saints, one shaped like a cat.)",
+			"* (Every wick is black. Wax has dripped down the\n*  shelves and frozen there, like it was in a hurry.)",
+			"* (Somewhere in here, something is dripping.)",
+		])
+
+
+func _leave_shop() -> void:
+	Game.play_sfx("door")
+	await go_through_door(OUTSIDE_SHOP)
+	fit_camera_to_room()
+
+
+func _shelf(which: int) -> void:
+	var lines: Array = [
+		["* (Candles for saints: San Antonio, for lost things.\n*  Santa Lucía, for eyes. One with no name on it.)"],
+		["* (Birthday candles. A box of them, all the same\n*  number: 9.)"],
+		["* (A candle shaped like a cat. Its wick is its tail.\n*  Nobody has ever had the heart to light it.)"],
+	][which]
+	await Game.dialogue.say(lines)
+
+
+func _shop_note() -> void:
 	await Game.dialogue.say([
-		"* (A sign in the door: BACK IN 5 MIN.)",
-		"* (The sign is very, very old.)",
+		"* (A note, pinned to the counter with a candle stub:)",
+		"* (\"MATCHES: in the drawer UNDER the one that sticks.\n*  - R.  (Back in 5 min.)\")",
 	])
+
+
+## Three drawers behind the counter. The middle one sticks.
+func _drawers() -> void:
+	if flag("ot_matches"):
+		await Game.dialogue.say(["* (The drawers. You already have the matches.)"])
+		return
+	var pick := await Game.dialogue.ask("* (Three drawers behind the counter.)", ["Top", "Middle", "Bottom", "Leave them"])
+	match pick:
+		0:
+			await Game.dialogue.say(["* (Receipts. Hundreds of them, all from 1874.\n*  All for candles. All for the Casa Vieja.)"])
+		1:
+			Game.play_sfx("bonk")
+			await Game.dialogue.say(["* (It's stuck. You pull. It doesn't budge.\n*  The whole counter creaks.)"])
+		2:
+			Game.play_sfx("item")
+			Game.flags["ot_matches"] = true
+			await Game.dialogue.say(["* (A box of long kitchen matches. A few are left.\n*  The box says LA VELERÍA, 1870.)", "* (You got the MATCHES.)"])
+			if flag("ot_inside") and not _candles_lit():
+				Game.set_objective("Light the candles. (The candelabra, on the table.)")
+
+
+## The candles, the counter and its drawers, the dripping wax.
+func _draw_candle_shop(ci: CanvasItem) -> void:
+	var r := _px(SHOP)
+	# Warm plaster, and wax frozen running down the walls.
+	for x in range(SHOP.position.x + 1, SHOP.end.x - 1):
+		ci.draw_rect(Rect2(x * T, (SHOP.position.y + 1) * T, 2, T), Color8(150, 110, 80, 110))
+	var colors := [Color8(240, 235, 215), Color8(220, 70, 60), Color8(240, 200, 80), Color8(130, 90, 180), Color8(90, 160, 110), Color8(240, 150, 190)]
+	var k := 0
+	# The shelves: rows of candles, all sizes.
+	for shelf in [Rect2(35 * T, 35 * T - 4, 14 * T, T + 4), Rect2(34 * T, 37 * T, T, 6 * T), Rect2(49 * T, 37 * T, T, 6 * T)]:
+		ci.draw_rect(shelf, Color8(96, 62, 38))
+		ci.draw_rect(Rect2(shelf.position, Vector2(shelf.size.x, 2)), Color8(130, 90, 58))
+		if shelf.size.x > shelf.size.y:
+			var x: float = shelf.position.x + 4
+			while x < shelf.end.x - 4:
+				var h := 6 + (k * 7) % 9
+				var c: Color = colors[k % colors.size()]
+				ci.draw_rect(Rect2(x, shelf.end.y - 3 - h, 4, h), c)
+				ci.draw_rect(Rect2(x + 1, shelf.end.y - 4 - h, 1, 2), Color8(40, 30, 30))
+				x += 7
+				k += 1
+		else:
+			var y: float = shelf.position.y + 4
+			while y < shelf.end.y - 6:
+				for dx in [3, 9, 14]:
+					var c: Color = colors[k % colors.size()]
+					ci.draw_rect(Rect2(shelf.position.x + dx - 1, y, 3, 6), c)
+					k += 1
+				ci.draw_rect(Rect2(shelf.position.x, y + 7, shelf.size.x, 2), Color8(120, 80, 50))
+				y += 12
+	# Drips of wax, frozen down the front of the back shelf.
+	for x in range(36, 48, 2):
+		ci.draw_rect(Rect2(x * T + 6, 36 * T, 2, 4 + (x * 5) % 9), Color8(236, 230, 210))
+	# The counter: three drawers, a brass bell, the note, a candle stub.
+	var counter := Rect2(37 * T, 39 * T - 4, 7 * T, T + 4)
+	ci.draw_rect(Rect2(counter.position + Vector2(2, 3), counter.size), Color(0, 0, 0, 0.25))
+	ci.draw_rect(counter, Color8(110, 72, 44))
+	ci.draw_rect(Rect2(counter.position, Vector2(counter.size.x, 3)), Color8(150, 104, 66))
+	for d in 3:
+		var drawer := Rect2(38 * T + 4, 39 * T - 1 + d * 7, 2 * T - 8, 6)
+		ci.draw_rect(drawer, Color8(92, 58, 34))
+		ci.draw_rect(Rect2(drawer.get_center() - Vector2(2, 1), Vector2(4, 2)), Color8(210, 180, 100))
+	ci.draw_circle(Vector2(41 * T, 39 * T - 6), 4.0, Color8(200, 160, 70))
+	ci.draw_rect(Rect2(41 * T - 1, 39 * T - 12, 2, 3), Color8(150, 110, 40))
+	ci.draw_rect(Rect2(42 * T + 4, 39 * T - 8, 10, 7), Color8(244, 240, 226))
+	ci.draw_rect(Rect2(42 * T + 8, 39 * T - 12, 3, 5), Color8(240, 235, 215))
+	# A beaded curtain to the back, and the shop's own sign over it.
+	for b in 8:
+		for y in range(int(r.position.y) + T + 6, int(r.position.y) + 2 * T, 4):
+			ci.draw_rect(Rect2(46 * T + b * 3, y + (b % 2) * 2, 2, 2), colors[(b + y) % colors.size()])
+	PixelFont.draw(ci, "LA VELERÍA", Vector2(36 * T, 33 * T + 6), 2.0, Color8(240, 200, 110), Color8(60, 30, 30))
+
+
+## The candles: lit, from the candelabra, with the matches.
+func _candelabra() -> void:
+	if flag("ot_dinner_done"):
+		if not flag("ot_fragment"):
+			await _take_fragment()
+		else:
+			await Game.dialogue.say(["* (The candelabra. It's just a candelabra now.)"])
+		return
+	if _candles_lit():
+		await Game.dialogue.say(["* (The candelabra. Every candle on the table is lit.\n*  In the middle of it, something is glowing red.)"])
+		return
+	if not flag("ot_matches"):
+		await Game.dialogue.say([
+			"* (The candelabra, in the middle of the table.\n*  Every candle around it is cold.)",
+			"* (You'd need matches.)",
+		])
+		if flag("ot_inside"):
+			Game.set_objective("Find matches. (The candle shop, up the street.)")
+		return
+	await Game.dialogue.say(["* (You strike a match.)"])
+	Game.flags["ot_candles_lit"] = true
+	for k in CANDLES.size():
+		Game.play_sfx("ping", 1.2 + k * 0.08)
+		_decor.queue_redraw()
+		_shade.queue_redraw()
+		await get_tree().create_timer(0.3).timeout
+	await Game.dialogue.say([
+		"* (One by one, down the whole table, you light\n*  the candles.)",
+		"* The Hostess: \"Oh! OH. There. THERE it is.\n*  That's how it looked. That's EXACTLY how it looked.\"",
+	])
+	await _after_table_step()
+
+
+# --- The table: name cards ----------------------------------------------------------
+
+func _candles_lit() -> bool:
+	return flag("ot_candles_lit") or flag("ot_dinner_done")
+
+
+func _table_ready() -> bool:
+	return _candles_lit() and (flag("ot_table_set") or flag("ot_dinner_done"))
+
+
+## Every place at the table: "N0".."N4" (the clock's side), "S0".."S4".
+func _seats() -> Array:
+	var seats: Array = []
+	for side in ["N", "S"]:
+		for k in 5:
+			seats.append("%s%d" % [side, k])
+	return seats
+
+
+## Where a seat's place card sits on the table (at its place setting).
+func _card_spot(seat: String) -> Vector2:
+	var k := int(seat.substr(1))
+	return Vector2((8 + k * 3) * T + 10, 41 * T + 8 if seat[0] == "N" else 43 * T + 12)
+
+
+func _seat_of(guest: String) -> String:
+	for seat in _seats():
+		if Game.flags.get("ot_seat_" + seat, "") == guest:
+			return seat
+	return ""
+
+
+func _draw_cards() -> void:
+	if flag("ot_dinner_done"):
+		return
+	for seat in _seats():
+		var guest: String = Game.flags.get("ot_seat_" + seat, "")
+		if guest == "":
+			continue
+		var at := _card_spot(seat) + Vector2(0, -8 if seat[0] == "N" else 6)
+		_shade.draw_rect(Rect2(at - Vector2(5, 3), Vector2(10, 6)), Color8(250, 248, 240))
+		_shade.draw_rect(Rect2(at - Vector2(3, 1), Vector2(6, 1)), Color8(120, 70, 90))
+
+
+## The sideboard: the invitations (they say who sat where), and the place cards.
+func _sideboard() -> void:
+	if flag("ot_dinner_done"):
+		await Game.dialogue.say(["* (Twelve invitations, in neat handwriting.\n*  Every one of them is crossed out but one.)"])
+		return
+	await Game.dialogue.say([
+		"* (Four invitations, in neat handwriting, each with\n*  a note on the back in the same hand:)",
+		"* (\"Don Esteban Ruiz.\" On the back: \"At my right\n*  hand, as always.\")",
+		"* (\"Señora Lupe Ortega.\" On the back: \"Across from\n*  Don Esteban. They argue. I LOVE it.\")",
+		"* (\"Marisol Ortega, age 9.\" On the back: \"Right\n*  next to her mother, where I can see her.\")",
+		"* (\"Father Tomás.\" On the back: \"Right in the middle.\n*  The clock's side of the table.\")",
+	])
+	if not flag("ot_cards"):
+		Game.flags["ot_cards"] = true
+		Game.play_sfx("item")
+		await Game.dialogue.say(["* (Under them: four place cards, with the same names.\n*  You take them.)", "* (You got the PLACE CARDS.)"])
+		if not flag("ot_table_set"):
+			Game.set_objective("Set the place cards. (Who sat where?)")
+
+
+## A place at the table: put a name card down (or pick it back up).
+func _place_card(seat: String) -> void:
+	if flag("ot_dinner_done"):
+		await Game.dialogue.say(["* (A clean plate, a folded napkin.)"])
+		return
+	if flag("ot_table_set"):
+		var guest: String = Game.flags.get("ot_seat_" + seat, "")
+		await Game.dialogue.say(["* (%s's place.)" % guest if guest != "" else "* (A clean plate, a folded napkin. Nobody's place.)"])
+		return
+	if not flag("ot_cards"):
+		await Game.dialogue.say(["* (A clean plate, a folded napkin, and a little\n*  silver card holder. It's empty.)"])
+		return
+	var here: String = Game.flags.get("ot_seat_" + seat, "")
+	var options: Array = []
+	for guest in GUESTS:
+		if guest != here:
+			options.append(guest)
+	options.append("Take it back" if here != "" else "Leave it")
+	var prompt := "* (%s's card is here.)" % here if here != "" else "* (An empty card holder. Whose card goes here?)"
+	var pick := await Game.dialogue.ask(prompt, options)
+	if pick < 0 or pick >= options.size():
+		return
+	if pick == options.size() - 1:
+		if here != "":
+			Game.flags.erase("ot_seat_" + seat)
+			_shade.queue_redraw()
+		return
+	var guest: String = options[pick]
+	# (A card goes in one place: from wherever it was, to here.)
+	var old := _seat_of(guest)
+	if old != "":
+		Game.flags.erase("ot_seat_" + old)
+	Game.flags["ot_seat_" + seat] = guest
+	Game.play_sfx("select")
+	_shade.queue_redraw()
+	for g in GUESTS:
+		if _seat_of(g) == "":
+			return
+	await _check_table()
+
+
+## All four cards are down: is it right?
+func _check_table() -> void:
+	var wrong: Array = GUESTS.filter(func(g: String) -> bool: return _seat_of(g) != GUEST_SEATS[g])
+	if wrong.is_empty():
+		Game.flags["ot_table_set"] = true
+		Game.play_sfx("spare")
+		await Game.dialogue.say([
+			"* The Hostess: \"Esteban at my right. Lupe across,\n*  so they can bicker. Marisol by her mama.\"",
+			"* \"And Father Tomás right in the middle, so he can\n*  bless the food AND keep an eye on the clock.\"",
+			"* \"...It's perfect. It's exactly how it was.\"",
+		])
+		await _after_table_step()
+		return
+	Game.play_sfx("miss")
+	var hints := {
+		"Don Esteban": "* \"Esteban sits at my RIGHT hand, dear. I'm standing\n*  at the head of the table, looking down it.\"",
+		"Señora Lupe": "* \"Lupe sits ACROSS from Esteban. Right across.\n*  Otherwise how would they argue?\"",
+		"Marisol": "* \"Marisol sits right NEXT to her mother.\n*  She's nine. She needs watching.\"",
+		"Father Tomás": "* \"Father Tomás sits in the very middle, on the\n*  side with the clock. He likes to know the time.\"",
+	}
+	await Game.dialogue.say([
+		"* The Hostess: \"Oh. Oh, dear. No, no, no.\"",
+		hints[wrong[0]],
+		"* (She gently hands the wrong cards back to you.)",
+	])
+	for g in wrong:
+		Game.flags.erase("ot_seat_" + _seat_of(g))
+	_shade.queue_redraw()
+
+
+## After a step of getting the table ready: what's left (or sit down).
+func _after_table_step() -> void:
+	if _table_ready():
+		await Game.dialogue.say(["* The Hostess: \"Now. NOW. Sit, sit! The soup's\n*  getting cold!\""])
+		Game.set_objective("Sit down. (The empty chair at the end.)")
+	elif not _candles_lit():
+		Game.set_objective("Light the candles. (Matches: the candle shop.)" if not flag("ot_matches") else "Light the candles. (The candelabra, on the table.)")
+	else:
+		Game.set_objective("Set the place cards. (The sideboard.)" if not flag("ot_cards") else "Set the place cards. (Who sat where?)")
+
+
+## The Hostess, before her table's ready.
+func _not_ready() -> void:
+	if not _candles_lit():
+		await Game.dialogue.say([
+			"* The Hostess: \"Not in the DARK, dear! The candles!\"",
+			"* \"Rodrigo, next door, has the matches. He's just\n*  stepped out. Back in five minutes.\"",
+			"* (She says it like she's said it before.\n*  For a long time.)",
+		])
+	else:
+		await Game.dialogue.say([
+			"* The Hostess: \"The place cards! Nobody sits until\n*  everybody knows where to sit.\"",
+			"* \"The invitations are on the sideboard.\n*  I wrote down where everyone goes. I always do.\"",
+		])
+	await _after_table_step()
 
 
 func _wagon() -> void:
@@ -415,13 +760,6 @@ func _flagpole() -> void:
 
 func _clock() -> void:
 	await Game.dialogue.say(["* (A grandfather clock. It's stopped at seven.)", "* (Dinner was at seven.)"])
-
-
-func _sideboard() -> void:
-	if flag("ot_dinner_done"):
-		await Game.dialogue.say(["* (Twelve invitations, in neat handwriting.\n*  Every one of them is crossed out but one.)"])
-		return
-	await Game.dialogue.say(["* (A stack of invitations, in neat handwriting.)", "* (\"Mrs. Isabel Arroyo requests the pleasure\n*  of your company. Seven o'clock.\")", "* (They were never sent.)"])
 
 
 # --- Story ------------------------------------------------------------------------
@@ -500,16 +838,17 @@ func _casa_door() -> void:
 	Game.flags["ot_inside"] = true
 	await Game.dialogue.say([
 		"* (A dining room. One long table, set for twelve.\n*  Silver, crystal, folded napkins.)",
-		"* (Every plate is clean. Every chair is empty.\n*  Every candle is lit.)",
+		"* (Every plate is clean. Every chair is empty.\n*  Every candle is cold.)",
 		"* (At the head of the table, a woman is standing.\n*  You can see the wallpaper through her.)",
 		"* (She sees you. Her whole face lights up.)",
 		"* The Hostess: \"Oh! OH! You CAME!\"",
 		"* \"Come in, come in! I kept your seat.\n*  I kept ALL the seats!\"",
 		"* \"Sit at the end. That one's the best one.\n*  ...Everyone always wanted that one.\"",
+		"* \"...Oh! But it's so DARK. And the place cards!\n*  Nobody can sit until the table's ready.\"",
 	])
 	if _genocide():
 		await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* She doesn't know what we are.\n* Nobody's told her."}])
-	Game.set_objective("Sit down. (The empty chair at the end.)")
+	await _not_ready()
 
 
 func _leave_casa() -> void:
@@ -530,6 +869,9 @@ func _empty_chair() -> void:
 		await Game.dialogue.say(["* (The chair at the foot of the table.\n*  You sat here. Somebody finally did.)"])
 		return
 	if _engaged:
+		return
+	if not _table_ready():
+		await _not_ready()
 		return
 	var sit := await Game.dialogue.ask("* (The empty chair at the foot of the table.\n*  Sit down?)", ["Sit", "Not yet"])
 	if sit != 0:
