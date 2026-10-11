@@ -21,7 +21,13 @@ extends Area
 ##              everything. Rooster is at the gliderport, roasting, not helping.
 ##   With Hop   Rooster is at the gliderport. The jokes fall apart.
 ##
-## Story flags: tp_arrived, tp_hop_talk, tp_glider_done, tp_fragment,
+## The way up to the gliderport climbs into the fog (Chapter 2: the road to each
+## fragment): a hedge of pines cuts the cliffs in two, and the only way through
+## is the fog trail. At each fork, a cairn (stacked stones) stands at the mouth
+## of the right path; the wrong ones have been knocked over. Four forks. Take a
+## wrong turn and the fog walks you back to where the trail started.
+##
+## Story flags: tp_arrived, tp_fog_seen, tp_fog_done, tp_hop_talk, tp_glider_done, tp_fragment,
 ## has_fragment_9, tp_stolen (Corps: Hopkuna took the fragments).
 
 const SCENE := "res://scenes/torrey_pines.tscn"
@@ -36,6 +42,17 @@ const VIEWPOINT := Vector2(17 * T, 21 * T + 10)
 const ROOSTER_SPOT := Vector2(24 * T, 7 * T)
 const LODGE_DOOR := Vector2(48 * T + 10, 9 * T + 4)
 const DORIS := Vector2(38 * T + 10, 21 * T)
+## The fog trail: its own room on the map. A clearing, and three ways out of it
+## (west, north, east); the way in is from the south.
+const FOG := Rect2i(0, 34, 40, 26)
+const FOG_START := Vector2(20 * T, 57 * T)
+const FOG_EXITS := {"W": Vector2(3 * T, 46 * T + 10), "N": Vector2(20 * T, 37 * T), "E": Vector2(37 * T, 46 * T + 10)}
+const FOG_MOUTHS := {"W": Vector2(14 * T, 46 * T + 10), "N": Vector2(20 * T, 41 * T + 4), "E": Vector2(26 * T, 46 * T + 10)}
+## The right way at each fork, in order.
+const FOG_PATH := ["N", "E", "W", "N"]
+## Where the trail meets the fog (south of the pines), and where it comes out (north).
+const FOG_MOUTH_SOUTH := Vector2(31 * T, 16 * T + 10)
+const FOG_OUT_NORTH := Vector2(31 * T, 13 * T + 10)
 
 var partner: Character
 var hop: Character
@@ -52,9 +69,10 @@ var _from_memory: bool = false
 func _ready() -> void:
 	_from_memory = not Game.keepsake_after.is_empty() and not Game.playing_relic
 	_engaged = str(Game.battle_result.get("id", "")) in ["glider", "corps_rooster", "hopkuna_cliffs"]
-	rooms.assign([_px(OUTSIDE)])
+	rooms.assign([_px(OUTSIDE), _px(FOG)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(16 * T, 13 * T, 46 * T, 18 * T))
+	add_wild_encounters(SCENE, _px(FOG))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)
@@ -69,6 +87,8 @@ func _ready() -> void:
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [LODGE_DOOR, _lodge], [Vector2(19 * T + 10, 4 * T + 4), _windsock],
 			[Vector2(18 * T + 10, 25 * T + 4), _plaque], [DORIS + Vector2(0, 24), _doris]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	for dir in FOG_MOUTHS:
+		world.add_child(Hotspot.create(FOG_MOUTHS[dir], _cairn.bind(dir)))
 	if str(Game.battle_result.get("id", "")) == "hopkuna_cliffs":
 		Game.play_music("hopkuna_reveal", 0.2)
 	elif flag("tp_stolen"):
@@ -94,6 +114,7 @@ func _route() -> String:
 func _process(delta: float) -> void:
 	_time += delta
 	_decor.queue_redraw()
+	_shade.queue_redraw()
 	# The Glider bobs on the wind.
 	if glider and is_instance_valid(glider):
 		glider.position = GLIDER_SPOT + Vector2(sin(_time * 0.7) * 10.0, sin(_time * 1.3) * 6.0)
@@ -128,7 +149,7 @@ func _dress() -> void:
 
 
 func build_map() -> void:
-	room.setup(64, 32, Room.GRASS)
+	room.setup(64, 62, Room.GRASS)
 	# (The trees here are Torrey pines, bent by the wind: see tile_art.gd.)
 	room.set_meta("tree_style", "torrey")
 	room.fill(0, 0, 10, 32, Room.WATER)
@@ -139,6 +160,20 @@ func build_map() -> void:
 	room.fill(0, 0, 64, 1, Room.TREE)
 	room.fill(63, 0, 1, 32, Room.TREE)
 	room.fill(0, 31, 64, 1, Room.TREE)
+	room.fill(0, 32, 64, 30, Room.VOID)
+	# A hedge of pines across the cliffs: the only way north is up the trail,
+	# into the fog. (Once you've been through, the trail's clear.)
+	room.fill(16, 15, 47, 1, Room.TREE)
+	room.fill(30, 15, 2, 1, Room.DIRT)
+	# The fog trail: a clearing in the pines, three paths out, one path in.
+	room.fill(FOG.position.x, FOG.position.y, FOG.size.x, FOG.size.y, Room.TREE)
+	room.fill(14, 42, 13, 10, Room.GRASS)
+	room.fill(15, 41, 11, 1, Room.GRASS)
+	room.fill(15, 52, 11, 1, Room.GRASS)
+	room.fill(2, 46, 13, 2, Room.DIRT)    # west
+	room.fill(26, 46, 13, 2, Room.DIRT)   # east
+	room.fill(19, 36, 2, 6, Room.DIRT)    # north
+	room.fill(19, 52, 2, 7, Room.DIRT)    # south, the way in
 	# The trail, from the bus stop up to the gliderport.
 	room.fill(30, 27, 33, 2, Room.DIRT)
 	room.fill(30, 12, 2, 16, Room.DIRT)
@@ -192,6 +227,7 @@ func _draw_shade() -> void:
 		_shade.draw_rect(_px(OUTSIDE), Color(0.25, 0.05, 0.1, 0.2))
 	else:
 		_shade.draw_rect(_px(OUTSIDE), Color(1.0, 0.75, 0.4, 0.08))
+	_draw_fog()
 
 
 # --- People ----------------------------------------------------------------------
@@ -300,6 +336,109 @@ func _doris() -> void:
 	await Game.dialogue.say(["* (A torrey pine, older than the rest. Someone's\n*  tied a little ribbon on it that says DORIS.)", "* (She's four hundred years old. She stayed.)"])
 
 
+# --- The fog trail ----------------------------------------------------------------
+
+## Through the fog already (or past it in the story: a save from before it existed).
+func _fog_done() -> bool:
+	return flag("tp_fog_done") or flag("tp_glider_done") or flag("tp_stolen")
+
+
+func _fog_stage() -> int:
+	return int(Game.flags.get("tp_fog_stage", 0))
+
+
+func _into_fog() -> void:
+	if not flag("tp_fog_seen"):
+		Game.flags["tp_fog_seen"] = true
+		await Game.dialogue.say([
+			"* (The trail climbs into the pines, and the fog\n*  comes in off the ocean. Thick. Cold. White.)",
+			"* (You can't see the gliderport. You can barely\n*  see your own feet.)",
+			"* (Somebody's been stacking stones along the trail.\n*  Little towers. Cairns.)",
+		])
+	Game.flags["tp_fog_stage"] = 0
+	await go_through_door(FOG_START)
+	if not flag("tp_fog_done"):
+		Game.set_objective("Through the fog. (Follow the cairns.)")
+
+
+## A cairn at the mouth of a path: standing (this way), or knocked over.
+func _cairn(dir: String) -> void:
+	if FOG_PATH[mini(_fog_stage(), FOG_PATH.size() - 1)] == dir:
+		await Game.dialogue.say(["* (A cairn: flat stones, stacked carefully, the top\n*  one pointing up the path. Someone wanted you to\n*  find your way.)"])
+	else:
+		await Game.dialogue.say(["* (Stones, scattered across the path.\n*  Something knocked this cairn down.)"])
+
+
+## Out of the clearing one way: the right way (on to the next fork, or out of
+## the fog), or a wrong turn (back to where the trail started).
+func _fog_exit(dir: String) -> void:
+	var stage := _fog_stage()
+	if dir == FOG_PATH[stage]:
+		stage += 1
+		Game.flags["tp_fog_stage"] = stage
+		if stage >= FOG_PATH.size():
+			Game.flags["tp_fog_done"] = true
+			await go_through_door(FOG_OUT_NORTH)
+			Game.play_sfx("spare")
+			await Game.dialogue.say([
+				"* (The fog thins. The wind picks up.)",
+				"* (You come out of the pines at the top of the\n*  cliffs, by the gliderport. The sea is huge.)",
+			])
+			if _route() == "pacifist" and not flag("tp_hop_talk"):
+				Game.set_objective("Hop. (At the viewpoint, back down the trail.)")
+			elif not _genocide():
+				Game.set_objective("The Glider. (Out past the gliderport.)")
+			return
+		await go_through_door(FOG_START)
+		await Game.dialogue.say([["* (The path winds on through the pines. Another\n*  clearing. Three ways out again.)", "* (Deeper in. The fog's so thick the trees are\n*  just shapes.)", "* (Almost there. You can hear the sea, and\n*  somewhere above it, a windsock snapping.)"][stage - 1]])
+		return
+	Game.flags["tp_fog_stage"] = 0
+	Game.play_sfx("miss")
+	await go_through_door(FOG_MOUTH_SOUTH + Vector2(0, 30))
+	await Game.dialogue.say(["* (You walk into the fog... and walk, and walk...)", "* (...and come out where the trail started.\n*  The fog's still sitting on the hill. Waiting.)"])
+
+
+## The fog, thick everywhere but close around you; the cairns at each fork.
+func _draw_fog() -> void:
+	var r := _px(FOG)
+	if not r.has_point(player.position):
+		# Outside, the fog sits on the hedge line, until you've been through.
+		if not _fog_done():
+			for k in 14:
+				var x := 16 * T + k * 72 + sin(_time * 0.4 + k) * 20.0
+				_shade.draw_circle(Vector2(x, 15 * T + 4 + sin(_time * 0.6 + k * 2.0) * 6.0), 40.0, Color(0.92, 0.94, 0.96, 0.35))
+		return
+	# The cairns: one standing at the right path's mouth, the rest knocked down.
+	var right: String = FOG_PATH[mini(_fog_stage(), FOG_PATH.size() - 1)]
+	for dir in FOG_MOUTHS:
+		var at: Vector2 = FOG_MOUTHS[dir]
+		if dir == right:
+			for k in 5:
+				var w := 12.0 - k * 2.0
+				_shade.draw_rect(Rect2(at + Vector2(-w / 2 + (k % 2), -4 - k * 4), Vector2(w, 4)), Color8(150, 146, 136).lightened(k * 0.05))
+			var tip := at + Vector2(0, -24)
+			var point := Vector2.UP if dir == "N" else (Vector2.LEFT if dir == "W" else Vector2.RIGHT)
+			_shade.draw_line(tip, tip + point * 8.0, Color8(180, 176, 166), 3.0)
+		else:
+			for k in 5:
+				_shade.draw_rect(Rect2(at + Vector2(-14 + k * 7, -2 + (k * 3) % 5), Vector2(6, 3)), Color8(130, 126, 118))
+	# The fog: a clear patch around you, thicker and thicker further out.
+	var fog := Color(0.9, 0.92, 0.94)
+	var near := 70.0
+	var far := 260.0
+	var radius := near
+	while radius < far:
+		var a := clampf((radius - near) / (far - near), 0.0, 1.0) * 0.92
+		_shade.draw_arc(player.position, radius + 6.0, 0.0, TAU, 48, Color(fog, a), 12.0)
+		radius += 12.0
+	var p := player.position
+	var big := 900.0
+	_shade.draw_rect(Rect2(p.x - big, p.y - big, big * 2, big - far), Color(fog, 0.92))
+	_shade.draw_rect(Rect2(p.x - big, p.y + far, big * 2, big - far), Color(fog, 0.92))
+	_shade.draw_rect(Rect2(p.x - big, p.y - far, big - far, far * 2), Color(fog, 0.92))
+	_shade.draw_rect(Rect2(p.x + far, p.y - far, big - far, far * 2), Color(fog, 0.92))
+
+
 func _bus_stop() -> void:
 	if flag("tp_stolen") and _route() == "pacifist" and not flag("tp_left"):
 		await Game.dialogue.say(["* (Not without telling the others.)"])
@@ -342,6 +481,16 @@ func _physics_process(_delta: float) -> void:
 	if is_blocked() or _engaged:
 		return
 	check_random_encounter(SCENE)
+	# Walking up the trail into the fog (until you've found the way through).
+	if not _fog_done() and player.position.y < 16 * T and absf(player.position.x - 31 * T) < 2 * T and player.position.y > 14 * T:
+		run_cutscene(_into_fog)
+		return
+	# In the fog: which way did you go?
+	if _px(FOG).has_point(player.position):
+		for dir in FOG_EXITS:
+			if player.position.distance_to(FOG_EXITS[dir]) < 22.0:
+				run_cutscene(_fog_exit.bind(dir))
+				return
 	# With Hop: Rooster is waiting at the gliderport.
 	if _genocide() and rooster and is_instance_valid(rooster) and player.position.distance_to(rooster.position) < 80.0:
 		run_cutscene(_confront_rooster)

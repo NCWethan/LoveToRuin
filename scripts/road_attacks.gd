@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- Torrey Pines ---
+		"snake_strike": return _snake_strike(enemy, parent, area, s, step)
+		"snake_rattle": return _snake_rattle(enemy, parent, area, s, step)
+		"wisp_fade": return _wisp_fade(enemy, parent, area, s, step)
+		"wisp_curl": return _wisp_curl(enemy, parent, area, s, step)
+		"lostkite_tangle": return _lostkite_tangle(enemy, parent, area, s, step)
+		"lostkite_loop": return _lostkite_loop(enemy, parent, area, s, step)
 		# --- The Harbor ---
 		"gull_dive": return _gull_dive(enemy, parent, area, s, step)
 		"gull_cap": return _gull_cap(enemy, parent, area, s, step)
@@ -404,3 +411,73 @@ static func _rust_bolts(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, 
 static func _rust_laser(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	Attacks._beam(enemy, parent, area, soul, Vector2.DOWN if step % 2 == 0 else Vector2.RIGHT, 0.6, Color(1.0, 0.3, 0.2))
 	return 0.8
+
+
+# --- Rattlesnake -------------------------------------------------------------------------
+
+## STRIKE: it coils at the edge of the box, rattles, then lunges at you, fast.
+static func _snake_strike(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var corners := [area.position + Vector2(8, 8), Vector2(area.end.x - 8, area.position.y + 8), area.end - Vector2(8, 8), Vector2(area.position.x + 8, area.end.y - 8)]
+	var start: Vector2 = corners[step % 4]
+	var snake := _glyph(enemy, parent, area, start, "snake", 10.0)
+	snake.delay = 0.55
+	snake.velocity = (soul - start).normalized() * 260.0
+	snake.face_motion = true
+	return 0.9
+
+
+## RATTLE: the rattle's buzz spreads out in rings, from where it's coiled.
+static func _snake_rattle(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var at := Vector2(area.position.x + 10 if step % 2 == 0 else area.end.x - 10, clampf(soul.y, area.position.y + 10, area.end.y - 10))
+	for k in 7:
+		var buzz := _glyph(enemy, parent, area, at, "dust", 6.0)
+		buzz.delay = 0.3
+		buzz.velocity = Vector2.from_angle((k - 3) * 0.32 + (0.0 if step % 2 == 0 else PI)) * 120.0
+	return 0.7
+
+
+# --- Fog Wisp ----------------------------------------------------------------------------
+
+## FADE: wisps blink into being around you, then drift in.
+static func _wisp_fade(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var angle := randf() * TAU
+	var at := soul + Vector2.from_angle(angle) * 46.0
+	at = at.clamp(area.position + Vector2(6, 6), area.end - Vector2(6, 6))
+	var wisp := _glyph(enemy, parent, area, at, "wisp", 8.0)
+	wisp.delay = 0.7
+	wisp.velocity = (soul - at).normalized() * 90.0
+	return 0.45
+
+
+## CURL: fog curls around the box in a slow spiral of orbs.
+static func _wisp_curl(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var center := area.get_center()
+	for k in 2:
+		var a := step * 0.55 + k * PI
+		var wisp := _glyph(enemy, parent, area, center, "wisp", 8.0)
+		wisp.delay = 0.15
+		wisp.velocity = Vector2.from_angle(a) * 85.0
+		wisp.sway = 25.0
+	return 0.3
+
+
+# --- Lost Kite ---------------------------------------------------------------------------
+
+## TANGLE: its string snaps across the box twice, in an X, with you in the middle.
+static func _lostkite_tangle(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	Attacks._beam(enemy, parent, area, soul + Vector2(14, 0), Vector2.from_angle(0.6), 0.6, Color(0.95, 0.95, 1.0))
+	Attacks._beam(enemy, parent, area, soul - Vector2(14, 0), Vector2.from_angle(-0.6), 0.75, Color(0.95, 0.95, 1.0))
+	return 1.0
+
+
+## LOOP: the kite loops the loop across the box, its tail swinging.
+static func _lostkite_loop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var kite := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, area.position.y + 10), "kite", 10.0)
+	kite.delay = 0.3
+	kite.velocity = Vector2(130 if left else -130, 60)
+	kite.zigzag = 55.0
+	kite.face_motion = true
+	kite.wall_bounce = true
+	kite.lifetime = 2.6
+	return 0.9

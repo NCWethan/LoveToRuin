@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: Torrey Pines ---
+	"rattlesnake": {
+		"name": "Rattlesnake", "sprite": "wild_rattlesnake",
+		"intro": "* A Rattlesnake rattles a warning.\n* You should probably listen.",
+		"hp": 124, "atk": 11, "def": 4, "patterns": ["snake_strike", "snake_rattle"],
+		"check": "* RATTLESNAKE - ATK 11 DEF 4\n* Doesn't want to fight. Will if it has to. It has warned you.",
+		"acts": [
+			{"name": "Back Away", "mercy": 50, "lines": ["* {actor} backs away, slowly.\n* The Rattlesnake stops rattling. That's all it wanted."]},
+			{"name": "Give Space", "mercy": 40, "lines": ["* {actor} steps off the trail.\n* The Rattlesnake appreciates a person who reads the signs."]},
+		],
+		"taunts": ["*tktktktk*", "HSSS", "*rattle*"],
+		"flavor": ["* The Rattlesnake coils up. The rattle never stops.", "* There's a sign behind the Rattlesnake:\n* STAY ON THE TRAIL. It's lying on the trail."],
+		"backdrop": Color(0.7, 0.55, 0.3), "style": "cliffs", "exp": 29, "money": 18,
+	},
+	"fog_wisp": {
+		"name": "Fog Wisp", "sprite": "wild_fog_wisp",
+		"intro": "* A Fog Wisp drifts out of the white.\n* You could walk right through it. You don't.",
+		"hp": 110, "atk": 12, "def": 2, "patterns": ["wisp_fade", "wisp_curl"],
+		"check": "* FOG WISP - ATK 12 DEF 2\n* A little piece of the fog that got lost. It wants to be found.",
+		"acts": [
+			{"name": "Call Out", "mercy": 50, "lines": ["* {actor} calls \"Hello?\" into the fog.\n* The Fog Wisp answers! It's never been called before."]},
+			{"name": "Stand Still", "mercy": 40, "lines": ["* {actor} stands very still.\n* The Fog Wisp drifts closer, curious. It's cold. It's nice."]},
+		],
+		"taunts": ["...", "*whooo*", "(lost)"],
+		"flavor": ["* The Fog Wisp curls around your ankles.", "* You can see the trees through the Fog Wisp.\n* They look further away than they are."],
+		"backdrop": Color(0.75, 0.8, 0.85), "style": "static", "exp": 30, "money": 15,
+	},
+	"lost_kite": {
+		"name": "Lost Kite", "sprite": "wild_lost_kite",
+		"intro": "* A Lost Kite tumbles down out of the sky.\n* Its string has nobody on the other end.",
+		"hp": 116, "atk": 11, "def": 3, "patterns": ["lostkite_tangle", "lostkite_loop"],
+		"check": "* LOST KITE - ATK 11 DEF 3\n* Got away from a kid at the gliderport. In 2019.",
+		"acts": [
+			{"name": "Grab String", "mercy": 50, "lines": ["* {actor} catches the string.\n* The Lost Kite tugs once, gently. It's being held again."]},
+			{"name": "Run", "mercy": 40, "lines": ["* {actor} runs into the wind with it.\n* The Lost Kite soars. It forgot it could do that."]},
+		],
+		"taunts": ["*flap flap*", "*whoosh*", "(where?)"],
+		"flavor": ["* The Lost Kite loops in the wind.", "* The Lost Kite's tail is tangled with three other\n*  kites' tails. A support group."],
+		"backdrop": Color(0.45, 0.65, 0.85), "style": "cliffs", "exp": 29, "money": 16,
+	},
 	# --- Chapter 2: The Harbor ---
 	"gull_captain": {
 		"name": "Gull Captain", "sprite": "wild_gull_captain",
@@ -350,7 +390,7 @@ const ZONES := {
 	"res://scenes/old_town.tscn": ["tumbleweed", "pinata", "wax_ghost"],
 	"res://scenes/downtown.tscn": ["pigeon_gang", "parking_meter", "neon_sign"],
 	"res://scenes/harbor.tscn": ["gull_captain", "lobster_trap", "rust_bot"],
-	"res://scenes/torrey_pines.tscn": ["seagull", "squirrel", "goose"],
+	"res://scenes/torrey_pines.tscn": ["rattlesnake", "fog_wisp", "lost_kite"],
 	"res://scenes/burned_hills.tscn": ["squirrel", "bag"],
 	"res://scenes/junkyard.tscn": ["cart", "bag", "receipt"],
 }
