@@ -508,6 +508,8 @@ func _hatch() -> void:
 			"* (Down the ladder: the engine room. Two engines the\n*  size of houses. It smells like a hundred years of oil.)",
 			"* (On the wall by the ladder: a chart, and some\n*  writing in grease pencil.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* She still remembers how.\n* So do we."}])
 
 
 func _ladder() -> void:

@@ -263,6 +263,8 @@ func _enter_lath() -> void:
 			"* (The plants have grown into walls. A hedge maze,\n*  whether anyone meant it or not.)",
 			"* (A sign: STAFF ENTRANCE (MUSEUM) AT FAR END.\n*  PLEASE READ THE PLANT LABELS. THEY'RE INTERESTING.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Hedges, grown into walls.\n* Something grew in Hop like that."}])
 
 
 func _leave_lath() -> void:

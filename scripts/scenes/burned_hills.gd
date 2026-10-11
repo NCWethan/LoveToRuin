@@ -450,6 +450,8 @@ func _see_fires() -> void:
 		"* (Spot fires, all the way across the hill.\n*  Little ones. Hungry ones. Three lines of them.)",
 		"* (Down at the trailhead, Engine 33 has a hose line\n*  running up the road. Its pump panel is on the side.)",
 	])
+	if _genocide():
+		await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Little fires.\n* They know us. They're ours."}])
 	Game.set_objective("Put out the spot fires. (Engine 33's pump panel.)")
 
 

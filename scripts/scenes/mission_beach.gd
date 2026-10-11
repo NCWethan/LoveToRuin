@@ -313,6 +313,8 @@ func _enter_arcade() -> void:
 			"* (The arcade. Carpet that glows under the black\n*  lights, a hundred machines beeping at nobody.)",
 			"* (Behind the prize counter, on a hook, under a sign\n*  that says TOP PRIZE: a big brass key. DIPPER.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Tickets for a key.\n* Everything's for sale if you play long enough."}])
 		if not flag("mb_key"):
 			Game.set_objective("Win the Dipper's key. (3 ticket strips.)")
 

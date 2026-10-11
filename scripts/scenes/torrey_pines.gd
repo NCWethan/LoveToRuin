@@ -357,6 +357,8 @@ func _into_fog() -> void:
 			"* (You can't see the gliderport. You can barely\n*  see your own feet.)",
 			"* (Somebody's been stacking stones along the trail.\n*  Little towers. Cairns.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* We could walk this blind.\n* We did, the morning we stayed."}])
 	Game.flags["tp_fog_stage"] = 0
 	await go_through_door(FOG_START)
 	if not flag("tp_fog_done"):

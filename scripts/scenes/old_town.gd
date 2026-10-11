@@ -458,6 +458,8 @@ func _candle_shop() -> void:
 			"* (Every wick is black. Wax has dripped down the\n*  shelves and frozen there, like it was in a hurry.)",
 			"* (Somewhere in here, something is dripping.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* \"Back in five minutes.\"\n* We said that to Hop once."}])
 
 
 func _leave_shop() -> void:

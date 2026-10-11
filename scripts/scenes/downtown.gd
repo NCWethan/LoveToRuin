@@ -408,6 +408,8 @@ func _hotel() -> void:
 			"* (The hotel's basement. Pipes along the ceiling,\n*  a boiler that sighs, a hundred years of luggage.)",
 			"* (On the far wall: a breaker panel. Somebody's\n*  scrawled all over the wall next to it in marker.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Lights out. Lights on.\n* Somebody always has to go down to the basement."}])
 		if not flag("dt_power"):
 			Game.set_objective("Get the power back on. (The breaker panel.)")
 

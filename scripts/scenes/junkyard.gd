@@ -308,6 +308,8 @@ func _cab_ladder() -> void:
 			"* (Through the window: the stack of crushed cars, and\n*  the van behind it, in the corner.)",
 			"* (Something's scratched into the dash.)",
 		])
+		if _genocide():
+			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Sal left instructions.\n* Nobody leaves instructions for the hard part."}])
 
 
 func _leave_cab() -> void:
