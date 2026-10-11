@@ -545,7 +545,8 @@ func _museum_door() -> void:
 	if bigjoe and is_instance_valid(bigjoe) and _route() != "pacifist":
 		await _talk_bigjoe()
 		return
-	if not flag("bp_staff_open"):
+	# (Been inside already, from a save before the staff door existed: it opens.)
+	if not flag("bp_staff_open") and not flag("bp_inside"):
 		await Game.dialogue.say([
 			"* (The museum's doors are locked. A sign: CLOSED FOR\n*  THE NIGHT. STAFF ENTRANCE: BOTANICAL BUILDING.)",
 			"* (Inside, something clanks.)",

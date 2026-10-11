@@ -618,7 +618,8 @@ func _arrival() -> void:
 
 
 func _ballpark_gate() -> void:
-	if not flag("dt_power"):
+	# (Been inside already, from a save before the breakers: the power is on.)
+	if not flag("dt_power") and not flag("dt_inside"):
 		Game.flags["dt_gate_seen"] = true
 		await Game.dialogue.say([
 			"* (The ballpark's gate is a big steel shutter, rolled\n*  all the way down. Its motor's dead.)",

@@ -472,7 +472,8 @@ func _leave_hangar() -> void:
 
 
 func _lift_up() -> void:
-	if not flag("hb_flags"):
+	# (Been up on the deck already, from a save before the flags: it runs.)
+	if not flag("hb_flags") and not flag("hb_deck"):
 		await Game.dialogue.say(["* (The elevator won't budge. A placard on the rail:\n*  NO LIFT WITHOUT SIGNAL CLEARANCE.)", "* (FLAGS ON THE HOIST: NONE.)"])
 		Game.set_objective("Raise the signal flags. (The locker by the elevator.)")
 		return
