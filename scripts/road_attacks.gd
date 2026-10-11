@@ -220,12 +220,14 @@ static func _tour_flash(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, 
 static func _weed_roll(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var left := step % 2 == 0
 	var y := clampf(soul.y + randf_range(-10, 10), area.position.y + 10, area.end.y - 10)
-	var weed := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, y), "weed", 10.0)
-	weed.delay = 0.3
-	weed.velocity = Vector2(160 if left else -160, 0)
-	weed.zigzag = 45.0
-	weed.spin = 6.0 if left else -6.0
-	return 0.55
+	for k in 2:
+		var row := clampf(y + k * (22.0 if step % 3 == 0 else -22.0), area.position.y + 10, area.end.y - 10)
+		var weed := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, row), "weed", 10.0)
+		weed.delay = 0.3 + k * 0.25
+		weed.velocity = Vector2(170 if left else -170, 0)
+		weed.zigzag = 45.0
+		weed.spin = 6.0 if left else -6.0
+	return 0.6
 
 
 ## GUST: a gust of grit sweeps across the whole box, with one gap to hide in.
@@ -487,14 +489,15 @@ static func _lostkite_tangle(enemy: Enemy, parent: Node, area: Rect2, soul: Vect
 ## LOOP: the kite loops the loop across the box, its tail swinging.
 static func _lostkite_loop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
 	var left := step % 2 == 0
-	var kite := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, area.position.y + 10), "kite", 10.0)
+	var start := Vector2(area.position.x + 8 if left else area.end.x - 8, clampf(soul.y - 20.0, area.position.y + 10, area.end.y - 10))
+	var kite := _glyph(enemy, parent, area, start, "kite", 10.0)
 	kite.delay = 0.3
-	kite.velocity = Vector2(130 if left else -130, 60)
+	kite.velocity = (soul - start).normalized() * 150.0 + Vector2(0, 20)
 	kite.zigzag = 55.0
 	kite.face_motion = true
 	kite.wall_bounce = true
 	kite.lifetime = 2.6
-	return 0.9
+	return 0.7
 
 
 # --- Cinder ------------------------------------------------------------------------------
