@@ -81,7 +81,7 @@ func _ready() -> void:
 	rooms.assign([_px(OUTSIDE), _px(INSIDE), _px(SHOP)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(T, 11 * T, 58 * T, 13 * T))
-	add_wild_encounters(SCENE, _px(SHOP))
+	add_wild_encounters(SCENE, _px(SHOP), true)
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)

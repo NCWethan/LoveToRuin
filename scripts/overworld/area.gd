@@ -909,14 +909,16 @@ func ride_bus(here: String) -> void:
 ## Lets the wild creatures that live in this area (WildBattles.ZONES) jump out
 ## at Elric while they walk around inside `rect` (in pixels). Not before the
 ## tutorial fight, and not on the night walk to Hop's house.
-func add_wild_encounters(scene_path: String, rect: Rect2) -> void:
+## `calm`: a puzzle room, where you walk back and forth working something out:
+## fights come half as often there.
+func add_wild_encounters(scene_path: String, rect: Rect2, calm: bool = false) -> void:
 	if not Game.flags.get("tutorial_done", false) or Game.flags.get("route", "") == "with_hop":
 		return
 	var ids := WildBattles.encounters_for(scene_path)
 	if not ids.is_empty():
 		# (Out in the open, fights come about three times less often than in
 		# Westview's haunted halls.)
-		encounter_zones.append([rect, ids, WILD_RARITY])
+		encounter_zones.append([rect, ids, WILD_RARITY * (2.0 if calm else 1.0)])
 
 
 ## Call from _physics_process: starts a random fight once Elric has walked far enough.
