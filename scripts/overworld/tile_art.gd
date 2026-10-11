@@ -746,7 +746,10 @@ func _glass(x: int, y: int, p: Vector2) -> void:
 	_rect(p, Vector2(T, T), Color8(62, 72, 84))
 	for k in 18:
 		_rect(p + Vector2(1, 1 + k), Vector2(18, 1), Color8(98, 136, 166).lerp(Color8(64, 92, 120), k / 17.0))
-	if _h(x, y, 73) % 2 == 0:
+	var shop := _display_at(x, y)
+	if shop.size() > 0:
+		_display(shop[0], x - shop[1].x, y - shop[1].y, p)
+	elif _h(x, y, 73) % 2 == 0:
 		var shelf := [Color8(220, 120, 80), Color8(110, 180, 120), Color8(230, 200, 90), Color8(170, 120, 200)]
 		for k in 3:
 			_rect(p + Vector2(3 + k * 5, 12), Vector2(3, 5), shelf[(_h(x, y, 74) + k) % 4].darkened(0.3))
@@ -755,6 +758,162 @@ func _glass(x: int, y: int, p: Vector2) -> void:
 	ci.draw_line(p + Vector2(9, 17), p + Vector2(18, 7), Color(1, 1, 1, 0.15), 1.0)
 	_rect(p, Vector2(1, T), Color8(150, 154, 162))
 	_rect(p, Vector2(T, 1), Color8(150, 154, 162))
+
+
+## What a shop has in its window: the Room meta "displays" is a list of
+## [Rect2i (tiles), kind]. Returns [kind, the rect's corner], or [] for none.
+func _display_at(x: int, y: int) -> Array:
+	for d in room.get_meta("displays", []):
+		var r: Rect2i = d[0]
+		if r.has_point(Vector2i(x, y)):
+			return [d[1], r.position]
+	return []
+
+
+## A shop window's stock, one tile of it (`col`, `row`: which tile of the window).
+func _display(kind: String, col: int, row: int, p: Vector2) -> void:
+	var v := (col * 7 + row * 3) % 4
+	match kind:
+		"grocery":
+			if row == 0:
+				# A SALE banner, and hanging bananas.
+				_rect(p + Vector2(2, 3), Vector2(16, 6), Color8(240, 240, 230))
+				_rect(p + Vector2(3, 5), Vector2(14, 2), Color8(220, 50, 50))
+				if v % 2 == 0:
+					_rect(p + Vector2(5, 11), Vector2(2, 5), Color8(240, 210, 70))
+					_rect(p + Vector2(8, 11), Vector2(2, 6), Color8(240, 210, 70))
+					_rect(p + Vector2(11, 11), Vector2(2, 5), Color8(240, 210, 70))
+			else:
+				# Crates of fruit.
+				var fruit := [Color8(220, 50, 45), Color8(245, 150, 40), Color8(120, 190, 70), Color8(240, 210, 70)]
+				for k in 2:
+					var c: Color = fruit[(v + k) % 4]
+					_rect(p + Vector2(2 + k * 8, 12), Vector2(7, 5), Color8(150, 104, 60))
+					_rect(p + Vector2(2 + k * 8, 12), Vector2(7, 1), Color8(190, 140, 90))
+					for f in 3:
+						_rect(p + Vector2(3 + k * 8 + f * 2, 9 + (f % 2)), Vector2(2, 3), c)
+		"games":
+			if row == 0:
+				# A fan of playing cards, or a pair of dice.
+				if v % 2 == 0:
+					for k in 3:
+						_rect(p + Vector2(4 + k * 4, 4 + absi(k - 1)), Vector2(5, 7), Color8(250, 250, 250))
+						_rect(p + Vector2(5 + k * 4, 5 + absi(k - 1)), Vector2(2, 2), Color8(220, 40, 40) if k != 1 else Color8(30, 30, 30))
+				else:
+					for k in 2:
+						_rect(p + Vector2(4 + k * 7, 6 + k * 2), Vector2(6, 6), Color8(250, 250, 250) if k == 0 else Color8(220, 40, 40))
+						_rect(p + Vector2(6 + k * 7, 8 + k * 2), Vector2(2, 2), Color8(30, 30, 30) if k == 0 else Color8(250, 250, 250))
+			else:
+				# Stacked game boxes.
+				var boxes := [Color8(70, 110, 210), Color8(220, 60, 60), Color8(80, 170, 90), Color8(240, 190, 60)]
+				for k in 3:
+					var c: Color = boxes[(v + k) % 4]
+					_rect(p + Vector2(2 + k, 14 - k * 4), Vector2(15 - k * 2, 4), c)
+					_rect(p + Vector2(3 + k, 15 - k * 4), Vector2(5, 1), c.lightened(0.4))
+		"bar":
+			if row == 0:
+				# A glowing OPEN sign in one window, string lights in the others.
+				if col == 0:
+					_rect(p + Vector2(2, 5), Vector2(16, 7), Color8(40, 20, 30))
+					_rect(p + Vector2(3, 6), Vector2(14, 5), Color8(255, 80, 120))
+					_rect(p + Vector2(4, 7), Vector2(12, 3), Color8(255, 190, 210))
+				else:
+					for k in 5:
+						_rect(p + Vector2(2 + k * 4 - (k / 4) * 2, 4 + (k % 2) * 2), Vector2(2, 2), Color8(255, 220, 140))
+			else:
+				# Root beer mugs on the sill, and a little barrel.
+				_rect(p + Vector2(2, 9), Vector2(7, 8), Color8(140, 90, 50))
+				_rect(p + Vector2(2, 11), Vector2(7, 1), Color8(80, 50, 30))
+				_rect(p + Vector2(2, 15), Vector2(7, 1), Color8(80, 50, 30))
+				for k in 2:
+					_rect(p + Vector2(11 + k * 4, 10), Vector2(3, 7), Color8(150, 80, 30))
+					_rect(p + Vector2(11 + k * 4, 10), Vector2(3, 2), Color8(250, 240, 220))
+		"empty":
+			# Bare, dusty, with a FOR LEASE sheet taped up.
+			_rect(p + Vector2(1, 1), Vector2(18, 18), Color(0.85, 0.82, 0.7, 0.18))
+			if row == 0 and col % 2 == 0:
+				_rect(p + Vector2(4, 4), Vector2(12, 12), Color8(245, 245, 235))
+				_rect(p + Vector2(6, 6), Vector2(8, 2), Color8(200, 40, 40))
+				for k in 3:
+					_rect(p + Vector2(6, 10 + k * 2), Vector2(8 - k * 2, 1), Color8(120, 120, 120))
+		"burger":
+			if row == 0 or v % 2 == 0:
+				# A poster of the burger.
+				_rect(p + Vector2(3, 3), Vector2(14, 13), Color8(250, 240, 220))
+				_rect(p + Vector2(5, 5), Vector2(10, 3), Color8(220, 160, 80))
+				_rect(p + Vector2(5, 8), Vector2(10, 1), Color8(90, 170, 70))
+				_rect(p + Vector2(5, 9), Vector2(10, 2), Color8(110, 60, 40))
+				_rect(p + Vector2(5, 11), Vector2(10, 2), Color8(220, 160, 80))
+			else:
+				# Fries and a cup.
+				_rect(p + Vector2(4, 9), Vector2(6, 8), Color8(220, 40, 40))
+				for k in 4:
+					_rect(p + Vector2(4 + k + k / 2, 6 + (k % 2)), Vector2(1, 4), Color8(250, 210, 80))
+				_rect(p + Vector2(12, 8), Vector2(5, 9), Color8(250, 250, 250))
+				_rect(p + Vector2(12, 11), Vector2(5, 2), Color8(220, 40, 40))
+		"surf":
+			# Surfboards standing up, and a rack of shirts.
+			var boards := [Color8(240, 100, 80), Color8(80, 200, 220), Color8(250, 210, 70), Color8(140, 220, 120)]
+			if row == 0:
+				for k in 2:
+					var c: Color = boards[(v + k) % 4]
+					_rect(p + Vector2(4 + k * 7, 3), Vector2(4, 16), c)
+					_rect(p + Vector2(5 + k * 7, 3), Vector2(2, 16), c.lightened(0.3))
+			else:
+				_rect(p + Vector2(2, 3), Vector2(16, 1), Color8(150, 150, 160))
+				for k in 3:
+					_rect(p + Vector2(3 + k * 5, 4), Vector2(4, 8), boards[(v + k + 1) % 4])
+		"taco":
+			if row == 0:
+				# A string of red chiles, and the menu.
+				for k in 4:
+					_rect(p + Vector2(3 + k * 4, 3 + k % 2), Vector2(2, 5), Color8(220, 40, 30))
+				_rect(p + Vector2(4, 10), Vector2(12, 8), Color8(30, 40, 30))
+				for k in 3:
+					_rect(p + Vector2(5, 11 + k * 2), Vector2(6 + (k % 2) * 3, 1), Color8(240, 240, 220))
+			else:
+				# Hot sauce bottles, and tacos on a plate.
+				var sauce := [Color8(220, 40, 30), Color8(90, 160, 60), Color8(240, 140, 40)]
+				for k in 3:
+					_rect(p + Vector2(2 + k * 3, 9), Vector2(2, 8), sauce[k])
+				_rect(p + Vector2(11, 14), Vector2(7, 2), Color8(240, 240, 240))
+				_rect(p + Vector2(12, 11), Vector2(5, 3), Color8(240, 200, 90))
+				_rect(p + Vector2(13, 11), Vector2(3, 1), Color8(90, 170, 70))
+		"arcade":
+			# Glowing cabinet screens in the dark.
+			_rect(p + Vector2(1, 1), Vector2(18, 18), Color8(26, 20, 44))
+			var glow := [Color8(80, 220, 240), Color8(250, 90, 200), Color8(250, 220, 80), Color8(120, 240, 120)]
+			var sy := 4 if row == 0 else 2
+			_rect(p + Vector2(4, sy), Vector2(12, 8), glow[v])
+			_rect(p + Vector2(6, sy + 2), Vector2(3, 3), glow[(v + 1) % 4].lightened(0.4))
+			if row == 1:
+				_rect(p + Vector2(6, 12), Vector2(2, 2), Color8(240, 60, 60))
+				_rect(p + Vector2(11, 12), Vector2(2, 2), Color8(80, 120, 240))
+		"icecream":
+			var scoops := [Color8(250, 160, 200), Color8(250, 240, 220), Color8(140, 90, 60), Color8(150, 220, 150)]
+			if row == 0:
+				# A giant cone, painted on the glass.
+				_rect(p + Vector2(6, 3), Vector2(8, 6), scoops[v])
+				for k in 4:
+					_rect(p + Vector2(7 + k / 2, 9 + k * 2), Vector2(6 - k, 2), Color8(220, 170, 100))
+			else:
+				# Tubs in the freezer case.
+				_rect(p + Vector2(1, 10), Vector2(18, 8), Color8(200, 220, 230))
+				for k in 3:
+					_rect(p + Vector2(2 + k * 6, 11), Vector2(5, 3), scoops[(v + k) % 4])
+		"diner":
+			# Checked curtains, a pie on a stand, a coffee cup.
+			for k in 9:
+				_rect(p + Vector2(1 + k * 2, 1), Vector2(2, 3), Color8(220, 50, 50) if k % 2 == 0 else Color8(250, 250, 250))
+			if col % 4 < 2:
+				_rect(p + Vector2(4, 13), Vector2(10, 1), Color8(200, 200, 210))
+				_rect(p + Vector2(8, 14), Vector2(2, 3), Color8(200, 200, 210))
+				_rect(p + Vector2(5, 10), Vector2(8, 3), Color8(220, 160, 80))
+				_rect(p + Vector2(5, 10), Vector2(8, 1), Color8(180, 40, 60))
+			else:
+				_rect(p + Vector2(7, 11), Vector2(6, 5), Color8(250, 250, 250))
+				_rect(p + Vector2(13, 12), Vector2(2, 2), Color8(250, 250, 250))
+				_rect(p + Vector2(8, 11), Vector2(4, 1), Color8(110, 70, 40))
 
 
 func _door(x: int, y: int, p: Vector2) -> void:

@@ -114,6 +114,9 @@ var ko_time: float = -1.0
 ## Killed for real (not the tutorial, the training dummy or a boss): instead of
 ## falling over, they crack into green pieces and the wind carries them away.
 var shattered: bool = false
+## Whether this defeat counts as a kill (for the Genocide path, Hop's fear,
+## Elric's dread). Only on the Genocide path itself does a kill shatter.
+var killed: bool = false
 
 ## How this enemy reacts if a partner is knocked out, by the partner's name:
 ##   {"BigJoe6": {"line": "...", "mood": "sad", "taunts": [...], "attack": 1}}

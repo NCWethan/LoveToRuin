@@ -155,7 +155,7 @@ func _dress() -> void:
 			["car_v", Vector2(28 * T, 16 * T + 10), {"color": Color8(90, 150, 90), "look": ["* (A green car. There's a dog in the back seat,\n*  watching you very seriously.)"]}],
 			["car_v", Vector2(31 * T, 16 * T + 10), {"color": Color8(230, 190, 70)}],
 			["car_v", Vector2(7 * T, 22 * T + 10), {"color": Color8(60, 60, 66)}],
-			["car_v", Vector2(43 * T, 22 * T + 10), {"color": Color8(140, 90, 160), "look": ["* (A purple car, parked across two spaces.\n*  Bold.)"]}],
+			["car_v", Vector2(41 * T + 10, 22 * T + 10), {"color": Color8(140, 90, 160), "look": ["* (A purple car, parked across two spaces.\n*  Bold.)"]}],
 		])
 	add_dressing(items)
 
@@ -200,6 +200,10 @@ func build_map() -> void:
 
 	# Sidewalk in front of the stores.
 	room.fill(1, 7, 42, 2, Room.SIDEWALK)
+	# What's in each window (TileArt draws the stock).
+	room.set_meta("displays", [[Rect2i(3, 4, 4, 2), "grocery"], [Rect2i(11, 4, 4, 2), "grocery"], [Rect2i(17, 4, 3, 2), "games"],
+		[Rect2i(25, 4, 2, 2), "bar"], [Rect2i(31, 4, 2, 2), "bar"], [Rect2i(36, 4, 2, 2), "empty"], [Rect2i(39, 4, 2, 2), "empty"],
+		[Rect2i(47, 18, 2, 1), "burger"], [Rect2i(52, 18, 1, 1), "burger"]])
 
 	# The parking lot.
 	room.fill(1, 9, 42, 17, Room.ASPHALT)
@@ -208,10 +212,10 @@ func build_map() -> void:
 	for x in range(2, 42, 3):
 		room.fill(x, 15, 1, 3, Room.PARKING_LINE)
 		room.fill(x, 21, 1, 3, Room.PARKING_LINE)
-	# Planter islands with palm trees.
+	# Planter islands: a palm tree at one end, a lamp at the other.
 	for island_x in [5, 17, 34]:
 		room.fill(island_x, 18, 3, 1, Room.PLANTER)
-		room.set_tile(island_x + 1, 18, Room.PALM)
+		room.set_tile(island_x, 18, Room.PALM)
 
 	# Knotty Barrel's patio, with two tables and planters around it.
 	room.fill(24, 9, 10, 3, Room.PATIO)
@@ -265,23 +269,25 @@ func _add_signs() -> void:
 	var signs := Node2D.new()
 	add_child(signs)
 	var font := ThemeDB.fallback_font
-	var labels := [
-		["VONS", Vector2(180, 33), 18, Color8(225, 45, 45)],
-		["GAMES & CARDS", Vector2(400, 31), 12, Color8(240, 240, 240)],
-		["KNOTTY BARREL", Vector2(580, 31), 13, Color8(235, 195, 125)],
-		["FOR LEASE", Vector2(770, 31), 12, Color8(170, 170, 170)],
-		["JACK IN THE BOX", Vector2(1000, 314), 11, Color8(255, 255, 255)],
-	]
+	# The signs: 8-bit marquees (Scenery.marquee). [rect, text, board, ink, trim, icon, bulbs]
 	var closed := _stores_closed()
+	var labels := [
+		[Rect2(118, 14, 124, 36), "VONS", Color8(250, 250, 245), Color8(225, 40, 40), Color8(200, 40, 40), "cart", true],
+		[Rect2(322, 12, 136, 44), "GAMES &\nCARDS", Color8(40, 50, 120), Color8(250, 230, 90), Color8(220, 60, 60), "cards", true],
+		[Rect2(480, 16, 200, 32), "KNOTTY BARREL", Color8(110, 70, 40), Color8(245, 210, 140), Color8(70, 44, 24), "mug", false],
+		[Rect2(708, 18, 124, 28), "FOR LEASE", Color8(236, 234, 226), Color8(150, 150, 150), Color8(120, 120, 124), "", false],
+		[Rect2(938, 284, 124, 40), "JACK IN\nTHE BOX", Color8(250, 250, 250), Color8(220, 30, 40), Color8(220, 30, 40), "burger", true],
+	]
 	signs.draw.connect(func() -> void:
 		# The faded MISSING flyer: bleached paper, a blank square where the photo was.
 		signs.draw_rect(Rect2(681, 86, 18, 24), Color8(232, 228, 214))
 		signs.draw_rect(Rect2(685, 89, 10, 3), Color8(150, 140, 140))
 		signs.draw_rect(Rect2(684, 94, 12, 9), Color8(244, 242, 236))
 		signs.draw_rect(Rect2(684, 105, 12, 1), Color8(185, 180, 175))
-		for label in labels:
-			var width := font.get_string_size(label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2]).x
-			signs.draw_string(font, label[1] - Vector2(width / 2, 0), label[0], HORIZONTAL_ALIGNMENT_LEFT, -1, label[2], label[3])
+		for s in labels:
+			# (Jack in the Box is open late: its lights stay on.)
+			var lit: bool = not closed or s[1].begins_with("JACK")
+			Scenery.marquee(signs, s[0], s[1], s[2], s[3], s[4], s[5], s[6], lit)
 		# Once the sun goes down, CLOSED signs hang on Vons and Knotty Barrel.
 		if closed:
 			for door_x in CLOSING_DOORS:
@@ -297,7 +303,7 @@ func _add_signs() -> void:
 ## The middle of the doors that get a CLOSED sign at night (Vons, Knotty Barrel).
 const CLOSING_DOORS := [180, 580]
 ## Where the parking lot's streetlights stand.
-const STREETLIGHTS := [Vector2(130, 368), Vector2(370, 368), Vector2(710, 368), Vector2(870, 186), Vector2(520, 518), Vector2(1000, 518)]
+const STREETLIGHTS := [Vector2(870, 186), Vector2(520, 518), Vector2(1000, 518)]
 
 
 ## Vons and Knotty Barrel close in the evening. (Jack in the Box is open late.)
@@ -884,8 +890,9 @@ func _talk_rooster() -> void:
 	if choice == 0:
 		Game.flags["roasted_rooster"] = true
 		await Game.dialogue.say([
-			{"who": "Elric", "choices": ["...Nice suit. Couldn't pick a color?", "...Did a penguin dress you?"], "mood": "smug"},
-			{"who": "Rooster", "text": "...", "mood": "shocked"},
+			{"who": "Elric", "choices": ["...Nice suit. Couldn't pick a color?", "...Did a penguin dress you?"], "mood": "smug", "replies": [
+				[{"who": "Rooster", "text": "...Couldn't PICK?", "mood": "shocked"}],
+				[{"who": "Rooster", "text": "...A PENGUIN?", "mood": "shocked"}]]},
 			{"who": "Rooster", "text": "HEY. That's- that's a FASHION choice.\nIt's called DUALITY.", "mood": "angry"},
 			"* (Rooster is visibly upset.)",
 			{"who": "Hop", "text": "Oh, they GOT you.", "mood": "happy"},

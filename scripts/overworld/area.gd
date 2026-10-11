@@ -46,6 +46,13 @@ func setup_area(default_spawn: Vector2) -> void:
 	life.area = self
 	life.room = room
 	add_child(life)
+	# The weather (weather.gd), outdoors.
+	if weather_ok():
+		Game.update_weather()
+		var sky := Weather.new()
+		sky.area = self
+		sky.room = room
+		add_child(sky)
 	# (Relic's lost collection, lying around, once it's open. See collection.gd.)
 	_add_collection.call_deferred(default_spawn)
 
@@ -290,6 +297,12 @@ func add_dressing(items: Array) -> void:
 ## Is it night here? (Fireflies instead of butterflies, no birds.) Areas say so.
 func is_night() -> bool:
 	return false
+
+
+## Whether this area has weather (rain, clouds, storms). Memories, the bunker and
+## the big story nights don't.
+func weather_ok() -> bool:
+	return true
 
 
 ## Ambience an area doesn't want ("birds", "butterflies", "fireflies", "leaves",

@@ -663,7 +663,9 @@ func _confession() -> void:
 		"* (Hop is sitting at the edge of the deck,\n*  his feet over the water.)",
 		{"who": "Hop", "text": "...Their name was Relic.", "mood": "sad"},
 		{"who": "Hop", "text": "You knew. Nat knew. I could tell.\nYou were waiting for me to say it.", "mood": "sad"},
-		{"who": "Elric", "choices": ["...Yeah.", "(Sit down next to him.)"]},
+		{"who": "Elric", "choices": ["...Yeah.", "(Sit down next to him.)"], "replies": [
+			[{"who": "Hop", "text": "Yeah. Of course you did.", "mood": "sad"}],
+			["* (You sit. Your feet hang over the water\n*  next to his.)", {"who": "Hop", "text": "...Thanks.", "mood": "sad"}]]},
 		{"who": "Hop", "text": "They came to town five years ago with a backpack\nthat clinked. Just passing through.", "mood": ""},
 		{"who": "Hop", "text": "I bought them curly fries. They stayed\nall summer. Best summer of my life.", "mood": "happy"},
 		{"who": "Hop", "text": "They carried everybody's junk. Everybody's worst\nday. I didn't understand what that meant until-", "mood": "sad"},

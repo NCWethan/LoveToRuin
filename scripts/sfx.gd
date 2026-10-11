@@ -48,6 +48,9 @@ static func make_all() -> Dictionary:
 		# The tent: wind over an empty field, made in code (only used if the
 		# recording, audio/sfx/relic_wind.mp3, isn't there).
 		"wind": wind(6.0, 0.35),
+		# Weather (weather.gd): rain on everything (a loop), and thunder.
+		"rain": rain(4.0, 0.16),
+		"thunder": thunder(3.2, 0.5),
 	}
 
 
@@ -164,6 +167,52 @@ static func wind(length: float, volume: float) -> AudioStreamWAV:
 		var gust := 0.55 + 0.3 * sin(t * 0.9) + 0.15 * sin(t * 2.3 + 1.0)
 		var fade := minf(1.0, t / 0.6) * minf(1.0, (length - t) / 1.2)
 		data.encode_s16(s * 2, int(clampf(lower * 3.0 * gust * volume * fade, -1.0, 1.0) * 32767.0))
+	return _wav(data)
+
+
+## Rain: a soft, steady hiss with little ticks of drops in it. Loops seamlessly.
+static func rain(length: float, volume: float) -> AudioStreamWAV:
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var low := 0.0
+	var tick := 0.0
+	for s in count:
+		# Hiss: noise, smoothed once (a shush, not a whine).
+		low += (rng.randf_range(-1.0, 1.0) - low) * 0.35
+		# Now and then a drop lands close by: a tiny click that dies fast.
+		if rng.randf() < 0.0009:
+			tick = rng.randf_range(0.4, 0.9)
+		tick *= 0.985
+		var value := low * 0.8 + tick * rng.randf_range(-1.0, 1.0)
+		data.encode_s16(s * 2, int(clampf(value * volume, -1.0, 1.0) * 32767.0))
+	var wav := _wav(data)
+	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	wav.loop_begin = 0
+	wav.loop_end = count
+	return wav
+
+
+## Thunder: a sharp crack, then a long, low rumble that rolls away in bumps.
+static func thunder(length: float, volume: float) -> AudioStreamWAV:
+	var count := int(length * RATE)
+	var data := PackedByteArray()
+	data.resize(count * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var low := 0.0
+	var lower := 0.0
+	for s in count:
+		var t := float(s) / RATE
+		var raw := rng.randf_range(-1.0, 1.0)
+		low += (raw - low) * 0.05
+		lower += (low - lower) * 0.05
+		var crack := raw * maxf(0.0, 1.0 - t / 0.18) * 0.6
+		var roll := 0.6 + 0.4 * sin(t * 5.0) * sin(t * 1.7 + 0.5)
+		var rumble := lower * 9.0 * roll * minf(1.0, t / 0.08) * pow(maxf(0.0, 1.0 - t / length), 1.4)
+		data.encode_s16(s * 2, int(clampf((crack + rumble) * volume, -1.0, 1.0) * 32767.0))
 	return _wav(data)
 
 

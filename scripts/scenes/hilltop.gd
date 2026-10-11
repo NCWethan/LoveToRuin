@@ -165,6 +165,11 @@ func _dress() -> void:
 	])
 
 
+## (The big night on the hill: its sky is part of the story.)
+func weather_ok() -> bool:
+	return false
+
+
 func build_map() -> void:
 	room.setup(40, 30, Room.GRASS)
 	room.fill(0, 0, 40, 1, Room.TREE)
@@ -772,7 +777,9 @@ func _eruption() -> void:
 		{"who": "Hopkuna", "text": "Tonight, he had no other choice. Thanks to you."},
 		{"who": "Hopkuna", "text": "And look. You've been carrying two of my\nfragments for me. How thoughtful."},
 		{"who": "Hopkuna", "text": "Hand them over."},
-		{"who": "Elric", "choices": ["...No.", "Never."], "mood": "angry"},
+		{"who": "Elric", "choices": ["...No.", "Never."], "mood": "angry", "replies": [
+			[{"who": "Hopkuna", "text": "\"No.\" How small. How brave."}],
+			[{"who": "Hopkuna", "text": "Never is a long time, little wanderer.\nI've been around for most of it."}]]},
 		{"who": "Hopkuna", "text": "Then I'll take them."},
 	])
 	await Game.start_battle("hopkuna", SCENE, player.position)
@@ -901,9 +908,15 @@ func _corps_arrives() -> void:
 		{"who": "Supreme", "text": "Statistically, we can't beat him.\nBut we can make him want to leave.", "mood": "shocked"},
 		{"who": "Agent", "text": "He's stalling. He wants the fragments, not a fight.\nElric. Whatever happens, don't let go of them."},
 		{"who": "Nat", "text": "Elric. Hop's still in there.\nTalk to him."},
-		{"who": "Elric", "choices": ["...Hop.", "Hop. Listen to me."]},
-		{"who": "Elric", "choices": ["You jumped in front of that for me.", "You took that hit so I wouldn't have to."]},
-		{"who": "Elric", "choices": ["Come back.", "We need you. Come back."]},
+		{"who": "Elric", "choices": ["...Hop.", "Hop. Listen to me."], "replies": [
+			[{"who": "Hopkuna", "text": "He can't hear you. ...Hm."}],
+			[{"who": "Hopkuna", "text": "Oh, he's listening. That's the problem."}]]},
+		{"who": "Elric", "choices": ["You jumped in front of that for me.", "You took that hit so I wouldn't have to."], "replies": [
+			["* (Something flickers behind Hopkuna's eyes.)"],
+			[{"who": "Hopkuna", "text": "He took it because he's a fool.\n...Stop that."}]]},
+		{"who": "Elric", "choices": ["Come back.", "We need you. Come back."], "replies": [
+			["* (Hopkuna flinches. Just barely.)"],
+			["* (Behind you, the Corps steps up. All of them.)"]]},
 		"* (Hopkuna's hand starts to shake.)",
 		{"who": "Hopkuna", "text": "...Tch. Sentimental."},
 		{"who": "Hopkuna", "text": "Keep him, then. For now."},
@@ -1001,7 +1014,9 @@ func _route_choice() -> void:
 
 func _ending_pacifist() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "choices": ["...I'm in.", "Count me in."]},
+		{"who": "Elric", "choices": ["...I'm in.", "Count me in."], "replies": [
+			[{"who": "BigJoe6", "text": "No hesitation. I LIKE it.", "mood": "happy"}],
+			[{"who": "Eggo", "text": "they said it like a movie. nice.", "mood": "happy"}]]},
 		{"who": "BigJoe6", "text": "Then welcome to the REVOLUTION Corps.", "mood": "happy"},
 		{"who": "Eggo", "text": "membership: a lot more than two now.", "mood": "happy"},
 		{"who": "NCWethan", "text": "GROUP HUG!!!", "mood": "happy"},
@@ -1011,7 +1026,9 @@ func _ending_pacifist() -> void:
 		"* (N.C. Wethan hugs everyone at once.\n*  There is a small electrical shock.)",
 		{"who": "Rooster", "text": "...My hair is standing up. My HAIR.", "mood": "angry"},
 		{"who": "Hop", "text": "...You'd still want me around?\nAfter all that?", "mood": "sad"},
-		{"who": "Elric", "choices": ["...You saved me. We'll save you.", "...Of course we would."]},
+		{"who": "Elric", "choices": ["...You saved me. We'll save you.", "...Of course we would."], "replies": [
+			[{"who": "Hop", "text": "That's not- you can't just-\nThat's not how it works.", "mood": "sad"}],
+			[{"who": "Hop", "text": "\"Of course.\" Like it's nothing.", "mood": "shocked"}]]},
 		{"who": "Hop", "text": "...Okay. Okay.", "mood": "happy"},
 		"* (Hop laughs, and wipes his eyes,\n*  and doesn't say anything else for a while.)",
 		{"who": "Nat", "text": "If the fragments are destroyed, Hopkuna can never\nfully wake up. That's our job now."},
@@ -1079,7 +1096,9 @@ func _morning() -> void:
 
 func _ending_neutral() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "choices": ["...I need to think. On my own.", "...Not yet. I need some time."]},
+		{"who": "Elric", "choices": ["...I need to think. On my own.", "...Not yet. I need some time."], "replies": [
+			[{"who": "BigJoe6", "text": "On your OWN? After tonight?", "mood": "shocked"}],
+			[{"who": "Hop", "text": "\"Not yet.\" That's not a no.\nI'm counting it.", "mood": "sad"}]]},
 		{"who": "Nassan", "text": "I understand. The offer stands.\nWhenever you're ready, you know where we are.", "mood": "sad"},
 		{"who": "BigJoe6", "text": "...Just don't make us regret letting you walk.", "mood": "angry"},
 		{"who": "Hop", "text": "Take care of yourself, mysterious traveler.", "mood": "sad"},
@@ -1091,7 +1110,9 @@ func _ending_neutral() -> void:
 
 func _ending_genocide() -> void:
 	await Game.dialogue.say([
-		{"who": "Elric", "choices": ["...I'm going with Hop.", "...Hop's coming with me."]},
+		{"who": "Elric", "choices": ["...I'm going with Hop.", "...Hop's coming with me."], "replies": [
+			[{"who": "Hop", "text": "...With me?", "mood": "shocked"}],
+			[{"who": "Hop", "text": "I- I am?", "mood": "shocked"}]]},
 		{"who": "BigJoe6", "text": "...What?", "mood": "shocked"},
 		{"who": "Eggo", "text": "elric. no.", "mood": "sad"},
 		{"who": "Supreme", "text": "That's... that's the worst possible outcome.", "mood": "shocked"},
@@ -1117,7 +1138,7 @@ func _talk_to_hop_after() -> void:
 				{"who": "Hop", "text": "Nine fragments left. Whenever you're ready,\nI'm ready. Probably. Mostly.", "mood": "happy"},
 			], [
 				[{"who": "Hop", "text": "N.C. Wethan says the zap was \"bonding.\"\nMy left arm is still buzzing.", "mood": "shocked"}],
-				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "choices": ["...Right.", "...I promise."]}, {"who": "Hop", "text": "...Okay. Good.", "mood": "happy"}],
+				[{"who": "Hop", "text": "If he ever comes back out... you'll stop me. Right?", "mood": "sad"}, {"who": "Elric", "choices": ["...Right.", "...I promise."], "replies": [[{"who": "Hop", "text": "...Right. Don't hesitate. Okay. Good.", "mood": "sad"}], [{"who": "Hop", "text": "A promise. Okay.\nI'm holding you to that.", "mood": "happy"}]]}],
 				[{"who": "Hop", "text": "Agent says I'm \"statistically a liability.\"\nSupreme says Agent's math is wrong. They're still arguing.", "mood": "smug"}],
 			])
 		"genocide":

@@ -253,7 +253,9 @@ func _talk_hop() -> void:
 			await Game.dialogue.say([
 				{"who": "Hop", "text": "...You found me. Of course you did.", "mood": "sad"},
 				{"who": "Hop", "text": "I left so you wouldn't have to carry me.\nIt was in the note. Did you read the note?", "mood": "sad"},
-				{"who": "Elric", "choices": ["You don't get to decide that.", "We read it. All of us."]},
+				{"who": "Elric", "choices": ["You don't get to decide that.", "We read it. All of us."], "replies": [
+					[{"who": "Hop", "text": "...Somebody has to.", "mood": "sad"}],
+					[{"who": "Hop", "text": "All of you? ...Even Agent?", "mood": "shocked"}]]},
 				{"who": "Hop", "text": "...", "mood": "sad"},
 				{"who": "Hop", "text": "It's so loud, Elric. He's so loud now.\nEvery fragment we broke. I can feel all of them.", "mood": "sad"},
 				{"who": "Hop", "text": "...Okay. Okay. Get the glider down.\nThen I'll come back. I'll try.", "mood": "sad"},

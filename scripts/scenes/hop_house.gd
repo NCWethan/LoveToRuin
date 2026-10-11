@@ -142,7 +142,7 @@ func _dress() -> void:
 		["hydrant", Vector2(18 * T, 15 * T + 16)],
 		["bin_row", Vector2(34 * T, 15 * T + 16), {"look": ["* (Trash cans out at the curb. Tomorrow is trash day.
 *  It's always tomorrow.)"]}],
-		["car", Vector2(9 * T, 16 * T + 12), {"color": Color8(60, 100, 180), "look": ["* (A blue car, parked at the curb. A dreamcatcher
+		["car", Vector2(9 * T, 16 * T + 12), {"facing": -1, "color": Color8(60, 100, 180), "look": ["* (A blue car, parked at the curb. A dreamcatcher
 *  hangs from the mirror.)"]}],
 		["car", Vector2(44 * T, 20 * T + 8), {"color": Color8(160, 160, 165)}],
 		# Inside Hop's house.

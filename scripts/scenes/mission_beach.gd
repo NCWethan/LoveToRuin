@@ -114,6 +114,7 @@ func build_map() -> void:
 	room.fill(0, 0, 64, 1, Room.ROOF)
 	room.fill(18, 0, 46, 1, Room.ROOF)
 	room.fill(18, 1, 46, 3, Room.STUCCO)
+	room.set_meta("displays", [[Rect2i(22, 2, 2, 2), "surf"], [Rect2i(34, 2, 2, 2), "taco"], [Rect2i(46, 2, 2, 2), "arcade"], [Rect2i(56, 2, 2, 2), "icecream"]])
 	for x in [22, 34, 46, 56]:
 		room.fill(x, 2, 2, 2, Room.GLASS)
 		room.set_tile(x + 3, 3, Room.DOOR)
@@ -150,14 +151,10 @@ func _dipper_track(x: float) -> float:
 func _draw_decor() -> void:
 	# The Dipper: white wooden trestle, red track, the train at the top.
 	Scenery.wooden_coaster(_decor, Rect2(0, 0, 18 * T, 5 * T), _dipper_track)
-	var sign_rect := Rect2(GATE + Vector2(-46, -60), Vector2(92, 22))
-	_decor.draw_rect(sign_rect.grow(3), Color8(250, 235, 200))
-	_decor.draw_rect(sign_rect.grow(1), Color8(150, 34, 32))
-	_decor.draw_rect(sign_rect, Color8(200, 50, 45))
-	for k in 10:
-		_decor.draw_circle(sign_rect.position + Vector2(4 + k * 9.4, -2), 1.5, Color8(255, 230, 140))
-	_decor.draw_string(_font, sign_rect.position + Vector2(10, 15), "THE DIPPER", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(250, 235, 200))
-	_decor.draw_string(_font, sign_rect.position + Vector2(18, 32), "since 1925", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(60, 40, 30))
+	# Its sign: a marquee with chasing lights.
+	var sign_rect := Rect2(GATE + Vector2(-66, -64), Vector2(132, 26))
+	Scenery.marquee(_decor, sign_rect, "THE DIPPER", Color8(200, 50, 45), Color8(250, 235, 200), Color8(250, 235, 200), "", true, (Time.get_ticks_msec() / 250) % 2 == 0)
+	PixelFont.draw_centered(_decor, "SINCE 1925", Vector2(GATE.x, sign_rect.end.y + 6), 1.0, Color8(60, 40, 30))
 	# The gate (a turnstile), glowing red until the fragment is gone.
 	Scenery.turnstile(_decor, GATE + Vector2(0, -2))
 	if not flag("mb_fragment"):
@@ -170,7 +167,7 @@ func _draw_decor() -> void:
 	for shop in shops:
 		var x: int = shop[0]
 		Scenery.awning(_decor, Rect2(x * T - 6, 2 * T - 6, 5 * T + 4, 8), shop[5], shop[6])
-		Scenery.shop_sign(_decor, Rect2(x * T - 4, 1 * T - 2, 5 * T, 14), shop[1], shop[2], shop[3], shop[4])
+		Scenery.shop_sign(_decor, Rect2(x * T - 12, 1 * T - 8, 6 * T + 4, 22), shop[1], shop[2], shop[3], shop[4])
 	# Surfboards leaning by the surf shop; a menu board by the tacos.
 	for k in 3:
 		var at := Vector2(21 * T - 6 + k * 5, 3 * T + 18)

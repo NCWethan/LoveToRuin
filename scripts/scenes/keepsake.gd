@@ -185,6 +185,11 @@ func _dress() -> void:
 			]
 	add_dressing(items)
 
+## (A memory: the sky is how it was.)
+func weather_ok() -> bool:
+	return false
+
+
 func build_map() -> void:
 	match Game.current_keepsake():
 		2: _build_gym()
@@ -627,7 +632,9 @@ func _intro_field() -> void:
 		{"who": "Hop", "text": "You've been sleeping here for three days.\nI walk my run past here. I notice things.", "mood": "smug"},
 		{"who": "Hop", "text": "Here. Jack in the Box. Curly fries.", "mood": "happy"},
 		{"who": "Hop", "text": "You look like you've never had these.\nTragic.", "mood": "smug"},
-		{"who": "Relic", "tag": "???", "choices": ["...Why are you giving me these?", "...Thanks."]},
+		{"who": "Relic", "tag": "???", "choices": ["...Why are you giving me these?", "...Thanks."], "replies": [
+			[{"who": "Hop", "text": "Why NOT?", "mood": "smug"}],
+			[{"who": "Hop", "text": "Don't thank me yet. Try them first.", "mood": "smug"}]]},
 	])
 	await Game.dialogue.say([
 		{"who": "Hop", "text": "Bought two by accident. Muscle memory.\nI used to buy for two.", "mood": "sad"},
@@ -711,7 +718,9 @@ func _end_steps() -> void:
 	hop.face(player.position - hop.position)
 	await Game.dialogue.say([
 		{"who": "Hop", "text": "Can I tell you something weird?\nLike. Actually weird.", "mood": "sad"},
-		{"who": "Relic", "choices": ["...Yeah.", "(Sit down next to him.)"]},
+		{"who": "Relic", "choices": ["...Yeah.", "(Sit down next to him.)"], "replies": [
+			[{"who": "Hop", "text": "...Okay. Don't laugh.", "mood": "sad"}],
+			["* (You sit down next to him on the steps.)", {"who": "Hop", "text": "...Okay.", "mood": "sad"}]]},
 		{"who": "Hop", "text": "There's... something inside me. A voice.\nIt's been there my whole life.", "mood": "sad"},
 		{"who": "Hop", "text": "It doesn't talk much. But when it does,\nit likes bad things. Fire. People getting hurt.", "mood": "sad"},
 		{"who": "Hop", "text": "I've never told anyone. Not my dad.\nNot anybody.", "mood": "sad"},
@@ -751,7 +760,9 @@ func _end_plaza() -> void:
 		"* The old man: \"...She'd have liked you. My wife.\"",
 		"* \"Geraldine. Forty-one years. Last Tuesday\n*  she just... didn't wake up.\"",
 		"* \"She fed these birds every day. I don't even\n*  like birds. I don't know why I'm here.\"",
-		{"who": "Relic", "choices": ["(Listen.)", "(Stay.)"]},
+		{"who": "Relic", "choices": ["(Listen.)", "(Stay.)"], "replies": [
+			["* (You listen. He tells you about her garden.\n*  About her terrible, terrible coffee.)"],
+			["* (You don't say anything. You just stay.\n*  He seems to need that more than words.)"]]},
 		"* \"Everybody keeps saying it gets lighter.\n*  It doesn't get lighter. It gets HEAVIER.\"",
 		"* (A pigeon walks up and drops a feather at your\n*  feet, like it's paying a toll.)",
 		"* (You pick it up. You hold it between your hands.)",
@@ -818,7 +829,9 @@ func _end_ballpark() -> void:
 	await Game.dialogue.say([
 		{"who": "Hop", "text": "It was the voice. It was- there was fire,\nand it was ME, it was my hands, and everyone was-", "mood": "sad"},
 		{"who": "Hop", "text": "Every night. EVERY night, Relic.\nIt's getting worse.", "mood": "sad"},
-		{"who": "Relic", "choices": ["(Sit down next to him.)", "...Give me your hand."]},
+		{"who": "Relic", "choices": ["(Sit down next to him.)", "...Give me your hand."], "replies": [
+			["* (You sit down next to him. He's shaking.)"],
+			[{"who": "Hop", "text": "...What? Why?", "mood": "shocked"}]]},
 		"* (You check your pockets. A bottle cap: no, that's\n*  somebody else's. A ticket stub: somebody else's.)",
 		"* (The only empty thing left: a token from Jack in the Box.\n*  GOOD FOR ONE FREE CURLY FRIES.)",
 		{"who": "Relic", "text": "Hold this. Hold it tight. Think about the dream.", "mood": ""},
@@ -940,7 +953,9 @@ func _end_tent() -> void:
 		"* (You lie on your backs with your heads sticking\n*  out of the tent, looking at the stars.)",
 		{"who": "Hop", "text": "...Hey. The voice is quiet tonight.", "mood": ""},
 		{"who": "Hop", "text": "Like, REALLY quiet. It's never this quiet.\nMaybe the token's working. Maybe it gave up.", "mood": "happy"},
-		{"who": "Relic", "choices": ["(Look at the token.)", "Maybe."]},
+		{"who": "Relic", "choices": ["(Look at the token.)", "Maybe."], "replies": [
+			["* (You turn it over in your fingers.)"],
+			[{"who": "Hop", "text": "Maybe's good. I'll take maybe.", "mood": "happy"}]]},
 		"* (The token around your neck is cold.\n*  Colder than it's ever been.)",
 		{"who": "Hop", "text": "Wake me up if anything weird happens, okay?", "mood": "happy"},
 		"* (He's asleep in a minute. You stay up.)",
@@ -974,8 +989,9 @@ func _end_fire() -> void:
 	hop.face(player.position - hop.position)
 	await Game.dialogue.say([
 		{"who": "Hopkuna", "text": "Don't. Don't touch me, little wanderer.\nYou carry junk. You can't carry ME.", "mood": ""},
-		{"who": "Relic", "choices": ["(Grab him.)", "(Hold on.)"]},
-		"* (You grab him. Both arms. You don't let go.)",
+		{"who": "Relic", "choices": ["(Grab him.)", "(Hold on.)"], "replies": [
+			["* (You grab him. Both arms. You don't let go.)"],
+			["* (You hold on. Both arms. Through the heat.)"]]},
 		{"who": "Relic", "text": "Hop. I know you're in there.", "mood": ""},
 		{"who": "Relic", "text": "Hop. Let go.", "mood": ""},
 		"* (For a second, his eyes are his eyes.)",

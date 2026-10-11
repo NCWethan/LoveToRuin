@@ -589,10 +589,14 @@ func _ambush() -> void:
 		{"who": "BigJoe6", "text": "We're the ones who've been tracking that thing\nfor a week. And you just walked off with it.", "mood": "angry"},
 		{"who": "BigJoe6", "text": "Nobody picks up a fragment by accident.\nYou're working for Hopkuna, aren't you?", "mood": "angry"},
 		"* (Hop goes very quiet.)",
-		{"who": "Elric", "choices": ["Who?", "...I'm not."]},
-		{"who": "BigJoe6", "text": "That's EXACTLY what a lackey would say!", "mood": "angry"},
-		{"who": "Eggo", "text": "he's not wrong. that is what a lackey would say.", "mood": "smug"},
-		{"who": "Eggo", "text": "...it's also what a not-lackey would say.\njust saying.", "mood": "smug"},
+		{"who": "Elric", "choices": ["Who?", "...I'm not."], "replies": [
+			[{"who": "BigJoe6", "text": "WHO?! HOPKUNA! Big, red, ancient, evil?!\nDon't you play dumb with me!", "mood": "angry"},
+				{"who": "Eggo", "text": "joe. i don't think that's an act.", "mood": ""},
+				{"who": "BigJoe6", "text": "Playing dumb is EXACTLY what a lackey would do!", "mood": "angry"},
+				{"who": "Eggo", "text": "...it's also what a confused person would do.\njust saying.", "mood": "smug"}],
+			[{"who": "BigJoe6", "text": "That's EXACTLY what a lackey would say!", "mood": "angry"},
+				{"who": "Eggo", "text": "he's not wrong. that is what a lackey would say.", "mood": "smug"},
+				{"who": "Eggo", "text": "...it's also what a not-lackey would say.\njust saying.", "mood": "smug"}]]},
 		{"who": "BigJoe6", "text": "Enough talk!", "mood": "angry"},
 	])
 	await Game.start_battle("tutorial", SCENE, player.position)
@@ -683,7 +687,7 @@ func _ride_home() -> void:
 	var car := CAR_SCRIPT.new()
 	car.scale = Vector2(1.5, 1.5)
 	car.color = Color8(214, 168, 60)
-	car.position = Vector2(stop_x - 640.0, CAR_LANE_Y)
+	car.position = Vector2(stop_x + 640.0, CAR_LANE_Y)  # (westbound, in the north lane: the right-hand side)
 	world.add_child(car)
 	await car.drive_to(stop_x, 260.0)
 	Game.play_sfx("brakes")
@@ -706,7 +710,7 @@ func _ride_home() -> void:
 
 	Game.play_sfx("honk")
 	Game.play_music("mt_carmel", 1.5)
-	await car.drive_to(room.pixel_size().x + 160.0, 240.0)
+	await car.drive_to(-160.0, 240.0)
 	car.queue_free()
 	await Game.dialogue.say([{"who": "Hop", "text": "...Their mom came and got them.\nWimps.", "mood": "smug"}])
 

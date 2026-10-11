@@ -73,7 +73,9 @@ func _process(delta: float) -> void:
 	var view := _view()
 	var outside := _outdoors(view)
 	# Birds: a flock now and then, crossing the top of the view.
-	if not "birds" in _off and outside and not _night:
+	# (In the rain, the birds and butterflies stay home.)
+	var wet := Game.weather in ["rain", "storm"]
+	if not "birds" in _off and outside and not _night and not wet:
 		_bird_wait -= delta
 		if _bird_wait <= 0.0:
 			_bird_wait = _rng.randf_range(9.0, 18.0)
@@ -85,7 +87,7 @@ func _process(delta: float) -> void:
 		flock["pos"] += flock["vel"] * delta
 	_birds = _birds.filter(func(f: Dictionary) -> bool: return view.grow(80).has_point(f["pos"]))
 	# Butterflies over the grass by day.
-	if not "butterflies" in _off and not _night:
+	if not "butterflies" in _off and not _night and not wet:
 		if _butterflies.size() < 3 and _rng.randf() < delta * 0.5:
 			var home := _spot_on(view, [Room.GRASS])
 			if home != Vector2.INF:

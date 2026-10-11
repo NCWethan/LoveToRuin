@@ -991,33 +991,109 @@ static func wooden_coaster(ci: CanvasItem, r: Rect2, track: Callable) -> void:
 		ci.draw_circle(Vector2(cx + 4, cy + 9), 1.5, Color8(30, 30, 34))
 
 
-## A shop's painted sign board over its windows, with a little picture.
+## A shop's sign board over its windows: an 8-bit marquee (see marquee()).
 static func shop_sign(ci: CanvasItem, r: Rect2, text: String, board: Color, ink: Color, icon: String) -> void:
-	ci.draw_rect(Rect2(r.position + Vector2(2, 2), r.size), Color(0, 0, 0, 0.25))
-	ci.draw_rect(r, board.darkened(0.3))
-	ci.draw_rect(r.grow(-1), board)
-	ci.draw_rect(Rect2(r.position + Vector2(1, 1), Vector2(r.size.x - 2, 1)), board.lightened(0.25))
-	var f := ThemeDB.fallback_font
-	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-	var tx := r.get_center().x - w / 2 + 6
-	ci.draw_string(f, Vector2(tx, r.get_center().y + 5), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, ink)
-	var ic := Vector2(tx - 10, r.get_center().y)
-	match icon:
-		"surf":
-			ci.draw_set_transform(ic, 0.5, Vector2.ONE)
-			ci.draw_rect(Rect2(-2, -6, 4, 12), Color8(250, 250, 250))
-			ci.draw_rect(Rect2(-1, -6, 1, 12), Color8(240, 100, 80))
-			ci.draw_set_transform(Vector2.ZERO)
-		"taco":
-			ci.draw_arc(ic + Vector2(0, 2), 5.0, PI, TAU, 10, Color8(240, 200, 90), 3.0)
-			ci.draw_rect(Rect2(ic + Vector2(-3, -1), Vector2(6, 2)), Color8(90, 170, 70))
-		"arcade":
-			ci.draw_rect(Rect2(ic + Vector2(-4, -5), Vector2(8, 10)), Color8(40, 40, 60))
-			ci.draw_rect(Rect2(ic + Vector2(-3, -4), Vector2(6, 4)), Color8(80, 220, 240))
-			ci.draw_circle(ic + Vector2(0, 3), 1.2, Color8(240, 60, 60))
-		"cone":
-			ci.draw_colored_polygon(PackedVector2Array([ic + Vector2(-3, 0), ic + Vector2(3, 0), ic + Vector2(0, 7)]), Color8(220, 170, 100))
-			ci.draw_circle(ic + Vector2(0, -2), 3.5, Color8(250, 170, 200))
+	marquee(ci, r, text, board, ink, board.darkened(0.45), icon, false)
+
+
+## Little pixel pictures for signs (7 x 7; each letter is a color, "." is empty).
+const SIGN_ICONS := {
+	"surf": ["...W...", "..WRW..", "..WRW..", "..WRW..", "..WRW..", "..WRW..", "...W..."],
+	"taco": [".......", "..YYY..", ".YGRGY.", "YGRGRGY", "YYYYYYY", ".......", "......."],
+	"arcade": [".KKKKK.", ".KCCCK.", ".KCCCK.", ".KKKKK.", ".KRKBK.", ".KKKKK.", ".K...K."],
+	"cone": ["..PPP..", ".PPPPP.", ".PPPPP.", ".TTTTT.", "..TTT..", "..TTT..", "...T..."],
+	"cart": ["R......", ".RRRRRR", ".RWWWWR", ".RWWWWR", "..RRRR.", ".......", "..K..K."],
+	"apple": ["...N...", "..N....", ".RRRRR.", "RRWRRRR", "RRRRRRR", ".RRRRR.", "..R.R.."],
+	"cards": [".WWWW..", ".WRWWW.", ".WWWWWW", ".WWRWWW", ".WWWWWW", "..WWWRW", "...WWWW"],
+	"mug": [".WWWW..", "TTTTTT.", "TYYYYTT", "TYYYYT.T", "TYYYYTT", "TYYYYT.", "TTTTTT."],
+	"burger": ["..TTT..", ".TTTTT.", "NNNNNNN", "RRRRRRR", "MMMMMMM", ".TTTTT.", "......."],
+	"star": ["...Y...", "...Y...", "YYYYYYY", ".YYYYY.", "..YYY..", ".YY.YY.", "Y.....Y"],
+	"coffee": ["..W.W..", "...W...", "WWWWWW.", "WMMMMWW", "WMMMMW.W", "WMMMMWW", ".WWWW.."],
+	"key": [".YYY...", "Y...Y..", "Y...YYY", ".YYY.Y.", "......Y", ".......", "......."],
+	"bed": [".......", "W......", "WWWWWWW", "WBBBBBW", "BBBBBBB", "B.....B", "......."],
+}
+const SIGN_PALETTE := {
+	"W": Color8(250, 250, 250), "R": Color8(226, 54, 54), "Y": Color8(250, 210, 70), "G": Color8(90, 180, 70),
+	"K": Color8(30, 30, 40), "C": Color8(90, 220, 240), "B": Color8(70, 120, 220), "P": Color8(250, 160, 200),
+	"T": Color8(214, 160, 90), "N": Color8(80, 170, 70), "M": Color8(120, 74, 40),
+}
+
+
+## Draws one of the SIGN_ICONS with its middle at `center`.
+static func sign_icon(ci: CanvasItem, icon: String, center: Vector2, px: float) -> void:
+	var rows: Array = SIGN_ICONS.get(icon, [])
+	var at := center - Vector2(7, 7) * px / 2.0
+	for y in rows.size():
+		var row: String = rows[y]
+		for x in row.length():
+			if SIGN_PALETTE.has(row[x]):
+				ci.draw_rect(Rect2(at + Vector2(x, y) * px, Vector2(px, px)), SIGN_PALETTE[row[x]])
+
+
+## An 8-bit sign: a beveled board in a frame, chunky pixel letters with an
+## arcade-style drop shadow, a little picture, and (if `bulbs`) a row of marquee
+## lights along the top and bottom. Text can be two lines ("JACK IN\nTHE BOX").
+## The letters are as big as will fit.
+static func marquee(ci: CanvasItem, r: Rect2, text: String, board: Color, ink: Color, trim: Color, icon: String = "", bulbs: bool = true, lit: bool = true) -> void:
+	# Shadow, frame, board, bevel.
+	ci.draw_rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(r, trim.darkened(0.5))
+	ci.draw_rect(r.grow(-1), trim)
+	var inner := r.grow(-3)
+	ci.draw_rect(inner, board)
+	ci.draw_rect(Rect2(inner.position, Vector2(inner.size.x, 1)), board.lightened(0.3))
+	ci.draw_rect(Rect2(inner.position + Vector2(0, inner.size.y - 1), Vector2(inner.size.x, 1)), board.darkened(0.3))
+	# Dithered stripes in the board, like an old cartridge label.
+	for k in int(inner.size.y / 4):
+		if k % 2 == 1:
+			ci.draw_rect(Rect2(inner.position + Vector2(1, k * 4), Vector2(inner.size.x - 2, 1)), board.darkened(0.08))
+	if bulbs:
+		var x := inner.position.x + 3
+		var k := 0
+		while x < inner.end.x - 2:
+			var on := lit and k % 2 == 0
+			var bulb := Color8(255, 240, 170) if on else trim.lightened(0.35)
+			for y in [r.position.y + 1, r.end.y - 3]:
+				ci.draw_rect(Rect2(x, y, 2, 2), bulb)
+			x += 6
+			k += 1
+	# The words: as big as fits (with room for the picture).
+	var lines := text.split("\n")
+	var longest := 0
+	for line in lines:
+		longest = maxi(longest, line.length())
+	# (Big letters matter more than the picture: if the picture is what makes them
+	# shrink, it's left off.)
+	var icon_w := 0.0
+	var px := 1.0
+	var fitted := false
+	for size in [4.0, 3.0, 2.0, 1.0]:
+		var h: float = lines.size() * PixelFont.height(size) + (lines.size() - 1) * size * 2
+		if h > inner.size.y - 2:
+			continue
+		for with_icon in ([true, false] if icon != "" else [false]):
+			var iw: float = 10.0 * size if with_icon else 0.0
+			if PixelFont.width("W".repeat(longest), size) + iw <= inner.size.x - 8:
+				px = size
+				icon_w = iw
+				fitted = true
+				break
+		if fitted:
+			break
+	if icon_w == 0.0:
+		icon = ""
+	var block_h := lines.size() * PixelFont.height(px) + (lines.size() - 1) * px * 2
+	var top := inner.get_center().y - block_h / 2.0
+	var shade := ink.darkened(0.7) if ink.get_luminance() > 0.5 else board.lightened(0.5)
+	var text_w := 0.0
+	for line in lines:
+		text_w = maxf(text_w, PixelFont.width(line, px))
+	var left := inner.get_center().x - (text_w + icon_w) / 2.0 + icon_w
+	for i in lines.size():
+		var lw := PixelFont.width(lines[i], px)
+		PixelFont.draw(ci, lines[i], Vector2(left + (text_w - lw) / 2.0, top + i * (PixelFont.height(px) + px * 2)), px, ink, Color(shade, 0.8))
+	if icon != "":
+		sign_icon(ci, icon, Vector2(left - icon_w + 3.5 * px, inner.get_center().y), px)
 
 
 ## A striped awning over a shop front, scalloped along the bottom.
@@ -1106,9 +1182,8 @@ static func papel_picado(ci: CanvasItem, from: Vector2, to: Vector2, colors: Arr
 
 ## A hand-painted wooden shop sign hanging from an iron bracket.
 static func hanging_sign(ci: CanvasItem, at: Vector2, text: String, color: Color) -> void:
-	var f := ThemeDB.fallback_font
-	var w := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x + 12
-	var board := Rect2(at, Vector2(w, 14))
+	var w := PixelFont.width(text, 1.0) + 14
+	var board := Rect2(at, Vector2(w, 16))
 	# The bracket, and the chains.
 	ci.draw_line(at + Vector2(-4, -6), at + Vector2(w + 4, -6), Color8(40, 36, 36), 2.0)
 	ci.draw_arc(at + Vector2(-4, -2), 4.0, PI * 0.5, PI * 1.5, 6, Color8(40, 36, 36), 1.0)
@@ -1119,7 +1194,8 @@ static func hanging_sign(ci: CanvasItem, at: Vector2, text: String, color: Color
 	ci.draw_rect(board.grow(-1), Color8(238, 222, 186))
 	ci.draw_rect(Rect2(board.position + Vector2(1, 1), Vector2(w - 2, 1)), Color8(250, 240, 214))
 	ci.draw_rect(board.grow(-3), color, false, 1.0)
-	ci.draw_string(f, at + Vector2(6, 11), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color)
+	# Pixel letters, with a pale shadow (like they were painted on twice).
+	PixelFont.draw(ci, text, at + Vector2(7, 6), 1.0, color, color.lerp(Color8(238, 222, 186), 0.65))
 
 
 ## Doña Rosa's outdoor kitchen: an adobe counter with a tiled top, the comal (a

@@ -133,7 +133,7 @@ func is_night() -> bool:
 ## ballpark, a ball cart and the grounds crew's gear.
 func _dress() -> void:
 	add_dressing([
-		["car", Vector2(44 * T, 10 * T + 12), {"color": Color8(60, 60, 66), "look": ["* (A black car with tinted windows, parked\n*  under a NO PARKING sign. Of course.)"]}],
+		["car", Vector2(44 * T, 10 * T + 12), {"facing": -1, "color": Color8(60, 60, 66), "look": ["* (A black car with tinted windows, parked\n*  under a NO PARKING sign. Of course.)"]}],
 		["car", Vector2(9 * T, 14 * T + 8), {"color": Color8(240, 200, 50), "look": ["* (A taxi. The light on top says OFF DUTY.\n*  The driver is asleep with his hat over his face.)"]}],
 		["car", Vector2(20 * T, 14 * T + 8), {"color": Color8(160, 160, 165)}],
 		["phone_booth", Vector2(38 * T + 10, 8 * T + 14), {"look": ["* (A phone booth. There's a quarter on the shelf\n*  and a number scratched in the glass.)", "* (You don't call it. Some numbers are a trap.)"]}],
@@ -182,6 +182,7 @@ func build_map() -> void:
 			room.set_tile(x, y, Room.WINDOW)
 	for x in [15, 17, 21, 23]:
 		room.set_tile(x, 5, Room.GLASS)
+	room.set_meta("displays", [[Rect2i(15, 5, 9, 1), "diner"]])
 	room.set_tile(6, 7, Room.DOOR)
 	room.set_tile(19, 7, Room.DOOR)
 	room.fill(50, 7, 2, 1, Room.DOOR)
@@ -210,16 +211,11 @@ func build_map() -> void:
 ## What never changes: the diner and the ballpark's fronts, the lamp posts, the
 ## rails, the fountain's basin, the field. Drawn once (Area.add_static_layer).
 func _draw_scenery(ci: CanvasItem) -> void:
-	var f := ThemeDB.fallback_font
 	Scenery.diner_front(ci, Rect2(14 * T, 3 * T, 11 * T, 5 * T), 19 * T + 10)
 	Scenery.ballpark_front(ci, Rect2(40 * T, 1 * T, 23 * T, 7 * T), Rect2(50 * T - 4, 5 * T, 2 * T + 8, 3 * T))
-	ci.draw_string(f, Vector2(46 * T + 1, 3 * T + 1), "THE BALLPARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.4))
-	ci.draw_string(f, Vector2(46 * T, 3 * T), "THE BALLPARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color8(240, 230, 210))
+	Scenery.marquee(ci, Rect2(44 * T - 4, 2 * T - 4, 9 * T + 8, 30), "THE BALLPARK", Color8(30, 60, 120), Color8(250, 240, 220), Color8(200, 40, 40), "star")
 	# The hotel's sign: a blade hanging off the corner, gold letters on maroon.
-	var blade := Rect2(1 * T + 6, 1 * T + 2, 7 * T + 4, 16)
-	ci.draw_rect(blade.grow(2), Color8(200, 170, 90))
-	ci.draw_rect(blade, Color8(110, 30, 40))
-	ci.draw_string(f, Vector2(2 * T + 4, 1 * T + 14), "HOTEL GRANDE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 210, 120))
+	Scenery.marquee(ci, Rect2(1 * T + 2, 1 * T - 4, 8 * T, 26), "HOTEL GRANDE", Color8(110, 30, 40), Color8(250, 214, 110), Color8(200, 170, 90), "bed", true)
 	# One lit window high in the office tower. (Someone's working late. Or someone
 	# forgot to turn it off five years ago.)
 	ci.draw_rect(Rect2(33 * T + 2, 2 * T + 2, T - 4, T - 4), Color(1.0, 0.9, 0.55, 0.8))
@@ -251,7 +247,11 @@ func _draw_decor() -> void:
 	var neon := 0.7 + 0.3 * sin(_time * 5.0) if fmod(_time, 7.0) > 0.3 else 0.15
 	_decor.draw_rect(Rect2(14 * T + 6, 3 * T + 4, 10 * T, 18), Color(0.05, 0.05, 0.1, 0.85))
 	_decor.draw_rect(Rect2(14 * T + 6, 3 * T + 4, 10 * T, 18), Color(1.0, 0.35, 0.55, 0.5 * neon), false, 1.0)
-	_decor.draw_string(_font, Vector2(14 * T + 14, 3 * T + 18), "ALL-NIGHT DINER", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.35, 0.55, neon))
+	# Neon tubes: a soft glow under bright pixel letters.
+	var tube := Color(1.0, 0.35, 0.55, neon)
+	PixelFont.draw_centered(_decor, "ALL-NIGHT DINER", Vector2(19 * T + 6, 3 * T + 13), 1.0, Color(1.0, 0.35, 0.55, 0.35 * neon))
+	PixelFont.draw_centered(_decor, "ALL-NIGHT DINER", Vector2(19 * T + 6, 3 * T + 13), 1.0, tube)
+	_decor.draw_rect(Rect2(14 * T + 10, 3 * T + 18, 10 * T - 8, 1), Color(0.4, 0.9, 1.0, 0.6 * neon))
 	# The lamps' glow, flickering.
 	for x in range(3, 62, 6):
 		var at := Vector2(x * T + 10, 9 * T - 39)

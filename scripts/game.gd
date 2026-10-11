@@ -56,6 +56,12 @@ var _fade: ColorRect
 var _objective_banner: CanvasLayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sounds: Dictionary = {}
+
+## The sky outdoors: "clear", "cloudy", "rain" or "storm" (see weather.gd).
+## It changes every few minutes (update_weather). Not saved: a new day, a new sky.
+var weather: String = "clear"
+var _weather_until: int = 0
+const WEATHER_CHANCES := {"clear": 45, "cloudy": 25, "rain": 18, "storm": 12}
 ## Sounds that are recordings rather than made in code. To swap one, replace the file.
 ## relic_wind: a wind recording ("No Copyright" sound effect), kept out of the public
 ## repo until its license is confirmed. Without it, the tent uses wind made in code.
@@ -140,7 +146,7 @@ const SETTINGS_PATH := "user://settings.cfg"
 const TEST_SETTINGS_PATH := "user://test_settings.cfg"
 var settings_path: String = SETTINGS_PATH
 ## music / sound: 0 to 1.  text_speed: 0 slow, 1 normal, 2 fast.
-var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "fullscreen": false, "reduce_flashing": false}
+var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "reduce_flashing": false}
 
 
 ## "Reduce flashing" (in Settings): fewer, gentler flashes and no strobing, for
@@ -221,11 +227,6 @@ func apply_settings() -> void:
 		var index := AudioServer.get_bus_index(bus_name)
 		AudioServer.set_bus_mute(index, amount <= 0.0)
 		AudioServer.set_bus_volume_db(index, linear_to_db(maxf(amount, 0.001)))
-	# (Tests run without a window, so leave the window alone there.)
-	if DisplayServer.get_name() != "headless":
-		var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if settings["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED
-		if DisplayServer.window_get_mode() != mode:
-			DisplayServer.window_set_mode(mode)
 
 
 ## How fast text types out, compared to normal (slow, normal or fast).
@@ -600,6 +601,34 @@ func play_sfx(sound: String, pitch: float = 1.0, start: float = 0.0, boost_db: f
 			return
 
 
+## A sound effect's stream (for things that play it themselves, like the rain).
+func get_sound(sound: String) -> AudioStream:
+	return _sounds.get(sound)
+
+
+## Maybe changes the weather: once its time is up (every two to five minutes),
+## the sky is picked again. Always clear until the tutorial's over. (For tests,
+## LTR_WEATHER=rain (etc.) holds it.)
+func update_weather() -> void:
+	var forced := OS.get_environment("LTR_WEATHER")
+	if WEATHER_CHANCES.has(forced):
+		weather = forced
+		return
+	if not flags.get("tutorial_done", false):
+		weather = "clear"
+		return
+	var now := Time.get_ticks_msec()
+	if now < _weather_until:
+		return
+	_weather_until = now + randi_range(120, 300) * 1000
+	var roll := randi_range(1, 100)
+	for kind in WEATHER_CHANCES:
+		roll -= WEATHER_CHANCES[kind]
+		if roll <= 0:
+			weather = kind
+			return
+
+
 func has_sfx(sound: String) -> bool:
 	return _sounds.has(sound)
 
@@ -747,8 +776,8 @@ func finish_battle(result: Dictionary) -> void:
 	if not battle_random and not result.get("fled", false):
 		flags["beat_" + str(result.get("id", ""))] = true
 	battle_random = false
-	# Only real kills count (see dread()): someone who shattered. Knockouts (the
-	# tutorial, the training dummy, bosses) don't.
+	# Only real kills count (see dread()). Knockouts (the tutorial, the training
+	# dummy, bosses) don't.
 	flags["kills"] = int(flags.get("kills", 0)) + result.get("killed", []).size()
 	# The glowbug, on the way to Hop's house: killing it is what starts the
 	# Genocide route, officially.

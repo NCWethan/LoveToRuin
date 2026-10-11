@@ -16,6 +16,14 @@ const BUTTONS := ["FIGHT", "ACT", "ITEM", "MERCY", "DEFEND"]
 const BOX_CENTER := Vector2(320, 320)
 const TEXT_BOX_SIZE := Vector2(570, 120)
 const ATTACK_BOX_SIZE := Vector2(160, 120)
+## The hardest attacks (Hopkuna's fire arrow, his cage, the bosses' last attacks)
+## get a big box: most of the screen between the enemies and the party, so
+## there's room to dodge.
+const BIG_BOX_SIZE := Vector2(500, 174)
+const BIG_BOX_CENTER := Vector2(320, 302)
+const BIG_BOX_PATTERNS := ["fire_arrow", "ember_rain", "cage", "burst", "slash_grid", "twelve_tattoos", "everything", "frenzy"]
+## Where the box sits this enemy turn (BOX_CENTER, or BIG_BOX_CENTER).
+var _turn_center: Vector2 = BOX_CENTER
 
 ## How long each enemy turn lasts, in seconds.
 const ENEMY_TURN_TIME := 5.0
@@ -1724,13 +1732,19 @@ func _process_fight_anim(delta: float) -> void:
 		target.ko_time = 0.0
 		exp_gained += target.exp_reward
 		if _deaths_are_real():
-			# Cracks into green pieces, and the wind carries them away.
-			target.shattered = true
+			target.killed = true
 			if target.last_words != "":
 				lines.append(target.last_words)
-			Game.play_sfx("crack" if Game.has_sfx("crack") else "thud")
-			_start_wind(SHATTER_WIND_TIME, 0.22)
-			lines.append("* %s cracked into pieces.\n* The wind carried them away." % target.name)
+			if Game.on_genocide_route():
+				# Cracks into green pieces, and the wind carries them away.
+				target.shattered = true
+				Game.play_sfx("crack" if Game.has_sfx("crack") else "thud")
+				_start_wind(SHATTER_WIND_TIME, 0.22)
+				lines.append("* %s cracked into pieces.\n* The wind carried them away." % target.name)
+			else:
+				# (Before the Genocide path, they're just knocked flat. They don't get up.)
+				Game.play_sfx("thud")
+				lines.append("* %s was knocked out.\n* They aren't getting up." % target.name)
 			var hop_line := _hop_after_kill()
 			if hop_line != "":
 				lines.append(hop_line)
@@ -1817,7 +1831,7 @@ func _hop_watching_line() -> String:
 
 ## Everyone killed so far, counting this fight.
 func _total_kills() -> int:
-	var now := enemies.filter(func(e: Enemy) -> bool: return e.shattered).size()
+	var now := enemies.filter(func(e: Enemy) -> bool: return e.killed).size()
 	return int(Game.flags.get("kills", 0)) + now
 
 
@@ -1870,8 +1884,13 @@ func _start_enemy_turn() -> void:
 			if label != "":
 				_speech[enemy] = "%s: %d%%" % [label, int(enemy.odds.get(_turn_patterns[enemy], 50))]
 
-	create_tween().tween_property(box, "size", ATTACK_BOX_SIZE, 0.25)
-	soul.global_position = BOX_CENTER
+	# A hard attack this turn (or anyone's last, desperate one): the big box.
+	var big := _attackers.any(func(e: Enemy) -> bool: return _turn_patterns[e] in BIG_BOX_PATTERNS or _turn_patterns[e] in e.finale_patterns)
+	_turn_center = BIG_BOX_CENTER if big else BOX_CENTER
+	create_tween().tween_property(box, "size", BIG_BOX_SIZE if big else ATTACK_BOX_SIZE, 0.25)
+	if box.center != _turn_center:
+		create_tween().tween_property(box, "center", _turn_center, 0.25)
+	soul.global_position = _turn_center
 	# Whose SOUL is out (and takes the hits). X switches it during the turn.
 	if _soul_member().is_down():
 		_soul_owner = party.find(_first_standing())
@@ -1923,7 +1942,7 @@ func _process_enemy_turn(delta: float) -> void:
 	# Out in the open sky, the box drifts on the wind.
 	if _data.box_drift > 0.0:
 		var drift_t := ENEMY_TURN_TIME - _enemy_timer
-		box.center = BOX_CENTER + Vector2(sin(drift_t * 1.1) * _data.box_drift, sin(drift_t * 0.7 + 1.0) * _data.box_drift * 0.4)
+		box.center = _turn_center + Vector2(sin(drift_t * 1.1) * _data.box_drift, sin(drift_t * 0.7 + 1.0) * _data.box_drift * 0.4)
 	if _soul_path_timer <= 0.0:
 		_soul_path_timer = 0.1
 		_soul_path.append(soul.global_position)
@@ -2191,8 +2210,8 @@ func _victory() -> void:
 				result["spared"].append(enemy.name)
 			elif enemy.state == "defeated":
 				result["defeated"].append(enemy.name)
-				# (Only the ones who shattered were killed; the rest were just knocked out.)
-				if enemy.shattered:
+				# (Only real kills count; bosses and the tutorial were just knocked out.)
+				if enemy.killed:
 					result["killed"] = result.get("killed", []) + [enemy.name]
 		_show_messages(lines, func() -> void: _leave_battle(func() -> void: Game.finish_battle(result)))
 	else:
@@ -3301,13 +3320,40 @@ func _draw_enemy_ko_dust(enemy: Enemy, feet: Vector2) -> void:
 		_overlay.draw_circle(at, 6.0 * (1.0 - age) + 2.0, Color(0.75, 0.72, 0.68, 0.6 * (1.0 - age)))
 
 
+## A spared enemy, sitting on the ground to rest: their own picture, folded.
+## The top of the sprite (head and body) sits lower; the legs fold out in front,
+## wide and flat, like sitting cross-legged. They breathe slowly.
+func _draw_resting(enemy: Enemy, feet: Vector2, size: Vector2) -> void:
+	var tex := enemy.sprite
+	var ts := tex.get_size()
+	var cut := 0.62
+	var legs_h := size.y * (1.0 - cut) * 0.42
+	var t := Time.get_ticks_msec() / 1000.0
+	var breathe := sin(t * 1.8 + enemy.position.x) * 0.012
+	# A wide, flat shadow where they sit.
+	_overlay.draw_set_transform(feet, 0.0, Vector2(1.0, 0.25))
+	_overlay.draw_circle(Vector2.ZERO, size.x * 0.55, Color(0, 0, 0, 0.35))
+	_overlay.draw_set_transform(Vector2.ZERO)
+	# Legs, folded out in front.
+	var legs_src := Rect2(0, ts.y * cut, ts.x, ts.y * (1.0 - cut))
+	_overlay.draw_texture_rect_region(tex, Rect2(feet + Vector2(-size.x * 0.62, -legs_h), Vector2(size.x * 1.24, legs_h)), legs_src)
+	# Head and body, resting on them (a little slumped, breathing).
+	var body_h := size.y * cut
+	_overlay.draw_set_transform(feet + Vector2(0, -legs_h + 2), -0.05, Vector2(1.0 - breathe, 1.0 + breathe))
+	_overlay.draw_texture_rect_region(tex, Rect2(Vector2(-size.x / 2, -body_h), Vector2(size.x, body_h)), Rect2(0, 0, ts.x, ts.y * cut))
+	_overlay.draw_set_transform(Vector2.ZERO)
+
+
 func _draw_enemies() -> void:
 	for enemy in enemies:
 		var pos := enemy.position
 		if enemy.shake > 0.0:
 			pos.x += sin(enemy.shake * 60.0) * 4.0
 
-		var alpha := 1.0 if enemy.is_active() else 0.35
+		# Spared, while someone else is still fighting: they sit down and rest
+		# (in full color: they're fine, they're just done).
+		var resting := enemy.state == "spared" and enemies.size() > 1 and enemy.sprite != null
+		var alpha := 1.0 if enemy.is_active() or resting else 0.35
 		# Knocked-out enemies turn gray; spared ones fade out.
 		var tint := Color(0.4, 0.4, 0.4) if enemy.state == "defeated" else Color(1, 1, 1, alpha)
 		var top := pos.y - 40.0
@@ -3320,6 +3366,13 @@ func _draw_enemies() -> void:
 			var feet_rect := Rect2(Vector2(-sprite_size.x / 2, -sprite_size.y), sprite_size)
 			if enemy.shattered:
 				_draw_shatter(enemy, feet + _enemy_motion(enemy)[0], sprite_size)
+				continue
+			if resting:
+				_draw_resting(enemy, feet, sprite_size)
+				_draw_centered(enemy.name, Vector2(pos.x, feet.y - sprite_size.y * 0.72 - 8), FONT_SIZE, Color.WHITE)
+				_draw_centered("SPARED", pos + Vector2(0, 62), FONT_SIZE, YELLOW)
+				if _speech.has(enemy) and _speech[enemy] != "":
+					_draw_speech(_speech[enemy], Vector2(pos.x, feet.y - sprite_size.y * 0.72 - 30))
 				continue
 			# A soft shadow on the ground.
 			if enemy.state != "spared":
@@ -3705,10 +3758,15 @@ func _is_choosing(member_index: int) -> bool:
 
 
 func _draw_speech(text: String, bottom_center: Vector2) -> void:
-	var width := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x + 16
+	# (Long taunts get a smaller font, and the bubble always stays on screen.)
+	var size := 14
+	while size > 10 and _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 16 > 300:
+		size -= 1
+	var width := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x + 16
 	var rect := Rect2(bottom_center - Vector2(width / 2, 26), Vector2(width, 24))
+	rect.position.x = clampf(rect.position.x, 4.0, 636.0 - width)
 	_overlay.draw_rect(rect, Color.WHITE)
-	_overlay.draw_string(_font, rect.position + Vector2(8, 17), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.BLACK)
+	_overlay.draw_string(_font, rect.position + Vector2(8, 17), text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, Color.BLACK)
 
 
 func _draw_party_panel() -> void:
@@ -3722,9 +3780,13 @@ func _draw_party_panel() -> void:
 			_overlay.draw_rect(panel, Color(member.color, 0.22))
 			_overlay.draw_rect(panel, member.color, false, 2.0)
 		var name_color := member.color if not member.is_down() else Color.DIM_GRAY
-		_overlay.draw_string(_font, Vector2(x, PANEL_Y), member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, name_color)
+		# (A long name gets a smaller font, so it and the LV fit before the HP bar.)
+		var name_size := FONT_SIZE
+		while name_size > 10 and _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, name_size).x > 58:
+			name_size -= 1
+		_overlay.draw_string(_font, Vector2(x, PANEL_Y), member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, name_size, name_color)
 		# Their level, right next to their name.
-		var name_width := _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE).x
+		var name_width := _font.get_string_size(member.name.to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, name_size).x
 		_overlay.draw_string(_font, Vector2(x + name_width + 6, PANEL_Y - 1), "LV %d" % Game.lv(), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.8, 0.8, 0.8))
 		_draw_bar(Rect2(x + 98, PANEL_Y - 13, 96, 14), float(member.hp) / member.max_hp, YELLOW)
 		# Overheal is blue. It first fills in the HP that's missing (any red still

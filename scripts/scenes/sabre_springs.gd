@@ -104,6 +104,11 @@ func _dress() -> void:
 	])
 
 
+## (The end: its sky is part of the story.)
+func weather_ok() -> bool:
+	return false
+
+
 func build_map() -> void:
 	room.setup(50, 36, Room.GRASS)
 	room.fill(0, 0, 50, 1, Room.TREE)
@@ -271,7 +276,9 @@ func _corps_circle() -> void:
 		{"who": "Relic", "tag": "", "face": false, "text": "* It's me. Relic."},
 		{"who": "Relic", "tag": "", "face": false, "text": "* I made you."},
 		{"who": "Relic", "tag": "", "face": false, "text": "* I'm sorry I made you lonely.\n* I didn't know how to make anything else."},
-		{"who": "Elric", "choices": ["...You didn't.", "(Say nothing.)"]},
+		{"who": "Elric", "choices": ["...You didn't.", "(Say nothing.)"], "replies": [
+			[{"who": "Relic", "tag": "", "face": false, "text": "* ...You're kind. Like him."}],
+			["* (You don't say anything. Neither does Relic.\n*  For a moment, that's enough.)"]]},
 		{"who": "Hopkuna", "text": "Touching. Now, little keepsake. You're the last\npiece of Relic. Come here and I'll have ALL of them.", "mood": ""},
 		"* (Behind you, car doors. Footsteps. A lot of them.)",
 	])

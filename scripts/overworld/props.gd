@@ -37,6 +37,7 @@ static func draw(ci: CanvasItem, kind: String, at: Vector2, opt: Dictionary, tim
 	match kind:
 		"car", "car_v":
 			var v := kind == "car_v"
+			var facing: int = opt.get("facing", 1)
 			var s := Vector2(22, 40) if v else Vector2(44, 22)
 			var r := Rect2(at - s / 2, s)
 			ci.draw_rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.25))
@@ -62,18 +63,24 @@ static func draw(ci: CanvasItem, kind: String, at: Vector2, opt: Dictionary, tim
 				ci.draw_rect(Rect2(r.position + Vector2(2, r.size.y - 2), Vector2(4, 2)), Color8(200, 40, 40))
 				ci.draw_rect(Rect2(r.position + Vector2(r.size.x - 6, r.size.y - 2), Vector2(4, 2)), Color8(200, 40, 40))
 			else:
-				ci.draw_rect(Rect2(r.position + Vector2(r.size.x - 2, 2), Vector2(2, 4)), Color8(250, 245, 200))
-				ci.draw_rect(Rect2(r.position + Vector2(r.size.x - 2, r.size.y - 6), Vector2(2, 4)), Color8(250, 245, 200))
-				ci.draw_rect(Rect2(r.position + Vector2(0, 2), Vector2(2, 4)), Color8(200, 40, 40))
-				ci.draw_rect(Rect2(r.position + Vector2(0, r.size.y - 6), Vector2(2, 4)), Color8(200, 40, 40))
+				# Side-on cars point right, or left with {"facing": -1} (parked in the
+				# far lane, they face the way that lane's traffic goes).
+				var front := r.size.x - 2 if facing > 0 else 0.0
+				var back := 0.0 if facing > 0 else r.size.x - 2
+				ci.draw_rect(Rect2(r.position + Vector2(front, 2), Vector2(2, 4)), Color8(250, 245, 200))
+				ci.draw_rect(Rect2(r.position + Vector2(front, r.size.y - 6), Vector2(2, 4)), Color8(250, 245, 200))
+				ci.draw_rect(Rect2(r.position + Vector2(back, 2), Vector2(2, 4)), Color8(200, 40, 40))
+				ci.draw_rect(Rect2(r.position + Vector2(back, r.size.y - 6), Vector2(2, 4)), Color8(200, 40, 40))
 			if v:
 				ci.draw_rect(Rect2(r.position + Vector2(3, 6), Vector2(16, 8)), glass)
 				ci.draw_rect(Rect2(r.position + Vector2(3, 26), Vector2(16, 6)), glass.darkened(0.15))
 				ci.draw_rect(Rect2(r.position + Vector2(3, 16), Vector2(16, 8)), color.lightened(0.15))
 			else:
-				ci.draw_rect(Rect2(r.position + Vector2(8, 3), Vector2(10, 16)), glass)
-				ci.draw_rect(Rect2(r.position + Vector2(28, 3), Vector2(8, 16)), glass.darkened(0.15))
-				ci.draw_rect(Rect2(r.position + Vector2(18, 3), Vector2(10, 16)), color.lightened(0.15))
+				# The windshield (toward the front), the roof, the back window.
+				var flip := func(x: float, w: float) -> float: return x if facing > 0 else r.size.x - x - w
+				ci.draw_rect(Rect2(r.position + Vector2(flip.call(26.0, 10.0), 3), Vector2(10, 16)), glass)
+				ci.draw_rect(Rect2(r.position + Vector2(flip.call(8.0, 8.0), 3), Vector2(8, 16)), glass.darkened(0.15))
+				ci.draw_rect(Rect2(r.position + Vector2(flip.call(16.0, 10.0), 3), Vector2(10, 16)), color.lightened(0.15))
 		"van":
 			var r := Rect2(at - Vector2(28, 13), Vector2(56, 26))
 			ci.draw_rect(Rect2(r.position + Vector2(2, 3), r.size), Color(0, 0, 0, 0.25))

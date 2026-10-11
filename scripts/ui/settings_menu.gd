@@ -1,6 +1,5 @@
 extends CanvasLayer
-## The settings screen: music volume, sound volume, text speed, fullscreen and
-## reduce flashing.
+## The settings screen: music volume, sound volume, text speed and reduce flashing.
 ## Opened from the title screen or from the bag. Up/Down to pick a setting,
 ## Left/Right to change it, X (or ENTER on "Back") to close.
 ## Settings are saved to user://settings.cfg (separate from the save file).
@@ -8,7 +7,7 @@ extends CanvasLayer
 signal _closed
 
 const PANEL := Rect2(90, 50, 460, 380)
-const ROWS := ["Music", "Sound", "Text speed", "Fullscreen", "Reduce flashing", "Back"]
+const ROWS := ["Music", "Sound", "Text speed", "Reduce flashing", "Back"]
 const TEXT_SPEEDS := ["Slow", "Normal", "Fast"]
 const ROW_HEIGHT := 44
 
@@ -67,7 +66,7 @@ func _process(_delta: float) -> void:
 	elif Input.is_action_just_pressed("confirm"):
 		if ROWS[_cursor] == "Back":
 			_close()
-		elif ROWS[_cursor] in ["Fullscreen", "Reduce flashing"]:
+		elif ROWS[_cursor] == "Reduce flashing":
 			_change(1)
 	elif Input.is_action_just_pressed("cancel"):
 		_close()
@@ -84,8 +83,6 @@ func _change(step: int) -> void:
 			settings["sound"] = clampf(snappedf(settings["sound"] + step * 0.1, 0.1), 0.0, 1.0)
 		"Text speed":
 			settings["text_speed"] = clampi(int(settings["text_speed"]) + step, 0, TEXT_SPEEDS.size() - 1)
-		"Fullscreen":
-			settings["fullscreen"] = not settings["fullscreen"]
 		"Reduce flashing":
 			settings["reduce_flashing"] = not settings.get("reduce_flashing", false)
 		_:
@@ -124,8 +121,6 @@ func _draw_panel() -> void:
 				_volume_bar(Vector2(value_x, y - 14), amount, color)
 			"Text speed":
 				_arrows(value_x, y, TEXT_SPEEDS[int(settings["text_speed"])], color, selected)
-			"Fullscreen":
-				_arrows(value_x, y, "On" if settings["fullscreen"] else "Off", color, selected)
 			"Reduce flashing":
 				_arrows(value_x, y, "On" if settings.get("reduce_flashing", false) else "Off", color, selected)
 	_panel.draw_string(_font, Vector2(PANEL.position.x + 24, PANEL.end.y - 14), "Up/Down: choose   Left/Right: change   X: back", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.55, 0.55, 0.55))

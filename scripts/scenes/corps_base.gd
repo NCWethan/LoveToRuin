@@ -143,6 +143,11 @@ func _dress() -> void:
 	add_dressing(items)
 
 
+## (Underground.)
+func weather_ok() -> bool:
+	return false
+
+
 func build_map() -> void:
 	room.setup(184, 144, Room.VOID)
 	_build_hall()
