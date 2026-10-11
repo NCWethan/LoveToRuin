@@ -339,6 +339,10 @@ func _pull(lever: String) -> void:
 		Game.flags["jy_pulls"] = []
 		var what: String = {"Yellow": "The boom lurches the wrong way.", "Red": "The magnet hums at nothing.", "Black": "The crane swings, with nothing on it."}[lever]
 		await Game.dialogue.say(["* (%s CLANG.\n*  Everything shudders back to where it started.)" % what])
+		# (Stuck? After a couple of wrong pulls, a nudge.)
+		Game.flags["jy_wrong"] = int(Game.flags.get("jy_wrong", 0)) + 1
+		if Game.flags["jy_wrong"] == 2:
+			await Game.dialogue.say(["* (Sal must have done this a thousand times.\n*  The scratches on the dash are worn smooth.)"])
 		return
 	pulls = pulls.duplicate()
 	pulls.append(lever)

@@ -401,6 +401,10 @@ func _fog_exit(dir: String) -> void:
 	Game.play_sfx("miss")
 	await go_through_door(FOG_MOUTH_SOUTH + Vector2(0, 30))
 	await Game.dialogue.say(["* (You walk into the fog... and walk, and walk...)", "* (...and come out where the trail started.\n*  The fog's still sitting on the hill. Waiting.)"])
+	# (Stuck? After a couple of wrong turns, a nudge.)
+	Game.flags["tp_wrong"] = int(Game.flags.get("tp_wrong", 0)) + 1
+	if Game.flags["tp_wrong"] >= 2:
+		await Game.dialogue.say(["* (Whoever stacked those stones knew the way.\n*  The ones still standing are the ones to follow.)"])
 
 
 ## The fog, thick everywhere but close around you; the cairns at each fork.

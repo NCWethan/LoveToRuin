@@ -297,6 +297,10 @@ func _staff_door() -> void:
 		if pick != STAFF_CODE[k]:
 			Game.play_sfx("miss")
 			await Game.dialogue.say(["* (BEEP BEEP. A red light. The keypad resets.)"])
+			# (Stuck? After a couple of tries, a nudge.)
+			Game.flags["bp_wrong"] = int(Game.flags.get("bp_wrong", 0)) + 1
+			if Game.flags["bp_wrong"] >= 2:
+				await Game.dialogue.say(["* (Taped under the keypad, in pencil: \"FORGOT THE\n*  CODE AGAIN? READ THE PLANT LABELS. - the night docent\")"])
 			return
 	Game.play_sfx("door")
 	Game.flags["bp_staff_open"] = true

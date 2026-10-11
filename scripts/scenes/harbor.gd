@@ -574,6 +574,10 @@ func _locker() -> void:
 		else:
 			Game.play_sfx("miss")
 			await Game.dialogue.say(["* (A buzzer. The elevator's light stays red.\n*  CLEARANCE DENIED.)", "* (You haul the flags back down.)"])
+			# (Stuck? After a couple of tries, a nudge.)
+			Game.flags["hb_wrong"] = int(Game.flags.get("hb_wrong", 0)) + 1
+			if Game.flags["hb_wrong"] >= 2:
+				await Game.dialogue.say(["* (Someone's doodled on the locker door: the ship,\n*  with a big number on its side, circled. Then: G, O.)"])
 			Game.flags["hb_hoist"] = []
 			_decor.queue_redraw()
 		return
