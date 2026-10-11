@@ -200,7 +200,7 @@ func _draw_decor() -> void:
 	# The windsock, pointing out to sea.
 	Scenery.windsock(_decor, Vector2(19 * T + 10, 4 * T), _time)
 	# The gliderport's launch edge.
-	_decor.draw_string(_font, Vector2(17 * T, 2 * T + 6), "GLIDERPORT", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(255, 255, 240))
+	PixelFont.draw(_decor, "GLIDERPORT", Vector2(17 * T, 2 * T + 6) - Vector2(0, 7), 1.0, Color8(255, 255, 240), Color(0, 0, 0, 0.5))
 	for k in 6:
 		_decor.draw_rect(Rect2(15 * T + 4, (2 + k * 2) * T, 6, T), Color8(240, 200, 40, 160))
 	# The Glider's shadow on the water.
@@ -216,7 +216,7 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	var sign := Rect2(44 * T + 2, 3 * T + 4, 3 * T, 16)
 	ci.draw_rect(sign.grow(1), Color8(70, 46, 28))
 	ci.draw_rect(sign, Color8(120, 82, 50))
-	ci.draw_string(_font, sign.position + Vector2(10, 13), "LODGE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(240, 230, 210))
+	PixelFont.draw(ci, "LODGE", sign.position + Vector2(10, 13) - Vector2(0, 7), 1.0, Color8(240, 230, 210), Color(0, 0, 0, 0.5))
 	Scenery.plaque(ci, Vector2(18 * T + 10, 25 * T + 4))
 	# Doris, the four-hundred-year-old pine (a good deal bigger than the rest).
 	Scenery.torrey_pine(ci, DORIS + Vector2(0, 44), 1.6)
@@ -408,9 +408,12 @@ func _draw_fog() -> void:
 	if not r.has_point(player.position):
 		# Outside, the fog sits on the hedge line, until you've been through.
 		if not _fog_done():
-			for k in 14:
-				var x := 16 * T + k * 72 + sin(_time * 0.4 + k) * 20.0
-				_shade.draw_circle(Vector2(x, 15 * T + 4 + sin(_time * 0.6 + k * 2.0) * 6.0), 40.0, Color(0.92, 0.94, 0.96, 0.35))
+			for k in 21:
+				var x := 16 * T + k * 46 + sin(_time * 0.4 + k) * 14.0
+				# Soft puffs: a few circles, bigger and fainter outward.
+				var at := Vector2(x, 15 * T + 4 + sin(_time * 0.6 + k * 2.0) * 6.0)
+				for ring in 4:
+					_shade.draw_circle(at, 46.0 - ring * 10.0, Color(0.92, 0.94, 0.96, 0.09))
 		return
 	# The cairns: one standing at the right path's mouth, the rest knocked down.
 	var right: String = FOG_PATH[mini(_fog_stage(), FOG_PATH.size() - 1)]

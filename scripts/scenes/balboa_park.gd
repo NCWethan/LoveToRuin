@@ -317,10 +317,10 @@ func _draw_lath(ci: CanvasItem) -> void:
 	for k in 13:
 		var a := PI + k * PI / 12.0
 		ci.draw_line(c, c + Vector2.from_angle(a) * (front.size.x / 2.0), Color8(120, 86, 54), 1.0)
-	var sign := Rect2(front.get_center().x - 50, front.end.y - 34, 100, 13)
+	var sign := Rect2(front.get_center().x - 60, front.end.y - 34, 120, 13)
 	ci.draw_rect(sign.grow(1), Color8(70, 48, 30))
 	ci.draw_rect(sign, Color8(234, 222, 190))
-	ci.draw_string(_font, sign.position + Vector2(5, 10), "BOTANICAL BUILDING", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(60, 90, 50))
+	PixelFont.draw_centered(ci, "BOTANICAL BUILDING", sign.get_center() + Vector2(0, 0.5), 1.0, Color8(60, 90, 50), Color(0, 0, 0, 0.5))
 	# Inside: shafts of light through the slats.
 	var inside := _px(LATH)
 	var y := inside.position.y + 2 * T
@@ -343,7 +343,7 @@ func _draw_decor() -> void:
 	var sign := Rect2(24 * T - 4, 2 * T + 4, 6 * T + 26, 14)
 	_decor.draw_rect(sign, Color8(206, 186, 140))
 	_decor.draw_rect(sign.grow(-1), Color8(232, 216, 176))
-	_decor.draw_string(_font, Vector2(24 * T + 2, 3 * T - 3), "MUSEUM OF ART & ARMOR", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(110, 80, 50))
+	PixelFont.draw(_decor, "MUSEUM OF ART & ARMOR", Vector2(24 * T + 2, 3 * T - 3) - Vector2(0, 7), 1.0, Color8(110, 80, 50), Color(0, 0, 0, 0.5))
 	# The fountain, and its spray arcing up out of the inner bowl.
 	Scenery.fountain(_decor, Vector2(32 * T, 18 * T + 10), 40.0)
 	var jet := Vector2(32 * T, 18 * T + 8)

@@ -276,7 +276,7 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	var banner := Rect2(35 * T, 7 * T - 2, 8 * T + 6, 16)
 	ci.draw_rect(banner.grow(1), Color8(240, 230, 200))
 	ci.draw_rect(banner, Color8(30, 50, 90))
-	ci.draw_string(f, banner.position + Vector2(6, 12), "MUSEUM - OPEN DAILY", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 230, 200))
+	PixelFont.draw(ci, "MUSEUM - OPEN DAILY", banner.position + Vector2(6, 12) - Vector2(0, 7), 1.0, Color8(240, 230, 200), Color(0, 0, 0, 0.5))
 	# On the promenade: the fish stand and the seal statue.
 	Scenery.fish_stand(ci, Rect2(44 * T, 25 * T - 14, 3 * T, 34))
 	Scenery.seal_statue(ci, Vector2(6 * T + 10, 25 * T + 8))
@@ -298,7 +298,7 @@ func _draw_hangar(ci: CanvasItem) -> void:
 		ci.draw_line(Vector2(x * T, 34 * T + 4), Vector2(x * T + 3 * T, 34 * T + 4), Color8(200, 40, 40), 2.0)
 	var lift := Rect2(33 * T, 34 * T, 5 * T, 4 * T)
 	Scenery.hazard_platform(ci, lift)
-	ci.draw_string(ThemeDB.fallback_font, lift.position + Vector2(10, lift.size.y - 12), "TO FLIGHT DECK", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
+	PixelFont.draw(ci, "TO FLIGHT DECK", lift.position + Vector2(10, lift.size.y - 12) - Vector2(0, 7), 1.0, Color8(240, 200, 40), Color(0, 0, 0, 0.5))
 
 
 func _draw_deck(ci: CanvasItem) -> void:
@@ -326,7 +326,7 @@ func _draw_deck(ci: CanvasItem) -> void:
 	Scenery.island_tower(ci, _px(Rect2i(44, 57, 6, 6)), _night)
 	# The elevator up here, and the arresting wires across the deck.
 	Scenery.hazard_platform(ci, Rect2(8 * T, 65 * T, 3 * T, 3 * T))
-	ci.draw_string(ThemeDB.fallback_font, Vector2(8 * T + 14, 68 * T - 10), "DOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
+	PixelFont.draw(ci, "DOWN", Vector2(8 * T + 14, 68 * T - 10) - Vector2(0, 7), 1.0, Color8(240, 200, 40), Color(0, 0, 0, 0.5))
 	for k in 4:
 		var x := 14 * T + k * 40
 		ci.draw_line(Vector2(x, 57 * T), Vector2(x, 75 * T), Color8(50, 50, 52), 2.0)

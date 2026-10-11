@@ -203,8 +203,8 @@ func _draw_decor() -> void:
 			var age := fmod(_time * 2.0 + k * 0.33, 1.0)
 			_decor.draw_circle(Vector2(van.position.x - 6 - age * 20, van.end.y - 6 - age * 16), 4.0 + age * 6.0, Color(0.4, 0.4, 0.42, 0.6 * (1.0 - age)))
 	# The shack sign, the gate, the bus stop.
-	_decor.draw_string(_font, Vector2(3 * T + 6, 3 * T), "OFFICE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 230, 210))
-	_decor.draw_string(_font, Vector2(46 * T, 35 * T - 4), "GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(240, 200, 60))
+	PixelFont.draw(_decor, "OFFICE", Vector2(3 * T + 6, 3 * T) - Vector2(0, 7), 1.0, Color8(240, 230, 210), Color(0, 0, 0, 0.5))
+	PixelFont.draw(_decor, "GATE", Vector2(46 * T, 35 * T - 4) - Vector2(0, 7), 1.0, Color8(240, 200, 60), Color(0, 0, 0, 0.5))
 	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
 	# The freeway, roaring past beyond the back fence.
 	for k in 6:

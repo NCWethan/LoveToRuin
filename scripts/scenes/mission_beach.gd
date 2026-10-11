@@ -431,7 +431,6 @@ func _prize_counter() -> void:
 
 
 func _draw_arcade(ci: CanvasItem) -> void:
-	var f := ThemeDB.fallback_font
 	# Memory Mania: a cabinet with four big colored lights.
 	var mem := Rect2(5 * T, 34 * T, 2 * T, 2 * T)
 	ci.draw_rect(Rect2(mem.position + Vector2(3, 4), mem.size), Color(0, 0, 0, 0.3))
@@ -441,7 +440,7 @@ func _draw_arcade(ci: CanvasItem) -> void:
 	for k in 4:
 		ci.draw_circle(mem.position + Vector2(10 + (k % 2) * 20, 12 + (k / 2) * 14), 6.0, lights[k].darkened(0.3))
 		ci.draw_circle(mem.position + Vector2(10 + (k % 2) * 20, 12 + (k / 2) * 14), 4.0, lights[k])
-	ci.draw_string(f, mem.position + Vector2(1, -2), "MEMORY", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(240, 200, 255))
+	PixelFont.draw(ci, "MEMORY", mem.position + Vector2(1, -2) - Vector2(0, 7), 1.0, Color8(240, 200, 255), Color(0, 0, 0, 0.5))
 	# Skee-Ball: two long ramps and the target rings at the top.
 	var skee := Rect2(10 * T, 34 * T, 2 * T, 4 * T)
 	ci.draw_rect(Rect2(skee.position + Vector2(3, 4), skee.size), Color(0, 0, 0, 0.3))
@@ -449,7 +448,7 @@ func _draw_arcade(ci: CanvasItem) -> void:
 	ci.draw_rect(Rect2(skee.position + Vector2(4, 30), Vector2(skee.size.x - 8, skee.size.y - 34)), Color8(150, 104, 62))
 	for k in 3:
 		ci.draw_arc(skee.position + Vector2(skee.size.x / 2, 14), 4.0 + k * 4, 0, TAU, 16, [Color8(240, 200, 60), Color8(230, 80, 60), Color8(60, 140, 220)][k], 2.0)
-	ci.draw_string(f, skee.position + Vector2(2, -2), "SKEE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(255, 220, 120))
+	PixelFont.draw(ci, "SKEE", skee.position + Vector2(2, -2) - Vector2(0, 7), 1.0, Color8(255, 220, 120), Color(0, 0, 0, 0.5))
 	ci.draw_rect(Rect2(13 * T + 2, 35 * T + 4, 10, 8), Color8(240, 230, 120))
 	# The Great Zaldo, in his glass booth.
 	var booth := Rect2(17 * T, 33 * T + 6, 2 * T, 2 * T + 14)
@@ -462,7 +461,7 @@ func _draw_arcade(ci: CanvasItem) -> void:
 	ci.draw_rect(Rect2(booth.position + Vector2(booth.size.x / 2 - 3, 16), Vector2(2, 1)), Color8(60, 220, 120))
 	ci.draw_rect(Rect2(booth.position + Vector2(booth.size.x / 2 + 1, 16), Vector2(2, 1)), Color8(60, 220, 120))
 	ci.draw_line(booth.position + Vector2(6, 26), booth.position + Vector2(booth.size.x - 8, 6), Color(1, 1, 1, 0.25), 2.0)
-	ci.draw_string(f, booth.position + Vector2(2, booth.size.y - 4), "ZALDO", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(250, 220, 100))
+	PixelFont.draw(ci, "ZALDO", booth.position + Vector2(2, booth.size.y - 4) - Vector2(0, 7), 1.0, Color8(250, 220, 100), Color(0, 0, 0, 0.5))
 	# The prize counter: a glass case of prizes, the key's hook on the wall behind.
 	var counter := Rect2(19 * T, 42 * T + 6, 5 * T, T + 14)
 	ci.draw_rect(Rect2(counter.position + Vector2(3, 4), counter.size), Color(0, 0, 0, 0.3))
@@ -471,7 +470,7 @@ func _draw_arcade(ci: CanvasItem) -> void:
 	var prizes := [Color8(240, 90, 120), Color8(90, 200, 120), Color8(250, 220, 80), Color8(120, 120, 240), Color8(30, 30, 30)]
 	for k in 9:
 		ci.draw_circle(counter.position + Vector2(8 + k * 10, 11), 3.0, prizes[k % prizes.size()])
-	ci.draw_string(f, counter.position + Vector2(10, -16), "TOP PRIZE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(255, 220, 120))
+	PixelFont.draw(ci, "TOP PRIZE", counter.position + Vector2(10, -16) - Vector2(0, 7), 1.0, Color8(255, 220, 120), Color(0, 0, 0, 0.5))
 	if not flag("mb_key"):
 		ci.draw_rect(Rect2(counter.position + Vector2(24, -12), Vector2(12, 4)), Color8(220, 180, 70))
 		ci.draw_circle(counter.position + Vector2(22, -10), 4.0, Color8(220, 180, 70))

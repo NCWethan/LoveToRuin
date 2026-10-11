@@ -268,7 +268,6 @@ func _add_muffin_burger() -> void:
 func _add_signs() -> void:
 	var signs := Node2D.new()
 	add_child(signs)
-	var font := ThemeDB.fallback_font
 	# The signs: 8-bit marquees (Scenery.marquee). [rect, text, board, ink, trim, icon, bulbs]
 	var closed := _stores_closed()
 	var labels := [
@@ -291,11 +290,10 @@ func _add_signs() -> void:
 		# Once the sun goes down, CLOSED signs hang on Vons and Knotty Barrel.
 		if closed:
 			for door_x in CLOSING_DOORS:
-				var plaque := Rect2(door_x - 16, 108, 32, 11)
+				var plaque := Rect2(door_x - 21, 107, 42, 12)
 				signs.draw_rect(plaque, Color8(200, 30, 35))
 				signs.draw_rect(plaque, Color8(250, 240, 230), false, 1.0)
-				var w := font.get_string_size("CLOSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
-				signs.draw_string(font, Vector2(door_x - w / 2, 117), "CLOSED", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color.WHITE)
+				PixelFont.draw_centered(signs, "CLOSED", plaque.get_center() + Vector2(0, 0.5), 1.0, Color.WHITE, Color(0, 0, 0, 0.5))
 	)
 	_add_streetlights()
 

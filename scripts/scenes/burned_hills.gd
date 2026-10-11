@@ -316,13 +316,13 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	for i in spots.size():
 		Scenery.sapling(ci, spots[i] * T + Vector2(0, 8), 70 + i)
 	Scenery.lookout(ci, Rect2(28 * T, 3 * T, 5 * T, 8))
-	ci.draw_string(_font, Vector2(28 * T, 2 * T + 14), "LOOKOUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(230, 220, 200))
+	PixelFont.draw(ci, "LOOKOUT", Vector2(28 * T, 2 * T + 14) - Vector2(0, 7), 1.0, Color8(230, 220, 200), Color(0, 0, 0, 0.5))
 	var sign := Rect2(36 * T, 35 * T, 2 * T, 16)
 	ci.draw_rect(Rect2(sign.position + Vector2(6, 14), Vector2(3, 8)), Color8(90, 64, 40))
 	ci.draw_rect(Rect2(sign.position + Vector2(30, 14), Vector2(3, 8)), Color8(90, 64, 40))
 	ci.draw_rect(sign.grow(1), Color8(70, 50, 30))
 	ci.draw_rect(sign, Color8(120, 86, 54))
-	ci.draw_string(_font, sign.position + Vector2(4, 12), "FIRE RD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 230, 210))
+	PixelFont.draw(ci, "FIRE RD", sign.position + Vector2(4, 12) - Vector2(0, 7), 1.0, Color8(240, 230, 210), Color(0, 0, 0, 0.5))
 	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
 	# Engine 33's hose line, snaking up the fire road beside the switchbacks.
 	var hose := PackedVector2Array([Vector2(24 * T, 36 * T), Vector2(33 * T, 34 * T), Vector2(33 * T + 10, 31 * T + 14), Vector2(7 * T + 16, 31 * T + 14),
