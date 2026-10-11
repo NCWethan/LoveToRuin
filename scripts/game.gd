@@ -146,7 +146,7 @@ const SETTINGS_PATH := "user://settings.cfg"
 const TEST_SETTINGS_PATH := "user://test_settings.cfg"
 var settings_path: String = SETTINGS_PATH
 ## music / sound: 0 to 1.  text_speed: 0 slow, 1 normal, 2 fast.
-var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "reduce_flashing": false}
+var settings: Dictionary = {"music": 0.8, "sound": 0.8, "text_speed": 1, "weather": true, "reduce_flashing": false}
 
 
 ## "Reduce flashing" (in Settings): fewer, gentler flashes and no strobing, for
@@ -614,7 +614,8 @@ func update_weather() -> void:
 	if WEATHER_CHANCES.has(forced):
 		weather = forced
 		return
-	if not flags.get("tutorial_done", false):
+	# (Weather can be turned off in Settings: always clear skies.)
+	if not flags.get("tutorial_done", false) or not settings.get("weather", true):
 		weather = "clear"
 		return
 	var now := Time.get_ticks_msec()
