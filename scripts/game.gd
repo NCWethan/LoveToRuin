@@ -367,6 +367,10 @@ func partner() -> String:
 	# (After the vote at the Harbor, Hop is gone.)
 	if id == "Hop" and hop_left():
 		return "BigJoe6"
+	# Going their own way, Hop stays with the Corps (on probation): Elric travels
+	# alone, unless they pick one of the Corps at the base. "" is nobody.
+	if id == "Hop" and flags.get("route", "") == "neutral":
+		return ""
 	return id
 
 
@@ -380,6 +384,16 @@ func corps_dead() -> int:
 
 
 ## ...as Relic counts them ("Nine.").
+## A number in words, capitalized: 0 "None", 3 "Three", 12 "Twelve".
+static func number_word(n: int) -> String:
+	return ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"][clampi(n, 0, 12)]
+
+
+## How many fragments Elric has found so far (3 to 12).
+func fragments_found() -> int:
+	return int(flags.get("fragments", 3))
+
+
 func corps_dead_count() -> String:
 	var n := corps_dead()
 	var words := ["None.", "One.", "Two.", "Three.", "Four.", "Five.", "Six.", "Seven.", "Eight.", "Nine.", "Ten.", "Eleven.", "Twelve."]
@@ -406,12 +420,12 @@ func daytime() -> bool:
 ## Going their own way, Elric travels alone (Hop stayed with the Corps) until they
 ## go down to the Corps' base.
 func walking_alone() -> bool:
-	return flags.get("route", "") == "neutral" and not flags.get("base_arrived", false)
+	return flags.get("route", "") == "neutral" and partner() == ""
 
 
 ## Everyone who could come along right now.
 func team_choices() -> Array:
-	var choices: Array = [] if hop_left() else ["Hop"]
+	var choices: Array = [] if hop_left() or flags.get("route", "") == "neutral" else ["Hop"]
 	if flags.get("base_arrived", false):
 		choices.append_array(load("res://scripts/helpers.gd").CORPS)
 	return choices
@@ -437,6 +451,11 @@ func _build_partner() -> void:
 		update_stats()
 		return
 	var id := partner()
+	if id == "":
+		if party.size() > 1:
+			party.resize(1)
+		update_stats()
+		return
 	if party.size() > 1 and party[1].id == id:
 		return
 	var colors := {"Hop": Color(0.75, 0.75, 0.75)}

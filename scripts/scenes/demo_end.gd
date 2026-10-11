@@ -1,19 +1,16 @@
 extends Node2D
-## Shown when Elric leaves Mt. Carmel: the end of what's built so far.
+## The Chapter 1 card (CHAPTER 1 COMPLETE, the route's closing line, the first
+## three fragments), shown leaving Westview Field the night it ends. CONTINUE goes
+## on into Chapter 2. (Going with Hop never comes here: that night ends at his house.)
 
 var _font: Font
 var _time: float = 0.0
-## Genocide only: after CONTINUE, a page saying the Corps' base is closed to you.
-var _sealed: bool = false
 
 const CORPS_BASE_SCENE := "res://scenes/corps_base.tscn"
 
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color.BLACK)
-	# Going with Hop: straight to the bolted hatch (no chapter screen).
-	if Game.flags.get("chapter1_done", false) and Game.flags.get("route", "") == "genocide":
-		_sealed = true
 	_font = ThemeDB.fallback_font
 	Game.play_music("title")
 
@@ -26,15 +23,13 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
-## After Chapter 1: CONTINUE goes down into the Corps' base (Chapter 2), unless
-## Elric went with Hop. Then the way is closed.
+## After Chapter 1: CONTINUE goes on into Chapter 2: down into the Corps' base,
+## or (going with Hop) to his house.
 func _continue() -> void:
-	if not Game.flags.get("chapter1_done", false) or _sealed:
+	if not Game.flags.get("chapter1_done", false):
 		Game.change_scene(Game.TITLE_SCENE)
-	elif Game.flags.get("route", "") == "genocide":
-		_sealed = true
-		_time = 0.0
-		Game.play_sfx("door")
+	elif Game.flags.get("route", "") in ["with_hop", "genocide"]:
+		Game.change_scene("res://scenes/hop_house.tscn", Vector2(40, 290))
 	else:
 		Game.play_music("", 1.0)
 		Game.change_scene(CORPS_BASE_SCENE)
@@ -50,9 +45,6 @@ const ROUTE_ENDINGS := {
 
 func _draw() -> void:
 	var alpha := clampf(_time / 1.0, 0.0, 1.0)
-	if _sealed:
-		_draw_sealed(alpha)
-		return
 	if Game.flags.get("chapter1_done", false):
 		_draw_chapter_complete(alpha)
 		return
@@ -93,18 +85,6 @@ func _draw_chapter_complete(alpha: float) -> void:
 	if _time > 2.5:
 		_centered("Thank you for playing!", 410, 16, Color(1, 1, 0.6))
 		_centered("CONTINUE  (press ENTER)", 440, 14, Color(1, 1, 1, 0.55 + 0.45 * sin(_time * 3.0)))
-
-
-## Genocide: leaving Hop's house the morning after. (What comes next isn't built yet.)
-func _draw_sealed(alpha: float) -> void:
-	_centered("Hop locks the door behind you.", 190, 18, Color(0.8, 0.8, 0.8, alpha))
-	_centered("The city is waiting.", 230, 18, Color(0.8, 0.8, 0.8, alpha))
-	_centered("So is someone else.", 270, 18, Color(1.0, 0.25, 0.3, alpha))
-	# Relic (green), saying "we" for the first time.
-	_centered("...And so are we.", 310, 18, Color(0.45, 0.95, 0.55, clampf((_time - 1.5) / 1.0, 0.0, 1.0)))
-	if _time > 2.5:
-		_centered("What comes next is still being written.", 370, 14, Color(0.6, 0.6, 0.6))
-		_centered("(press ENTER to return to the title)", 440, 12, Color(0.5, 0.5, 0.5))
 
 
 ## Behind the text: a great ring split into twelve pieces, one for each FRAGMENT,

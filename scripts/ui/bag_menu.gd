@@ -571,7 +571,7 @@ func _draw_team_cards() -> void:
 		var at := Vector2(56, 360)
 		var here := _step == Step.TEAM and _team_slot == Game.SLOTS.size()
 		_box(Rect2(30, 340, 580, 34))
-		_text("Change partner  (now: %s)" % DialogueBox.display_name(Game.partner()), at + Vector2(0, 4), Color.YELLOW if here else Color.WHITE)
+		_text("Change partner  (now: %s)" % (DialogueBox.display_name(Game.partner()) if Game.partner() != "" else "nobody"), at + Vector2(0, 4), Color.YELLOW if here else Color.WHITE)
 		if here:
 			_heart(at + Vector2(-16, -2))
 

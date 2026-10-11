@@ -192,6 +192,8 @@ func _show(line) -> void:
 		_mood = line.get("mood", "")
 		if _who == "Eggo":
 			_text = eggo_voice(_text)
+		if _show_face and OS.get_environment("LTR_SPEAKER_AUDIT") == "1":
+			_audit_speaker()
 		if nervous and not _who in ["", "Elric", "Hop", "Hopkuna"]:
 			_mood = "shocked"
 			if _text.length() > 1 and _text[0] == _text[0].to_upper() and _text[0] != _text[0].to_lower():
@@ -317,6 +319,25 @@ func _draw_box() -> void:
 			_panel.draw_string(_font, at, str(_choices[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
 			if i == _choice:
 				_draw_heart(at + Vector2(-18, -6))
+
+
+## (For testing, with LTR_SPEAKER_AUDIT=1: prints a warning whenever someone speaks
+## on screen who isn't actually in the area or the party. Off-screen voices use
+## "face": false, and aren't checked.)
+func _audit_speaker() -> void:
+	var scene := get_tree().current_scene
+	if _who in ["", "Elric", "Relic", "Hopkuna"] or scene == null or scene.get("world") == null:
+		return
+	var here: Array[String] = []
+	for member in Game.party:
+		here.append(str(member.id).to_lower())
+	for node in (scene.get("world") as Node).get_children():
+		if node.has_meta("who"):
+			here.append(str(node.get_meta("who")).to_lower())
+		elif node.get("front") is Texture2D:
+			here.append((node.get("front") as Texture2D).resource_path.get_file().get_basename().to_lower())
+	if not _who.to_lower() in here:
+		print("SPEAKER? %s speaks in %s, but isn't here: \"%s\"" % [_who, scene.name, _text.substr(0, 60).replace("\n", " ")])
 
 
 ## Where stacked choices go: under the question, as many rows as fit in the box,

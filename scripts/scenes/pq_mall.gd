@@ -412,6 +412,9 @@ func _place_people() -> void:
 		# (Whoever's coming along with Elric is with Elric, not standing around here.)
 		if flag("chapter1_done") and who == Game.partner() and not Game.walking_alone():
 			continue
+		# (With Hop: whoever Elric has killed isn't hanging around the mall anymore.)
+		if flag("beat_corps_" + who.to_lower().trim_suffix("6")):
+			continue
 		var talk: Callable = day_talks[who] if time == "day" else _talk_later.bind(who)
 		# After the choice on Westview Field, everyone has something new to say.
 		if flag("chapter1_done") and AFTER_TALK.has(who):

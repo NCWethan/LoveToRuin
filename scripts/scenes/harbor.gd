@@ -573,6 +573,17 @@ func _after_memory() -> void:
 			await Game.dialogue.say([
 				"* (Down on the pier, the Corps is packing up.\n*  Agent is on the phone. He looks at you, and away.)",
 			])
+			# The offer's closed: whoever came along from the Corps goes with them.
+			if not Game.walking_alone():
+				var who := DialogueBox.display_name(Game.partner())
+				await Game.dialogue.say(["* (%s goes with them. At the end of the pier,\n*  they look back once.)" % who])
+				Game.flags["partner"] = "Hop"
+				Game._build_partner()
+				if partner and is_instance_valid(partner):
+					partner.follow = null
+					await partner.walk_to(partner.position + Vector2(0, 160), 110.0)
+					partner.queue_free()
+					partner = null
 			Game.set_objective("8 of 12. Next: Torrey Pines. (Take the bus.)")
 		_:
 			Game.set_objective("...")
@@ -806,7 +817,7 @@ func _after_agent() -> void:
 		"* (A dart is stuck in the deck, right where\n*  you were about to step. Dead center.)",
 		"* (You keep it.)",
 		"* (Hop is standing at the edge of the deck,\n*  looking at the water. He doesn't turn around.)",
-		{"who": "Relic", "tag": "", "face": false, "text": "* Six."},
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
 	])
 	_engaged = false
 	Game.set_objective("...")

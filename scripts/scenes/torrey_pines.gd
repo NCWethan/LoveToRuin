@@ -552,7 +552,7 @@ func _after_rooster() -> void:
 		"* (His top hat rolls in a little circle on the\n*  grass, and stops at the edge of the cliff.)",
 		"* (You keep it.)",
 		"* (Hop doesn't say anything. He hasn't said anything\n*  since the Harbor.)",
-		{"who": "Relic", "tag": "", "face": false, "text": "* Seven."},
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
 	])
 	_engaged = false
 	Game.set_objective("...")

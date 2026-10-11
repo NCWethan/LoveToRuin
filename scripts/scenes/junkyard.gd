@@ -382,7 +382,7 @@ func _nassan_admits() -> void:
 		{"who": "Nassan", "text": "Fragment eleven is at Hop's house.\nAnd if Hopkuna knows that, he's going there next.", "mood": ""},
 		{"who": "Sansworth", "text": "EVERYBODY IN THE VAN.", "mood": "happy"},
 	])
-	Game.set_objective("Hop's house. (Fragment eleven. To be continued.)")
+	Game.set_objective("Hop's house. (Fragment eleven. Bus: Hop's Street.)")
 
 
 ## Own way: Elric watches from behind the junk as the Corps finds the van.

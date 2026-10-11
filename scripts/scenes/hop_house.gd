@@ -578,7 +578,7 @@ func _hopkuna_takes_it() -> void:
 		if Game.flags.get("route", "") == "pacifist":
 			await Game.dialogue.say([
 				"* (Outside: a horn. HONK HONK. A tan van, in the street,\n*  full of people.)",
-				{"who": "Sansworth", "text": "EVERYBODY IN THE VAN!", "mood": "happy"},
+				{"who": "Sansworth", "face": false, "text": "EVERYBODY IN THE VAN!", "mood": "happy"},
 			])
 		else:
 			await Game.dialogue.say([

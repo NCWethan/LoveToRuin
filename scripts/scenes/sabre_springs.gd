@@ -339,10 +339,23 @@ func _the_choice() -> void:
 		{"who": "Relic", "tag": "", "face": false, "text": "* It's me. Relic. I made you."},
 		{"who": "Relic", "tag": "", "face": false, "text": "* I'm sorry I made you lonely.\n* I didn't know how to make anything else."},
 		"* (You learn what you are alone, in the park\n*  where you were born. Nobody's next to you.)",
+	])
+	# The Corps steps out of the trees, all around the edge of the park.
+	for i in CORPS.size():
+		var from_left := i % 2 == 0
+		var start := Vector2((4 if from_left else 46) * T, (6 + i * 2) * T)
+		var angle := PI * 0.1 + i * PI * 0.8 / (CORPS.size() - 1)
+		var member := add_character(Cast.make(CORPS[i]), start)
+		_circle.append(member)
+		member.walk_to(CENTER + Vector2.from_angle(angle) * Vector2(190, 130), 120.0)
+	await get_tree().create_timer(2.4).timeout
+	for member in _circle:
+		member.face(player.position - member.position)
+	await Game.dialogue.say([
 		"* (Out of the trees: the Corps. All of them.\n*  They've seen you now.)",
 		{"who": "Hopkuna", "text": "The rest of them, little keepsake. The ones in your\npockets. Give them to me, and I'll be whole.", "mood": ""},
 		{"who": "Nassan", "text": "Elric. Please. Give them to us.\nWe'll do what Relic did. We'll hold him.", "mood": "sad"},
-		{"who": "Hop", "text": "(from somewhere inside) ...Elric. Whatever you do.\nIt's okay. It was always okay.", "mood": "sad"},
+		{"who": "Hop", "face": false, "text": "(from somewhere inside) ...Elric. Whatever you do.\nIt's okay. It was always okay.", "mood": "sad"},
 	])
 	var choice := await Game.dialogue.ask("* (Everyone's looking at you. The fragments\n*  in your pockets are burning.)", ["Walk away.", "Give them to the Corps.", "Give them to Hopkuna."])
 	Game.flags["ss_done"] = true

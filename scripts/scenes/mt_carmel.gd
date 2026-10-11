@@ -184,15 +184,24 @@ func build_map() -> void:
 # --- People and things ----------------------------------------------------
 
 func _place_characters() -> void:
-	# Hop: by the doors until you meet him, then following Elric.
-	hop = Cast.make("Hop")
-	if _flag("met_hop"):
-		hop.position = player.position + Vector2(-22, -4)
-		hop.follow = player
+	# Hop: by the doors until you meet him, then following Elric. After Chapter 1,
+	# whoever's coming along instead (nobody, going their own way alone; never Hop
+	# once he's left, or once Hopkuna has him).
+	if _flag("chapter1_done"):
+		if not Game.walking_alone():
+			hop = Cast.make(Game.partner())
+			hop.position = player.position + Vector2(-22, -4)
+			hop.follow = player
+			world.add_child(hop)
 	else:
-		hop.position = HOP_SPOT
-		hop.on_interact = _talk_to_hop
-	world.add_child(hop)
+		hop = Cast.make("Hop")
+		if _flag("met_hop"):
+			hop.position = player.position + Vector2(-22, -4)
+			hop.follow = player
+		else:
+			hop.position = HOP_SPOT
+			hop.on_interact = _talk_to_hop
+		world.add_child(hop)
 
 	# The fragment, until Elric picks it up.
 	if not _flag("has_fragment_1"):

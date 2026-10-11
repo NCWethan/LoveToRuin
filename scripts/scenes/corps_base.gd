@@ -298,9 +298,10 @@ func _place_people() -> void:
 	# from the hall in the arrival scene.)
 	if _guest_arrival():
 		return
-	partner = Cast.make(Game.partner())
-	add_character(partner, player.position + Vector2(-20, 0))
-	partner.follow = player
+	if not Game.walking_alone():
+		partner = Cast.make(Game.partner())
+		add_character(partner, player.position + Vector2(-20, 0))
+		partner.follow = player
 	if Game.partner() != "Hop" and not Game.hop_left():
 		hop = Cast.make("Hop")
 		hop.on_interact = func() -> void:
@@ -308,7 +309,7 @@ func _place_people() -> void:
 			await chat("base_hop", [
 				{"who": "Hop", "text": "Taking someone else out, huh? It's cool.\nI'll guard the couch.", "mood": "smug"},
 				{"who": "Hop", "text": "...Come get me if things get weird, okay?", "mood": "sad"},
-			], [[{"who": "Hop", "text": "Couch status: guarded.", "mood": "happy"}], [{"who": "Hop", "text": "Nine fragments to go. We'll get there.", "mood": "happy"}]])
+			], [[{"who": "Hop", "text": "Couch status: guarded.", "mood": "happy"}], [{"who": "Hop", "text": _counts("{left} fragments to go. We'll get there."), "mood": "happy"}]])
 		add_character(hop, Vector2(6 * T, 17 * T))
 
 
@@ -367,14 +368,19 @@ func _start() -> void:
 				{"who": "BigJoe6", "text": "...Fine. But you're on dish duty.", "mood": "angry"},
 				"* (Running footsteps in the hall.)",
 			])
-			# Hop comes running in from the hall, and from now on he's with Elric.
-			partner = add_character(Cast.make("Hop"), HALL_DOOR_INSIDE)
-			await partner.walk_to(player.position + Vector2(-22, 0), 150.0)
-			partner.face(player.position - partner.position)
+			# Hop comes running in from the hall. (He stays down here: going their own
+			# way, Elric travels alone, or with one of the Corps.)
+			var greeter := add_character(Cast.make("Hop"), HALL_DOOR_INSIDE)
+			await greeter.walk_to(player.position + Vector2(-22, 0), 150.0)
+			greeter.face(player.position - greeter.position)
 			await Game.dialogue.say([
 				{"who": "Hop", "text": "ELRIC! You came back!", "mood": "happy"},
+				{"who": "Hop", "text": "...I can't come with you, though. Agent's got me\non probation. I stay where they can see me.", "mood": "sad"},
+				{"who": "Hop", "text": "But you can visit! Visit a lot!", "mood": "happy"},
 				{"who": "Nassan", "text": "There's a spare bunk by the wall.\nEveryone's room is down the hall.\nTheir names are on the doors."},
+				{"who": "Nassan", "text": "If you want company out there, any of us will go.\nPick someone. (TEAM, in your bag.)"},
 			])
+			greeter.walk_to(Vector2(6 * T, 17 * T), 110.0)
 		else:
 			await Game.dialogue.say([
 				"* (Under the shelter at Westview Field, a hatch.)",
@@ -457,8 +463,8 @@ const ROOM_TALK := {
 		"oh hey. you came back. egg-cellent.",
 	],
 	"Nassan": [
-		[["", "Ah, Elric. Come in."], ["", "This wall is everything we know about the fragments.\nEvery report. Every sighting."], ["", "Twelve fragments. Three in our hands now.\nThe red string goes... well. Everywhere."], ["", "Rest while you can.\nPlanning is my job. Surviving is yours."]],
-		[[["", "Nine left. I'm already working on where to look next."]], [["", "When it's time, you'll be the first to know."]], [["smug", "Gloria gave me Sundays off. For planning."], ["", "She thinks it's a book club.\nI didn't correct her."]]],
+		[["", "Ah, Elric. Come in."], ["", "This wall is everything we know about the fragments.\nEvery report. Every sighting."], ["", "Twelve fragments. {found} in our hands now.\nThe red string goes... well. Everywhere."], ["", "Rest while you can.\nPlanning is my job. Surviving is yours."]],
+		[[["", "{left} left. I'm already working on where to look next."]], [["", "When it's time, you'll be the first to know."]], [["smug", "Gloria gave me Sundays off. For planning."], ["", "She thinks it's a book club.\nI didn't correct her."]]],
 		"I hoped you'd come back. I planned for it, actually.",
 	],
 	"Nat": [
@@ -510,7 +516,7 @@ const ROOM_TALK := {
 
 
 func _talk(id: String) -> void:
-	var talk: Array = ROOM_TALK[id]
+	var talk: Array = _with_counts(ROOM_TALK[id])
 	var first: Array = []
 	if Game.flags.get("route", "") == "neutral":
 		first.append({"who": id, "text": talk[2]})
@@ -562,7 +568,7 @@ func _map_table() -> void:
 		return
 	await Game.dialogue.say([
 		"* (A big map of the city, covered in notes.)",
-		"* (Twelve red circles. Three are crossed out.)",
+		_counts("* (Twelve red circles. {found} are crossed out.)"),
 		"* (Someone has drawn a tiny crown next to Rooster's\n*  neighborhood. In Rooster's handwriting.)",
 	] + (NEXT_FRAGMENT if not flag("mb_fragment") else []))
 	_point_to_the_beach()
@@ -696,6 +702,25 @@ func _dream() -> void:
 	_point_to_the_beach()
 
 
+## The base is visited all game long, so lines that count fragments say the real
+## count: {found} (how many Elric has found) and {left} (how many are still out
+## there), in words.
+func _counts(text: String) -> String:
+	var found := Game.fragments_found()
+	# (After the cliffs, Hopkuna has every one of them.)
+	if flag("tp_stolen"):
+		text = text.replace("{found} in our hands now.", "None in our hands now.\nHopkuna has them. All of them.")
+	return text.replace("{found}", Game.number_word(found)).replace("{left}", Game.number_word(12 - found))
+
+
+func _with_counts(value):
+	if value is String:
+		return _counts(value)
+	if value is Array:
+		return value.map(func(v): return _with_counts(v))
+	return value
+
+
 ## Rooster's mirror. The first time, the reflection isn't quite Elric for a second
 ## (Relic, riding along). With dread, it looks away before Elric does.
 func _rooster_mirror() -> void:
@@ -734,9 +759,10 @@ func _hunt() -> bool:
 
 
 func _place_hunt() -> void:
-	partner = Cast.make(Game.partner())
-	add_character(partner, player.position + Vector2(-20, 0))
-	partner.follow = player
+	if not Game.walking_alone():
+		partner = Cast.make(Game.partner())
+		add_character(partner, player.position + Vector2(-20, 0))
+		partner.follow = player
 	if not flag("beat_corps_eggo") and str(Game.battle_result.get("id", "")) != "corps_eggo":
 		_eggo = add_character(Cast.make("Eggo"), EGGO_COUCH)
 		_eggo.face(Vector2.DOWN)

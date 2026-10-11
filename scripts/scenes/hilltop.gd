@@ -556,11 +556,10 @@ func _place_people() -> void:
 	if _day():
 		# Whoever's coming along follows Elric. (The Corps is down in the base.)
 		# Going their own way, Elric is alone until they go down there.
-		hop = Cast.make(Game.partner())
-		add_character(hop, player.position + Vector2(-20, -4))
-		hop.follow = player
-		if Game.walking_alone():
-			hop.queue_free()
+		if not Game.walking_alone():
+			hop = Cast.make(Game.partner())
+			add_character(hop, player.position + Vector2(-20, -4))
+			hop.follow = player
 		world.add_child(Hotspot.create(HATCH, _go_down_hatch))
 		var star := make_save_star()
 		star.glow = true
@@ -1138,6 +1137,10 @@ func _leave_after_chapter() -> void:
 	if _day():
 		# Back to Westview, in through the gym's emergency exit.
 		await Game.change_scene(WESTVIEW_SCENE, Vector2(116 * 20, 42 * 20 + 10))
+		return
+	# Going with Hop, the night after: the only way to go is home, to his house.
+	if Game.flags.get("route", "") in ["with_hop", "genocide"]:
+		await Game.change_scene(HOP_HOUSE_SCENE, Vector2(40, 290))
 		return
 	await Game.change_scene(DEMO_END_SCENE)
 

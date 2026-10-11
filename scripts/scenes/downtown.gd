@@ -581,11 +581,11 @@ func _after_supreme() -> void:
 		kept.append("Spreadsheet Printout")
 	Game.flags["mementos"] = kept
 	await Game.dialogue.say([
-		"* (A printout blows across home plate.\n*  A spreadsheet. Twelve rows. Four are crossed out.)",
+		"* (A printout blows across home plate.\n*  A spreadsheet. Twelve rows. %s crossed out.)" % Game.number_word(Game.corps_dead() - 1),
 		"* (At the bottom, circled twice, in pen: 0.4%.\n*  And under it, smaller: STAYING ANYWAY.)",
 		"* (You keep it.)",
 		"* (On the Big Screen, the replay shows Hop.\n*  He's sitting in the stands with his head down.)",
-		{"who": "Relic", "tag": "", "face": false, "text": "* Five."},
+		{"who": "Relic", "tag": "", "face": false, "text": Game.corps_dead_count()},
 	])
 	Game.set_objective("...")
 	_engaged = false
