@@ -21,7 +21,7 @@ const T := 20
 const TALL := [Room.TREE, Room.PALM, Room.STUMP, Room.FENCE, Room.BENCH, Room.PLANTER, Room.TABLE]
 ## Ground a tall thing can stand on (it takes its floor from its neighbors).
 const FLOORS := [Room.GRASS, Room.SIDEWALK, Room.ASPHALT, Room.ROAD, Room.DIRT, Room.SAND, Room.PATIO,
-	Room.BOARDWALK, Room.FIELD, Room.SCORCHED, Room.HALL_FLOOR, Room.HOUSE_FLOOR, Room.GYM_FLOOR, Room.BUNKER_FLOOR]
+	Room.BOARDWALK, Room.FIELD, Room.SCORCHED, Room.HALL_FLOOR, Room.HOUSE_FLOOR, Room.GYM_FLOOR, Room.BUNKER_FLOOR, Room.ARCADE_CARPET]
 ## Walls a window or a door can be set into.
 const WALLS := [Room.WALL, Room.STUCCO, Room.ADOBE, Room.RED_WALL, Room.WOOD_WALL, Room.INTERIOR_WALL,
 	Room.HOUSE_WALL, Room.BUNKER_WALL]
@@ -120,6 +120,7 @@ func ground(x: int, y: int, tile: int) -> void:
 		Room.HOUSE_FLOOR, Room.HOUSE_PROP: _house_floor(x, y, p)
 		Room.HOUSE_WALL: _house_wall(x, y, p)
 		Room.BUNKER_FLOOR: _bunker_floor(x, y, p)
+		Room.ARCADE_CARPET: _arcade_carpet(x, y, p)
 		# Solid ground that something is drawn on top of (a junk heap, a well, the
 		# armor on its stands): just the floor around it.
 		Room.PROP: ground(x, y, _floor_under(x, y))
@@ -1026,6 +1027,21 @@ func _bunker_door(x: int, y: int, p: Vector2) -> void:
 	for k in 5:
 		_rect(p + Vector2(k * 4, T - 2), Vector2(2, 2), Color8(214, 180, 50))
 		_rect(p + Vector2(k * 4 + 2, T - 2), Vector2(2, 2), Color8(40, 40, 40))
+
+
+## Arcade carpet: dark blue, with the neon confetti pattern that glows under
+## black lights.
+func _arcade_carpet(x: int, y: int, p: Vector2) -> void:
+	_rect(p, Vector2(T, T), Color8(26, 22, 52))
+	var neon := [Color8(80, 230, 250), Color8(250, 90, 200), Color8(250, 230, 80), Color8(120, 250, 120)]
+	for i in 6:
+		var h := _h(x, y, 700 + i)
+		var at := p + Vector2(h % 17, (h / 17) % 17)
+		var c: Color = neon[(h / 7) % 4]
+		match i % 3:
+			0: _rect(at, Vector2(3, 1), c)
+			1: _rect(at, Vector2(1, 3), c)
+			_: _rect(at, Vector2(2, 2), c)
 
 
 # --- Pass 2: tall things ---------------------------------------------------------------

@@ -1,0 +1,123 @@
+extends SceneTree
+## Draws the Chapter 2 wild creatures' battle sprites from text maps and saves them
+## as PNGs in art/sprites/ (wild_<name>.png). Each letter is one pixel; "." is
+## see-through. A dark outline is added around every shape so it stands out on
+## the black battle background. The canvas is 26 x 34 (like the other sprites),
+## the creature centered and standing on the bottom.
+##
+## Run it from the project folder:
+##   godot --headless --path . --script tools/make_wild_sprites.gd
+
+const W := 26
+const H := 34
+
+const PALETTE := {
+	"K": Color8(20, 20, 24), "W": Color8(240, 240, 245), "w": Color8(200, 204, 214),
+	"R": Color8(214, 60, 52), "r": Color8(150, 36, 34), "O": Color8(240, 140, 50), "o": Color8(190, 100, 36),
+	"Y": Color8(250, 214, 70), "y": Color8(200, 160, 40), "G": Color8(150, 154, 164), "g": Color8(96, 100, 112),
+	"B": Color8(60, 110, 210), "b": Color8(40, 70, 150), "C": Color8(120, 210, 240), "c": Color8(70, 150, 200),
+	"P": Color8(246, 150, 200), "p": Color8(200, 100, 160), "V": Color8(150, 90, 200), "v": Color8(100, 56, 150),
+	"N": Color8(90, 190, 90), "n": Color8(50, 130, 60), "T": Color8(214, 186, 130), "t": Color8(160, 130, 86),
+	"M": Color8(130, 92, 56), "m": Color8(90, 62, 36), "S": Color8(236, 214, 162), "s": Color8(200, 176, 124),
+	"E": Color8(110, 220, 120), "F": Color8(255, 236, 160), "Q": Color8(232, 228, 216), "q": Color8(176, 172, 160),
+	"A": Color8(90, 90, 100), "a": Color8(60, 60, 68), "U": Color8(50, 170, 200), "Z": Color8(255, 90, 140),
+}
+
+const SPRITES := {
+	# --- Mission Beach ---
+	"sand_crab": [
+		"..r...............r..",
+		".rRr.............rRr.",
+		"rRRr.............rRRr",
+		"rRRr..K.......K..rRRr",
+		".rRr..W.......W..rRr.",
+		"..rR..W.......W..Rr..",
+		"...rRRRRRRRRRRRRRr...",
+		"...RRRRRRRRRRRRRRR...",
+		"..RRRRYRRRRRRRYRRRR..",
+		"..RRRRRRRRRRRRRRRRR..",
+		"..rRRRRRKRRRKRRRRRr..",
+		"...rRRRRRKKKRRRRRr...",
+		"....rrrrrrrrrrrrr....",
+		"...r.r..r....r..r.r..",
+		"..r..r..r....r..r..r.",
+		".r..r...r....r...r..r",
+	],
+	"jellyfish": [
+		".....PPPPPPPPP.....",
+		"...PPPPPPPPPPPPP...",
+		"..PPWWPPPPPPPPPPP..",
+		".PPWWPPPPPPPPPPPPP.",
+		".PPPPPPPPPPPPPPPPP.",
+		"PPPPKPPPPPPPPPKPPPP",
+		"PPPPKPPPPPPPPPKPPPP",
+		"PPPPPPPPPpPPPPPPPPP",
+		"pppppppppppppppppp.",
+		".p.pp.p.pp.p.pp.p..",
+		".p..p.p..p..p.p..p.",
+		"..p.p..p.p..p..p.p.",
+		".p..p..p..p.p..p..p",
+		"..p..p.p..p..p.p..p",
+		".p..p..p.p..p..p..p",
+		"..p.p...pp..p..p.p.",
+		"...p....p...p...p..",
+		"..p.....p....p..p..",
+	],
+	"beach_kite": [
+		".........R.........",
+		"........RRR........",
+		".......RRYRR.......",
+		"......RRYYYRR......",
+		".....RRYYYYYRR.....",
+		"....RRYKYYYKYRR....",
+		"...RRYYKYYYKYYRR...",
+		"..RRYYYYYYYYYYYRR..",
+		"...RRYYYKKKYYYRR...",
+		"....RRYYYYYYYRR....",
+		".....RRYYYYYRR.....",
+		"......RRYYYRR......",
+		".......RRYRR.......",
+		"........RRR........",
+		".........R.........",
+		".........W.........",
+		"........B..........",
+		".........W.........",
+		"..........R........",
+		".........W.........",
+		"........Y..........",
+		".........W.........",
+	],
+}
+
+
+func _initialize() -> void:
+	for name in SPRITES:
+		var rows: Array = SPRITES[name]
+		var w := 0
+		for row in rows:
+			w = maxi(w, str(row).length())
+		var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+		img.fill(Color(0, 0, 0, 0))
+		var ox := (W - w) / 2
+		var oy := H - rows.size() - 1
+		for y in rows.size():
+			var row: String = rows[y]
+			for x in row.length():
+				var ch := row[x]
+				if PALETTE.has(ch):
+					img.set_pixel(ox + x, oy + y, PALETTE[ch])
+		# The outline: any empty pixel touching a filled one.
+		var outlined := img.duplicate()
+		for y in H:
+			for x in W:
+				if img.get_pixel(x, y).a > 0.0:
+					continue
+				for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+					var nx: int = x + d.x
+					var ny: int = y + d.y
+					if nx >= 0 and ny >= 0 and nx < W and ny < H and img.get_pixel(nx, ny).a > 0.0:
+						outlined.set_pixel(x, y, Color8(76, 76, 86))
+						break
+		outlined.save_png("res://art/sprites/wild_%s.png" % name)
+		print("wild_%s.png" % name)
+	quit()

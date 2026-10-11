@@ -463,6 +463,10 @@ const GLYPH_COLORS := {
 	"L": Color(0.8, 0.72, 1.0), "T": Color(0.85, 0.72, 0.5),
 }
 const GLYPHS := {
+	"claw": ["RR...", "RRR..", ".RRRR", "RRR..", "RR..."],
+	"crab": ["R...R", ".KRK.", "RRRRR", "R.R.R"],
+	"jelly": [".PPP.", "PPPPP", "PKPKP", "P.P.P", ".P.P."],
+	"kite": ["..R..", ".RYR.", "RYKYR", ".RYR.", "..R..", "..W.."],
 	"key": [".YYY....", "Y...YYYY", ".YYY.Y.Y"],
 	"cone": ["..O..", ".OWO.", ".OOO.", "OWWWO", "OOOOO"],
 	"can": [".GGG.", "GRRRG", "GWWWG", "GRRRG", ".GGG."],

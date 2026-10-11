@@ -22,6 +22,21 @@ const ENTRY := Vector2(60 * T, 6 * T + 10)
 ## The coaster's gate on the boardwalk.
 const GATE := Vector2(9 * T + 10, 6 * T)
 const CRAYOLA_SPOT := Vector2(26 * T, 12 * T)
+## The beach, and the arcade on the boardwalk (its own room on the map).
+const OUTSIDE := Rect2i(0, 0, 64, 30)
+const ARCADE := Rect2i(2, 32, 24, 18)
+const ARCADE_DOOR := Vector2(49 * T + 10, 4 * T + 4)
+const OUTSIDE_ARCADE := Vector2(49 * T + 10, 5 * T + 6)
+const ARCADE_ENTRY := Vector2(13 * T + 10, 47 * T + 6)
+const ARCADE_EXIT := Vector2(13 * T + 10, 49 * T - 2)
+## Where the arcade's machines stand (the spot in front of each).
+const MEMORY_SPOT := Vector2(6 * T, 36 * T + 10)
+const SKEE_SPOT := Vector2(11 * T, 38 * T + 10)
+const STICKER_SPOT := Vector2(13 * T + 10, 36 * T + 10)
+const FORTUNE_SPOT := Vector2(18 * T, 36 * T + 10)
+const COUNTER_SPOT := Vector2(21 * T + 10, 44 * T + 10)
+## Tickets: one strip from each machine. Three get the Dipper's key.
+const TICKET_FLAGS := ["mb_t_memory", "mb_t_skee", "mb_t_fortune"]
 const WETHAN_SPOT := Vector2(30 * T, 14 * T)
 
 var partner: Character
@@ -34,6 +49,7 @@ var _engaged: bool = false
 
 
 func _ready() -> void:
+	rooms.assign([_px(OUTSIDE), _px(ARCADE)])
 	setup_area(ENTRY)
 	_dress()
 	add_wild_encounters(SCENE, Rect2(0, 8 * T, room.pixel_size().x, 12 * T))
@@ -46,8 +62,16 @@ func _ready() -> void:
 	_place_people()
 	world.add_child(Hotspot.create(ENTRY + Vector2(10, -8), _bus_stop))
 	world.add_child(Hotspot.create(GATE + Vector2(0, -2), _coaster_gate))
+	for spot in [[ARCADE_DOOR, _enter_arcade], [ARCADE_EXIT, _leave_arcade], [MEMORY_SPOT, _memory_machine], [SKEE_SPOT, _skee_ball],
+			[STICKER_SPOT, _skee_sticker], [FORTUNE_SPOT, _fortune_teller], [COUNTER_SPOT, _prize_counter]]:
+		world.add_child(Hotspot.create(spot[0], spot[1]))
+	add_static_layer(_draw_arcade)
 	fit_camera_to_room()
 	_start.call_deferred()
+
+
+static func _px(r: Rect2i) -> Rect2:
+	return Rect2(r.position * T, r.size * T)
 
 
 func _genocide() -> bool:
@@ -85,7 +109,7 @@ func _dress() -> void:
 
 
 func build_map() -> void:
-	room.setup(64, 30, Room.SAND)
+	room.setup(64, 52, Room.SAND)
 	# Shops along the top: a surf shop, a taco stand, an arcade.
 	room.fill(0, 0, 64, 1, Room.ROOF)
 	room.fill(18, 0, 46, 1, Room.ROOF)
@@ -103,6 +127,19 @@ func build_map() -> void:
 	for spot in [Vector2i(12, 10), Vector2i(20, 15), Vector2i(38, 11), Vector2i(50, 16), Vector2i(58, 10)]:
 		room.set_tile(spot.x, spot.y, Room.PALM)
 	room.fill(0, 20, 64, 10, Room.WATER)
+	# Below the beach on the map: the arcade, inside. Dark carpet, machines along
+	# the walls, the prize counter, the door back out to the boardwalk.
+	room.fill(0, 30, 64, 22, Room.VOID)
+	room.fill(ARCADE.position.x, ARCADE.position.y, ARCADE.size.x, ARCADE.size.y, Room.INTERIOR_WALL)
+	room.fill(3, 35, 22, 14, Room.ARCADE_CARPET)
+	room.set_tile(13, 49, Room.DOOR)
+	room.fill(5, 35, 2, 1, Room.PROP)      # Memory Mania
+	room.fill(10, 35, 2, 3, Room.PROP)     # Skee-Ball lanes
+	room.fill(17, 35, 2, 1, Room.PROP)     # the fortune teller
+	room.fill(19, 43, 5, 1, Room.PROP)     # the prize counter
+	for y in [38, 40, 42, 44]:
+		room.set_tile(3, y, Room.PROP)       # cabinets along the walls
+		room.set_tile(24, y, Room.PROP)
 
 
 ## The Dipper's track: where the rail is, at each x along the coaster.
@@ -268,6 +305,190 @@ func _arrival() -> void:
 			Game.set_objective("...")
 
 
+# --- The arcade ------------------------------------------------------------------------
+
+func _enter_arcade() -> void:
+	Game.play_sfx("door")
+	await go_through_door(ARCADE_ENTRY)
+	if not flag("mb_arcade_seen"):
+		Game.flags["mb_arcade_seen"] = true
+		await Game.dialogue.say([
+			"* (The arcade. Carpet that glows under the black\n*  lights, a hundred machines beeping at nobody.)",
+			"* (Behind the prize counter, on a hook, under a sign\n*  that says TOP PRIZE: a big brass key. DIPPER.)",
+		])
+		if not flag("mb_key"):
+			Game.set_objective("Win the Dipper's key. (3 ticket strips.)")
+
+
+func _leave_arcade() -> void:
+	Game.play_sfx("door")
+	await go_through_door(OUTSIDE_ARCADE)
+
+
+func _tickets() -> int:
+	var n := 0
+	for f in TICKET_FLAGS:
+		if flag(f):
+			n += 1
+	return n
+
+
+func _win_tickets(which: String) -> void:
+	Game.flags[which] = true
+	Game.play_sfx("save")
+	await Game.dialogue.say(["* (DING DING DING. A strip of tickets comes curling out\n*  of the machine. %d of 3.)" % _tickets()])
+	if _tickets() >= 3 and not flag("mb_key"):
+		Game.set_objective("Trade your tickets at the prize counter.")
+
+
+## MEMORY MANIA: five lights flash, then you press them back in the same order.
+func _memory_machine() -> void:
+	if flag("mb_t_memory"):
+		await Game.dialogue.say(["* (MEMORY MANIA. HIGH SCORE: YOU.)"])
+		return
+	var colors := ["RED", "BLUE", "GREEN", "YELLOW"]
+	var sequence: Array = []
+	for k in 5:
+		sequence.append(colors[randi() % 4])
+	var play := await Game.dialogue.ask("* (MEMORY MANIA! Watch the lights, then press\n*  them in the same order. One token.)", ["Play", "Not now"])
+	if play != 0:
+		return
+	await Game.dialogue.say(["* (The lights flash: " + ", ".join(sequence) + ".)", "* (...Then it goes dark, and waits.)"])
+	for k in sequence.size():
+		var pick := await Game.dialogue.ask("* (Press light %d of %d.)" % [k + 1, sequence.size()], colors)
+		if colors[pick] != sequence[k]:
+			Game.play_sfx("miss")
+			await Game.dialogue.say(["* (BZZZT. The lights flash red.\n*  TRY AGAIN!)"])
+			return
+	await _win_tickets("mb_t_memory")
+
+
+## The sticker on the side of the Skee-Ball machine (the trick to it).
+func _skee_sticker() -> void:
+	await Game.dialogue.say([
+		"* (A sticker on the side of the Skee-Ball machine,\n*  in somebody's angry handwriting:)",
+		"* (\"THE ONE THAT GLOWS NEVER PAYS. THE ONE THAT\n*  PAYS IS ALWAYS THE ONE TO ITS LEFT.\")",
+	])
+
+
+## SKEE-BALL: one hole glows; the one that pays is the one to its left.
+func _skee_ball() -> void:
+	if flag("mb_t_skee"):
+		await Game.dialogue.say(["* (Skee-Ball. You've beaten it.\n*  It seems sulky about it.)"])
+		return
+	var holes := ["10", "20", "50", "100"]
+	var glowing := 1 + randi() % 3
+	var play := await Game.dialogue.ask("* (SKEE-BALL. The %s hole is glowing.\n*  Where do you roll?)" % holes[glowing], holes + ["Not now"])
+	if play == holes.size():
+		return
+	if play == glowing - 1:
+		await _win_tickets("mb_t_skee")
+	elif play == glowing:
+		Game.play_sfx("miss")
+		await Game.dialogue.say(["* (Right in the glowing hole! ...Zero tickets.\n*  Of course. The glowing one never pays.)"])
+	else:
+		Game.play_sfx("miss")
+		await Game.dialogue.say(["* (Clunk. Nothing. The machine blinks smugly.)"])
+
+
+## THE GREAT ZALDO: a fortune teller in a glass booth, with a riddle.
+func _fortune_teller() -> void:
+	if flag("mb_t_fortune"):
+		await Game.dialogue.say(["* (The Great Zaldo nods at you. \"YOUR FUTURE:\n*  A ROLLER COASTER.\" He's very proud of that.)"])
+		return
+	await Game.dialogue.say([
+		"* (THE GREAT ZALDO, in his glass booth. His eyes light up.)",
+		"* \"ANSWER ME THIS, TRAVELER:\"",
+		"* \"I CLIMB AND I CLIMB AND YOU PAY FOR THE RIDE.\n*  THEN I DROP YOU, AND YOU SCREAM, AND YOU SMILE.\"",
+	])
+	var pick := await Game.dialogue.ask("* \"WHAT AM I?\"", ["A Ferris wheel", "The Dipper", "An elevator", "Rent"])
+	if pick == 1:
+		await Game.dialogue.say(["* \"THE DIPPER! WISDOM IS YOURS!\"", "* (He spits out a ticket.\n*  It smells like popcorn.)"])
+		await _win_tickets("mb_t_fortune")
+	else:
+		Game.play_sfx("miss")
+		await Game.dialogue.say(["* \"NO. THINK, TRAVELER. WHAT CLIMBS, AND DROPS,\n*  AND RATTLES, RIGHT OUTSIDE?\""])
+
+
+## The prize counter: three strips of tickets for the Dipper's key.
+func _prize_counter() -> void:
+	if flag("mb_key"):
+		await Game.dialogue.say(["* (The prize counter. The hook where the key hung\n*  is empty. The rubber spiders are still for sale.)"])
+		return
+	if _tickets() < 3:
+		await Game.dialogue.say([
+			"* (The prize counter. Nobody's working it. A sign:\n*  HONOR SYSTEM. PLEASE BE HONORABLE.)",
+			"* (The Dipper's key: 3 STRIPS. You have %d.)" % _tickets(),
+		])
+		return
+	Game.play_sfx("fragment")
+	Game.flags["mb_key"] = true
+	_decor.queue_redraw()
+	await Game.dialogue.say([
+		"* (You leave all three strips on the counter, neatly,\n*  and take the brass key off its hook.)",
+		"* (A tag on it: DIPPER. DO NOT LOSE. Someone\n*  has added: AGAIN.)",
+	])
+	Game.set_objective("Ride the Dipper. (The gate on the boardwalk.)")
+
+
+func _draw_arcade(ci: CanvasItem) -> void:
+	var f := ThemeDB.fallback_font
+	# Memory Mania: a cabinet with four big colored lights.
+	var mem := Rect2(5 * T, 34 * T, 2 * T, 2 * T)
+	ci.draw_rect(Rect2(mem.position + Vector2(3, 4), mem.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(mem, Color8(40, 30, 70))
+	ci.draw_rect(Rect2(mem.position, Vector2(mem.size.x, 3)), Color8(90, 70, 150))
+	var lights := [Color8(230, 60, 60), Color8(60, 120, 230), Color8(70, 200, 90), Color8(240, 210, 60)]
+	for k in 4:
+		ci.draw_circle(mem.position + Vector2(10 + (k % 2) * 20, 12 + (k / 2) * 14), 6.0, lights[k].darkened(0.3))
+		ci.draw_circle(mem.position + Vector2(10 + (k % 2) * 20, 12 + (k / 2) * 14), 4.0, lights[k])
+	ci.draw_string(f, mem.position + Vector2(1, -2), "MEMORY", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(240, 200, 255))
+	# Skee-Ball: two long ramps and the target rings at the top.
+	var skee := Rect2(10 * T, 34 * T, 2 * T, 4 * T)
+	ci.draw_rect(Rect2(skee.position + Vector2(3, 4), skee.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(skee, Color8(110, 74, 44))
+	ci.draw_rect(Rect2(skee.position + Vector2(4, 30), Vector2(skee.size.x - 8, skee.size.y - 34)), Color8(150, 104, 62))
+	for k in 3:
+		ci.draw_arc(skee.position + Vector2(skee.size.x / 2, 14), 4.0 + k * 4, 0, TAU, 16, [Color8(240, 200, 60), Color8(230, 80, 60), Color8(60, 140, 220)][k], 2.0)
+	ci.draw_string(f, skee.position + Vector2(2, -2), "SKEE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(255, 220, 120))
+	ci.draw_rect(Rect2(13 * T + 2, 35 * T + 4, 10, 8), Color8(240, 230, 120))
+	# The Great Zaldo, in his glass booth.
+	var booth := Rect2(17 * T, 33 * T + 6, 2 * T, 2 * T + 14)
+	ci.draw_rect(Rect2(booth.position + Vector2(3, 4), booth.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(booth, Color8(120, 30, 60))
+	ci.draw_rect(Rect2(booth.position + Vector2(4, 4), Vector2(booth.size.x - 8, 24)), Color8(60, 40, 80))
+	ci.draw_circle(booth.position + Vector2(booth.size.x / 2, 16), 6.0, Color8(220, 180, 140))
+	ci.draw_rect(Rect2(booth.position + Vector2(booth.size.x / 2 - 7, 7), Vector2(14, 5)), Color8(200, 40, 60))
+	ci.draw_circle(booth.position + Vector2(booth.size.x / 2, 7), 2.0, Color8(240, 210, 80))
+	ci.draw_rect(Rect2(booth.position + Vector2(booth.size.x / 2 - 3, 16), Vector2(2, 1)), Color8(60, 220, 120))
+	ci.draw_rect(Rect2(booth.position + Vector2(booth.size.x / 2 + 1, 16), Vector2(2, 1)), Color8(60, 220, 120))
+	ci.draw_line(booth.position + Vector2(6, 26), booth.position + Vector2(booth.size.x - 8, 6), Color(1, 1, 1, 0.25), 2.0)
+	ci.draw_string(f, booth.position + Vector2(2, booth.size.y - 4), "ZALDO", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(250, 220, 100))
+	# The prize counter: a glass case of prizes, the key's hook on the wall behind.
+	var counter := Rect2(19 * T, 42 * T + 6, 5 * T, T + 14)
+	ci.draw_rect(Rect2(counter.position + Vector2(3, 4), counter.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(counter, Color8(90, 60, 40))
+	ci.draw_rect(Rect2(counter.position + Vector2(3, 3), Vector2(counter.size.x - 6, 14)), Color8(150, 200, 230, 180))
+	var prizes := [Color8(240, 90, 120), Color8(90, 200, 120), Color8(250, 220, 80), Color8(120, 120, 240), Color8(30, 30, 30)]
+	for k in 9:
+		ci.draw_circle(counter.position + Vector2(8 + k * 10, 11), 3.0, prizes[k % prizes.size()])
+	ci.draw_string(f, counter.position + Vector2(10, -16), "TOP PRIZE", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(255, 220, 120))
+	if not flag("mb_key"):
+		ci.draw_rect(Rect2(counter.position + Vector2(24, -12), Vector2(12, 4)), Color8(220, 180, 70))
+		ci.draw_circle(counter.position + Vector2(22, -10), 4.0, Color8(220, 180, 70))
+		ci.draw_circle(counter.position + Vector2(22, -10), 2.0, Color8(60, 40, 30))
+	# Cabinets along the walls, their screens glowing.
+	var screens := [Color8(80, 220, 240), Color8(240, 100, 200), Color8(120, 240, 120), Color8(250, 200, 80)]
+	for k in 4:
+		for x in [3, 24]:
+			var cab := Rect2(x * T + 2, [38, 40, 42, 44][k] * T - 12, T - 4, T + 10)
+			ci.draw_rect(Rect2(cab.position + Vector2(2, 3), cab.size), Color(0, 0, 0, 0.3))
+			ci.draw_rect(cab, Color8(30, 30, 46))
+			ci.draw_rect(Rect2(cab.position + Vector2(2, 3), Vector2(cab.size.x - 4, 10)), screens[(k + x) % 4])
+			ci.draw_rect(Rect2(cab.position + Vector2(4, 16), Vector2(2, 2)), Color8(230, 60, 60))
+			ci.draw_rect(Rect2(cab.position + Vector2(9, 16), Vector2(2, 2)), Color8(60, 120, 230))
+
+
 func _bus_stop() -> void:
 	await ride_bus(SCENE)
 
@@ -278,6 +499,13 @@ func _coaster_gate() -> void:
 		return
 	if _genocide() and (not flag("beat_corps_crayola") or not flag("beat_corps_ncwethan")):
 		await Game.dialogue.say(["* (Crayola and N.C. Wethan are watching you\n*  from the sand.)"])
+		return
+	if not flag("mb_key"):
+		await Game.dialogue.say([
+			"* (The gate's padlocked. A sign on it: OPERATOR ON\n*  BREAK. KEY = TOP PRIZE AT THE ARCADE.)",
+			"* (The front car, behind the gate, is glowing red.)",
+		])
+		Game.set_objective("Win the Dipper's key. (The arcade, on the boardwalk.)")
 		return
 	var ride := await Game.dialogue.ask("* (The Dipper rolls up to the gate.\n*  The front car is glowing red. Get on?)", ["Ride", "Not yet"])
 	if ride != 0:

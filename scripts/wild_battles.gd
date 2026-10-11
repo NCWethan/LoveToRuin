@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: Mission Beach ---
+	"sand_crab": {
+		"name": "Sand Crab", "sprite": "wild_sand_crab",
+		"intro": "* A Sand Crab bursts up out of the sand,\n*  claws first!",
+		"hp": 70, "atk": 6, "def": 3, "patterns": ["crab_pinch", "crab_scuttle"],
+		"check": "* SAND CRAB - ATK 6 DEF 3\n* Walks sideways. Thinks sideways. Is never wrong.",
+		"acts": [
+			{"name": "Walk Sideways", "mercy": 50, "lines": ["* {actor} walks sideways too.\n* The Sand Crab is impressed. Finally, someone gets it."]},
+			{"name": "Offer Shell", "mercy": 40, "lines": ["* {actor} holds out a nice shell.\n* The crab considers it. It's a very good shell."]},
+		],
+		"taunts": ["*click click*", "*CLACK*", "*bubble*"],
+		"flavor": ["* The Sand Crab snaps its claws.", "* The Sand Crab is guarding a sandcastle\n*  nobody asked it to guard."],
+		"backdrop": Color(0.85, 0.75, 0.5), "style": "waves", "exp": 14, "money": 9,
+	},
+	"jellyfish": {
+		"name": "Jellyfish", "sprite": "wild_jellyfish",
+		"intro": "* A Jellyfish wobbles up out of the surf.\n* It shouldn't be able to do that.",
+		"hp": 60, "atk": 7, "def": 1, "patterns": ["jelly_drift", "jelly_sting"],
+		"check": "* JELLYFISH - ATK 7 DEF 1\n* No brain, no heart, no bones. Plenty of sting.",
+		"acts": [
+			{"name": "Float", "mercy": 50, "lines": ["* {actor} lies back and floats.\n* The Jellyfish floats too. You're both just... drifting."]},
+			{"name": "Back to Sea", "mercy": 40, "lines": ["* {actor} points at the ocean.\n* The Jellyfish looks. It looks for a long time."]},
+		],
+		"taunts": ["*bloop*", "...", "*wobble*"],
+		"flavor": ["* The Jellyfish pulses gently.", "* You can see right through it.\n*  It's thinking about nothing at all."],
+		"backdrop": Color(0.3, 0.55, 0.85), "style": "waves", "exp": 15, "money": 7,
+	},
+	"beach_kite": {
+		"name": "Runaway Kite", "sprite": "wild_beach_kite",
+		"intro": "* A Runaway Kite swoops down at you,\n*  string trailing!",
+		"hp": 64, "atk": 7, "def": 2, "patterns": ["kite_dive", "kite_string"],
+		"check": "* RUNAWAY KITE - ATK 7 DEF 2\n* Snapped its string at 9 AM. Never coming down.",
+		"acts": [
+			{"name": "Grab String", "mercy": 50, "lines": ["* {actor} grabs the trailing string.\n* The Kite tugs, then lets itself be held."]},
+			{"name": "Run With It", "mercy": 40, "lines": ["* {actor} runs down the beach with it.\n* The Kite soars. It's the best day of its life."]},
+		],
+		"taunts": ["*flap*", "*WHOOSH*", "*rustle*"],
+		"flavor": ["* The Runaway Kite loops the loop.", "* Somewhere, a kid is still holding\n*  the other end of a string."],
+		"backdrop": Color(0.55, 0.8, 0.95), "style": "cliffs", "exp": 15, "money": 8,
+	},
 	"cart": {
 		"name": "Runaway Cart", "sprite": "wild_cart",
 		"intro": "* A shopping cart rattles toward you!\n* Nobody is pushing it.",
@@ -145,7 +185,7 @@ const ZONES := {
 	"res://scenes/westview.tscn": ["bag", "squirrel", "seagull"],
 	"res://scenes/hilltop.tscn": ["goose", "sprinkler", "balloon"],
 	"res://scenes/hop_house.tscn": ["gnome", "flamingo", "bag"],
-	"res://scenes/mission_beach.tscn": ["seagull", "balloon", "bag"],
+	"res://scenes/mission_beach.tscn": ["sand_crab", "jellyfish", "beach_kite"],
 	"res://scenes/balboa_park.tscn": ["squirrel", "balloon", "goose"],
 	"res://scenes/old_town.tscn": ["seagull", "bag", "squirrel"],
 	"res://scenes/downtown.tscn": ["seagull", "bag", "cart"],
