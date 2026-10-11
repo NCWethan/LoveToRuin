@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: The Junkyard ---
+	"junk_rat": {
+		"name": "Junk Rat", "sprite": "wild_junk_rat",
+		"intro": "* A Junk Rat pops out of a tire.\n* It's wearing a bottle cap as a hat.",
+		"hp": 132, "atk": 13, "def": 4, "patterns": ["rat_scurry", "rat_hoard"],
+		"check": "* JUNK RAT - ATK 13 DEF 4\n* Collects things. Shiny things. Your things, if you let it.",
+		"acts": [
+			{"name": "Trade", "mercy": 50, "lines": ["* {actor} offers it a shiny button.\n* The Junk Rat inspects it. It accepts. A deal is a deal."]},
+			{"name": "Admire Hoard", "mercy": 40, "lines": ["* {actor} admires its collection.\n* The Junk Rat shows you every single piece. Every one."]},
+		],
+		"taunts": ["*squeak*", "MINE MINE", "*rustle*"],
+		"flavor": ["* The Junk Rat twitches its whiskers.", "* The Junk Rat has a collection, too.\n* It reminds you of someone."],
+		"backdrop": Color(0.45, 0.4, 0.35), "style": "grid", "exp": 34, "money": 25,
+	},
+	"magnet": {
+		"name": "Magnet", "sprite": "wild_magnet",
+		"intro": "* A Magnet drags itself over, covered in bolts.\n* Everything metal leans toward it.",
+		"hp": 140, "atk": 13, "def": 7, "patterns": ["magnet_pull", "magnet_scrap"],
+		"check": "* MAGNET - ATK 13 DEF 7\n* Fell off the crane. Everything sticks to it. Nothing stays.",
+		"acts": [
+			{"name": "Flip It", "mercy": 50, "lines": ["* {actor} flips it around.\n* Everything stuck to it falls off. The Magnet sighs with relief."]},
+			{"name": "Stick Around", "mercy": 40, "lines": ["* {actor} says they'll stick around.\n* The Magnet has never heard that from anything not made of metal."]},
+		],
+		"taunts": ["*hummm*", "*CLINK*", "STAY."],
+		"flavor": ["* Screws crawl across the ground toward the Magnet.", "* Your belt buckle is trying to leave you."],
+		"backdrop": Color(0.55, 0.2, 0.2), "style": "static", "exp": 35, "money": 22,
+	},
+	"hubcap": {
+		"name": "Hubcap", "sprite": "wild_hubcap",
+		"intro": "* A Hubcap comes rolling out of nowhere!\n* It's been rolling since the freeway.",
+		"hp": 128, "atk": 14, "def": 5, "patterns": ["hubcap_roll", "hubcap_glint"],
+		"check": "* HUBCAP - ATK 14 DEF 5\n* Came off a car on the 15 in 2011. Still rolling. Can't stop.",
+		"acts": [
+			{"name": "Catch It", "mercy": 50, "lines": ["* {actor} catches it. It wobbles, and stops.\n* The Hubcap hasn't stopped in years. It's dizzy. It's grateful."]},
+			{"name": "Polish", "mercy": 40, "lines": ["* {actor} polishes it with a sleeve.\n* The Hubcap gleams. It sees itself. It looks good."]},
+		],
+		"taunts": ["*wobblewobble*", "*CLANG*", "*whirrr*"],
+		"flavor": ["* The Hubcap spins in place.", "* The Hubcap catches the light, and blinds you a little.\n* On purpose."],
+		"backdrop": Color(0.5, 0.5, 0.55), "style": "skyline", "exp": 35, "money": 24,
+	},
 	# --- Chapter 2: The Burned Hills ---
 	"cinder": {
 		"name": "Cinder", "sprite": "wild_cinder",
@@ -231,7 +271,7 @@ const CREATURES := {
 		],
 		"taunts": ["...", "*crack*", "HMPH"],
 		"flavor": ["* The Marble Bust stares blankly.\n*  It has no pupils. Somehow you feel judged.", "* The Marble Bust is missing its nose. Rude to mention."],
-		"backdrop": Color(0.7, 0.68, 0.62), "style": "rings", "exp": 19, "money": 12,
+		"backdrop": Color(0.7, 0.68, 0.62), "style": "stripes", "exp": 19, "money": 12,
 	},
 	"tour_group": {
 		"name": "Tour Group", "sprite": "wild_tour_group",
@@ -432,7 +472,7 @@ const ZONES := {
 	"res://scenes/harbor.tscn": ["gull_captain", "lobster_trap", "rust_bot"],
 	"res://scenes/torrey_pines.tscn": ["rattlesnake", "fog_wisp", "lost_kite"],
 	"res://scenes/burned_hills.tscn": ["cinder", "smoke_wraith", "charred_stump"],
-	"res://scenes/junkyard.tscn": ["cart", "bag", "receipt"],
+	"res://scenes/junkyard.tscn": ["junk_rat", "magnet", "hubcap"],
 }
 
 

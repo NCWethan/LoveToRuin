@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- The Junkyard ---
+		"rat_scurry": return _rat_scurry(enemy, parent, area, s, step)
+		"rat_hoard": return _rat_hoard(enemy, parent, area, s, step)
+		"magnet_pull": return _magnet_pull(enemy, parent, area, s, step)
+		"magnet_scrap": return _magnet_scrap(enemy, parent, area, s, step)
+		"hubcap_roll": return _hubcap_roll(enemy, parent, area, s, step)
+		"hubcap_glint": return _hubcap_glint(enemy, parent, area, s, step)
 		# --- The Burned Hills ---
 		"cinder_spark": return _cinder_spark(enemy, parent, area, s, step)
 		"cinder_pop": return _cinder_pop(enemy, parent, area, s, step)
@@ -559,3 +566,76 @@ static func _stump_splinters(enemy: Enemy, parent: Node, area: Rect2, soul: Vect
 		splinter.velocity = Vector2.from_angle(aim + (k - 2) * 0.22) * 150.0
 		splinter.face_motion = true
 	return 0.9
+
+
+# --- Junk Rat ----------------------------------------------------------------------------
+
+## SCURRY: rats dart across the box in a zigzag, one after another.
+static func _rat_scurry(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var y := clampf(soul.y + randf_range(-20, 20), area.position.y + 8, area.end.y - 8)
+	var rat := _glyph(enemy, parent, area, Vector2(area.position.x + 6 if left else area.end.x - 6, y), "rat", 8.0)
+	rat.delay = 0.2
+	rat.velocity = Vector2(190 if left else -190, 0)
+	rat.zigzag = 40.0
+	rat.face_motion = true
+	return 0.4
+
+
+## HOARD: its hoard comes down: bottle caps and bolts, falling in a fan.
+static func _rat_hoard(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	for k in 4:
+		var x := clampf(soul.x + (k - 1.5) * 22.0 + randf_range(-6, 6), area.position.x + 6, area.end.x - 6)
+		var thing := _glyph(enemy, parent, area, Vector2(x, area.position.y + 4), ["coin", "bolt"][k % 2], 7.0)
+		thing.delay = 0.25 + k * 0.08
+		thing.velocity = Vector2(0, 150)
+		thing.spin = 6.0
+	return 0.85
+
+
+# --- Magnet ------------------------------------------------------------------------------
+
+## PULL: scrap all around the edges, pulled toward you.
+static func _magnet_pull(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var edge := step % 4
+	var at: Vector2
+	match edge:
+		0: at = Vector2(randf_range(area.position.x + 6, area.end.x - 6), area.position.y + 4)
+		1: at = Vector2(area.end.x - 4, randf_range(area.position.y + 6, area.end.y - 6))
+		2: at = Vector2(randf_range(area.position.x + 6, area.end.x - 6), area.end.y - 4)
+		_: at = Vector2(area.position.x + 4, randf_range(area.position.y + 6, area.end.y - 6))
+	var bit := _glyph(enemy, parent, area, at, "bolt", 7.0)
+	bit.delay = 0.3
+	bit.velocity = (soul - at).normalized() * 140.0
+	bit.spin = 7.0
+	return 0.35
+
+
+## SCRAP: everything stuck to it flies off at once, in a ring.
+static func _magnet_scrap(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var center := area.get_center() + Vector2((step % 3 - 1) * 40.0, 0)
+	for k in 10:
+		var bit := _glyph(enemy, parent, area, center, ["bolt", "coin"][k % 2], 6.0)
+		bit.delay = 0.5
+		bit.velocity = Vector2.from_angle(k * TAU / 10.0 + step * 0.2) * 110.0
+	return 1.0
+
+
+# --- Hubcap ------------------------------------------------------------------------------
+
+## ROLL: hubcaps roll in and bounce off the walls, spinning.
+static func _hubcap_roll(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var cap := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, area.position.y + 10), "hubcap", 10.0)
+	cap.delay = 0.3
+	cap.velocity = Vector2(150 if left else -150, 110)
+	cap.spin = 10.0
+	cap.wall_bounce = true
+	cap.lifetime = 3.0
+	return 1.0
+
+
+## GLINT: the sun catches it: a flash of light down your row or column.
+static func _hubcap_glint(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	Attacks._beam(enemy, parent, area, soul, Vector2.RIGHT if step % 2 == 0 else Vector2.DOWN, 0.5, Color(1.0, 0.95, 0.7))
+	return 0.7

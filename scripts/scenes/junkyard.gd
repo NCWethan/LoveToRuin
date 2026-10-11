@@ -16,7 +16,14 @@ extends Area
 ##              as the Corps finds the van and cheers. Nobody sees Elric.
 ##   With Hop   Sansworth is at the van. It never starts.
 ##
-## Story flags: jy_arrived, jy_heap_done, jy_van, jy_nassan.
+## Before anyone can reach the van, Scrap Heap's stacks of crushed cars have to
+## move (Chapter 2: the road to each fragment): it walled the back corner in. Its
+## cab (its own little room) has three levers, yellow, red and black, and a rhyme
+## scratched into the dash. Pull them in the rhyme's order: down (yellow), grab
+## (red), up (yellow), swing (black), let go (red).
+##
+## Story flags: jy_arrived, jy_heap_done, jy_pulls (so far), jy_cleared, jy_van,
+## jy_nassan.
 
 const SCENE := "res://scenes/junkyard.tscn"
 const T := Room.TILE
@@ -27,6 +34,19 @@ const VAN := Rect2(4 * T, 24 * T, 5 * T, 3 * T)
 const VAN_FRONT := Vector2(10 * T, 26 * T)
 const SANSWORTH_SPOT := Vector2(10 * T + 10, 25 * T)
 const NASSAN_SPOT := Vector2(44 * T, 28 * T)
+## The crane's cab: its own little room on the map. The ladder up is by the crane.
+const CAB := Rect2i(58, 3, 10, 9)
+const CAB_LADDER := Vector2(31 * T + 10, 12 * T + 10)
+const CAB_ENTRY := Vector2(63 * T, 9 * T + 10)
+const CAB_EXIT := Vector2(63 * T, 11 * T - 2)
+const OUTSIDE_CAB := Vector2(31 * T + 10, 13 * T + 14)
+const LEVERS := ["Yellow", "Red", "Black"]
+const LEVER_SPOTS := [Vector2(60 * T + 10, 6 * T + 4), Vector2(62 * T + 10, 6 * T + 4), Vector2(64 * T + 10, 6 * T + 4)]
+const RHYME := Vector2(66 * T + 10, 6 * T + 4)
+## Down, grab, up, swing, let go.
+const LIFT_ORDER := ["Yellow", "Red", "Yellow", "Black", "Red"]
+## The wall of crushed cars Scrap Heap stacked around the back corner.
+const CAR_WALL := [Rect2i(1, 22, 12, 1), Rect2i(12, 23, 1, 12)]
 
 var partner: Character
 var heap: Character
@@ -42,7 +62,7 @@ var _van_running: float = -1.0
 
 func _ready() -> void:
 	_engaged = str(Game.battle_result.get("id", "")) in ["scrap_heap", "corps_sansworth"]
-	rooms.assign([_px(OUTSIDE)])
+	rooms.assign([_px(OUTSIDE), _px(CAB)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(T, 14 * T, 54 * T, 20 * T))
 	_font = ThemeDB.fallback_font
@@ -57,8 +77,11 @@ func _ready() -> void:
 	_place_people()
 	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [VAN_FRONT + Vector2(0, 10), _van], [Vector2(8 * T + 10, 6 * T + 4), _shack],
-			[Vector2(40 * T, 20 * T + 4), _car_stack]]:
+			[Vector2(40 * T, 20 * T + 4), _car_stack], [CAB_LADDER, _cab_ladder], [CAB_EXIT, _leave_cab],
+			[RHYME, _rhyme]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	for i in LEVERS.size():
+		world.add_child(Hotspot.create(LEVER_SPOTS[i], _pull.bind(LEVERS[i])))
 	Game.play_music("junkyard")
 	if flag("jy_van"):
 		_van_running = 0.0
@@ -114,7 +137,8 @@ func _dress() -> void:
 
 
 func build_map() -> void:
-	room.setup(56, 36, Room.ASPHALT)
+	room.setup(70, 36, Room.ASPHALT)
+	room.fill(56, 0, 14, 36, Room.VOID)
 	room.fill(0, 0, 56, 1, Room.FENCE)
 	room.fill(0, 0, 1, 36, Room.FENCE)
 	room.fill(55, 0, 1, 36, Room.FENCE)
@@ -129,6 +153,14 @@ func build_map() -> void:
 		room.fill(pile.position.x, pile.position.y, pile.size.x, pile.size.y, Room.PROP)
 	room.fill(38, 19, 4, 2, Room.PROP)             # the stack of crushed cars
 	room.fill(4, 24, 5, 3, Room.PROP)              # the van, under its tarp
+	# Scrap Heap's wall of crushed cars around the back corner (until it's moved).
+	if not _cleared():
+		for r in CAR_WALL:
+			room.fill(r.position.x, r.position.y, r.size.x, r.size.y, Room.PROP)
+	# The crane's cab: a little steel box, three levers, a window.
+	room.fill(CAB.position.x, CAB.position.y, CAB.size.x, CAB.size.y, Room.BUNKER_WALL)
+	room.fill(59, 6, 8, 5, Room.BUNKER_FLOOR)
+	room.set_tile(63, 11, Room.BUNKER_DOOR)
 
 
 const HEAPS := [Rect2i(18, 3, 5, 3), Rect2i(34, 3, 6, 3), Rect2i(44, 6, 7, 4), Rect2i(16, 16, 6, 3), Rect2i(30, 18, 4, 3),
@@ -148,6 +180,8 @@ func _draw_scenery(ci: CanvasItem) -> void:
 
 func _draw_decor() -> void:
 	# (The heaps and the crushed cars are on the static layer: _draw_scenery.)
+	_draw_car_wall()
+	_draw_cab()
 	# The van: tan, boxy, a tarp half off it, flat tires. (Running, it shakes.)
 	var shake := Vector2(sin(_time * 40.0) * 1.0, 0) if _van_running >= 0.0 else Vector2.ZERO
 	var van := Rect2(VAN.position + shake, VAN.size)
@@ -225,6 +259,137 @@ func _talk_nassan() -> void:
 
 # --- Things --------------------------------------------------------------------------
 
+# --- The crane's cab ------------------------------------------------------------------
+
+## The cars have been moved off the back corner (or it's past that in the story).
+func _cleared() -> bool:
+	return flag("jy_cleared") or flag("jy_van") or flag("jy_nassan") or flag("beat_corps_sansworth")
+
+
+func _cab_ladder() -> void:
+	if not flag("jy_heap_done"):
+		await Game.dialogue.say(["* (A ladder up to the crane's cab.\n*  The crane is very much still moving. Not now.)"])
+		return
+	if _cleared():
+		await Game.dialogue.say(["* (The crane's cab. The cars are moved.\n*  Scrap Heap is back to sorting, quietly.)"])
+		return
+	Game.play_sfx("door", 0.8)
+	await go_through_door(CAB_ENTRY)
+	fit_camera_to_room()
+	if not flag("jy_cab_seen"):
+		Game.flags["jy_cab_seen"] = true
+		await Game.dialogue.say([
+			"* (The crane's cab. It smells like coffee and\n*  hydraulic fluid. Three levers: yellow, red, black.)",
+			"* (Through the window: the stack of crushed cars, and\n*  the van behind it, in the corner.)",
+			"* (Something's scratched into the dash.)",
+		])
+
+
+func _leave_cab() -> void:
+	Game.play_sfx("door", 0.8)
+	await go_through_door(OUTSIDE_CAB)
+	fit_camera_to_room()
+
+
+func _rhyme() -> void:
+	await Game.dialogue.say([
+		"* (Scratched into the dash with a key:)",
+		"* (\"YELLOW takes it DOWN, RED grabs hold,\n*  YELLOW brings it UP, BLACK swings it 'ROUND,\")",
+		"* (\"and RED lets go. - SAL. 1979.\")",
+	])
+
+
+## A lever: the crane does its part, if it's the right one next.
+func _pull(lever: String) -> void:
+	if _cleared():
+		await Game.dialogue.say(["* (The %s lever. The job's done.)" % lever.to_lower()])
+		return
+	var pulls: Array = Game.flags.get("jy_pulls", [])
+	var next: String = LIFT_ORDER[pulls.size()]
+	Game.play_sfx("engine", 0.8)
+	if lever != next:
+		Game.play_sfx("bonk")
+		Game.flags["jy_pulls"] = []
+		var what: String = {"Yellow": "The boom lurches the wrong way.", "Red": "The magnet hums at nothing.", "Black": "The crane swings, with nothing on it."}[lever]
+		await Game.dialogue.say(["* (%s CLANG.\n*  Everything shudders back to where it started.)" % what])
+		return
+	pulls = pulls.duplicate()
+	pulls.append(lever)
+	Game.flags["jy_pulls"] = pulls
+	var says: Array = [
+		"* (The boom groans, and the magnet goes DOWN\n*  onto the stack of crushed cars.)",
+		"* (A deep hum. The magnet GRABS the whole stack.)",
+		"* (The boom comes UP. The cars come with it,\n*  dripping rust.)",
+		"* (The crane swings 'ROUND, cars and all,\n*  out over the open lot.)",
+		"* (The magnet lets go. The cars drop: CRASH.\n*  The whole junkyard jumps.)",
+	]
+	await Game.dialogue.say([says[pulls.size() - 1]])
+	if pulls.size() < LIFT_ORDER.size():
+		return
+	Game.flags["jy_cleared"] = true
+	for r in CAR_WALL:
+		room.fill(r.position.x, r.position.y, r.size.x, r.size.y, Room.ASPHALT)
+	room._build_collision()
+	Game.play_sfx("save")
+	await Game.dialogue.say(["* (Through the window: the back corner, open.\n*  The van, under its tarp, waiting.)"])
+	Game.play_sfx("door", 0.8)
+	await go_through_door(OUTSIDE_CAB)
+	fit_camera_to_room()
+	match _route():
+		"pacifist":
+			await _van_found()
+		"neutral":
+			await _watch_from_behind()
+		_:
+			Game.set_objective("...")
+
+
+## The crushed cars stacked around the back corner, until they're moved.
+func _draw_car_wall() -> void:
+	if _cleared():
+		return
+	var colors := [Color8(140, 70, 60), Color8(70, 90, 120), Color8(110, 110, 100), Color8(150, 120, 60), Color8(80, 100, 80)]
+	var k := 0
+	for r in CAR_WALL:
+		var px: Rect2 = _px(r)
+		var horizontal: bool = r.size.x > r.size.y
+		var steps: int = r.size.x if horizontal else r.size.y
+		for i in steps:
+			var at := px.position + (Vector2(i * T, 0) if horizontal else Vector2(0, i * T))
+			for layer in 3:
+				var c: Color = colors[(k + layer) % colors.size()]
+				var slab := Rect2(at + Vector2(1, T - 6 - layer * 6), Vector2(T - 2, 6))
+				_decor.draw_rect(slab, c.darkened(0.15))
+				_decor.draw_rect(Rect2(slab.position, Vector2(slab.size.x, 1)), c.lightened(0.15))
+				_decor.draw_rect(Rect2(slab.position + Vector2(3, 2), Vector2(4, 2)), Color8(120, 160, 190))
+			k += 1
+
+
+## The cab: the window over the junkyard, the dash, the three levers.
+func _draw_cab() -> void:
+	var r := _px(CAB)
+	var window := Rect2(r.position + Vector2(T + 4, T - 6), Vector2(r.size.x - 2 * T - 8, T + 2))
+	_decor.draw_rect(window.grow(2), Color8(60, 64, 70))
+	_decor.draw_rect(window, Color8(150, 170, 190))
+	# Junk heaps through the glass, and the crushed cars.
+	for k in 6:
+		_decor.draw_circle(window.position + Vector2(14 + k * 26, window.size.y + 4), 14.0, Color8(110, 100, 90))
+	if not _cleared():
+		_decor.draw_rect(Rect2(window.position + Vector2(20, window.size.y - 12), Vector2(30, 12)), Color8(140, 70, 60))
+	var pulls: Array = Game.flags.get("jy_pulls", [])
+	# The dash, and the levers (each one pulled back if it's been pulled).
+	_decor.draw_rect(Rect2(r.position.x + T, 6 * T - 4, r.size.x - 2 * T, 6), Color8(80, 84, 90))
+	var lever_colors := {"Yellow": Color8(240, 200, 40), "Red": Color8(220, 50, 40), "Black": Color8(30, 30, 34)}
+	for i in LEVERS.size():
+		var at: Vector2 = LEVER_SPOTS[i] + Vector2(0, -6)
+		var back := pulls.count(LEVERS[i]) % 2 == 1
+		_decor.draw_line(at, at + Vector2(-5 if back else 5, -12), Color8(160, 164, 170), 2.0)
+		_decor.draw_circle(at + Vector2(-5 if back else 5, -13), 3.5, lever_colors[LEVERS[i]])
+	# The scratches on the dash.
+	for k in 3:
+		_decor.draw_line(RHYME + Vector2(-8, -12 + k * 3), RHYME + Vector2(6, -12 + k * 3), Color8(200, 200, 200, 120), 1.0)
+
+
 func _van() -> void:
 	if flag("jy_van"):
 		await Game.dialogue.say(["* (The van is running. It smells like 1994.)", "* (There's a sticker on the bumper: MY OTHER CAR\n*  IS ALSO THIS CAR.)"])
@@ -274,7 +439,7 @@ func _physics_process(_delta: float) -> void:
 	if heap and is_instance_valid(heap) and player.position.distance_to(heap.position) < 80.0:
 		run_cutscene(_meet_heap)
 		return
-	if _genocide() and not heap and sansworth and is_instance_valid(sansworth) and player.position.distance_to(sansworth.position) < 80.0:
+	if _genocide() and not heap and _cleared() and sansworth and is_instance_valid(sansworth) and player.position.distance_to(sansworth.position) < 80.0:
 		run_cutscene(_confront_sansworth)
 
 
@@ -324,6 +489,15 @@ func _after_heap(spared: bool) -> void:
 		if _genocide():
 			await Game.dialogue.say([{"who": "Relic", "tag": "", "face": false, "text": "* Scrap."}])
 	_engaged = false
+	if not _cleared():
+		await Game.dialogue.say([
+			"* (In the back corner, behind Scrap Heap's sorting:\n*  a wall of crushed cars, stacked three high.)",
+			"* (It's walled in a van. Under a tarp.)",
+		])
+		if _route() == "pacifist":
+			await Game.dialogue.say([{"who": "Nassan", "text": "Somebody has to work the crane.\nThe cab's up the ladder. Please don't crush anyone.", "mood": ""}])
+		Game.set_objective("Move the cars. (The crane's cab.)" if not _genocide() else "...")
+		return
 	match _route():
 		"pacifist":
 			await _van_found()

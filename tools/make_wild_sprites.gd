@@ -24,6 +24,53 @@ const PALETTE := {
 }
 
 const SPRITES := {
+	# --- The Junkyard ---
+	"junk_rat": [
+		".....YYYY........",
+		"....YyyyyY.......",
+		".....GGGG........",
+		"...GGGGGGGG......",
+		"..PGGKGGGKGGP....",
+		"..PGGGGGGGGGP....",
+		"...GGGGPGGGG.....",
+		"....GGGGGGG......",
+		"...GGGGGGGGGG....",
+		"..GGGGGGGGGGGG...",
+		"..GGGGGGGGGGGGPPP",
+		"...GGGGGGGGGG...P",
+		"....g..g..g..g...",
+	],
+	"magnet": [
+		"..RRRR.....RRRR..",
+		"..RRRR.....RRRR..",
+		"..WWWW.....WWWW..",
+		"..RRRR..G..RRRR..",
+		"..RRRR.GgG.RRRR..",
+		"..RRRR.....RRRR..",
+		"..RRRRK...KRRRR..",
+		"..RRRRR...RRRRR..",
+		"..RRRRRRRRRRRRR..",
+		"...RRRRKKKRRRR...",
+		"....RRRRRRRRR....",
+		"..g..G.....G..g..",
+		".gGg.......gGg...",
+	],
+	"hubcap": [
+		".....GGGGGGG.....",
+		"...GGWWWWWWWGG...",
+		"..GWWGGGGGGGWWG..",
+		".GWGGWGGGGGWGGWG.",
+		".GWGGGWGGGWGGGWG.",
+		"GWGGKGGWGWGGKGGWG",
+		"GWGGGGGGKGGGGGGWG",
+		"GWGGGGGWGWGGGGGWG",
+		"GWGGGGWKKKWGGGGWG",
+		".GWGGWGGGGGWGGWG.",
+		".GWGGGGGGGGGGGWG.",
+		"..GWWGGGGGGGWWG..",
+		"...GGWWWWWWWGG...",
+		".....GGGGGGG.....",
+	],
 	# --- The Burned Hills ---
 	"cinder": [
 		"........Y........",
