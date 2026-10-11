@@ -64,6 +64,8 @@ var _font: Font
 var _time: float = 0.0
 var _engaged: bool = false
 var _from_memory: bool = false
+## Where Elric was last frame, up and down (for the fog: see _physics_process).
+var _last_y: float = 1.0e9
 
 
 func _ready() -> void:
@@ -481,8 +483,11 @@ func _physics_process(_delta: float) -> void:
 	if is_blocked() or _engaged:
 		return
 	check_random_encounter(SCENE)
+	# (Only walking UP into it: from the north, after an old save, you just walk down.)
+	var going_up := player.position.y < _last_y
+	_last_y = player.position.y
 	# Walking up the trail into the fog (until you've found the way through).
-	if not _fog_done() and player.position.y < 16 * T and absf(player.position.x - 31 * T) < 2 * T and player.position.y > 14 * T:
+	if not _fog_done() and going_up and player.position.y < 16 * T and absf(player.position.x - 31 * T) < 2 * T and player.position.y > 14 * T:
 		run_cutscene(_into_fog)
 		return
 	# In the fog: which way did you go?
