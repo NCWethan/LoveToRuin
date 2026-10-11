@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: The Burned Hills ---
+	"cinder": {
+		"name": "Cinder", "sprite": "wild_cinder",
+		"intro": "* A Cinder hops out of the ash.\n* It's still warm. It's very proud of that.",
+		"hp": 128, "atk": 12, "def": 4, "patterns": ["cinder_spark", "cinder_pop"],
+		"check": "* CINDER - ATK 12 DEF 4\n* A piece of the old fire that never went out. Five years old.",
+		"acts": [
+			{"name": "Warm Hands", "mercy": 50, "lines": ["* {actor} warms their hands over it.\n* The Cinder glows brighter. Somebody needed it."]},
+			{"name": "Tell It Rest", "mercy": 40, "lines": ["* {actor} tells it it can stop now.\n* The Cinder flickers. Nobody ever told it that."]},
+		],
+		"taunts": ["*crackle*", "*pop*", "STILL HOT"],
+		"flavor": ["* The Cinder smolders.", "* The Cinder bounces from foot to foot.\n* Which is to say, from side to side. It has no feet."],
+		"backdrop": Color(0.6, 0.25, 0.1), "style": "shards", "exp": 31, "money": 18,
+	},
+	"smoke_wraith": {
+		"name": "Smoke Wraith", "sprite": "wild_smoke_wraith",
+		"intro": "* A Smoke Wraith rises off the hill.\n* Your eyes water.",
+		"hp": 120, "atk": 13, "def": 2, "patterns": ["smoke_veil", "smoke_choke"],
+		"check": "* SMOKE WRAITH - ATK 13 DEF 2\n* Hung over these hills since the fire. Wants to see the sky.",
+		"acts": [
+			{"name": "Fan", "mercy": 50, "lines": ["* {actor} fans it gently upward.\n* The Smoke Wraith rises a little. Toward the sky. It looks up."]},
+			{"name": "Hold Breath", "mercy": 40, "lines": ["* {actor} holds their breath and waits.\n* The Smoke Wraith is touched. People usually cough at it."]},
+		],
+		"taunts": ["*cough*", "...hhhh...", "*drift*"],
+		"flavor": ["* The Smoke Wraith thins and thickens.", "* You can't tell where the Smoke Wraith ends\n* and the sky begins."],
+		"backdrop": Color(0.4, 0.38, 0.38), "style": "static", "exp": 32, "money": 15,
+	},
+	"charred_stump": {
+		"name": "Charred Stump", "sprite": "wild_charred_stump",
+		"intro": "* A Charred Stump pulls up its roots.\n* It's had enough of standing around.",
+		"hp": 136, "atk": 12, "def": 8, "patterns": ["stump_roots", "stump_splinters"],
+		"check": "* CHARRED STUMP - ATK 12 DEF 8\n* Was a tree once. Remembers all of it. Angry about the rest.",
+		"acts": [
+			{"name": "Plant Seed", "mercy": 50, "lines": ["* {actor} plants a seed by its roots.\n* The Charred Stump goes very still. Something's growing."]},
+			{"name": "Count Rings", "mercy": 40, "lines": ["* {actor} counts its rings out loud. 84.\n* The Charred Stump didn't know it was that old. It feels wise."]},
+		],
+		"taunts": ["*creak*", "*CRACK*", "MY HILL."],
+		"flavor": ["* The Charred Stump shifts its roots.", "* There's a tiny green shoot on top of the Charred Stump.\n* It hasn't noticed."],
+		"backdrop": Color(0.35, 0.25, 0.2), "style": "leaves", "exp": 33, "money": 20,
+	},
 	# --- Chapter 2: Torrey Pines ---
 	"rattlesnake": {
 		"name": "Rattlesnake", "sprite": "wild_rattlesnake",
@@ -391,7 +431,7 @@ const ZONES := {
 	"res://scenes/downtown.tscn": ["pigeon_gang", "parking_meter", "neon_sign"],
 	"res://scenes/harbor.tscn": ["gull_captain", "lobster_trap", "rust_bot"],
 	"res://scenes/torrey_pines.tscn": ["rattlesnake", "fog_wisp", "lost_kite"],
-	"res://scenes/burned_hills.tscn": ["squirrel", "bag"],
+	"res://scenes/burned_hills.tscn": ["cinder", "smoke_wraith", "charred_stump"],
 	"res://scenes/junkyard.tscn": ["cart", "bag", "receipt"],
 }
 

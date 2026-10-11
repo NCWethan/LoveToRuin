@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- The Burned Hills ---
+		"cinder_spark": return _cinder_spark(enemy, parent, area, s, step)
+		"cinder_pop": return _cinder_pop(enemy, parent, area, s, step)
+		"smoke_veil": return _smoke_veil(enemy, parent, area, s, step)
+		"smoke_choke": return _smoke_choke(enemy, parent, area, s, step)
+		"stump_roots": return _stump_roots(enemy, parent, area, s, step)
+		"stump_splinters": return _stump_splinters(enemy, parent, area, s, step)
 		# --- Torrey Pines ---
 		"snake_strike": return _snake_strike(enemy, parent, area, s, step)
 		"snake_rattle": return _snake_rattle(enemy, parent, area, s, step)
@@ -480,4 +487,75 @@ static func _lostkite_loop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector
 	kite.face_motion = true
 	kite.wall_bounce = true
 	kite.lifetime = 2.6
+	return 0.9
+
+
+# --- Cinder ------------------------------------------------------------------------------
+
+## SPARK: sparks rise from the floor of the box, swaying, under where you are.
+static func _cinder_spark(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := Attacks._aim_x(area, soul, step, 2)
+	var spark := _glyph(enemy, parent, area, Vector2(x, area.end.y - 4), "cinder", 7.0)
+	spark.velocity = Vector2(0, -130)
+	spark.sway = 35.0
+	return 0.3
+
+
+## POP: a cinder lands near you and pops, throwing sparks in a ring.
+static func _cinder_pop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var at := (soul + Vector2(randf_range(-40, 40), randf_range(-30, 30))).clamp(area.position + Vector2(10, 10), area.end - Vector2(10, 10))
+	for k in 8:
+		var spark := _glyph(enemy, parent, area, at, "cinder", 6.0)
+		spark.delay = 0.55
+		spark.velocity = Vector2.from_angle(k * TAU / 8.0) * 115.0
+	return 0.8
+
+
+# --- Smoke Wraith ------------------------------------------------------------------------
+
+## VEIL: a wall of smoke rolls across the box, one gap in it.
+static func _smoke_veil(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var down := step % 2 == 0
+	var cols := int(area.size.x / 14.0)
+	var gap := clampi(int((soul.x - area.position.x) / 14.0) + randi_range(-1, 1), 0, cols - 2)
+	for k in cols:
+		if k == gap or k == gap + 1:
+			continue
+		var puff := _glyph(enemy, parent, area, Vector2(area.position.x + 7 + k * 14, area.position.y + 6 if down else area.end.y - 6), "smoke", 8.0)
+		puff.delay = 0.3
+		puff.velocity = Vector2(0, 80 if down else -80)
+	return 1.4
+
+
+## CHOKE: smoke gathers in a ring around you and closes in.
+static func _smoke_choke(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var skip := randi() % 8
+	for k in 8:
+		if k == skip:
+			continue
+		var at := soul + Vector2.from_angle(k * TAU / 8.0) * 60.0
+		var puff := _glyph(enemy, parent, area, at.clamp(area.position + Vector2(6, 6), area.end - Vector2(6, 6)), "smoke", 8.0)
+		puff.delay = 0.6
+		puff.velocity = (soul - at).normalized() * 70.0
+	return 1.3
+
+
+# --- Charred Stump -----------------------------------------------------------------------
+
+## ROOTS: roots burst up through the floor where you're standing.
+static func _stump_roots(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := clampf(soul.x + (0.0 if step % 2 == 0 else randf_range(-30, 30)), area.position.x + 6, area.end.x - 6)
+	Attacks._beam(enemy, parent, area, Vector2(x, area.get_center().y), Vector2.DOWN, 0.55, Color(0.55, 0.35, 0.2))
+	return 0.6
+
+
+## SPLINTERS: it cracks, and splinters fly out in a fan at you.
+static func _stump_splinters(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var origin := Vector2(area.get_center().x + (step % 3 - 1) * 50.0, area.position.y + 4)
+	var aim := (soul - origin).angle()
+	for k in 5:
+		var splinter := _glyph(enemy, parent, area, origin, "splinter", 7.0)
+		splinter.delay = 0.3
+		splinter.velocity = Vector2.from_angle(aim + (k - 2) * 0.22) * 150.0
+		splinter.face_motion = true
 	return 0.9

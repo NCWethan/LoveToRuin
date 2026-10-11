@@ -464,6 +464,9 @@ const GLYPH_COLORS := {
 }
 const GLYPHS := {
 	"claw": ["RR...", "RRR..", ".RRRR", "RRR..", "RR..."],
+	"cinder": [".O.", "OYO", ".R."],
+	"smoke": [".gg.", "gGGg", "GGGG", ".gG."],
+	"splinter": ["bb...", ".bbb.", "...bb"],
 	"snake": ["..NN.", ".N.KN", "N..NN", ".NN..", "...NN"],
 	"wisp": [".WWW.", "WWWWW", "WLWLW", "WWWWW", ".W.W."],
 	"cap": [".WWW.", "WWWWW", "KKYKK", "bbbbb"],

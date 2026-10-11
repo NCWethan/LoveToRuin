@@ -19,7 +19,14 @@ extends Area
 ##   With Hop   Ember doesn't fight. It's Relic's fire; it knows them. Ronin is
 ##              waiting at the top with his guitar.
 ##
-## Story flags: bh_arrived, bh_ember_done, bh_fragment, has_fragment_10.
+## Spot fires burn across the hill at three of the switchbacks (Chapter 2: the road
+## to each fragment). Engine 33's hose line runs up the fire road: three valves on
+## the engine (A, the main; B, up the middle; C, to the top), and a pump. Past A,
+## the water only has the pressure for ONE branch at a time. So: A for the lower
+## fire, A and B for the middle, A and C for the top.
+##
+## Story flags: bh_arrived, bh_fires_seen, bh_valves (A, B, C open?), bh_fire_0..2
+## (out), bh_ember_done, bh_fragment, has_fragment_10.
 
 const SCENE := "res://scenes/burned_hills.tscn"
 const T := Room.TILE
@@ -28,6 +35,12 @@ const ENTRY := Vector2(44 * T, 37 * T + 10)
 const EMBER_SPOT := Vector2(20 * T, 5 * T)
 const RONIN_SPOT := Vector2(20 * T, 9 * T)
 const LOOKOUT := Vector2(30 * T, 4 * T + 6)
+## The spot fires: a line of fire across the hill at each of these rows.
+const FIRE_ROWS := [26, 16, 10]
+const FIRE_NAMES := ["the lower switchback", "the middle switchback", "the top of the road"]
+## Engine 33's pump panel, and the hose diagram on its side.
+const PUMP := Vector2(24 * T + 14, 36 * T + 6)
+const DIAGRAM := Vector2(21 * T, 35 * T + 4)
 
 var partner: Character
 var ronin: Character
@@ -58,7 +71,7 @@ func _ready() -> void:
 	_place_people()
 	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [LOOKOUT, _lookout], [Vector2(9 * T + 10, 30 * T + 4), _saplings],
-			[Vector2(36 * T + 10, 36 * T + 4), _trailhead_sign]]:
+			[Vector2(36 * T + 10, 36 * T + 4), _trailhead_sign], [PUMP, _pump], [DIAGRAM, _diagram]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	Game.play_music("burned_hills")
 	fit_camera_to_room()
@@ -80,6 +93,8 @@ func _route() -> String:
 func _process(delta: float) -> void:
 	_time += delta
 	_decor.queue_redraw()
+	for i in _steam.keys():
+		_steam[i] = maxf(0.0, _steam[i] - delta * 0.4)
 	if ember and is_instance_valid(ember):
 		ember.position = EMBER_SPOT + Vector2(0, sin(_time * 3.0) * 2.0)
 
@@ -142,9 +157,139 @@ func build_map() -> void:
 	# A few patches of new grass, where the Firefighter has been planting.
 	for spot in [Vector2i(8, 28), Vector2i(10, 28), Vector2i(12, 29), Vector2i(20, 27), Vector2i(36, 19), Vector2i(24, 14)]:
 		room.fill(spot.x, spot.y, 2, 1, Room.GRASS)
+	# The spot fires, across the hill (until they're put out).
+	for i in FIRE_ROWS.size():
+		if not _fire_out(i):
+			_set_fire_line(i, true)
+
+
+# --- The spot fires, and Engine 33's hose line ------------------------------------------
+
+func _fire_out(i: int) -> bool:
+	return flag("bh_fire_%d" % i) or flag("bh_ember_done") or flag("bh_fragment")
+
+
+func _fires_left() -> int:
+	var left := 0
+	for i in FIRE_ROWS.size():
+		if not _fire_out(i):
+			left += 1
+	return left
+
+
+## Lays a line of fire across the hill (solid), or takes it away (the ground it
+## was on comes back: the road where the road was).
+var _under_fire := {}
+func _set_fire_line(i: int, burning: bool) -> void:
+	var row: int = FIRE_ROWS[i]
+	for x in range(1, 47):
+		var at := Vector2i(x, row)
+		if burning:
+			var tile := room.get_tile(x, row)
+			if tile == Room.STUMP:
+				continue
+			_under_fire[at] = tile
+			room.set_tile(x, row, Room.PROP)
+		elif _under_fire.has(at):
+			room.set_tile(x, row, _under_fire[at])
+
+
+func _valves() -> Array:
+	return Game.flags.get("bh_valves", [false, false, false])
+
+
+## The diagram painted on the side of the engine.
+func _diagram() -> void:
+	await Game.dialogue.say([
+		"* (Painted on the side of the engine: ENGINE 33.\n*  HOSE LINE, BLACK MTN FIRE ROAD. A diagram:)",
+		"* (A: THE MAIN. Nothing goes anywhere without A.\n*  B: UP THE MIDDLE.  C: ALL THE WAY TO THE TOP.)",
+		"* (Underlined twice: PAST A, ONE BRANCH AT A TIME!!\n*  Open B and C together and you get a trickle.)",
+	])
+
+
+## The pump panel: three valves, and the pump.
+func _pump() -> void:
+	if _fires_left() == 0:
+		await Game.dialogue.say(["* (The pump panel. Every fire on the road is out.\n*  The engine ticks as it cools.)"])
+		return
+	while true:
+		var v := _valves()
+		var options: Array = []
+		for k in 3:
+			options.append("%s: %s" % [["A", "B", "C"][k], "OPEN" if v[k] else "SHUT"])
+		options.append_array(["Run the pump", "Step back"])
+		var pick := await Game.dialogue.ask("* (Engine 33's pump panel. Three valves on the\n*  hose line, and a big red PUMP button.)", options)
+		if pick < 0 or pick == 4:
+			return
+		if pick < 3:
+			var turned: Array = v.duplicate()
+			turned[pick] = not turned[pick]
+			Game.flags["bh_valves"] = turned
+			Game.play_sfx("move")
+			continue
+		await _run_pump()
+		return
+
+
+## The pump: where does the water go?
+func _run_pump() -> void:
+	var v := _valves()
+	Game.play_sfx("engine")
+	if not v[0]:
+		await Game.dialogue.say(["* (The pump roars. The hose twitches.\n*  ...Nothing comes out. Valve A is shut.)"])
+		return
+	var reach: Array = [0]
+	if v[1] and v[2]:
+		await Game.dialogue.say(["* (The pump roars. Water runs up the hose... and\n*  splits two ways, and slows to a trickle.)"])
+	elif v[1]:
+		reach.append(1)
+	elif v[2]:
+		reach.append(2)
+	var put_out: Array = []
+	for i in reach:
+		if not _fire_out(i):
+			put_out.append(i)
+			Game.flags["bh_fire_%d" % i] = true
+			_set_fire_line(i, false)
+			_steam[i] = 1.0
+	room._build_collision()
+	if put_out.is_empty():
+		await Game.dialogue.say(["* (Water rushes up the road... to fires that are\n*  already out.)"])
+		return
+	Game.play_sfx("shatter")
+	var names: Array = put_out.map(func(i: int) -> String: return FIRE_NAMES[i])
+	await Game.dialogue.say(["* (Far up the hill, a hiss, and a cloud of steam\n*  where %s was burning.)" % " and ".join(names)])
+	if _fires_left() == 0:
+		await Game.dialogue.say(["* (The last of the spot fires goes out.\n*  The fire road is clear, all the way up.)"])
+		Game.set_objective("The top of the hill." if not _genocide() else "...")
+	else:
+		Game.set_objective("Put out the spot fires. (%d left.)" % _fires_left())
+
+
+## The fire lines (flickering), and the steam where one just went out.
+var _steam := {}
+func _draw_fires() -> void:
+	for i in FIRE_ROWS.size():
+		var y: float = FIRE_ROWS[i] * T + T
+		if not _fire_out(i):
+			var x := T
+			var k := 0
+			while x < 47 * T:
+				var h := 10.0 + 6.0 * absf(sin(_time * 6.0 + k * 1.7))
+				_decor.draw_circle(Vector2(x + 6, y - 6), 9.0, Color(1.0, 0.45, 0.1, 0.18))
+				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x, y - 2), Vector2(x + 6, y - 2 - h), Vector2(x + 12, y - 2)]), Color(1.0, 0.5, 0.12, 0.9))
+				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x + 3, y - 2), Vector2(x + 6, y - 2 - h * 0.6), Vector2(x + 9, y - 2)]), Color(1.0, 0.88, 0.3, 0.95))
+				x += 12
+				k += 1
+		elif _steam.has(i):
+			var s: float = _steam[i]
+			for k in 16:
+				var at := Vector2(T + k * 58 + sin(k * 3.0) * 10.0, y - 10 - (1.0 - s) * 30.0)
+				_decor.draw_circle(at, 10.0 + (1.0 - s) * 10.0, Color(0.9, 0.92, 0.95, 0.4 * s))
 
 
 func _draw_decor() -> void:
+	_draw_fires()
 	# Ash drifting across the hill.
 	for k in 26:
 		var at := Vector2(fmod(k * 131.0 + _time * 14.0, 48.0 * T), fmod(k * 59.0 + _time * 6.0, 34.0 * T))
@@ -170,6 +315,16 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	ci.draw_rect(sign, Color8(120, 86, 54))
 	ci.draw_string(_font, sign.position + Vector2(4, 12), "FIRE RD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 230, 210))
 	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
+	# Engine 33's hose line, snaking up the fire road beside the switchbacks.
+	var hose := PackedVector2Array([Vector2(24 * T, 36 * T), Vector2(33 * T, 34 * T), Vector2(33 * T + 10, 31 * T + 14), Vector2(7 * T + 16, 31 * T + 14),
+		Vector2(7 * T + 16, 22 * T + 14), Vector2(39 * T + 16, 22 * T + 14), Vector2(39 * T + 16, 12 * T + 14), Vector2(13 * T + 16, 12 * T + 14), Vector2(13 * T + 16, 10 * T + 18)])
+	ci.draw_polyline(hose, Color8(200, 170, 120), 3.0)
+	ci.draw_polyline(hose, Color8(150, 120, 80), 1.0)
+	# The valves where the branches split off, and the pump panel on the engine.
+	for at in [Vector2(33 * T, 34 * T), Vector2(7 * T + 16, 22 * T + 14), Vector2(39 * T + 16, 12 * T + 14)]:
+		ci.draw_circle(at, 4.0, Color8(200, 40, 40))
+	ci.draw_rect(Rect2(PUMP + Vector2(-6, -8), Vector2(10, 10)), Color8(80, 80, 88))
+	ci.draw_circle(PUMP + Vector2(-1, -3), 3.0, Color8(230, 50, 40))
 
 
 ## A hazy, orange-gray sky over everything.
@@ -186,7 +341,7 @@ func _place_people() -> void:
 		partner.follow = player
 	add_person("firefighter", Vector2(11 * T, 31 * T), SCENE)
 	if Game.partner() != "Ronin" and not flag("beat_corps_ronin"):
-		ronin = add_npc("Ronin", RONIN_SPOT + Vector2(0, 30 if _genocide() else 0), _talk_ronin)
+		ronin = add_npc("Ronin", RONIN_SPOT + Vector2(0, 14 if _genocide() else 0), _talk_ronin)
 	if not flag("bh_ember_done") and str(Game.battle_result.get("id", "")) != "ember":
 		ember = Cast.make("ember")
 		ember.glow = true
@@ -267,6 +422,9 @@ func _physics_process(_delta: float) -> void:
 	if is_blocked() or _engaged:
 		return
 	check_random_encounter(SCENE)
+	if not flag("bh_fires_seen") and _fires_left() > 0 and player.position.y < 29 * T:
+		run_cutscene(_see_fires)
+		return
 	if _genocide() and ronin and is_instance_valid(ronin) and player.position.distance_to(ronin.position) < 80.0:
 		run_cutscene(_confront_ronin)
 		return
@@ -274,6 +432,16 @@ func _physics_process(_delta: float) -> void:
 		if _genocide() and ronin and is_instance_valid(ronin):
 			return
 		run_cutscene(_meet_ember)
+
+
+func _see_fires() -> void:
+	Game.flags["bh_fires_seen"] = true
+	await Game.dialogue.say([
+		"* (Up ahead, the fire road is on fire.)",
+		"* (Spot fires, all the way across the hill.\n*  Little ones. Hungry ones. Three lines of them.)",
+		"* (Down at the trailhead, Engine 33 has a hose line\n*  running up the road. Its pump panel is on the side.)",
+	])
+	Game.set_objective("Put out the spot fires. (Engine 33's pump panel.)")
 
 
 func _arrival() -> void:
