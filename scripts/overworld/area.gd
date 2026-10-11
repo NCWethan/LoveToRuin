@@ -15,6 +15,10 @@ var camera: Camera2D
 ## Rooms within this area's map (in pixels). The camera stays inside whichever
 ## room Elric is in. Leave empty to use the whole map as one room.
 var rooms: Array[Rect2] = []
+## Black over everything outside the room Elric is in (when the area has rooms),
+## so a room smaller than the screen doesn't show its neighbors.
+var _room_mask: Node2D
+var _mask_bounds := Rect2()
 
 var _cutscene_running: bool = false
 
@@ -771,6 +775,24 @@ func fit_camera_to_room() -> void:
 	camera.limit_right = int(bounds.end.x)
 	camera.limit_bottom = int(bounds.end.y)
 	camera.reset_smoothing()
+	if not rooms.is_empty():
+		if _room_mask == null:
+			_room_mask = Node2D.new()
+			_room_mask.z_index = 100
+			_room_mask.draw.connect(_draw_room_mask)
+			add_child(_room_mask)
+		_mask_bounds = bounds
+		_room_mask.queue_redraw()
+
+
+func _draw_room_mask() -> void:
+	var b := _mask_bounds
+	var far := 4000.0
+	var black := Color.BLACK
+	_room_mask.draw_rect(Rect2(b.position.x - far, b.position.y - far, b.size.x + far * 2, far), black)
+	_room_mask.draw_rect(Rect2(b.position.x - far, b.end.y, b.size.x + far * 2, far), black)
+	_room_mask.draw_rect(Rect2(b.position.x - far, b.position.y, far, b.size.y), black)
+	_room_mask.draw_rect(Rect2(b.end.x, b.position.y, far, b.size.y), black)
 
 
 ## Moves Elric (and anyone following) to `to`, with a quick fade, like walking through a door.

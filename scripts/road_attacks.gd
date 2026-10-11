@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- Downtown ---
+		"pigeon_swoop": return _pigeon_swoop(enemy, parent, area, s, step)
+		"pigeon_crumbs": return _pigeon_crumbs(enemy, parent, area, s, step)
+		"meter_coins": return _meter_coins(enemy, parent, area, s, step)
+		"meter_expired": return _meter_expired(enemy, parent, area, s, step)
+		"neon_flicker": return _neon_flicker(enemy, parent, area, s, step)
+		"neon_buzz": return _neon_buzz(enemy, parent, area, s, step)
 		# --- Old Town ---
 		"weed_roll": return _weed_roll(enemy, parent, area, s, step)
 		"weed_gust": return _weed_gust(enemy, parent, area, s, step)
@@ -248,3 +255,80 @@ static func _wax_flame(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, s
 	flame.velocity = (soul - start).normalized() * 95.0
 	flame.sway = 30.0
 	return 0.5
+
+
+# --- Pigeon Gang -------------------------------------------------------------------------
+
+## SWOOP: the gang dives in a V from one side, straight at you.
+static func _pigeon_swoop(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var lead := Vector2(area.position.x + 6 if left else area.end.x - 6, area.position.y + 8)
+	var dir := (soul - lead).normalized()
+	var side := Vector2(-dir.y, dir.x)
+	for k in 5:
+		var rank := (k + 1) / 2
+		var offset := -dir * rank * 12.0 + side * rank * 10.0 * (1 if k % 2 == 0 else -1)
+		var start := (lead + offset).clamp(area.position + Vector2(6, 6), area.end - Vector2(6, 6))
+		var bird := _glyph(enemy, parent, area, start, "bird", 8.0)
+		bird.delay = 0.3
+		bird.velocity = dir * 170.0
+		bird.face_motion = true
+	return 1.0
+
+
+## CRUMBS: someone dropped fries. Crumbs rain down, and the gang follows them.
+static func _pigeon_crumbs(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := Attacks._aim_x(area, soul, step, 3)
+	var crumb := _glyph(enemy, parent, area, Vector2(x, area.position.y + 4), "fry", 6.0)
+	crumb.velocity = Vector2(0, 120)
+	if step % 3 == 0:
+		var bird := _glyph(enemy, parent, area, Vector2(x + (30 if step % 2 == 0 else -30), area.position.y + 4), "bird", 8.0)
+		bird.delay = 0.2
+		bird.velocity = Vector2(0, 150)
+		bird.sway = 30.0
+	return 0.3
+
+
+# --- Parking Meter -----------------------------------------------------------------------
+
+## COINS: quarters pop out of the slot and arc over, bouncing off the walls.
+static func _meter_coins(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	for k in 3:
+		var coin := _glyph(enemy, parent, area, Vector2(area.get_center().x, area.position.y + 6), "coin", 7.0)
+		coin.delay = 0.25 + k * 0.1
+		coin.velocity = Vector2((k - 1) * 90.0 + randf_range(-20, 20), 130)
+		coin.wall_bounce = true
+		coin.lifetime = 2.4
+	return 0.9
+
+
+## EXPIRED: the red flag drops. Warning stripes light up a row, then a column.
+static func _meter_expired(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var dir := Vector2.RIGHT if step % 2 == 0 else Vector2.DOWN
+	Attacks._beam(enemy, parent, area, soul, dir, 0.55, Color(1.0, 0.3, 0.3))
+	return 0.75
+
+
+# --- Neon Sign ---------------------------------------------------------------------------
+
+## FLICKER: tubes of light flash on across the box: two at a time, never where
+## the gap is.
+static func _neon_flicker(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var colors := [Color(1.0, 0.35, 0.7), Color(0.4, 0.9, 1.0), Color(1.0, 0.85, 0.3)]
+	var c: Color = colors[step % 3]
+	var at := Vector2(soul.x + (18.0 if step % 2 == 0 else -18.0), soul.y)
+	Attacks._beam(enemy, parent, area, at, Vector2.DOWN, 0.5, c)
+	Attacks._beam(enemy, parent, area, Vector2(soul.x, clampf(soul.y + (24.0 if step % 2 == 0 else -24.0), area.position.y + 6, area.end.y - 6)), Vector2.RIGHT, 0.65, c)
+	return 0.9
+
+
+## BUZZ: sparks crackle out of a loose wire in rings.
+static func _neon_buzz(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var at := Vector2(randf_range(area.position.x + 14, area.end.x - 14), randf_range(area.position.y + 14, area.end.y - 14))
+	if at.distance_to(soul) < 30.0:
+		at = soul + (at - soul).normalized() * 30.0
+	for k in 6:
+		var spark := _glyph(enemy, parent, area, at, "spark", 6.0)
+		spark.delay = 0.4
+		spark.velocity = Vector2.from_angle(k * TAU / 6.0 + step * 0.3) * 120.0
+	return 0.6

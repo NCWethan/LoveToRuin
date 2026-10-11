@@ -19,8 +19,13 @@ extends Area
 ##   Own way    Supreme is on the field. He tells you your odds. Unhelpfully.
 ##   With Hop   Supreme is waiting at home plate. He's done the math on you.
 ##
-## Story flags: dt_arrived, dt_inside, dt_screen_done, dt_fragment, dt_odds,
-## has_fragment_7.
+## The ballpark's gate has no power (Chapter 2: the road to each fragment). The
+## service panel is in the Hotel Grande's basement: six breakers, and a chart
+## scrawled on the wall. The main trips over 30 amps; the gate needs breaker 3,
+## the diner's coffee (1) must stay on, and you'll want the light (6).
+##
+## Story flags: dt_arrived, dt_inside, dt_basement_seen, dt_breakers (which are
+## on), dt_power, dt_screen_done, dt_fragment, dt_odds, has_fragment_7.
 
 const SCENE := "res://scenes/downtown.tscn"
 const T := Room.TILE
@@ -42,6 +47,16 @@ const FIRST_BASE := Vector2(31 * T, 49 * T)
 const SCREEN := Rect2(15 * T, 32 * T + 4, 15 * T, 3 * T + 4)
 const DINER_DOOR := Vector2(19 * T + 10, 8 * T + 4)
 const HOTEL_DOOR := Vector2(6 * T + 10, 8 * T + 4)
+## The Hotel Grande's basement (its own room on the map): the breaker panel.
+const BASEMENT := Rect2i(46, 32, 18, 16)
+const BASEMENT_ENTRY := Vector2(54 * T + 10, 45 * T + 10)
+const BASEMENT_EXIT := Vector2(54 * T + 10, 47 * T - 2)
+const OUTSIDE_HOTEL := Vector2(6 * T + 10, 9 * T + 2)
+const PANEL := Vector2(56 * T + 10, 35 * T + 4)
+const CHART := Vector2(52 * T + 10, 35 * T + 4)
+## The breakers: what each one runs, and how many amps it draws.
+const BREAKERS := [["DINER", 10], ["HOTEL SIGN", 10], ["BALLPARK GATE", 15], ["TROLLEY BELL", 5], ["ELEVATOR", 25], ["THIS LIGHT", 5]]
+const MAX_AMPS := 30
 
 var partner: Character
 var supreme: Character
@@ -59,9 +74,10 @@ func _ready() -> void:
 	_from_memory = not Game.keepsake_after.is_empty() and not Game.playing_relic
 	# Just back from a fight here: nothing starts again until its scene has played.
 	_engaged = str(Game.battle_result.get("id", "")) in ["big_screen", "corps_supreme"]
-	rooms.assign([_px(OUTSIDE), _px(INSIDE)])
+	rooms.assign([_px(OUTSIDE), _px(INSIDE), _px(BASEMENT)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(T, 15 * T, 62 * T, 13 * T))
+	add_wild_encounters(SCENE, _px(BASEMENT))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)
@@ -75,7 +91,8 @@ func _ready() -> void:
 	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [GATE_OUT, _ballpark_gate], [INSIDE_EXIT, _leave_ballpark],
 			[DINER_DOOR, _diner], [HOTEL_DOOR, _hotel], [Vector2(32 * T, 21 * T + 4), _fountain],
-			[Vector2(22 * T + 10, 36 * T + 4), _outfield_wall]]:
+			[Vector2(22 * T + 10, 36 * T + 4), _outfield_wall], [BASEMENT_EXIT, _leave_basement], [PANEL, _panel],
+			[CHART, _chart], [Vector2(48 * T + 10, 38 * T + 4), _boiler]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	_play_music_here()
 	fit_camera_to_room()
@@ -94,8 +111,9 @@ func _route() -> String:
 	return str(Game.flags.get("route", ""))
 
 
+## In the ballpark (not the basement).
 func _inside() -> bool:
-	return player.position.y > 32 * T
+	return _px(INSIDE).has_point(player.position)
 
 
 ## The city outside; inside, the empty ballpark is quiet (until the screen wakes up).
@@ -206,6 +224,12 @@ func build_map() -> void:
 	room.fill(20, 57, 5, 2, Room.SIDEWALK)    # the tunnel out
 	room.set_tile(22, 59, Room.DOOR)
 	room.fill(27, 55, 6, 1, Room.FENCE)       # the dugout rail
+	# The Hotel Grande's basement: concrete, pipes, a boiler, the panel.
+	room.fill(BASEMENT.position.x, BASEMENT.position.y, BASEMENT.size.x, BASEMENT.size.y, Room.BUNKER_WALL)
+	room.fill(47, 35, 16, 12, Room.BUNKER_FLOOR)
+	room.fill(47, 37, 3, 3, Room.PROP)        # the boiler
+	room.fill(60, 40, 2, 5, Room.PROP)        # old luggage, stacked
+	room.set_tile(54, 47, Room.BUNKER_DOOR)
 
 
 ## What never changes: the diner and the ballpark's fronts, the lamp posts, the
@@ -240,6 +264,7 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	# Inside the ballpark: the field, and the Big Screen's frame.
 	Scenery.ball_field(ci, HOME_PLATE, MOUND)
 	Scenery.big_screen_frame(ci, SCREEN)
+	_draw_basement(ci)
 
 
 func _draw_decor() -> void:
@@ -297,6 +322,19 @@ func _draw_shade() -> void:
 	for x in range(3, 62, 6):
 		_shade.draw_circle(Vector2(x * T + 10, 9 * T - 30), 26.0, Color(1.0, 0.85, 0.5, 0.08))
 	_shade.draw_rect(_px(INSIDE), Color(0.05, 0.05, 0.12, 0.18))
+	# The basement: one bare bulb (when breaker 6 is on and the main is up).
+	var lit := flag("dt_power")
+	_shade.draw_rect(_px(BASEMENT), Color(0.02, 0.02, 0.05, 0.25 if lit else 0.5))
+	if lit:
+		_shade.draw_circle(Vector2(55 * T, 36 * T), 70.0, Color(1.0, 0.9, 0.6, 0.08))
+	# The panel's breakers: up (on) or down (off), and the main.
+	var on := _breakers()
+	for i in 6:
+		var at := Vector2(55 * T + 4 + (i % 2) * 14, 33 * T + 8 + (i / 2) * 9)
+		_shade.draw_rect(Rect2(at, Vector2(10, 7)), Color8(40, 42, 48))
+		_shade.draw_rect(Rect2(at + Vector2(3, 0 if on[i] else 4), Vector2(4, 3)), Color8(220, 220, 225) if on[i] else Color8(120, 120, 128))
+	_shade.draw_rect(Rect2(58 * T + 2, 33 * T + 8, 8, 24), Color8(40, 42, 48))
+	_shade.draw_rect(Rect2(58 * T + 3, 33 * T + 9 if lit else 33 * T + 22, 6, 8), Color8(220, 60, 50) if not lit else Color8(80, 220, 110))
 
 
 # --- People ----------------------------------------------------------------------
@@ -356,7 +394,152 @@ func _diner() -> void:
 
 
 func _hotel() -> void:
-	await Game.dialogue.say(["* (The Hotel Grande. The doorman is asleep standing up.\n*  You don't wake him.)"])
+	if not flag("dt_basement_seen") and not flag("dt_gate_seen"):
+		await Game.dialogue.say(["* (The Hotel Grande. The doorman is asleep standing up.\n*  You don't wake him.)"])
+		return
+	await Game.dialogue.say(["* (The doorman is still asleep. Past him, a door:\n*  STAFF ONLY. STAIRS TO BASEMENT.)"])
+	Game.play_sfx("door")
+	await go_through_door(BASEMENT_ENTRY)
+	fit_camera_to_room()
+	_play_music_here()
+	if not flag("dt_basement_seen"):
+		Game.flags["dt_basement_seen"] = true
+		await Game.dialogue.say([
+			"* (The hotel's basement. Pipes along the ceiling,\n*  a boiler that sighs, a hundred years of luggage.)",
+			"* (On the far wall: a breaker panel. Somebody's\n*  scrawled all over the wall next to it in marker.)",
+		])
+		if not flag("dt_power"):
+			Game.set_objective("Get the power back on. (The breaker panel.)")
+
+
+func _leave_basement() -> void:
+	Game.play_sfx("door")
+	await go_through_door(OUTSIDE_HOTEL)
+	fit_camera_to_room()
+	_play_music_here()
+
+
+func _boiler() -> void:
+	await Game.dialogue.say(["* (The boiler. It sighs. It's been sighing since 1920.)", "* (A sticky note on it: PLEASE DO NOT KICK.\n*  Under that: (IT HELPS SOMETIMES.))"])
+
+
+## What each breaker is on (from the flags; all on, to start: that's why it trips).
+func _breakers() -> Array:
+	return Game.flags.get("dt_breakers", [true, true, true, true, true, true])
+
+
+## The chart, scrawled on the wall next to the panel.
+func _chart() -> void:
+	await Game.dialogue.say([
+		"* (Scrawled on the wall in marker:)",
+		"* (\"PANEL B. THE MAIN TRIPS OVER 30 AMPS!!!\")",
+		"* (\"1 DINER ........ 10   NEVER OFF. - MARGE\n*  2 HOTEL SIGN ... 10\n*  3 BALLPARK GATE  15\")",
+		"* (\"4 TROLLEY BELL .  5\n*  5 ELEVATOR ..... 25   BROKEN ANYWAY\n*  6 THIS LIGHT ...  5   you'll want this\")",
+	])
+
+
+## The breaker panel: flip breakers, then try the main.
+func _panel() -> void:
+	if flag("dt_power"):
+		await Game.dialogue.say(["* (The panel hums. The MAIN is up.\n*  Somewhere up the street, a gate motor is running.)"])
+		return
+	while true:
+		var on := _breakers()
+		var options: Array = []
+		for i in 6:
+			options.append("%d: %s" % [i + 1, "ON" if on[i] else "OFF"])
+		options.append_array(["Flip the MAIN", "Step back"])
+		var pick := await Game.dialogue.ask("* (The breaker panel. Six breakers, and the MAIN.\n*  The MAIN is down.)", options)
+		if pick < 0 or pick == 7:
+			return
+		if pick < 6:
+			var flipped: Array = on.duplicate()
+			flipped[pick] = not flipped[pick]
+			Game.flags["dt_breakers"] = flipped
+			Game.play_sfx("move")
+			_shade.queue_redraw()
+			continue
+		await _try_main()
+		return
+
+
+## The main: does it hold?
+func _try_main() -> void:
+	var on := _breakers()
+	var amps := 0
+	for i in 6:
+		if on[i]:
+			amps += int(BREAKERS[i][1])
+	Game.play_sfx("thud")
+	if amps > MAX_AMPS:
+		await Game.dialogue.say([
+			"* (CLUNK. The lights flicker on, buzz-)",
+			"* (BANG. The MAIN trips. Everything's dark again.)",
+			"* (Too much on at once.)",
+		])
+		return
+	if not on[5]:
+		await Game.dialogue.say(["* (CLUNK. ...The MAIN holds. But it's pitch black.\n*  You can't see a thing. You fumble it back down.)", "* (Breaker 6: THIS LIGHT. \"You'll want this.\")"])
+		return
+	if not on[0]:
+		await Game.dialogue.say([
+			"* (CLUNK. The MAIN holds. The bulb comes on.)",
+			"* (Upstairs, faintly: \"WHO TURNED OFF MY COFFEE.\")",
+			"* (Heavy footsteps. The basement door bangs open.\n*  A waitress flips breaker 1 back on and glares at you.)",
+			"* (BANG. The MAIN trips. She leaves.\n*  Breaker 1 stays on.)",
+		])
+		var fixed: Array = on.duplicate()
+		fixed[0] = true
+		Game.flags["dt_breakers"] = fixed
+		_shade.queue_redraw()
+		return
+	if not on[2]:
+		await Game.dialogue.say(["* (CLUNK. The MAIN holds. The bulb comes on.\n*  The diner's still got coffee.)", "* (...But nothing's running up at the ballpark.\n*  Breaker 3 is off.)"])
+		return
+	Game.flags["dt_power"] = true
+	Game.play_sfx("save")
+	_shade.queue_redraw()
+	await Game.dialogue.say([
+		"* (CLUNK. The MAIN holds. The bulb comes on.)",
+		"* (Far away, up the street, something big starts\n*  to hum. A gate, rolling up.)",
+	])
+	Game.set_objective("The ballpark gate's open. (Up the street.)")
+
+
+## The basement: pipes, the boiler, luggage, the panel and the scrawls.
+func _draw_basement(ci: CanvasItem) -> void:
+	# Pipes along the top of the wall, dripping now and then.
+	for k in 3:
+		var y := (BASEMENT.position.y + 1) * T + 4 + k * 7
+		ci.draw_rect(Rect2((BASEMENT.position.x + 1) * T, y, (BASEMENT.size.x - 2) * T, 4), Color8(120, 110, 100).darkened(k * 0.15))
+		ci.draw_rect(Rect2((BASEMENT.position.x + 1) * T, y, (BASEMENT.size.x - 2) * T, 1), Color8(170, 160, 150))
+	# The boiler: a big round tank, a gauge, a little door with a glow behind it.
+	var boiler := Rect2(47 * T + 2, 37 * T - 6, 3 * T - 4, 3 * T + 4)
+	ci.draw_rect(boiler, Color8(90, 70, 60))
+	ci.draw_rect(Rect2(boiler.position, Vector2(boiler.size.x, 3)), Color8(130, 100, 84))
+	ci.draw_circle(boiler.position + Vector2(boiler.size.x / 2, 14), 7.0, Color8(230, 226, 210))
+	ci.draw_line(boiler.position + Vector2(boiler.size.x / 2, 14), boiler.position + Vector2(boiler.size.x / 2 + 4, 10), Color8(200, 40, 40), 1.0)
+	ci.draw_rect(Rect2(boiler.position + Vector2(14, 34), Vector2(22, 14)), Color8(50, 36, 30))
+	ci.draw_rect(Rect2(boiler.position + Vector2(16, 40), Vector2(18, 6)), Color8(240, 120, 40))
+	# Old luggage, stacked.
+	var colors := [Color8(130, 60, 50), Color8(60, 80, 120), Color8(120, 100, 60), Color8(80, 110, 80)]
+	for k in 5:
+		var bag := Rect2(60 * T + 2 + (k % 2) * 4, 45 * T - 4 - k * 18, 2 * T - 8 - (k % 2) * 6, 16)
+		ci.draw_rect(bag, colors[k % 4])
+		ci.draw_rect(Rect2(bag.position + Vector2(4, 6), Vector2(bag.size.x - 8, 2)), colors[k % 4].darkened(0.3))
+		ci.draw_rect(Rect2(bag.get_center() - Vector2(3, 10), Vector2(6, 3)), Color8(200, 180, 120))
+	# The panel: a grey steel box on the wall.
+	var box := Rect2(55 * T - 2, 33 * T + 2, 4 * T + 4, 2 * T)
+	ci.draw_rect(Rect2(box.position + Vector2(2, 2), box.size), Color(0, 0, 0, 0.3))
+	ci.draw_rect(box, Color8(140, 146, 150))
+	ci.draw_rect(box.grow(-2), Color8(110, 116, 122))
+	PixelFont.draw(ci, "PANEL B", box.position + Vector2(3, 2), 1.0, Color8(240, 220, 90))
+	# The scrawls on the wall: marker, in a hurry.
+	var scrawl := Rect2(50 * T, 33 * T + 2, 4 * T, 2 * T - 2)
+	for k in 6:
+		ci.draw_line(scrawl.position + Vector2(2, 6 + k * 6), scrawl.position + Vector2(scrawl.size.x - 6 - (k * 7) % 20, 6 + k * 6), Color8(30, 30, 40), 1.0)
+		PixelFont.draw(ci, str(k + 1), scrawl.position + Vector2(-6, 3 + k * 6), 0.7, Color8(30, 30, 40))
+	ci.draw_circle(scrawl.position + Vector2(scrawl.size.x - 4, 6), 3.0, Color8(200, 40, 40), false, 1.0)
 
 
 func _fountain() -> void:
@@ -435,6 +618,16 @@ func _arrival() -> void:
 
 
 func _ballpark_gate() -> void:
+	if not flag("dt_power"):
+		Game.flags["dt_gate_seen"] = true
+		await Game.dialogue.say([
+			"* (The ballpark's gate is a big steel shutter, rolled\n*  all the way down. Its motor's dead.)",
+			"* (A sign taped to it: POWER OUT ON THIS BLOCK.\n*  SERVICE PANEL: HOTEL GRANDE, BASEMENT.)",
+		])
+		if _route() == "pacifist" and Game.partner() != "Supreme":
+			await Game.dialogue.say([{"who": "Supreme", "text": "(over the phone) Oh, I climbed the fence.\nDon't. You'd lose. Flip the breakers, it's faster.", "mood": "smug"}])
+		Game.set_objective("Get the power back on. (The Hotel Grande's basement.)")
+		return
 	Game.play_sfx("door")
 	await go_through_door(INSIDE_ENTRY)
 	fit_camera_to_room()

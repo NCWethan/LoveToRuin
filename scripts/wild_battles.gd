@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: Downtown ---
+	"pigeon_gang": {
+		"name": "Pigeon Gang", "sprite": "wild_pigeon_gang",
+		"intro": "* The Pigeon Gang surrounds you.\n* They're wearing tiny bandanas.",
+		"hp": 100, "atk": 9, "def": 3, "patterns": ["pigeon_swoop", "pigeon_crumbs"],
+		"check": "* PIGEON GANG - ATK 9 DEF 3\n* Run this block. Want your fries. All of them.",
+		"acts": [
+			{"name": "Share Fries", "mercy": 50, "lines": ["* {actor} tosses them a fry.\n* The Pigeon Gang has never been offered anything. They're stunned."]},
+			{"name": "Coo", "mercy": 40, "lines": ["* {actor} coos. Badly.\n* The Pigeon Gang coos back, out of pity."]},
+		],
+		"taunts": ["COO.", "*flap flap*", "FRIES."],
+		"flavor": ["* The Pigeon Gang bobs its heads in unison. Menacingly.", "* One of the pigeons is just a guy in a pigeon costume.\n* Nobody mentions it."],
+		"backdrop": Color(0.45, 0.45, 0.55), "style": "skyline", "exp": 23, "money": 16,
+	},
+	"parking_meter": {
+		"name": "Parking Meter", "sprite": "wild_parking_meter",
+		"intro": "* A Parking Meter blocks your path.\n* Its little flag says EXPIRED.",
+		"hp": 112, "atk": 9, "def": 6, "patterns": ["meter_coins", "meter_expired"],
+		"check": "* PARKING METER - ATK 9 DEF 6\n* Has given out 40,000 tickets. Has never been thanked.",
+		"acts": [
+			{"name": "Feed It", "mercy": 50, "lines": ["* {actor} feeds it a quarter.\n* The flag flips to TIME LEFT. It hasn't felt this full in years."]},
+			{"name": "Thank It", "mercy": 40, "lines": ["* {actor} thanks it for its service.\n* The Parking Meter makes a small, grateful ding."]},
+		],
+		"taunts": ["EXPIRED", "*ding*", "*tick tick*"],
+		"flavor": ["* The Parking Meter ticks.", "* The Parking Meter is judging where you're standing.\n* It's a loading zone."],
+		"backdrop": Color(0.35, 0.4, 0.5), "style": "grid", "exp": 24, "money": 25,
+	},
+	"neon_sign": {
+		"name": "Neon Sign", "sprite": "wild_neon_sign",
+		"intro": "* A Neon Sign buzzes to life!\n* Half its letters are out.",
+		"hp": 96, "atk": 10, "def": 2, "patterns": ["neon_flicker", "neon_buzz"],
+		"check": "* NEON SIGN - ATK 10 DEF 2\n* Used to say OPEN. Now says OP N. It's sensitive about it.",
+		"acts": [
+			{"name": "Fix Letter", "mercy": 50, "lines": ["* {actor} jiggles the loose E.\n* It flickers back on. OPEN. The sign glows with pride."]},
+			{"name": "Read It", "mercy": 40, "lines": ["* {actor} reads it out loud: \"OP N!\"\n* Close enough. The sign is moved."]},
+		],
+		"taunts": ["*bzzzt*", "OP N", "*hummmm*"],
+		"flavor": ["* The Neon Sign flickers. Off. On. Off.", "* Moths are circling the Neon Sign. It loves them."],
+		"backdrop": Color(0.6, 0.2, 0.55), "style": "static", "exp": 25, "money": 15,
+	},
 	# --- Chapter 2: Old Town ---
 	"tumbleweed": {
 		"name": "Tumbleweed", "sprite": "wild_tumbleweed",
@@ -268,7 +308,7 @@ const ZONES := {
 	"res://scenes/mission_beach.tscn": ["sand_crab", "jellyfish", "beach_kite"],
 	"res://scenes/balboa_park.tscn": ["peacock", "marble_bust", "tour_group"],
 	"res://scenes/old_town.tscn": ["tumbleweed", "pinata", "wax_ghost"],
-	"res://scenes/downtown.tscn": ["seagull", "bag", "cart"],
+	"res://scenes/downtown.tscn": ["pigeon_gang", "parking_meter", "neon_sign"],
 	"res://scenes/harbor.tscn": ["seagull", "balloon", "bag"],
 	"res://scenes/torrey_pines.tscn": ["seagull", "squirrel", "goose"],
 	"res://scenes/burned_hills.tscn": ["squirrel", "bag"],
