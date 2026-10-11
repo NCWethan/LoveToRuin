@@ -269,17 +269,23 @@ func _run_pump() -> void:
 ## The fire lines (flickering), and the steam where one just went out.
 var _steam := {}
 func _draw_fires() -> void:
+	# (Only the flames on screen are drawn: three lines of them is a lot of fire.)
+	var view := get_viewport().get_canvas_transform().affine_inverse() * Rect2(Vector2.ZERO, Vector2(640, 480))
 	for i in FIRE_ROWS.size():
 		var y: float = FIRE_ROWS[i] * T + T
 		if not _fire_out(i):
-			var x := T
-			var k := 0
-			while x < 47 * T:
+			if y < view.position.y - 40 or y > view.end.y + 40:
+				continue
+			# One soft glow along the whole line, then the flames.
+			_decor.draw_rect(Rect2(T, y - 18, 46 * T, 18), Color(1.0, 0.45, 0.1, 0.16))
+			var k := int(maxf(0.0, view.position.x - T) / 14.0)
+			var x := T + k * 14.0
+			var stop := minf(47.0 * T, view.end.x + 14.0)
+			while x < stop:
 				var h := 10.0 + 6.0 * absf(sin(_time * 6.0 + k * 1.7))
-				_decor.draw_circle(Vector2(x + 6, y - 6), 9.0, Color(1.0, 0.45, 0.1, 0.18))
-				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x, y - 2), Vector2(x + 6, y - 2 - h), Vector2(x + 12, y - 2)]), Color(1.0, 0.5, 0.12, 0.9))
-				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x + 3, y - 2), Vector2(x + 6, y - 2 - h * 0.6), Vector2(x + 9, y - 2)]), Color(1.0, 0.88, 0.3, 0.95))
-				x += 12
+				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x, y - 2), Vector2(x + 7, y - 2 - h), Vector2(x + 14, y - 2)]), Color(1.0, 0.5, 0.12, 0.9))
+				_decor.draw_colored_polygon(PackedVector2Array([Vector2(x + 4, y - 2), Vector2(x + 7, y - 2 - h * 0.6), Vector2(x + 10, y - 2)]), Color(1.0, 0.88, 0.3, 0.95))
+				x += 14.0
 				k += 1
 		elif _steam.has(i):
 			var s: float = _steam[i]
