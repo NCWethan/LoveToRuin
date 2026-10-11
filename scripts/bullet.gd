@@ -464,6 +464,12 @@ const GLYPH_COLORS := {
 }
 const GLYPHS := {
 	"claw": ["RR...", "RRR..", ".RRRR", "RRR..", "RR..."],
+	"eye": [".NNN.", "NBBBN", "NBYBN", "NBBBN", ".NNN."],
+	"plume": ["....N", "..NNB", ".NBN.", "NN...", "N...."],
+	"bust": [".GGG.", "GWGWG", "GGGGG", ".GGG.", "GGGGG"],
+	"tourist": [".T.", "RRR", ".R.", "B.B"],
+	"flag": ["YYYY", "Y...", "W...", "W..."],
+	"spark": [".W.", "WYW", ".W."],
 	"crab": ["R...R", ".KRK.", "RRRRR", "R.R.R"],
 	"jelly": [".PPP.", "PPPPP", "PKPKP", "P.P.P", ".P.P."],
 	"kite": ["..R..", ".RYR.", "RYKYR", ".RYR.", "..R..", "..W.."],

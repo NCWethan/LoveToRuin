@@ -14,6 +14,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"jelly_sting": return _jelly_sting(enemy, parent, area, s, step)
 		"kite_dive": return _kite_dive(enemy, parent, area, s, step)
 		"kite_string": return _kite_string(enemy, parent, area, s, step)
+		# --- Balboa Park ---
+		"peacock_fan": return _peacock_fan(enemy, parent, area, s, step)
+		"peacock_strut": return _peacock_strut(enemy, parent, area, s, step)
+		"bust_roll": return _bust_roll(enemy, parent, area, s, step)
+		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
+		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
+		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
 	return -1.0
 
 
@@ -85,3 +92,81 @@ static func _kite_string(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2,
 	var angle := (0.35 if step % 2 == 0 else -0.35)
 	Attacks._beam(enemy, parent, area, soul, Vector2.from_angle(angle), 0.6, Color(0.95, 0.95, 1.0))
 	return 0.85
+
+
+# --- Peacock -----------------------------------------------------------------------------
+
+## FAN: the tail spreads, and its eyes fly out in a fan, aimed at you.
+static func _peacock_fan(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var origin := Vector2(area.get_center().x + (step % 3 - 1) * 40.0, area.position.y + 4)
+	var aim := (soul - origin).angle()
+	for k in 5:
+		var eye := _glyph(enemy, parent, area, origin, "eye", 8.0)
+		eye.delay = 0.3
+		eye.velocity = Vector2.from_angle(aim + (k - 2) * 0.28) * 120.0
+	return 1.0
+
+
+## STRUT: the peacock struts back and forth across the bottom, then the top,
+## feathers trailing.
+static func _peacock_strut(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var top := step % 2 == 0
+	var y := clampf(soul.y + (-14.0 if top else 14.0), area.position.y + 8, area.end.y - 8)
+	for k in 3:
+		var feather := _glyph(enemy, parent, area, Vector2(area.position.x + 6 if top else area.end.x - 6, y + (k - 1) * 12.0), "plume", 8.0)
+		feather.delay = 0.2 + k * 0.12
+		feather.velocity = Vector2(150 if top else -150, 0)
+		feather.zigzag = 30.0
+	return 0.9
+
+
+# --- Marble Bust -------------------------------------------------------------------------
+
+## ROLL: heavy busts roll in from the sides, along the floor and back up the walls.
+static func _bust_roll(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var bust := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, clampf(soul.y, area.position.y + 10, area.end.y - 10)), "bust", 12.0)
+	bust.delay = 0.45
+	bust.velocity = Vector2(170 if left else -170, 0)
+	bust.spin = 5.0 if left else -5.0
+	bust.wall_bounce = true
+	bust.lifetime = 2.6
+	return 1.1
+
+
+## GLARE: its blank eyes glare at a row and a column, and the glare burns.
+static func _bust_glare(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var warn := 0.6
+	if step % 2 == 0:
+		Attacks._beam(enemy, parent, area, soul, Vector2.RIGHT, warn, Color(0.95, 0.95, 0.9))
+	else:
+		Attacks._beam(enemy, parent, area, soul, Vector2.DOWN, warn, Color(0.95, 0.95, 0.9))
+	return 0.8
+
+
+# --- Tour Group --------------------------------------------------------------------------
+
+## FLAGS: the group shuffles through in a tight line behind the guide's flag,
+## with a gap to slip through.
+static func _tour_flags(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var down := step % 2 == 0
+	var gap := int(clampf((soul.x - area.position.x) / area.size.x * 8.0 + randf_range(-1.5, 1.5), 0.0, 7.0))
+	for k in 8:
+		if k == gap:
+			continue
+		var x := area.position.x + 10 + k * (area.size.x - 20) / 7.0
+		var tourist := _glyph(enemy, parent, area, Vector2(x, area.position.y + 6 if down else area.end.y - 6), "flag" if k == 0 else "tourist", 8.0)
+		tourist.velocity = Vector2(0, 70 if down else -70)
+	return 1.25
+
+
+## FLASH: cameras go off all at once: bursts of light from where they're pointing.
+static func _tour_flash(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var at := Vector2(randf_range(area.position.x + 10, area.end.x - 10), randf_range(area.position.y + 10, area.end.y - 10))
+	if step % 2 == 0:
+		at = soul + Vector2(randf_range(-8, 8), randf_range(-8, 8))
+	for k in 8:
+		var spark := _glyph(enemy, parent, area, at, "spark", 6.0)
+		spark.delay = 0.45
+		spark.velocity = Vector2.from_angle(k * TAU / 8.0) * 110.0
+	return 0.55

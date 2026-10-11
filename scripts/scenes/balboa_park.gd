@@ -32,6 +32,21 @@ const BIGJOE_SPOT := Vector2(32 * T, 11 * T + 10)
 const NAT_SPOT := Vector2(33 * T, 47 * T)
 const KNIGHT_SPOT := Vector2(20 * T, 42 * T)
 const BOOK_DESK := Vector2(33 * T + 10, 50 * T + 6)
+## The Botanical Building: a lath house, planted as a hedge maze, with the
+## museum's staff entrance at the far end. (Its own room on the map.)
+const LATH := Rect2i(41, 31, 23, 25)
+## The maze: 10 x 10 cells, each a path tile with a hedge tile between them.
+const MAZE_ORIGIN := Vector2i(42, 33)
+const MAZE_CELLS := 10
+const LATH_DOOR_OUT := Vector2(53 * T + 10, 8 * T + 4)
+const OUTSIDE_LATH := Vector2(53 * T + 10, 9 * T + 12)
+const LATH_ENTRY := Vector2(53 * T + 10, 54 * T + 2)
+const LATH_EXIT := Vector2(53 * T + 10, 55 * T - 2)
+const STAFF_DOOR := Vector2(53 * T + 10, 33 * T + 4)
+## The staff door's code: the year of the Exposition the park was built for.
+## One digit on each of four plant labels, hidden in the maze's dead ends.
+const STAFF_CODE := [1, 9, 1, 5]
+const PLANTS := ["BIRD OF PARADISE", "STAGHORN FERN", "ORCHID (MOTH)", "CYCAD (OLD)"]
 
 var partner: Character
 var bigjoe: Character
@@ -44,9 +59,10 @@ var _engaged: bool = false
 
 
 func _ready() -> void:
-	rooms.assign([_px(OUTSIDE), _px(INSIDE)])
+	rooms.assign([_px(OUTSIDE), _px(INSIDE), _px(LATH)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(0, 14 * T, 64 * T, 15 * T))
+	add_wild_encounters(SCENE, _px(LATH))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)
@@ -55,8 +71,13 @@ func _ready() -> void:
 	Game.play_music("balboa")
 	_place_people()
 	_dress()
-	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [DOOR_OUT, _museum_door], [INSIDE_EXIT, _leave_museum], [BOOK_DESK, _book]]:
+	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [DOOR_OUT, _museum_door], [INSIDE_EXIT, _leave_museum], [BOOK_DESK, _book],
+			[LATH_DOOR_OUT, _enter_lath], [LATH_EXIT, _leave_lath], [STAFF_DOOR, _staff_door]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	var labels := _label_spots()
+	for i in labels.size():
+		world.add_child(Hotspot.create(labels[i], _plant_label.bind(i)))
+	add_static_layer(_draw_lath)
 	fit_camera_to_room()
 	_start.call_deferred()
 
@@ -127,8 +148,13 @@ func build_map() -> void:
 	room.fill(31, 9, 2, 1, Room.PATIO)
 	room.fill(30, 17, 4, 3, Room.WATER)
 	room.fill(5, 21, 14, 6, Room.WATER)
-	for spot in [Vector2i(4, 4), Vector2i(10, 6), Vector2i(14, 3), Vector2i(50, 4), Vector2i(56, 6), Vector2i(47, 18), Vector2i(55, 22), Vector2i(24, 24), Vector2i(40, 25), Vector2i(60, 26)]:
+	for spot in [Vector2i(4, 4), Vector2i(10, 6), Vector2i(14, 3), Vector2i(47, 18), Vector2i(55, 22), Vector2i(24, 24), Vector2i(40, 25), Vector2i(60, 26)]:
 		room.set_tile(spot.x, spot.y, Room.TREE)
+	# The Botanical Building's front, up the lawn from the Prado.
+	room.fill(47, 3, 13, 5, Room.WOOD_WALL)
+	room.fill(52, 7, 3, 1, Room.DOOR)
+	room.fill(52, 8, 3, 2, Room.PATIO)
+	_build_maze()
 	# Inside: the arms and armor hall, and the archives through a doorway.
 	room.fill(0, 32, 40, 24, Room.INTERIOR_WALL)
 	room.fill(1, 35, 38, 20, Room.HALL_FLOOR)
@@ -142,6 +168,171 @@ func build_map() -> void:
 	for y in [37, 41, 45]:
 		room.fill(30, y, 8, 1, Room.PROP)     # archive shelves
 	room.fill(32, 49, 3, 1, Room.PROP)        # the reading desk
+
+
+# --- The Botanical Building ------------------------------------------------------------
+
+## The lath house: wooden lath walls, and a hedge maze carved out of the planters
+## (the same maze every time: a fixed seed). Path in, at the bottom; the staff
+## door to the museum, at the top.
+func _build_maze() -> void:
+	room.fill(LATH.position.x, LATH.position.y, LATH.size.x, LATH.size.y, Room.WOOD_WALL)
+	var size := MAZE_CELLS * 2 + 1
+	room.fill(MAZE_ORIGIN.x, MAZE_ORIGIN.y, size, size, Room.PLANTER)
+	var open := _maze_open()
+	for cell in open:
+		room.set_tile(MAZE_ORIGIN.x + cell.x, MAZE_ORIGIN.y + cell.y, Room.DIRT)
+	# In at the bottom, out (to the museum) at the top.
+	room.set_tile(53, MAZE_ORIGIN.y + size - 1, Room.DIRT)
+	room.set_tile(53, MAZE_ORIGIN.y + size, Room.DIRT)
+	room.set_tile(53, LATH.end.y - 1, Room.DOOR)
+	room.set_tile(53, MAZE_ORIGIN.y, Room.DIRT)
+	room.set_tile(53, MAZE_ORIGIN.y - 1, Room.DOOR)
+
+
+## The maze's open tiles (relative to MAZE_ORIGIN): a depth-first maze over the
+## cells, always the same.
+func _maze_open() -> Array[Vector2i]:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1915
+	var visited := {}
+	var open: Array[Vector2i] = []
+	var stack: Array[Vector2i] = [Vector2i(5, MAZE_CELLS - 1)]
+	visited[stack[0]] = true
+	open.append(stack[0] * 2 + Vector2i.ONE)
+	while not stack.is_empty():
+		var cell: Vector2i = stack[-1]
+		var next: Array[Vector2i] = []
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = cell + d
+			if n.x >= 0 and n.y >= 0 and n.x < MAZE_CELLS and n.y < MAZE_CELLS and not visited.has(n):
+				next.append(n)
+		if next.is_empty():
+			stack.pop_back()
+			continue
+		var n: Vector2i = next[rng.randi() % next.size()]
+		visited[n] = true
+		open.append(cell * 2 + Vector2i.ONE + (n - cell))
+		open.append(n * 2 + Vector2i.ONE)
+		stack.append(n)
+	return open
+
+
+## Where the four plant labels are: the maze's dead ends farthest from the way in.
+func _label_spots() -> Array[Vector2]:
+	var open := {}
+	for t in _maze_open():
+		open[t] = true
+	# Distance from the entrance, by walking.
+	var start := Vector2i(11, MAZE_CELLS * 2 - 1)
+	var dist := {start: 0}
+	var queue: Array[Vector2i] = [start]
+	while not queue.is_empty():
+		var t: Vector2i = queue.pop_front()
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = t + d
+			if open.has(n) and not dist.has(n):
+				dist[n] = dist[t] + 1
+				queue.append(n)
+	var ends: Array = []
+	for t in open:
+		var exits := 0
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if open.has(t + d):
+				exits += 1
+		if exits == 1 and t != start and t.y > 1:
+			ends.append([dist.get(t, 0), t])
+	ends.sort_custom(func(a, b) -> bool: return a[0] > b[0])
+	var spots: Array[Vector2] = []
+	for e in ends.slice(0, 4):
+		var t: Vector2i = e[1]
+		spots.append(Vector2((MAZE_ORIGIN.x + t.x) * T + T / 2.0, (MAZE_ORIGIN.y + t.y) * T + T / 2.0))
+	return spots
+
+
+func _enter_lath() -> void:
+	if bigjoe and is_instance_valid(bigjoe) and _route() != "pacifist":
+		await Game.dialogue.say(["* (Big Joe is watching you from the museum doors.\n*  Better deal with him first.)"])
+		return
+	Game.play_sfx("door")
+	await go_through_door(LATH_ENTRY)
+	if not flag("bp_lath_seen"):
+		Game.flags["bp_lath_seen"] = true
+		await Game.dialogue.say([
+			"* (The Botanical Building. Light comes through the\n*  wooden slats in stripes. It smells like rain.)",
+			"* (The plants have grown into walls. A hedge maze,\n*  whether anyone meant it or not.)",
+			"* (A sign: STAFF ENTRANCE (MUSEUM) AT FAR END.\n*  PLEASE READ THE PLANT LABELS. THEY'RE INTERESTING.)",
+		])
+
+
+func _leave_lath() -> void:
+	Game.play_sfx("door")
+	await go_through_door(OUTSIDE_LATH)
+
+
+func _plant_label(i: int) -> void:
+	Game.flags["bp_label_%d" % i] = true
+	var ordinal: String = ["FIRST", "SECOND", "THIRD", "FOURTH"][i]
+	await Game.dialogue.say([
+		"* (A little plant label on a stake: %s.)" % PLANTS[i],
+		"* (On the back, in pencil: \"STAFF DOOR, %s DIGIT:\n*  %d. - the night docent\")" % [ordinal, STAFF_CODE[i]],
+	])
+
+
+## The staff door into the museum: a keypad. Four digits.
+func _staff_door() -> void:
+	if flag("bp_staff_open"):
+		Game.play_sfx("door")
+		await go_through_door(INSIDE_ENTRY)
+		fit_camera_to_room()
+		return
+	await Game.dialogue.say(["* (A heavy door: MUSEUM STAFF ONLY. A keypad,\n*  four digits. The 1, the 5 and the 9 are worn.)"])
+	var digits := ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+	for k in 4:
+		var pick := await Game.dialogue.ask("* (Digit %d of 4.)" % (k + 1), digits + ["Stop"])
+		if pick == digits.size():
+			return
+		if pick != STAFF_CODE[k]:
+			Game.play_sfx("miss")
+			await Game.dialogue.say(["* (BEEP BEEP. A red light. The keypad resets.)"])
+			return
+	Game.play_sfx("door")
+	Game.flags["bp_staff_open"] = true
+	await Game.dialogue.say(["* (A green light, and a heavy click.\n*  The staff door swings open.)"])
+	await go_through_door(INSIDE_ENTRY)
+	fit_camera_to_room()
+	await Game.dialogue.say(["* (You're in the museum. You unlatch the front doors\n*  from inside, for the way back out.)"])
+	await _museum_intro()
+
+
+## The lath house's front, the slatted roof over the maze, the plant labels.
+func _draw_lath(ci: CanvasItem) -> void:
+	# Outside: an arched roof of wooden lath over the front, and its sign.
+	var front := _px(Rect2i(47, 3, 13, 5))
+	var c := Vector2(front.get_center().x, front.position.y + 6)
+	for k in 9:
+		ci.draw_arc(c, front.size.x / 2.0 - k * 7, PI, TAU, 24, Color8(176, 136, 90) if k % 2 == 0 else Color8(140, 104, 66), 3.0)
+	for k in 13:
+		var a := PI + k * PI / 12.0
+		ci.draw_line(c, c + Vector2.from_angle(a) * (front.size.x / 2.0), Color8(120, 86, 54), 1.0)
+	var sign := Rect2(front.get_center().x - 50, front.end.y - 34, 100, 13)
+	ci.draw_rect(sign.grow(1), Color8(70, 48, 30))
+	ci.draw_rect(sign, Color8(234, 222, 190))
+	ci.draw_string(_font, sign.position + Vector2(5, 10), "BOTANICAL BUILDING", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(60, 90, 50))
+	# Inside: shafts of light through the slats.
+	var inside := _px(LATH)
+	var y := inside.position.y + 2 * T
+	while y < inside.end.y - 2 * T:
+		ci.draw_rect(Rect2(inside.position.x + T, y, inside.size.x - 2 * T, 3), Color(1.0, 0.95, 0.75, 0.07))
+		y += 12
+	# The plant labels: little white stakes.
+	for at in _label_spots():
+		ci.draw_rect(Rect2(at + Vector2(-1, -4), Vector2(2, 9)), Color8(240, 236, 226))
+		ci.draw_rect(Rect2(at + Vector2(-5, -8), Vector2(10, 6)), Color8(244, 242, 236))
+		ci.draw_rect(Rect2(at + Vector2(-4, -6), Vector2(8, 1)), Color8(80, 110, 70))
+	# The keypad by the staff door.
+	ci.draw_rect(Rect2(STAFF_DOOR + Vector2(16, -22), Vector2(8, 11)), Color8(60, 64, 72))
+	ci.draw_rect(Rect2(STAFF_DOOR + Vector2(17, -21), Vector2(6, 2)), Color8(220, 60, 60) if not flag("bp_staff_open") else Color8(60, 220, 100))
 
 
 func _draw_decor() -> void:
@@ -354,9 +545,22 @@ func _museum_door() -> void:
 	if bigjoe and is_instance_valid(bigjoe) and _route() != "pacifist":
 		await _talk_bigjoe()
 		return
+	if not flag("bp_staff_open"):
+		await Game.dialogue.say([
+			"* (The museum's doors are locked. A sign: CLOSED FOR\n*  THE NIGHT. STAFF ENTRANCE: BOTANICAL BUILDING.)",
+			"* (Inside, something clanks.)",
+		])
+		if not flag("bp_fragment"):
+			Game.set_objective("Get into the museum. (The Botanical Building?)")
+		return
 	Game.play_sfx("door")
 	await go_through_door(INSIDE_ENTRY)
 	fit_camera_to_room()
+	await _museum_intro()
+
+
+## The first look at the hall.
+func _museum_intro() -> void:
 	if not flag("bp_inside"):
 		Game.flags["bp_inside"] = true
 		await Game.dialogue.say([

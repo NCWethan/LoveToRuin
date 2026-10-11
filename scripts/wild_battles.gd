@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: Balboa Park ---
+	"peacock": {
+		"name": "Peacock", "sprite": "wild_peacock",
+		"intro": "* A Peacock fans its tail at you.\n* Every eye on it is staring.",
+		"hp": 80, "atk": 7, "def": 3, "patterns": ["peacock_fan", "peacock_strut"],
+		"check": "* PEACOCK - ATK 7 DEF 3\n* Lives in the park. Owns the park. Ask it.",
+		"acts": [
+			{"name": "Admire", "mercy": 50, "lines": ["* {actor} admires its feathers. Out loud.\n* The Peacock turns, slowly, so you get every angle."]},
+			{"name": "Strut", "mercy": 40, "lines": ["* {actor} struts back at it.\n* The Peacock stops. It respects the commitment."]},
+		],
+		"taunts": ["*MEEE-OWW*", "*rustle*", "*AAAAH*"],
+		"flavor": ["* The Peacock's tail shimmers.", "* The Peacock screams for no reason.\n*  Peacocks do that."],
+		"backdrop": Color(0.3, 0.6, 0.55), "style": "leaves", "exp": 17, "money": 10,
+	},
+	"marble_bust": {
+		"name": "Marble Bust", "sprite": "wild_marble_bust",
+		"intro": "* A Marble Bust has rolled off its pedestal,\n*  and it is FURIOUS about it.",
+		"hp": 96, "atk": 8, "def": 5, "patterns": ["bust_roll", "bust_glare"],
+		"check": "* MARBLE BUST - ATK 8 DEF 5\n* Some general. Or a poet. The plaque fell off.",
+		"acts": [
+			{"name": "Read Plaque", "mercy": 50, "lines": ["* {actor} finds the plaque and reads it out loud.\n* The Bust remembers who it is. It stands taller."]},
+			{"name": "Dust It", "mercy": 40, "lines": ["* {actor} dusts off its nose.\n* Two hundred years. Nobody ever dusted the nose."]},
+		],
+		"taunts": ["...", "*crack*", "HMPH"],
+		"flavor": ["* The Marble Bust stares blankly.\n*  It has no pupils. Somehow you feel judged.", "* The Marble Bust is missing its nose. Rude to mention."],
+		"backdrop": Color(0.7, 0.68, 0.62), "style": "rings", "exp": 19, "money": 12,
+	},
+	"tour_group": {
+		"name": "Tour Group", "sprite": "wild_tour_group",
+		"intro": "* A Tour Group surrounds you!\n* Their guide holds the flag high.",
+		"hp": 88, "atk": 7, "def": 2, "patterns": ["tour_flags", "tour_flash"],
+		"check": "* TOUR GROUP - ATK 7 DEF 2\n* Twelve people, one flag, no idea where they are.",
+		"acts": [
+			{"name": "Give Directions", "mercy": 50, "lines": ["* {actor} points them to the museum.\n* Twelve people say THANK YOU at slightly different times."]},
+			{"name": "Pose", "mercy": 40, "lines": ["* {actor} poses for a photo.\n* Everyone takes one. Nobody checks if it's good."]},
+		],
+		"taunts": ["*click click*", "IS THIS THE ZOO?", "*murmur*"],
+		"flavor": ["* The Tour Group shuffles in a tight circle.", "* Somebody in the back is still eating a churro."],
+		"backdrop": Color(0.75, 0.55, 0.4), "style": "plaza", "exp": 18, "money": 15,
+	},
 	# --- Chapter 2: Mission Beach ---
 	"sand_crab": {
 		"name": "Sand Crab", "sprite": "wild_sand_crab",
@@ -186,7 +226,7 @@ const ZONES := {
 	"res://scenes/hilltop.tscn": ["goose", "sprinkler", "balloon"],
 	"res://scenes/hop_house.tscn": ["gnome", "flamingo", "bag"],
 	"res://scenes/mission_beach.tscn": ["sand_crab", "jellyfish", "beach_kite"],
-	"res://scenes/balboa_park.tscn": ["squirrel", "balloon", "goose"],
+	"res://scenes/balboa_park.tscn": ["peacock", "marble_bust", "tour_group"],
 	"res://scenes/old_town.tscn": ["seagull", "bag", "squirrel"],
 	"res://scenes/downtown.tscn": ["seagull", "bag", "cart"],
 	"res://scenes/harbor.tscn": ["seagull", "balloon", "bag"],
