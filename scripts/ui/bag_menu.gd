@@ -219,10 +219,18 @@ func _effects() -> GDScript:
 ## pictures, stats, attacks and ACTs).
 func _open_book() -> void:
 	_book_enemies.clear()
-	for entry in _effects().ENCYCLOPEDIA:
-		_book_enemies.append([entry[1], _effects().enemy_for(entry)])
+	# (Each page's enemy is made the first time you look at it: _book_enemy.)
+	for entry in _effects().entries():
+		_book_enemies.append([entry[1], null, entry])
 	_book_cursor = 0
 	_step = Step.BOOK
+
+
+## The enemy on page `i` of the Encyclopedia (made the first time it's needed).
+func _book_enemy(i: int) -> Enemy:
+	if _book_enemies[i][1] == null:
+		_book_enemies[i][1] = _effects().enemy_for(_book_enemies[i][2])
+	return _book_enemies[i][1]
 
 
 ## True when the cursor is on the "Team" row (right below the items).
@@ -470,15 +478,31 @@ func _draw_book() -> void:
 	_box(index_box)
 	_box(page)
 	_text("ENCYCLOPEDIA", index_box.position + Vector2(12, 24), Color.YELLOW, 15)
-	for i in _book_enemies.size():
+	# The index scrolls: a window of rows around the cursor, and how many you've met.
+	var rows := 12
+	var first := clampi(_book_cursor - rows / 2, 0, maxi(0, _book_enemies.size() - rows))
+	var met := 0
+	for entry in _book_enemies:
+		if _effects().seen(entry[0]):
+			met += 1
+	for i in range(first, mini(first + rows, _book_enemies.size())):
 		var enemy_name: String = _book_enemies[i][0]
 		var known: bool = _effects().seen(enemy_name)
-		var at := index_box.position + Vector2(30, 54 + i * 26)
-		_text(enemy_name if known else "???", at, Color.YELLOW if i == _book_cursor else (Color.WHITE if known else Color(0.45, 0.45, 0.45)), 14)
+		var at := index_box.position + Vector2(30, 54 + (i - first) * 26)
+		var label: String = enemy_name if known else "???"
+		var size := 14
+		while size > 10 and _font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x > index_box.size.x - 40:
+			size -= 1
+		_text(label, at, Color.YELLOW if i == _book_cursor else (Color.WHITE if known else Color(0.45, 0.45, 0.45)), size)
 		if i == _book_cursor:
 			_heart(at + Vector2(-16, -5))
+	if first > 0:
+		_text("^", index_box.position + Vector2(index_box.size.x - 22, 44), Color(0.6, 0.6, 0.6), 14)
+	if first + rows < _book_enemies.size():
+		_text("v", index_box.position + Vector2(index_box.size.x - 22, index_box.end.y - 50), Color(0.6, 0.6, 0.6), 14)
+	_text("MET %d / %d" % [met, _book_enemies.size()], index_box.position + Vector2(14, index_box.size.y - 14), Color(0.6, 0.6, 0.6), 12)
 	var enemy_name: String = _book_enemies[_book_cursor][0]
-	var enemy: Enemy = _book_enemies[_book_cursor][1]
+	var enemy: Enemy = _book_enemy(_book_cursor) if _effects().seen(enemy_name) else null
 	if not _effects().seen(enemy_name) or enemy == null:
 		var note := "Haven't seen yet."
 		var width := _font.get_string_size(note, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
@@ -506,7 +530,7 @@ func _draw_book() -> void:
 	# Attacks, what it can do to you, and how to talk it down.
 	var names: Array = []
 	for pattern in enemy.patterns:
-		names.append(_effects().ATTACK_NAMES.get(pattern, pattern))
+		names.append(_effects().attack_name(pattern))
 	var y := page.position.y + 172
 	_text("ATTACKS", Vector2(page.position.x + 14, y), Color(1, 0.6, 0.6), 13)
 	_panel.draw_multiline_string(_font, Vector2(page.position.x + 14, y + 18), ", ".join(names), HORIZONTAL_ALIGNMENT_LEFT, page.size.x - 28, 13, -1, Color.WHITE)

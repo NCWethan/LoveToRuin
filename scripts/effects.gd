@@ -59,6 +59,58 @@ const ENCYCLOPEDIA := [
 ]
 
 
+## Every fight in the game, in about the order you'd meet them, for the full
+## Encyclopedia (entries()): the story's fights, then the wild creatures, then
+## the townsfolk you can pick a fight with.
+const STORY_FIGHTS := ["tutorial", "pop_quiz", "hall_pass", "mystery_meat", "tardy_bell", "overdue_book", "wally", "tent",
+	"hopkuna", "training", "glowbug", "dipper", "corps_crayola", "corps_ncwethan", "knight", "duel_bigjoe", "corps_bigjoe",
+	"hostess", "corps_nat", "big_screen", "corps_supreme", "flight_deck", "corps_agent", "glider", "corps_rooster",
+	"hopkuna_cliffs", "ember", "corps_ronin", "scrap_heap", "corps_sansworth", "corps_eggo", "corps_muffinmage", "corps_nassan",
+	"hopkuna_unbound"]
+static var _entries: Array = []
+
+
+## The whole Encyclopedia: [battle id, enemy name] for every enemy in the game
+## (each name once). Worked out the first time it's asked for.
+static func entries() -> Array:
+	if not _entries.is_empty():
+		return _entries
+	var ids: Array = STORY_FIGHTS.duplicate()
+	# The wild creatures: Chapter 1's first, then each Chapter 2 area's, in order.
+	var chapter2: Array = []
+	for scene in ["mission_beach", "balboa_park", "old_town", "downtown", "harbor", "torrey_pines", "burned_hills", "junkyard"]:
+		chapter2.append_array(WildBattles.ZONES.get("res://scenes/%s.tscn" % scene, []))
+	for creature in WildBattles.CREATURES:
+		if not creature in chapter2:
+			ids.append("wild_" + creature)
+	for creature in chapter2:
+		ids.append("wild_" + creature)
+	# (The students at Westview share a profile: "student-1" has a face.)
+	for person in Townsfolk.PEOPLE:
+		ids.append("person_" + (person if person != "student" else "student-1"))
+	var names := {}
+	for id in ids:
+		var data: BattleData = Battles.create(id)
+		if data == null:
+			continue
+		for enemy in data.enemies:
+			if not names.has(enemy.name):
+				names[enemy.name] = true
+				_entries.append([id, enemy.name])
+	return _entries
+
+
+## An attack's name for the Encyclopedia (from ATTACK_NAMES, or made from its
+## id: "crab_pinch" is "Crab Pinch").
+static func attack_name(pattern: String) -> String:
+	if ATTACK_NAMES.has(pattern):
+		return ATTACK_NAMES[pattern]
+	var words: Array = []
+	for word in pattern.split("_"):
+		words.append(word.capitalize())
+	return " ".join(words)
+
+
 ## Remembers that you've met an enemy (for the Encyclopedia).
 static func mark_seen(enemy_name: String) -> void:
 	var seen: Array = Game.flags.get("seen_enemies", [])
