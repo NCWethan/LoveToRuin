@@ -706,6 +706,7 @@ func _check_table() -> void:
 			"* \"And Father Tomás right in the middle, so he can\n*  bless the food AND keep an eye on the clock.\"",
 			"* \"...It's perfect. It's exactly how it was.\"",
 		])
+		await partner_cheer(2)
 		await _after_table_step()
 		return
 	Game.play_sfx("miss")

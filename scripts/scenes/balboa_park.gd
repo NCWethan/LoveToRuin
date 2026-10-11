@@ -304,6 +304,7 @@ func _staff_door() -> void:
 	await go_through_door(INSIDE_ENTRY)
 	fit_camera_to_room()
 	await Game.dialogue.say(["* (You're in the museum. You unlatch the front doors\n*  from inside, for the way back out.)"])
+	await partner_cheer(1)
 	await _museum_intro()
 
 

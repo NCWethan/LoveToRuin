@@ -303,6 +303,35 @@ func is_night() -> bool:
 	return false
 
 
+## What whoever's with Elric says when a Chapter 2 puzzle is solved: three each,
+## taken in turn across the areas (`i`: which puzzle). Not on the Genocide path
+## (Relic does the talking there), and nobody says anything if Elric's alone.
+const PARTNER_CHEERS := {
+	"Hop": [["happy", "Look at you! Big brain.\nI was gonna get it. Eventually. Probably."], ["smug", "Okay, that was cool.\nI'm telling everyone I helped."], ["happy", "You do that thing with your face when you're\nthinking. It's very serious. I love it."]],
+	"BigJoe6": [["happy", "JUSTICE! ...For puzzles!"], ["happy", "By the rules! Every step! I'm so proud."], ["shocked", "I would have punched it. That works too.\nBut your way had no punching. Wow."]],
+	"Eggo": [["happy", "egg-cellent."], ["smug", "you cracked it. sorry. i had to."], ["happy", "sunny side up. that's us."]],
+	"Nassan": [["", "Step complete. Next step."], ["happy", "Good. That's how a plan goes.\nOne piece at a time."], ["", "I'd have drawn a diagram.\nYours was faster."]],
+	"Nat": [["smug", "Called it. I read ahead."], ["", "That's a good chapter. Short, but good."], ["happy", "I'm putting that in the margins.\nNext to the good parts."]],
+	"NCWethan": [["happy", "YOU DID THE THING!!"], ["happy", "LIGHTNING SPEED!! Not actual lightning.\nThat time."], ["happy", "HIGH FIVE!! ...Careful, I'm a little\nstaticky."]],
+	"Ronin": [["happy", "(He plays a little victory riff.)"], ["smug", "Nice. That's going in a song."], ["happy", "That was like a solo.\nNobody saw it coming."]],
+	"Supreme": [["smug", "Odds were 31%. Nice work."], ["", "I modeled that. You beat the model.\nI'm updating it."], ["happy", "Statistically, you're on a streak."]],
+	"Crayola": [["happy", "Ta-da! ...Wait, that's my line."], ["happy", "Pick a card. Any card.\n...Oh, you already won."], ["", "That's a good trick.\nI'd like to learn that one."]],
+	"Rooster": [["smug", "Okay. That was kinda cool.\nDon't tell anyone I said that."], ["smug", "I'd roast you, but you're on fire.\n...That was a compliment. Write it down."], ["shocked", "Huh. You're smart AND you look like that?\nUnfair."]],
+	"Agent": [["", "Efficient. I approve."], ["smug", "Correct on the first real try.\nThe other tries don't count."], ["", "Noted. Filed. Good work."]],
+	"MuffinMage": [["", "Mm. Magic."], ["happy", "That's like baking. You follow the steps,\nand then something good happens."], ["", "...I would've burned it."]],
+	"Sansworth": [["happy", "I would've gotten that! Eventually! I have\n31 keys. One of them opens puzzles."], ["happy", "TEAMWORK. I was the team. Moral support."], ["smug", "Nice. You should be a locksmith. Like me.\n(I'm not a locksmith.)"]],
+}
+
+
+## A partner's reaction to a solved puzzle (see PARTNER_CHEERS).
+func partner_cheer(i: int) -> void:
+	var who := Game.partner()
+	if who == "" or Game.on_genocide_route() or not PARTNER_CHEERS.has(who):
+		return
+	var said: Array = PARTNER_CHEERS[who][i % 3]
+	await Game.dialogue.say([{"who": who, "text": said[1], "mood": said[0]}])
+
+
 ## Whether this area has weather (rain, clouds, storms). Memories, the bunker and
 ## the big story nights don't.
 func weather_ok() -> bool:

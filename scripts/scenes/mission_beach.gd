@@ -427,6 +427,7 @@ func _prize_counter() -> void:
 		"* (You leave all three strips on the counter, neatly,\n*  and take the brass key off its hook.)",
 		"* (A tag on it: DIPPER. DO NOT LOSE. Someone\n*  has added: AGAIN.)",
 	])
+	await partner_cheer(0)
 	Game.set_objective("Ride the Dipper. (The gate on the boardwalk.)")
 
 

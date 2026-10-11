@@ -264,6 +264,7 @@ func _run_pump() -> void:
 	await Game.dialogue.say(["* (Far up the hill, a hiss, and a cloud of steam\n*  where %s was burning.)" % " and ".join(names)])
 	if _fires_left() == 0:
 		await Game.dialogue.say(["* (The last of the spot fires goes out.\n*  The fire road is clear, all the way up.)"])
+		await partner_cheer(6)
 		Game.set_objective("The top of the hill." if not _genocide() else "...")
 	else:
 		Game.set_objective("Put out the spot fires. (%d left.)" % _fires_left())

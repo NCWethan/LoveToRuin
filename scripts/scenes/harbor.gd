@@ -569,6 +569,7 @@ func _locker() -> void:
 				"* (Four flags snap in the wind over the elevator.)",
 				"* (A bell rings somewhere in the ship. The elevator's\n*  light goes from red to green.)",
 			])
+			await partner_cheer(4)
 			Game.set_objective("The elevator. (Up to the flight deck.)")
 		else:
 			Game.play_sfx("miss")

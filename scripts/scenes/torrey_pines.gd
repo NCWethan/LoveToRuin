@@ -388,6 +388,7 @@ func _fog_exit(dir: String) -> void:
 				"* (The fog thins. The wind picks up.)",
 				"* (You come out of the pines at the top of the\n*  cliffs, by the gliderport. The sea is huge.)",
 			])
+			await partner_cheer(5)
 			if _route() == "pacifist" and not flag("tp_hop_talk"):
 				Game.set_objective("Hop. (At the viewpoint, back down the trail.)")
 			elif not _genocide():

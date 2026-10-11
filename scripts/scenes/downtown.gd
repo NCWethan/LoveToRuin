@@ -505,6 +505,7 @@ func _try_main() -> void:
 		"* (CLUNK. The MAIN holds. The bulb comes on.)",
 		"* (Far away, up the street, something big starts\n*  to hum. A gate, rolling up.)",
 	])
+	await partner_cheer(3)
 	Game.set_objective("The ballpark gate's open. (Up the street.)")
 
 
