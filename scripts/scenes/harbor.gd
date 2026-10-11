@@ -22,7 +22,14 @@ extends Area
 ##              is locked: the offer stood. It doesn't anymore.
 ##   With Hop   Agent is waiting on the flight deck. The hardest fight in the game.
 ##
-## Story flags: hb_arrived, hb_rps, hb_inside, hb_deck, hb_jet_done, hb_fragment,
+## The elevator to the flight deck won't run without signal clearance (Chapter 2:
+## the road to each fragment): four flags on the hoist, in order. The flag locker
+## is by the elevator; what each flag means is on a chart in the engine room,
+## below decks (a hatch in the hangar floor): "OUR NUMBER, THEN G-O." The number
+## is painted on the hull: 41.
+##
+## Story flags: hb_arrived, hb_rps, hb_inside, hb_engine_seen, hb_hoist (the flags
+## raised so far), hb_flags, hb_deck, hb_jet_done, hb_fragment,
 ## has_fragment_8, hb_feeding, hb_confession, hb_vote ("keep"/"seal"),
 ## hb_votes_keep, hb_vote_done, hb_hop_left (read the note, at the base).
 
@@ -51,6 +58,18 @@ const EGGO_PIER := Vector2(34 * T, 16 * T + 10)
 const HOP_BENCH := Vector2(12 * T + 10, 23 * T + 2)
 ## Where everyone stands for the vote, in the hangar.
 const VOTE_CENTER := Vector2(20 * T, 41 * T)
+## The engine room, below the hangar (its own room on the map), and the way down.
+const ENGINE := Rect2i(42, 32, 18, 20)
+const HATCH := Vector2(36 * T + 10, 47 * T + 10)
+const HATCH_OUT := Vector2(36 * T + 10, 46 * T + 8)
+const ENGINE_ENTRY := Vector2(50 * T + 10, 35 * T + 10)
+const LADDER := Vector2(50 * T + 10, 34 * T + 2)
+const CHART := Vector2(45 * T + 10, 34 * T + 4)
+## The flag locker, by the elevator, and its flags: [what it looks like, what it means].
+const LOCKER := Vector2(31 * T, 35 * T + 4)
+const SIGNAL_FLAGS := [["Red, white cross", "4"], ["Blue, white square", "1"], ["Yellow, black dot", "2"],
+	["Black + white checks", "7"], ["Yellow + blue stripes", "G"], ["Red + yellow halves", "O"]]
+const CLEARANCE := ["4", "1", "G", "O"]
 
 var partner: Character
 var agent: Character
@@ -71,9 +90,10 @@ func _ready() -> void:
 	_from_memory = not Game.keepsake_after.is_empty() and not Game.playing_relic
 	_engaged = str(Game.battle_result.get("id", "")) in ["flight_deck", "corps_agent"]
 	_night = flag("hb_feeding") and not flag("hb_vote_done")
-	rooms.assign([_px(OUTSIDE), _px(HANGAR), _px(DECK)])
+	rooms.assign([_px(OUTSIDE), _px(HANGAR), _px(DECK), _px(ENGINE)])
 	setup_area(ENTRY)
 	add_wild_encounters(SCENE, Rect2(T, 14 * T, 58 * T, 14 * T))
+	add_wild_encounters(SCENE, _px(ENGINE))
 	_font = ThemeDB.fallback_font
 	_decor = Node2D.new()
 	add_child(_decor)
@@ -87,7 +107,9 @@ func _ready() -> void:
 	_dress()
 	for spot in [[ENTRY + Vector2(10, -8), _bus_stop], [GANGWAY_TOP, _gangway], [HANGAR_EXIT, _leave_hangar],
 			[LIFT_DOWN, _lift_up], [LIFT_UP, _lift_down], [Vector2(45 * T + 10, 26 * T + 4), _fish_stand],
-			[Vector2(6 * T + 10, 26 * T + 4), _seal_statue], [Vector2(10 * T + 10, 36 * T + 4), _old_plane]]:
+			[Vector2(6 * T + 10, 26 * T + 4), _seal_statue], [Vector2(10 * T + 10, 36 * T + 4), _old_plane],
+			[HATCH, _hatch], [LADDER, _ladder], [CHART, _chart], [LOCKER, _locker],
+			[Vector2(52 * T, 39 * T + 4), _engines]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	_play_music_here()
 	fit_camera_to_room()
@@ -107,6 +129,8 @@ func _route() -> String:
 
 
 func _where() -> String:
+	if _px(ENGINE).has_point(player.position):
+		return "engine"
 	if player.position.y > 54 * T:
 		return "deck"
 	if player.position.y > 32 * T:
@@ -203,6 +227,13 @@ func build_map() -> void:
 	room.fill(2, 56, 56, 20, Room.ASPHALT)
 	room.fill(44, 57, 6, 6, Room.WALL)          # the island
 	room.set_tile(47, 62, Room.DOOR)
+	# The flag locker, by the elevator.
+	room.fill(30, 34, 2, 1, Room.PROP)
+	# The engine room: steel, pipes, two huge old engines.
+	room.fill(ENGINE.position.x, ENGINE.position.y, ENGINE.size.x, ENGINE.size.y, Room.BUNKER_WALL)
+	room.fill(43, 34, 16, 17, Room.BUNKER_FLOOR)
+	room.fill(47, 39, 4, 6, Room.PROP)
+	room.fill(53, 39, 4, 6, Room.PROP)
 
 
 func _draw_decor() -> void:
@@ -215,6 +246,17 @@ func _draw_decor() -> void:
 			_decor.draw_line(Vector2(x, y), Vector2(x + 10, y), Color(1, 1, 1, 0.3), 1.0)
 	# The bus stop.
 	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
+	# The signal flags on the hoist over the elevator, flapping.
+	var hoist: Array = ["4", "1", "G", "O"] if flag("hb_flags") else Game.flags.get("hb_hoist", [])
+	var keys := ["4", "1", "2", "7", "G", "O"]
+	var flag_colors := [[Color8(220, 40, 40), Color8(250, 250, 250)], [Color8(40, 70, 170), Color8(250, 250, 250)], [Color8(240, 200, 40), Color8(20, 20, 24)],
+		[Color8(20, 20, 24), Color8(250, 250, 250)], [Color8(240, 200, 40), Color8(40, 70, 170)], [Color8(220, 40, 40), Color8(240, 200, 40)]]
+	_decor.draw_line(Vector2(33 * T, 33 * T + 10), Vector2(38 * T, 33 * T + 10), Color8(200, 200, 205), 1.0)
+	for i in hoist.size():
+		var c: Array = flag_colors[keys.find(hoist[i])]
+		var at := Vector2(33 * T + 8 + i * 22, 33 * T + 11 + sin(_time * 6.0 + i) * 1.5)
+		_decor.draw_rect(Rect2(at, Vector2(14, 10)), c[0])
+		_decor.draw_rect(Rect2(at + Vector2(4, 3), Vector2(6, 4)), c[1])
 	# The radar on the island, turning.
 	var dish := Vector2(47 * T, 57 * T - 30)
 	_decor.draw_line(dish, dish + Vector2.from_angle(_time * 1.5) * 14.0, Color8(200, 200, 210), 3.0)
@@ -240,6 +282,7 @@ func _draw_scenery(ci: CanvasItem) -> void:
 	Scenery.seal_statue(ci, Vector2(6 * T + 10, 25 * T + 8))
 	_draw_hangar(ci)
 	_draw_deck(ci)
+	_draw_engine_room(ci)
 
 
 func _draw_hangar(ci: CanvasItem) -> void:
@@ -429,6 +472,10 @@ func _leave_hangar() -> void:
 
 
 func _lift_up() -> void:
+	if not flag("hb_flags"):
+		await Game.dialogue.say(["* (The elevator won't budge. A placard on the rail:\n*  NO LIFT WITHOUT SIGNAL CLEARANCE.)", "* (FLAGS ON THE HOIST: NONE.)"])
+		Game.set_objective("Raise the signal flags. (The locker by the elevator.)")
+		return
 	var go := await Game.dialogue.ask("* (The elevator. TO FLIGHT DECK.\n*  The button is shiny from being pressed.)", ["Up", "Not yet"])
 	if go != 0:
 		return
@@ -445,6 +492,127 @@ func _lift_up() -> void:
 	])
 	if not _genocide():
 		Game.set_objective("The jet, at the end of the deck.")
+
+
+# --- Below decks, and the signal flags -----------------------------------------------
+
+func _hatch() -> void:
+	Game.play_sfx("door", 0.7)
+	await go_through_door(ENGINE_ENTRY)
+	fit_camera_to_room()
+	_play_music_here()
+	if not flag("hb_engine_seen"):
+		Game.flags["hb_engine_seen"] = true
+		await Game.dialogue.say([
+			"* (Down the ladder: the engine room. Two engines the\n*  size of houses. It smells like a hundred years of oil.)",
+			"* (On the wall by the ladder: a chart, and some\n*  writing in grease pencil.)",
+		])
+
+
+func _ladder() -> void:
+	Game.play_sfx("door", 0.7)
+	await go_through_door(HATCH_OUT)
+	fit_camera_to_room()
+	_play_music_here()
+
+
+func _engines() -> void:
+	await Game.dialogue.say(["* (The engines. Cold, for decades. A brass plate:\n*  280,000 HORSEPOWER.)", "* (Someone has taped a note to one: SHE STILL\n*  REMEMBERS HOW. DON'T TEMPT HER.)"])
+
+
+func _chart() -> void:
+	await Game.dialogue.say([
+		"* (A chart: SIGNAL FLAGS, and what each one means.)",
+		"* (\"1: blue, white square.   2: yellow, black dot.\n*  4: red, white cross.     7: black and white checks.\")",
+		"* (\"G: yellow and blue stripes.\n*  O: red and yellow, split corner to corner.\")",
+		"* (Under it, in grease pencil: ELEVATOR CLEARANCE =\n*  OUR NUMBER, THEN G-O.  (IT'S ON THE HULL, GENIUS.))",
+	])
+	if not flag("hb_flags"):
+		Game.set_objective("Raise the signal flags. (Our number, then G-O.)")
+
+
+## The flag locker: hoist flags one at a time; four up, the elevator checks them.
+func _locker() -> void:
+	if flag("hb_flags"):
+		await Game.dialogue.say(["* (The flags are up: 4, 1, G, O. The elevator's\n*  light is green.)"])
+		return
+	await Game.dialogue.say(["* (The flag locker. Six signal flags, rolled up neat,\n*  and a hoist that runs up over the elevator.)"])
+	while true:
+		var hoist: Array = Game.flags.get("hb_hoist", [])
+		var names: Array = []
+		for f in SIGNAL_FLAGS:
+			names.append(f[0])
+		names.append("Haul them down" if not hoist.is_empty() else "Leave it")
+		var pick := await Game.dialogue.ask("* (Flag %d of 4. Which one goes up?)" % (hoist.size() + 1), names)
+		if pick < 0 or pick == SIGNAL_FLAGS.size():
+			if not hoist.is_empty():
+				Game.flags["hb_hoist"] = []
+				Game.play_sfx("move")
+				_decor.queue_redraw()
+			return
+		hoist = hoist.duplicate()
+		hoist.append(SIGNAL_FLAGS[pick][1])
+		Game.flags["hb_hoist"] = hoist
+		Game.play_sfx("select")
+		_decor.queue_redraw()
+		if hoist.size() < 4:
+			continue
+		if hoist == CLEARANCE:
+			Game.flags["hb_flags"] = true
+			Game.play_sfx("save")
+			await Game.dialogue.say([
+				"* (Four flags snap in the wind over the elevator.)",
+				"* (A bell rings somewhere in the ship. The elevator's\n*  light goes from red to green.)",
+			])
+			Game.set_objective("The elevator. (Up to the flight deck.)")
+		else:
+			Game.play_sfx("miss")
+			await Game.dialogue.say(["* (A buzzer. The elevator's light stays red.\n*  CLEARANCE DENIED.)", "* (You haul the flags back down.)"])
+			Game.flags["hb_hoist"] = []
+			_decor.queue_redraw()
+		return
+
+
+## The engine room: the engines, pipes, the ladder and the chart; the locker.
+func _draw_engine_room(ci: CanvasItem) -> void:
+	var r := _px(ENGINE)
+	for k in 4:
+		var y := r.position.y + T + 2 + k * 8
+		ci.draw_rect(Rect2(r.position.x + T, y, r.size.x - 2 * T, 4), Color8(110, 116, 120).darkened(k * 0.12))
+		ci.draw_rect(Rect2(r.position.x + T, y, r.size.x - 2 * T, 1), Color8(160, 166, 170))
+	for spot in [Rect2(47 * T, 39 * T - 10, 4 * T, 6 * T + 10), Rect2(53 * T, 39 * T - 10, 4 * T, 6 * T + 10)]:
+		ci.draw_rect(Rect2(spot.position + Vector2(3, 4), spot.size), Color(0, 0, 0, 0.3))
+		ci.draw_rect(spot, Color8(84, 92, 86))
+		ci.draw_rect(Rect2(spot.position, Vector2(spot.size.x, 4)), Color8(120, 130, 122))
+		for k in 5:
+			ci.draw_rect(Rect2(spot.position.x + 6, spot.position.y + 16 + k * 20, spot.size.x - 12, 3), Color8(60, 66, 62))
+		ci.draw_circle(spot.position + Vector2(spot.size.x / 2, 30), 9.0, Color8(200, 170, 90))
+		ci.draw_circle(spot.position + Vector2(spot.size.x / 2, 30), 6.0, Color8(240, 236, 220))
+	# The ladder up, and the chart beside it.
+	for k in 6:
+		ci.draw_rect(Rect2(50 * T + 2, 32 * T + 4 + k * 6, T - 4, 2), Color8(150, 150, 156))
+	ci.draw_rect(Rect2(50 * T + 1, 32 * T, 2, 2 * T), Color8(120, 120, 126))
+	ci.draw_rect(Rect2(51 * T - 3, 32 * T, 2, 2 * T), Color8(120, 120, 126))
+	var chart := Rect2(44 * T, 32 * T + 4, 3 * T, 2 * T - 6)
+	ci.draw_rect(chart, Color8(236, 232, 216))
+	var flag_colors := [[Color8(220, 40, 40), Color8(250, 250, 250)], [Color8(40, 70, 170), Color8(250, 250, 250)], [Color8(240, 200, 40), Color8(20, 20, 24)],
+		[Color8(20, 20, 24), Color8(250, 250, 250)], [Color8(240, 200, 40), Color8(40, 70, 170)], [Color8(220, 40, 40), Color8(240, 200, 40)]]
+	for i in 6:
+		var at := chart.position + Vector2(4 + (i % 3) * 18, 4 + (i / 3) * 14)
+		ci.draw_rect(Rect2(at, Vector2(10, 8)), flag_colors[i][0])
+		ci.draw_rect(Rect2(at + Vector2(3, 2), Vector2(4, 4)), flag_colors[i][1])
+		PixelFont.draw(ci, ["4", "1", "2", "7", "G", "O"][i], at + Vector2(12, 1), 1.0, Color8(40, 40, 50))
+	# The hatch in the hangar floor.
+	ci.draw_circle(HATCH, 9.0, Color8(70, 74, 82))
+	ci.draw_circle(HATCH, 7.0, Color8(100, 106, 116))
+	ci.draw_line(HATCH + Vector2(-6, 0), HATCH + Vector2(6, 0), Color8(60, 64, 70), 2.0)
+	ci.draw_line(HATCH + Vector2(0, -6), HATCH + Vector2(0, 6), Color8(60, 64, 70), 2.0)
+	# The flag locker, by the elevator.
+	var locker := Rect2(30 * T, 34 * T - 6, 2 * T, T + 6)
+	ci.draw_rect(locker, Color8(70, 90, 120))
+	ci.draw_rect(Rect2(locker.position, Vector2(locker.size.x, 3)), Color8(110, 130, 160))
+	for i in 6:
+		ci.draw_rect(Rect2(locker.position + Vector2(3 + i * 6, 8), Vector2(4, 12)), flag_colors[i][0])
 
 
 func _lift_down() -> void:
@@ -492,7 +660,7 @@ func _start() -> void:
 func _physics_process(_delta: float) -> void:
 	if is_blocked() or _engaged:
 		return
-	if _where() == "outside":
+	if _where() in ["outside", "engine"]:
 		check_random_encounter(SCENE)
 		return
 	if _where() != "deck":

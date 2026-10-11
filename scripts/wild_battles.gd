@@ -6,6 +6,46 @@ extends RefCounted
 ## then as you walk.
 
 const CREATURES := {
+	# --- Chapter 2: The Harbor ---
+	"gull_captain": {
+		"name": "Gull Captain", "sprite": "wild_gull_captain",
+		"intro": "* A Gull Captain lands on the rail.\n* It salutes. It wants your fish taco.",
+		"hp": 116, "atk": 10, "def": 4, "patterns": ["gull_dive", "gull_cap"],
+		"check": "* GULL CAPTAIN - ATK 10 DEF 4\n* Found the hat in 1987. Has been in charge ever since.",
+		"acts": [
+			{"name": "Salute", "mercy": 50, "lines": ["* {actor} salutes back, crisply.\n* The Gull Captain puffs out its chest. Finally, discipline."]},
+			{"name": "Aye Aye", "mercy": 40, "lines": ["* {actor} says \"Aye aye, Captain!\"\n* The Gull Captain has waited its whole life for that."]},
+		],
+		"taunts": ["SKRAA!", "*flap*", "MINE."],
+		"flavor": ["* The Gull Captain inspects you. You fail.", "* The Gull Captain's hat is three sizes too big.\n* It is extremely proud of it."],
+		"backdrop": Color(0.3, 0.5, 0.75), "style": "waves", "exp": 26, "money": 18,
+	},
+	"lobster_trap": {
+		"name": "Lobster Trap", "sprite": "wild_lobster_trap",
+		"intro": "* A Lobster Trap scuttles out on its own.\n* The lobster inside is driving.",
+		"hp": 124, "atk": 10, "def": 7, "patterns": ["trap_snap", "trap_rope"],
+		"check": "* LOBSTER TRAP - ATK 10 DEF 7\n* The lobster got in. The lobster stayed. It's home now.",
+		"acts": [
+			{"name": "Open Door", "mercy": 50, "lines": ["* {actor} opens the little door.\n* The lobster looks out. ...It closes the door again. Cozy."]},
+			{"name": "Compliment", "mercy": 40, "lines": ["* {actor} compliments the craftsmanship.\n* The lobster clicks its claws, flattered."]},
+		],
+		"taunts": ["*click click*", "*creak*", "SNIP"],
+		"flavor": ["* The Lobster Trap drips seawater.", "* The lobster is waving. You're not sure it's friendly."],
+		"backdrop": Color(0.2, 0.35, 0.5), "style": "bubbles", "exp": 27, "money": 22,
+	},
+	"rust_bot": {
+		"name": "Rust Bot", "sprite": "wild_rust_bot",
+		"intro": "* A Rust Bot clanks out of the engine room.\n* It hasn't been oiled since the war.",
+		"hp": 120, "atk": 11, "def": 6, "patterns": ["rust_bolts", "rust_laser"],
+		"check": "* RUST BOT - ATK 11 DEF 6\n* Built to fix the engines. Nobody told it they stopped.",
+		"acts": [
+			{"name": "Oil It", "mercy": 50, "lines": ["* {actor} oils its joints.\n* The Rust Bot moves its arm without screeching. It weeps oil."]},
+			{"name": "Thank It", "mercy": 40, "lines": ["* {actor} tells it the engines were well kept.\n* The Rust Bot's eye glows a little softer."]},
+		],
+		"taunts": ["*CLANK*", "SCREEEECH", "MAINTENANCE."],
+		"flavor": ["* The Rust Bot creaks. Flakes of rust drift down.", "* The Rust Bot is still holding a wrench from 1972."],
+		"backdrop": Color(0.55, 0.35, 0.25), "style": "carrier", "exp": 28, "money": 20,
+	},
 	# --- Chapter 2: Downtown ---
 	"pigeon_gang": {
 		"name": "Pigeon Gang", "sprite": "wild_pigeon_gang",
@@ -309,7 +349,7 @@ const ZONES := {
 	"res://scenes/balboa_park.tscn": ["peacock", "marble_bust", "tour_group"],
 	"res://scenes/old_town.tscn": ["tumbleweed", "pinata", "wax_ghost"],
 	"res://scenes/downtown.tscn": ["pigeon_gang", "parking_meter", "neon_sign"],
-	"res://scenes/harbor.tscn": ["seagull", "balloon", "bag"],
+	"res://scenes/harbor.tscn": ["gull_captain", "lobster_trap", "rust_bot"],
 	"res://scenes/torrey_pines.tscn": ["seagull", "squirrel", "goose"],
 	"res://scenes/burned_hills.tscn": ["squirrel", "bag"],
 	"res://scenes/junkyard.tscn": ["cart", "bag", "receipt"],

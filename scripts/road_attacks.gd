@@ -21,6 +21,13 @@ static func spawn(pattern: String, enemy: Enemy, parent: Node, area: Rect2, s: V
 		"bust_glare": return _bust_glare(enemy, parent, area, s, step)
 		"tour_flags": return _tour_flags(enemy, parent, area, s, step)
 		"tour_flash": return _tour_flash(enemy, parent, area, s, step)
+		# --- The Harbor ---
+		"gull_dive": return _gull_dive(enemy, parent, area, s, step)
+		"gull_cap": return _gull_cap(enemy, parent, area, s, step)
+		"trap_snap": return _trap_snap(enemy, parent, area, s, step)
+		"trap_rope": return _trap_rope(enemy, parent, area, s, step)
+		"rust_bolts": return _rust_bolts(enemy, parent, area, s, step)
+		"rust_laser": return _rust_laser(enemy, parent, area, s, step)
 		# --- Downtown ---
 		"pigeon_swoop": return _pigeon_swoop(enemy, parent, area, s, step)
 		"pigeon_crumbs": return _pigeon_crumbs(enemy, parent, area, s, step)
@@ -332,3 +339,68 @@ static func _neon_buzz(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, s
 		spark.delay = 0.4
 		spark.velocity = Vector2.from_angle(k * TAU / 6.0 + step * 0.3) * 120.0
 	return 0.6
+
+
+# --- Gull Captain ------------------------------------------------------------------------
+
+## DIVE: gulls dive from the top, two at a time, crossing over you.
+static func _gull_dive(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	for side in [-1.0, 1.0]:
+		var start := Vector2(clampf(soul.x + side * 60.0, area.position.x + 6, area.end.x - 6), area.position.y + 4)
+		var gull := _glyph(enemy, parent, area, start, "bird", 9.0)
+		gull.delay = 0.3
+		gull.velocity = (soul + Vector2(-side * 30.0, 20) - start).normalized() * 175.0
+		gull.face_motion = true
+	return 0.8
+
+
+## CAP: the captain's hat, thrown like a boomerang: out along your row, and back.
+static func _gull_cap(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var left := step % 2 == 0
+	var cap := _glyph(enemy, parent, area, Vector2(area.position.x + 8 if left else area.end.x - 8, clampf(soul.y, area.position.y + 8, area.end.y - 8)), "cap", 10.0)
+	cap.delay = 0.35
+	cap.velocity = Vector2(200 if left else -200, 0)
+	cap.spin = 9.0
+	cap.wall_bounce = true
+	cap.lifetime = 2.2
+	return 1.0
+
+
+# --- Lobster Trap ------------------------------------------------------------------------
+
+## SNAP: claws snap shut from above and below your column.
+static func _trap_snap(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var x := clampf(soul.x + randf_range(-8, 8), area.position.x + 8, area.end.x - 8)
+	for top in [true, false]:
+		var claw := _glyph(enemy, parent, area, Vector2(x, area.position.y + 6 if top else area.end.y - 6), "claw", 10.0)
+		claw.delay = 0.5
+		claw.velocity = Vector2(0, 210 if top else -210)
+		claw.lifetime = 1.0
+	return 0.85
+
+
+## ROPE: the trap's rope whips taut across the box, at a slant.
+static func _trap_rope(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	var angle := 0.45 if step % 2 == 0 else -0.45
+	Attacks._beam(enemy, parent, area, soul, Vector2.from_angle(angle), 0.55, Color(0.85, 0.75, 0.5))
+	return 0.8
+
+
+# --- Rust Bot ----------------------------------------------------------------------------
+
+## BOLTS: loose bolts rattle out of its joints and fly in from both sides.
+static func _rust_bolts(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	for k in 2:
+		var left := (step + k) % 2 == 0
+		var y := clampf(soul.y + (k * 2 - 1) * 16.0 + randf_range(-6, 6), area.position.y + 6, area.end.y - 6)
+		var bolt := _glyph(enemy, parent, area, Vector2(area.position.x + 4 if left else area.end.x - 4, y), "bolt", 7.0)
+		bolt.delay = 0.2
+		bolt.velocity = Vector2(180 if left else -180, 0)
+		bolt.spin = 8.0
+	return 0.45
+
+
+## LASER: its one eye locks on and fires: down your column, then along your row.
+static func _rust_laser(enemy: Enemy, parent: Node, area: Rect2, soul: Vector2, step: int) -> float:
+	Attacks._beam(enemy, parent, area, soul, Vector2.DOWN if step % 2 == 0 else Vector2.RIGHT, 0.6, Color(1.0, 0.3, 0.2))
+	return 0.8
