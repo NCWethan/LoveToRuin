@@ -51,6 +51,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -148,25 +149,27 @@ func _draw_decor() -> void:
 	for k in 26:
 		var at := Vector2(fmod(k * 131.0 + _time * 14.0, 48.0 * T), fmod(k * 59.0 + _time * 6.0, 34.0 * T))
 		_decor.draw_rect(Rect2(at, Vector2(2, 2)), Color(0.75, 0.72, 0.7, 0.5))
-	# Saplings, each with a little stake and a tag.
-	for spot in [Vector2(8.5, 28), Vector2(10.5, 28), Vector2(12.5, 29), Vector2(20.5, 27), Vector2(36.5, 19), Vector2(24.5, 14)]:
-		var at: Vector2 = spot * T + Vector2(0, 8)
-		_decor.draw_line(at, at + Vector2(0, -12), Color8(110, 80, 50), 2.0)
-		_decor.draw_circle(at + Vector2(0, -12), 4.0, Color8(80, 170, 80))
-	# The lookout: a railing and, far below, Westview Field with its crater.
-	_decor.draw_rect(Rect2(28 * T, 3 * T, 5 * T, 4), Color8(150, 120, 90))
-	_decor.draw_string(_font, Vector2(28 * T, 2 * T + 14), "LOOKOUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(230, 220, 200))
 	# Ember's glow on the ground, if it's still burning.
 	if ember and is_instance_valid(ember):
 		var pulse := 0.6 + 0.4 * sin(_time * 5.0)
 		_decor.draw_circle(EMBER_SPOT + Vector2(0, 10), 60.0, Color(1.0, 0.4, 0.1, 0.1 * pulse))
 		_decor.draw_circle(EMBER_SPOT + Vector2(0, 10), 30.0, Color(1.0, 0.6, 0.2, 0.12 * pulse))
-	# The trailhead sign, and the bus stop.
-	_decor.draw_rect(Rect2(36 * T, 35 * T, 2 * T, 16), Color8(110, 80, 50))
-	_decor.draw_string(_font, Vector2(36 * T + 4, 35 * T + 12), "FIRE RD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 230, 210))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+
+
+## What never changes: the saplings, the lookout, the signs. Drawn once.
+func _draw_scenery(ci: CanvasItem) -> void:
+	var spots := [Vector2(8.5, 28), Vector2(10.5, 28), Vector2(12.5, 29), Vector2(20.5, 27), Vector2(36.5, 19), Vector2(24.5, 14)]
+	for i in spots.size():
+		Scenery.sapling(ci, spots[i] * T + Vector2(0, 8), 70 + i)
+	Scenery.lookout(ci, Rect2(28 * T, 3 * T, 5 * T, 8))
+	ci.draw_string(_font, Vector2(28 * T, 2 * T + 14), "LOOKOUT", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(230, 220, 200))
+	var sign := Rect2(36 * T, 35 * T, 2 * T, 16)
+	ci.draw_rect(Rect2(sign.position + Vector2(6, 14), Vector2(3, 8)), Color8(90, 64, 40))
+	ci.draw_rect(Rect2(sign.position + Vector2(30, 14), Vector2(3, 8)), Color8(90, 64, 40))
+	ci.draw_rect(sign.grow(1), Color8(70, 50, 30))
+	ci.draw_rect(sign, Color8(120, 86, 54))
+	ci.draw_string(_font, sign.position + Vector2(4, 12), "FIRE RD", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 230, 210))
+	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
 
 
 ## A hazy, orange-gray sky over everything.

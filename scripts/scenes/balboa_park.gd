@@ -145,41 +145,49 @@ func build_map() -> void:
 
 
 func _draw_decor() -> void:
-	# The bell tower over the museum: tiled dome, arched windows.
-	_decor.draw_rect(Rect2(30 * T, 0, 4 * T, 40), Color8(225, 205, 160))
-	_decor.draw_circle(Vector2(32 * T, 6), 30.0, Color8(60, 110, 140))
-	_decor.draw_rect(Rect2(31 * T + 6, 12, 8, 18), Color8(40, 40, 50))
-	_decor.draw_rect(Rect2(32 * T + 6, 12, 8, 18), Color8(40, 40, 50))
-	_decor.draw_string(_font, Vector2(24 * T, 3 * T - 4), "MUSEUM OF ART & ARMOR", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(110, 80, 50))
-	# The fountain's stone rim, and a spray.
-	_decor.draw_arc(Vector2(32 * T, 18 * T + 10), 46.0, 0, TAU, 32, Color8(220, 215, 200), 6.0)
-	for k in 6:
-		var dir := Vector2.from_angle(-PI / 2 + (k - 2.5) * 0.25)
-		_decor.draw_line(Vector2(32 * T, 18 * T + 6), Vector2(32 * T, 18 * T + 6) + dir * 22.0, Color(0.85, 0.95, 1.0, 0.7), 2.0)
-	# Lily pads.
-	for spot in [Vector2(7, 22), Vector2(11, 24), Vector2(15, 23), Vector2(9, 26), Vector2(16, 25)]:
-		_decor.draw_circle(spot * T, 7.0, Color8(80, 150, 70))
-		_decor.draw_circle(spot * T + Vector2(3, -2), 2.0, Color8(240, 170, 200))
-	# Inside: armor on stands, paintings, the empty pedestal, the shelves.
-	for x in [4, 8, 12]:
-		var at := Vector2(x * T + 10, 37 * T + 2)
-		_decor.draw_rect(Rect2(at + Vector2(-6, -26), Vector2(12, 26)), Color8(170, 175, 190))
-		_decor.draw_rect(Rect2(at + Vector2(-4, -22), Vector2(8, 3)), Color8(40, 40, 50))
-	for x in [3, 9, 15, 22]:
-		_decor.draw_rect(Rect2(x * T, 33 * T + 4, 2 * T, 30), Color8(120, 85, 50))
-		_decor.draw_rect(Rect2(x * T + 4, 33 * T + 8, 2 * T - 8, 22), Color8(70 + x * 5, 90, 120 - x * 2))
-	_decor.draw_rect(Rect2(18 * T, 37 * T, 4 * T, T), Color8(140, 130, 120))
-	_decor.draw_string(_font, Vector2(18 * T + 4, 37 * T + 14), "1540 (ON LOAN)", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(40, 40, 40))
-	for y in [37, 41, 45]:
-		for k in 16:
-			_decor.draw_rect(Rect2(30 * T + k * 10, y * T + 2, 7, 16), Color8(110 + (k * 37) % 90, 60 + (k * 23) % 80, 50 + (k * 51) % 60))
+	# The bell tower over the museum, and the museum's name in carved letters.
+	Scenery.bell_tower(_decor, Vector2(32 * T, 7 * T + 10), 3 * T, 80)
+	var sign := Rect2(24 * T - 4, 2 * T + 4, 6 * T + 26, 14)
+	_decor.draw_rect(sign, Color8(206, 186, 140))
+	_decor.draw_rect(sign.grow(-1), Color8(232, 216, 176))
+	_decor.draw_string(_font, Vector2(24 * T + 2, 3 * T - 3), "MUSEUM OF ART & ARMOR", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(110, 80, 50))
+	# The fountain, and its spray arcing up out of the inner bowl.
+	Scenery.fountain(_decor, Vector2(32 * T, 18 * T + 10), 40.0)
+	var jet := Vector2(32 * T, 18 * T + 8)
+	for k in 7:
+		var a := -PI / 2 + (k - 3) * 0.28
+		var arc := PackedVector2Array()
+		for i in 8:
+			var t := i / 7.0
+			arc.append(jet + Vector2(cos(a) * 24.0 * t, sin(a) * 22.0 * t + 18.0 * t * t))
+		_decor.draw_polyline(arc, Color(0.86, 0.95, 1.0, 0.75), 2.0)
+		_decor.draw_circle(arc[7], 1.5, Color(1, 1, 1, 0.8))
+	_decor.draw_circle(jet, 3.0, Color(1, 1, 1, 0.7))
+	# Lily pads, some flowering.
+	var pads := [Vector2(7, 22), Vector2(11, 24), Vector2(15, 23), Vector2(9, 26), Vector2(16, 25), Vector2(6, 25), Vector2(13, 21), Vector2(17, 22)]
+	for i in pads.size():
+		Scenery.lily_pad(_decor, pads[i] * T, 30 + i)
+	# Inside: suits of armor on their stands, paintings, the empty pedestal, the
+	# archive's shelves, the reading desk.
+	var plumes := [Color8(200, 40, 50), Color8(40, 80, 170), Color8(230, 190, 60)]
+	for i in 3:
+		Scenery.suit_of_armor(_decor, Vector2([4, 8, 12][i] * T + 10, 38 * T - 2), plumes[i])
+	for i in 4:
+		var x: int = [3, 9, 15, 22][i]
+		Scenery.painting(_decor, Rect2(x * T, 33 * T + 4, 2 * T, 28), 7 + i)
+	Scenery.pedestal(_decor, Rect2(18 * T, 37 * T - 6, 4 * T, T + 6), "1540 (ON LOAN)")
+	for i in 3:
+		Scenery.archive_shelf(_decor, Rect2(30 * T, [37, 41, 45][i] * T - 8, 8 * T, T + 8), 20 + i)
 	_decor.draw_rect(Rect2(32 * T, 49 * T, 3 * T, T), Color8(120, 85, 50))
+	_decor.draw_rect(Rect2(32 * T, 49 * T, 3 * T, 2), Color8(150, 112, 72))
+	_decor.draw_rect(Rect2(32 * T + 4, 49 * T + 2, 10, 6), Color8(60, 90, 70))
+	_decor.draw_circle(Vector2(35 * T - 8, 49 * T + 6), 3.0, Color8(240, 210, 120))
 	if not flag("bp_page"):
-		_decor.draw_rect(Rect2(33 * T + 2, 49 * T + 4, 16, 10), Color8(200, 190, 160))
+		_decor.draw_rect(Rect2(33 * T + 2, 49 * T + 4, 16, 10), Color8(214, 204, 172))
+		_decor.draw_rect(Rect2(33 * T + 4, 49 * T + 6, 10, 1), Color8(130, 120, 100))
+		_decor.draw_rect(Rect2(33 * T + 4, 49 * T + 9, 8, 1), Color8(130, 120, 100))
 	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
 
 
 # --- People ----------------------------------------------------------------------

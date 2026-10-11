@@ -105,45 +105,53 @@ func build_map() -> void:
 	room.fill(0, 20, 64, 10, Room.WATER)
 
 
+## The Dipper's track: where the rail is, at each x along the coaster.
+func _dipper_track(x: float) -> float:
+	return 30.0 + sin(x * 0.045) * 22.0
+
+
 func _draw_decor() -> void:
-	# The Dipper: a white wooden lattice, a red track rising over it, and a sign.
-	var base := Vector2(0, 0)
-	_decor.draw_rect(Rect2(base, Vector2(18 * T, 5 * T)), Color8(70, 60, 55))
-	for k in 12:
-		var x := 6.0 + k * 30.0
-		_decor.draw_line(base + Vector2(x, 100), base + Vector2(x + 26, 4), Color8(235, 230, 220), 2.0)
-		_decor.draw_line(base + Vector2(x + 26, 100), base + Vector2(x, 4), Color8(235, 230, 220), 2.0)
-	var track := PackedVector2Array()
-	for k in 37:
-		var x := k * 10.0
-		track.append(base + Vector2(x, 30 + sin(k * 0.45) * 22.0))
-	_decor.draw_polyline(track, Color8(200, 50, 45), 4.0)
+	# The Dipper: white wooden trestle, red track, the train at the top.
+	Scenery.wooden_coaster(_decor, Rect2(0, 0, 18 * T, 5 * T), _dipper_track)
 	var sign_rect := Rect2(GATE + Vector2(-46, -60), Vector2(92, 22))
+	_decor.draw_rect(sign_rect.grow(3), Color8(250, 235, 200))
+	_decor.draw_rect(sign_rect.grow(1), Color8(150, 34, 32))
 	_decor.draw_rect(sign_rect, Color8(200, 50, 45))
-	_decor.draw_rect(sign_rect, Color8(250, 235, 200), false, 2.0)
+	for k in 10:
+		_decor.draw_circle(sign_rect.position + Vector2(4 + k * 9.4, -2), 1.5, Color8(255, 230, 140))
 	_decor.draw_string(_font, sign_rect.position + Vector2(10, 15), "THE DIPPER", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(250, 235, 200))
 	_decor.draw_string(_font, sign_rect.position + Vector2(18, 32), "since 1925", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(60, 40, 30))
 	# The gate (a turnstile), glowing red until the fragment is gone.
-	_decor.draw_rect(Rect2(GATE + Vector2(-14, -16), Vector2(28, 14)), Color8(120, 90, 60))
+	Scenery.turnstile(_decor, GATE + Vector2(0, -2))
 	if not flag("mb_fragment"):
 		_decor.draw_circle(GATE + Vector2(0, -26), 8.0, Color(0.9, 0.15, 0.2, 0.35))
-	# Shop signs.
-	var shops := [[22, "SURF"], [34, "TACOS"], [46, "ARCADE"], [56, "ICE CREAM"]]
+	# The shops: awnings, painted signs.
+	var shops := [[22, "SURF", Color8(60, 150, 200), Color8(250, 250, 250), "surf", Color8(60, 150, 200), Color8(250, 250, 250)],
+		[34, "TACOS", Color8(240, 190, 60), Color8(120, 40, 30), "taco", Color8(220, 70, 50), Color8(250, 210, 90)],
+		[46, "ARCADE", Color8(40, 30, 70), Color8(120, 240, 250), "arcade", Color8(140, 60, 200), Color8(40, 30, 70)],
+		[56, "ICE CREAM", Color8(250, 200, 220), Color8(160, 60, 100), "cone", Color8(250, 160, 200), Color8(250, 250, 250)]]
 	for shop in shops:
-		_decor.draw_string(_font, Vector2(shop[0] * T, 1 * T + 10), shop[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(80, 60, 50))
+		var x: int = shop[0]
+		Scenery.awning(_decor, Rect2(x * T - 6, 2 * T - 6, 5 * T + 4, 8), shop[5], shop[6])
+		Scenery.shop_sign(_decor, Rect2(x * T - 4, 1 * T - 2, 5 * T, 14), shop[1], shop[2], shop[3], shop[4])
+	# Surfboards leaning by the surf shop; a menu board by the tacos.
+	for k in 3:
+		var at := Vector2(21 * T - 6 + k * 5, 3 * T + 18)
+		_decor.draw_set_transform(at, -0.15, Vector2.ONE)
+		_decor.draw_rect(Rect2(-2, -22, 5, 22), [Color8(250, 250, 250), Color8(240, 120, 90), Color8(90, 200, 220)][k])
+		_decor.draw_rect(Rect2(0, -22, 1, 22), Color8(60, 60, 70))
+		_decor.draw_set_transform(Vector2.ZERO)
+	_decor.draw_rect(Rect2(33 * T - 4, 3 * T, 14, 18), Color8(40, 40, 46))
+	_decor.draw_rect(Rect2(33 * T - 3, 3 * T + 1, 12, 16), Color8(30, 60, 40))
+	for k in 4:
+		_decor.draw_rect(Rect2(33 * T - 1, 3 * T + 4 + k * 3, 8, 1), Color8(220, 224, 214))
 	# Crayola's duck pool float, and a couple of umbrellas.
 	if not _genocide() or not flag("beat_corps_crayola"):
-		_decor.draw_circle(CRAYOLA_SPOT + Vector2(-26, 10), 9.0, Color8(250, 210, 60))
-		_decor.draw_circle(CRAYOLA_SPOT + Vector2(-32, 2), 4.0, Color8(250, 210, 60))
-		_decor.draw_rect(Rect2(CRAYOLA_SPOT + Vector2(-38, 1), Vector2(4, 2)), Color8(240, 140, 40))
-	for spot in [Vector2(16 * T, 12 * T), Vector2(44 * T, 14 * T)]:
-		_decor.draw_circle(spot, 16.0, Color8(230, 80, 80))
-		_decor.draw_arc(spot, 16.0, 0, TAU, 16, Color8(250, 250, 250), 2.0)
-		_decor.draw_line(spot, spot + Vector2(0, 18), Color8(120, 120, 120), 2.0)
+		Scenery.duck_float(_decor, CRAYOLA_SPOT + Vector2(-28, 8))
+	Scenery.beach_umbrella(_decor, Vector2(16 * T, 12 * T), Color8(230, 80, 80), Color8(250, 250, 250))
+	Scenery.beach_umbrella(_decor, Vector2(44 * T, 14 * T), Color8(60, 150, 210), Color8(250, 220, 90))
 	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
 
 
 # --- People ----------------------------------------------------------------------

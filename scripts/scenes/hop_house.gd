@@ -215,54 +215,70 @@ func _draw_decor() -> void:
 	_block(Rect2(_tile(44.5, 10.5), Vector2(10, 14)), Color8(80, 85, 95))
 	_decor.draw_string(_font, _tile(44.5, 10.5) + Vector2(-2, -3), "HOP", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(240, 240, 240))
 	# --- The house ---
+	# A rug in the living room.
+	Scenery.rug(_decor, Rect2(_tile(3, 38) + Vector2(0, 6), Vector2(6 * T, 3 * T)), Color8(150, 60, 50), Color8(220, 180, 120))
 	# The couch, with a folded blanket.
-	_block(Rect2(_tile(3, 44), Vector2(5 * T, 2 * T)), Color8(120, 70, 60))
-	_decor.draw_rect(Rect2(_tile(3, 44) + Vector2(4, 4), Vector2(5 * T - 8, 10)), Color8(150, 92, 80))
+	Scenery.couch(_decor, Rect2(_tile(3, 44), Vector2(5 * T, 2 * T)), Color8(120, 70, 60))
 	_decor.draw_rect(Rect2(_tile(6.5, 44) + Vector2(0, 14), Vector2(22, 10)), Color8(90, 110, 150))
+	_decor.draw_rect(Rect2(_tile(6.5, 44) + Vector2(0, 14), Vector2(22, 2)), Color8(120, 140, 180))
+	_decor.draw_rect(Rect2(_tile(6.5, 44) + Vector2(0, 19), Vector2(22, 1)), Color8(70, 86, 120))
 	# The coffee table, with a checkers game nobody else played.
-	var table := Rect2(_tile(4, 41), Vector2(3 * T, T))
-	_block(table, Color8(110, 78, 50))
-	for k in 12:
-		_decor.draw_rect(Rect2(table.position + Vector2(10 + (k % 6) * 7, 4 + (k / 6) * 7), Vector2(5, 5)), Color8(200, 40, 40) if k < 3 else Color8(30, 30, 34))
+	Scenery.coffee_table_checkers(_decor, Rect2(_tile(4, 41), Vector2(3 * T, T)))
 	# The TV and a game console with one controller.
-	_block(Rect2(_tile(3, 33) + Vector2(4, -10), Vector2(4 * T - 8, T + 6)), Color8(40, 40, 46))
-	_decor.draw_rect(Rect2(_tile(3, 33) + Vector2(8, -6), Vector2(4 * T - 16, 14)), Color8(70, 90, 110))
+	Scenery.tv_stand(_decor, Rect2(_tile(3, 33) + Vector2(4, -10), Vector2(4 * T - 8, T + 10)), false)
 	# The shelf, with a photo frame lying face-down.
-	_block(Rect2(_tile(9, 33), Vector2(2 * T, T)), Color8(110, 78, 50))
-	_decor.draw_rect(Rect2(_tile(9, 33) + Vector2(10, 4), Vector2(18, 6)), Color8(60, 45, 35))
-	# The calendar on the wall.
-	_decor.draw_rect(Rect2(_tile(7, 31) + Vector2(2, 2), Vector2(16, 20)), Color8(235, 230, 215))
-	_decor.draw_rect(Rect2(_tile(7, 31) + Vector2(2, 2), Vector2(16, 5)), Color8(190, 60, 50))
+	Scenery.shelf(_decor, Rect2(_tile(9, 33), Vector2(2 * T, T)))
+	# The calendar on the wall, every day crossed out up to today.
+	var cal := Rect2(_tile(7, 31) + Vector2(2, 2), Vector2(16, 20))
+	_decor.draw_rect(Rect2(cal.position + Vector2(1, 1), cal.size), Color(0, 0, 0, 0.2))
+	_decor.draw_rect(cal, Color8(235, 230, 215))
+	_decor.draw_rect(Rect2(cal.position, Vector2(16, 5)), Color8(190, 60, 50))
+	for k in 12:
+		var at := cal.position + Vector2(2 + (k % 4) * 3.5, 7 + (k / 4) * 4)
+		_decor.draw_rect(Rect2(at, Vector2(2, 2)), Color8(200, 60, 60) if k < 9 else Color8(150, 150, 140))
 	# The window, with a jar of bottle caps on the sill.
-	_decor.draw_rect(Rect2(_tile(13, 31) + Vector2(0, 2), Vector2(2 * T, 2 * T - 4)), Color8(40, 50, 80) if not _morning() else Color8(170, 205, 235))
-	_decor.draw_rect(Rect2(_tile(13, 31) + Vector2(0, 2), Vector2(2 * T, 2 * T - 4)), Color8(98, 70, 50), false, 2.0)
+	var win := Rect2(_tile(13, 31) + Vector2(0, 2), Vector2(2 * T, 2 * T - 4))
+	_decor.draw_rect(win, Color8(40, 50, 80) if not _morning() else Color8(170, 205, 235))
+	if _morning():
+		_decor.draw_line(win.position + Vector2(4, win.size.y - 4), win.position + Vector2(20, 4), Color(1, 1, 1, 0.4), 2.0)
+	else:
+		_decor.draw_circle(win.position + Vector2(28, 8), 3.0, Color8(240, 236, 200))
+	_decor.draw_rect(win, Color8(98, 70, 50), false, 2.0)
+	_decor.draw_rect(Rect2(win.position + Vector2(win.size.x / 2 - 1, 0), Vector2(2, win.size.y)), Color8(98, 70, 50))
+	_decor.draw_rect(Rect2(win.position + Vector2(-2, win.size.y - 2), Vector2(win.size.x + 4, 3)), Color8(130, 96, 66))
 	_decor.draw_rect(Rect2(_tile(13.5, 32) + Vector2(4, 4), Vector2(10, 12)), Color(0.8, 0.9, 1.0, 0.6))
+	_decor.draw_rect(Rect2(_tile(13.5, 32) + Vector2(3, 3), Vector2(12, 2)), Color8(170, 170, 176))
 	for k in 5:
 		_decor.draw_circle(_tile(13.5, 32) + Vector2(6 + (k % 3) * 3, 13 - (k / 3) * 3), 1.5, [Color8(200, 50, 50), Color8(230, 190, 60), Color8(60, 120, 200)][k % 3])
 	# The kitchen: counter and sink (one plate, one cup), and the fridge.
-	_block(Rect2(_tile(12, 33), Vector2(4 * T, T)), Color8(190, 190, 185))
-	_decor.draw_rect(Rect2(_tile(13, 33) + Vector2(2, 4), Vector2(18, 10)), Color8(150, 160, 170))
-	_decor.draw_circle(_tile(14.5, 33) + Vector2(6, 10), 4, Color8(240, 240, 235))
-	_block(Rect2(_tile(16, 33) + Vector2(0, -8), Vector2(2 * T, 2 * T + 8)), Color8(225, 225, 225))
+	Scenery.kitchen_counter(_decor, Rect2(_tile(12, 33), Vector2(4 * T, T)))
+	Scenery.fridge(_decor, Rect2(_tile(16, 33) + Vector2(0, -8), Vector2(2 * T, 2 * T + 8)), "")
 	_decor.draw_rect(Rect2(_tile(16, 33) + Vector2(10, 4), Vector2(12, 8)), Color8(230, 170, 60))
 	# The push-up bar.
-	_block(Rect2(_tile(12, 46) + Vector2(0, 8), Vector2(3 * T, 6)), Color8(60, 60, 66))
+	var bar := Rect2(_tile(12, 46) + Vector2(0, 8), Vector2(3 * T, 6))
+	_decor.draw_rect(Rect2(bar.position + Vector2(2, 3), bar.size), Color(0, 0, 0, 0.2))
+	_decor.draw_rect(Rect2(bar.position + Vector2(4, 0), Vector2(bar.size.x - 8, 3)), Color8(80, 80, 86))
+	_decor.draw_rect(Rect2(bar.position + Vector2(4, 0), Vector2(bar.size.x - 8, 1)), Color8(150, 150, 156))
+	for side in [bar.position.x, bar.end.x - 6]:
+		_decor.draw_rect(Rect2(side, bar.position.y - 2, 6, 8), Color8(40, 40, 46))
 	# Hop's room: the bed (made, perfectly), the nightstand with a note, tally
 	# marks on the wall, a mirror with a towel taped over it, and the closet.
-	_block(Rect2(_tile(24, 34), Vector2(4 * T, 3 * T)), Color8(110, 80, 55))
-	_decor.draw_rect(Rect2(_tile(24, 34) + Vector2(4, 4), Vector2(4 * T - 8, 12)), Color8(235, 235, 230))
-	_decor.draw_rect(Rect2(_tile(24, 34) + Vector2(3, 18), Vector2(4 * T - 6, 3 * T - 22)), Color8(90, 95, 105))
-	_block(Rect2(_tile(22, 34), Vector2(T, T)), Color8(110, 78, 50))
-	_decor.draw_rect(Rect2(_tile(22, 34) + Vector2(5, 4), Vector2(10, 8)), Color8(245, 245, 235))
+	Scenery.bed(_decor, Rect2(_tile(24, 34), Vector2(4 * T, 3 * T)), Color8(90, 95, 105))
+	Scenery.nightstand(_decor, Rect2(_tile(22, 34), Vector2(T, T)))
 	for k in 24:
 		var mark := _tile(20.5, 31) + Vector2(4 + (k % 12) * 3 + (k % 12) / 4 * 3, 6 + (k / 12) * 12)
 		_decor.draw_line(mark, mark + Vector2(0, 8), Color8(40, 40, 46), 1.0)
+		if k % 5 == 4:
+			_decor.draw_line(mark + Vector2(-12, 6), mark + Vector2(1, 1), Color8(40, 40, 46), 1.0)
 	_decor.draw_string(_font, _tile(20.5, 31) + Vector2(10, 4), "DAYS", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(40, 40, 46))
-	_decor.draw_rect(Rect2(_tile(26.5, 31), Vector2(T + 4, 2 * T - 4)), Color8(160, 130, 70))
-	_decor.draw_rect(Rect2(_tile(26.5, 31) + Vector2(2, 4), Vector2(T, 2 * T - 10)), Color8(230, 225, 210))
-	_decor.draw_rect(Rect2(_tile(26.5, 31) + Vector2(6, 2), Vector2(12, 3)), Color8(200, 200, 190))
-	_block(Rect2(_tile(25, 46), Vector2(3 * T, 2 * T)), Color8(120, 88, 60))
-	_decor.draw_line(_tile(26.5, 46) + Vector2(0, 2), _tile(26.5, 48), Color8(80, 58, 40), 1.0)
+	var mirror := Rect2(_tile(26.5, 31), Vector2(T + 4, 2 * T - 4))
+	_decor.draw_rect(mirror, Color8(160, 130, 70))
+	_decor.draw_rect(mirror.grow(-2), Color8(180, 200, 214))
+	_decor.draw_rect(Rect2(mirror.position + Vector2(2, 4), Vector2(T, 2 * T - 10)), Color8(230, 225, 210))
+	for k in 3:
+		_decor.draw_rect(Rect2(mirror.position + Vector2(3, 8 + k * 7), Vector2(T - 2, 1)), Color8(200, 194, 176))
+	_decor.draw_rect(Rect2(mirror.position + Vector2(6, 2), Vector2(12, 3)), Color8(200, 200, 190))
+	Scenery.closet(_decor, Rect2(_tile(25, 46), Vector2(3 * T, 2 * T)))
 
 
 func _add_streetlights() -> void:

@@ -48,6 +48,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -128,22 +129,18 @@ func _draw_decor() -> void:
 		var pulse := 0.6 + 0.4 * sin(_time * 3.0)
 		_decor.draw_circle(CENTER + Vector2(0, 20), 70.0 * pulse, Color(1.0, 0.2, 0.25, 0.12))
 		_decor.draw_circle(CENTER + Vector2(0, 20), 9.0, Color(1.0, 0.25, 0.3, 0.9))
-	# Furrows in the torn ground.
-	for k in 8:
-		var a := Vector2(21 * T + k * 22, 12 * T + 6)
-		_decor.draw_line(a, a + Vector2(10, 100), Color8(90, 60, 40), 2.0)
-	# The playground: a slide and swings.
-	_decor.draw_rect(Rect2(36 * T, 3 * T, 8 * T, 6 * T), Color8(120, 100, 80))
-	_decor.draw_line(Vector2(38 * T, 3 * T + 10), Vector2(42 * T, 8 * T), Color8(220, 80, 60), 5.0)
-	for k in 3:
-		_decor.draw_line(Vector2(37 * T + k * 30, 4 * T), Vector2(37 * T + k * 30 + sin(_time + k) * 6.0, 6 * T), Color8(150, 150, 160), 1.0)
-	# The park sign by the lot.
-	_decor.draw_rect(Rect2(6 * T, 29 * T, 5 * T, 26), Color8(90, 70, 50))
-	_decor.draw_string(_font, Vector2(6 * T + 6, 29 * T + 17), "SABRE SPRINGS PARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(240, 230, 210))
+	# The swings sway. (Everything that holds still: _draw_scenery.)
+	Scenery.swing_seats(_decor, _px(Rect2i(36, 3, 8, 6)), _time)
+
+
+## What never changes: drawn once (Area.add_static_layer).
+func _draw_scenery(ci: CanvasItem) -> void:
+	Scenery.torn_ground(ci, _px(Rect2i(21, 12, 9, 6)))
+	Scenery.playground(ci, _px(Rect2i(36, 3, 8, 6)))
+	Scenery.park_sign(ci, Rect2(6 * T - 4, 29 * T, 5 * T + 8, 22), "SABRE SPRINGS PARK")
 	# The van, if the Corps came in it.
 	if _route() == "pacifist" or flag("jy_van"):
-		_decor.draw_rect(Rect2(40 * T, 30 * T, 5 * T, 3 * T), Color8(200, 180, 140))
-		_decor.draw_rect(Rect2(40 * T + 6, 30 * T + 6, 30, 16), Color8(120, 160, 190))
+		Scenery.van(ci, Rect2(40 * T, 30 * T - 4, 5 * T, 3 * T + 4), false, false)
 
 
 ## Night. And then the flood of the last keepsake: green-white, everywhere.

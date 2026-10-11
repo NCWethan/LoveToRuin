@@ -237,6 +237,19 @@ var _dressing_items: Array = []
 var _dressing_time: float = 0.0
 
 
+## A layer for detailed scenery that never changes (junk heaps, a carrier's hull,
+## a coaster): drawn once, just above the ground, instead of every frame. `paint`
+## gets the layer's CanvasItem to draw on. Returns the layer (queue_redraw() it if
+## what it shows changes).
+func add_static_layer(paint: Callable) -> Node2D:
+	var layer := Node2D.new()
+	add_child(layer)
+	# Right above the ground: under the area's own decor (things that move) and props.
+	move_child(layer, room.get_index() + 1)
+	layer.draw.connect(func() -> void: paint.call(layer))
+	return layer
+
+
 func add_dressing(items: Array) -> void:
 	if _dressing == null:
 		_dressing = Node2D.new()

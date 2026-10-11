@@ -337,7 +337,7 @@ func _audit_speaker() -> void:
 		elif node.get("front") is Texture2D:
 			here.append((node.get("front") as Texture2D).resource_path.get_file().get_basename().to_lower())
 	if not _who.to_lower() in here:
-		print("SPEAKER? %s speaks in %s, but isn't here: \"%s\"" % [_who, scene.name, _text.substr(0, 60).replace("\n", " ")])
+		print("SPEAKER? ", _who, " speaks in ", scene.name, ", but isn't here: ", _text.substr(0, 60).replace("\n", " "))
 
 
 ## Where stacked choices go: under the question, as many rows as fit in the box,

@@ -50,6 +50,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -130,35 +131,28 @@ func build_map() -> void:
 	room.fill(4, 24, 5, 3, Room.PROP)              # the van, under its tarp
 
 
+const HEAPS := [Rect2i(18, 3, 5, 3), Rect2i(34, 3, 6, 3), Rect2i(44, 6, 7, 4), Rect2i(16, 16, 6, 3), Rect2i(30, 18, 4, 3),
+	Rect2i(44, 14, 5, 3), Rect2i(20, 25, 7, 3), Rect2i(34, 27, 5, 3), Rect2i(2, 13, 6, 3)]
+
+
+## What never changes: the junk heaps, the stack of crushed cars, the shack's
+## tin roof. (Drawn once; see Area.add_static_layer.)
+func _draw_scenery(ci: CanvasItem) -> void:
+	for i in HEAPS.size():
+		var r := _px(HEAPS[i])
+		# A little taller than their footprint: junk piles up.
+		Scenery.junk_heap(ci, Rect2(r.position + Vector2(-4, -14), r.size + Vector2(8, 14)), 41 + i * 7)
+	Scenery.crushed_cars(ci, Rect2(38 * T, 19 * T - 6, 4 * T, 2 * T + 6), 5)
+	Scenery.shack_roof(ci, _px(Rect2i(3, 2, 10, 4)))
+
+
 func _draw_decor() -> void:
-	# Junk on the piles: hubcaps, tires, a fridge, a shopping cart.
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 41
-	for pile in [Rect2i(18, 3, 5, 3), Rect2i(34, 3, 6, 3), Rect2i(44, 6, 7, 4), Rect2i(16, 16, 6, 3), Rect2i(30, 18, 4, 3),
-			Rect2i(44, 14, 5, 3), Rect2i(20, 25, 7, 3), Rect2i(34, 27, 5, 3), Rect2i(2, 13, 6, 3)]:
-		var r := _px(pile)
-		_decor.draw_rect(r, Color8(110, 95, 80))
-		for k in 10:
-			var at := r.position + Vector2(rng.randf() * r.size.x, rng.randf() * r.size.y)
-			match k % 4:
-				0: _decor.draw_circle(at, 6.0, Color8(30, 30, 34))
-				1: _decor.draw_circle(at, 4.0, Color8(190, 190, 196))
-				2: _decor.draw_rect(Rect2(at, Vector2(10, 7)), Color8(150, 80, 60))
-				_: _decor.draw_rect(Rect2(at, Vector2(6, 10)), Color8(120, 140, 170))
-	# The crushed cars, stacked like pancakes.
-	for k in 4:
-		_decor.draw_rect(Rect2(38 * T, 19 * T + 30 - k * 9, 4 * T, 8), [Color8(170, 60, 50), Color8(60, 90, 160), Color8(200, 190, 80), Color8(90, 140, 90)][k])
+	# (The heaps and the crushed cars are on the static layer: _draw_scenery.)
 	# The van: tan, boxy, a tarp half off it, flat tires. (Running, it shakes.)
 	var shake := Vector2(sin(_time * 40.0) * 1.0, 0) if _van_running >= 0.0 else Vector2.ZERO
 	var van := Rect2(VAN.position + shake, VAN.size)
-	_decor.draw_rect(van, Color8(200, 180, 140))
-	_decor.draw_rect(Rect2(van.position + Vector2(6, 6), Vector2(30, 16)), Color8(120, 160, 190))
-	_decor.draw_rect(Rect2(van.position + Vector2(44, 6), Vector2(40, 16)), Color8(120, 160, 190))
-	for wx in [van.position.x + 16, van.end.x - 16]:
-		_decor.draw_circle(Vector2(wx, van.end.y), 8.0, Color8(30, 30, 34))
-	if not flag("jy_van"):
-		_decor.draw_colored_polygon(PackedVector2Array([van.position + Vector2(40, -4), van.end + Vector2(4, -10), Vector2(van.end.x + 4, van.position.y - 4)]), Color8(60, 90, 140))
-	else:
+	Scenery.van(_decor, van, not flag("jy_van"), not flag("jy_van"))
+	if flag("jy_van"):
 		# Exhaust.
 		for k in 3:
 			var age := fmod(_time * 2.0 + k * 0.33, 1.0)
@@ -166,9 +160,7 @@ func _draw_decor() -> void:
 	# The shack sign, the gate, the bus stop.
 	_decor.draw_string(_font, Vector2(3 * T + 6, 3 * T), "OFFICE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 230, 210))
 	_decor.draw_string(_font, Vector2(46 * T, 35 * T - 4), "GATE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color8(240, 200, 60))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
 	# The freeway, roaring past beyond the back fence.
 	for k in 6:
 		var x := fmod(k * 210.0 + _time * 160.0, 56.0 * T + 200.0) - 100.0

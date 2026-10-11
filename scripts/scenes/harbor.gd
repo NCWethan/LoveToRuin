@@ -79,6 +79,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -205,70 +206,88 @@ func build_map() -> void:
 
 
 func _draw_decor() -> void:
-	# The carrier's hull: a number, portholes, the flight deck's edge overhead.
-	_decor.draw_rect(Rect2(6 * T, 1 * T, 50 * T, 9 * T), Color8(110, 116, 128))
-	_decor.draw_rect(Rect2(6 * T, 1 * T, 50 * T, 12), Color8(80, 84, 94))
-	for x in range(8, 55, 3):
-		_decor.draw_circle(Vector2(x * T + 10, 5 * T), 5.0, Color8(40, 44, 54))
-		if (x * 7) % 5 == 0:
-			_decor.draw_circle(Vector2(x * T + 10, 5 * T), 3.0, Color(1.0, 0.85, 0.5, 0.6))
-	_decor.draw_string(_font, Vector2(14 * T, 8 * T), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, Color8(230, 230, 236))
-	_decor.draw_rect(Rect2(29 * T, 8 * T, 3 * T, 2 * T), Color8(60, 64, 74))
-	_decor.draw_string(_font, Vector2(36 * T, 8 * T + 6), "MUSEUM - OPEN DAILY", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 230, 200))
+	# (The hull, the fish stand, the seal, the planes, the island: _draw_scenery.)
 	# Glints on the water.
 	for k in 30:
 		var x := fmod(k * 83.0 + _time * 10.0, 60.0 * T)
 		var y := 10 * T + 4 + (k % 4) * 18
 		if y < 14 * T:
 			_decor.draw_line(Vector2(x, y), Vector2(x + 10, y), Color(1, 1, 1, 0.3), 1.0)
-	# The fish stand and the seal statue.
-	_decor.draw_rect(Rect2(44 * T, 25 * T - 10, 3 * T, 30), Color8(70, 120, 170))
-	_decor.draw_string(_font, Vector2(44 * T + 4, 25 * T + 2), "FISH", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
-	_decor.draw_circle(Vector2(6 * T + 10, 25 * T + 4), 9.0, Color8(130, 125, 120))
-	_decor.draw_circle(Vector2(6 * T + 14, 25 * T - 4), 5.0, Color8(130, 125, 120))
 	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
-	_draw_hangar()
-	_draw_deck()
+	Scenery.bus_stop(_decor, ENTRY + Vector2(9, -8))
+	# The radar on the island, turning.
+	var dish := Vector2(47 * T, 57 * T - 30)
+	_decor.draw_line(dish, dish + Vector2.from_angle(_time * 1.5) * 14.0, Color8(200, 200, 210), 3.0)
+	_decor.draw_circle(dish, 2.0, Color8(160, 164, 174))
 
 
-func _draw_hangar() -> void:
-	# Old planes, roped off, each on its own little stand.
-	for spot in [Vector2(8, 37), Vector2(18, 38), Vector2(8, 44), Vector2(26, 44)]:
-		var at: Vector2 = spot * T
-		_decor.draw_rect(Rect2(at + Vector2(0, 14), Vector2(5 * T, 8)), Color8(90, 110, 90))
-		_decor.draw_rect(Rect2(at + Vector2(2 * T - 4, 0), Vector2(T + 8, 2 * T)), Color8(110, 130, 105))
-		_decor.draw_circle(at + Vector2(2.5 * T, 6), 5.0, Color(0.6, 0.8, 1.0, 0.7))
+## What never changes: drawn once (Area.add_static_layer).
+func _draw_scenery(ci: CanvasItem) -> void:
+	var f := ThemeDB.fallback_font
+	# The carrier's hull, the gangway's hatch, the number and the museum's banner.
+	Scenery.carrier_hull(ci, Rect2(6 * T, 1 * T, 50 * T, 9 * T), _night)
+	ci.draw_rect(Rect2(29 * T, 7 * T, 3 * T, 3 * T), Color8(52, 56, 66))
+	ci.draw_rect(Rect2(29 * T + 4, 7 * T + 4, 3 * T - 8, 3 * T - 4), Color8(28, 30, 36))
+	ci.draw_rect(Rect2(29 * T, 7 * T, 3 * T, 2), Color8(150, 156, 166))
+	ci.draw_string(f, Vector2(14 * T + 2, 8 * T + 2), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, Color(0, 0, 0, 0.3))
+	ci.draw_string(f, Vector2(14 * T, 8 * T), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 40, Color8(232, 232, 238))
+	var banner := Rect2(35 * T, 7 * T - 2, 8 * T + 6, 16)
+	ci.draw_rect(banner.grow(1), Color8(240, 230, 200))
+	ci.draw_rect(banner, Color8(30, 50, 90))
+	ci.draw_string(f, banner.position + Vector2(6, 12), "MUSEUM - OPEN DAILY", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 230, 200))
+	# On the promenade: the fish stand and the seal statue.
+	Scenery.fish_stand(ci, Rect2(44 * T, 25 * T - 14, 3 * T, 34))
+	Scenery.seal_statue(ci, Vector2(6 * T + 10, 25 * T + 8))
+	_draw_hangar(ci)
+	_draw_deck(ci)
+
+
+func _draw_hangar(ci: CanvasItem) -> void:
+	# Old warbirds, each on its stand inside velvet ropes, in museum colors.
+	var colors := [Color8(96, 116, 88), Color8(70, 96, 130), Color8(150, 150, 140), Color8(120, 100, 70)]
+	var spots := [Vector2(8, 37), Vector2(18, 38), Vector2(8, 44), Vector2(26, 44)]
+	for i in spots.size():
+		var at: Vector2 = spots[i] * T
+		Scenery.velvet_ropes(ci, Rect2(at + Vector2(-6, -10), Vector2(5 * T + 12, 2 * T + 22)))
+		Scenery.warplane(ci, at + Vector2(2.5 * T, T), 4 * T, colors[i])
+	# A red line painted along the wall, and the elevator.
 	for x in range(2, 38, 4):
-		_decor.draw_line(Vector2(x * T, 34 * T + 4), Vector2(x * T + 3 * T, 34 * T + 4), Color8(200, 40, 40), 2.0)
-	# The elevator: a big square with hazard stripes.
+		ci.draw_line(Vector2(x * T, 34 * T + 4), Vector2(x * T + 3 * T, 34 * T + 4), Color8(200, 40, 40), 2.0)
 	var lift := Rect2(33 * T, 34 * T, 5 * T, 4 * T)
-	_decor.draw_rect(lift, Color8(70, 74, 80))
-	for k in 10:
-		_decor.draw_line(lift.position + Vector2(k * 10, 0), lift.position + Vector2(k * 10 - 8, 8), Color8(240, 200, 40), 3.0)
-	_decor.draw_string(_font, lift.position + Vector2(8, lift.size.y - 10), "TO FLIGHT DECK", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
+	Scenery.hazard_platform(ci, lift)
+	ci.draw_string(ThemeDB.fallback_font, lift.position + Vector2(10, lift.size.y - 12), "TO FLIGHT DECK", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
 
 
-func _draw_deck() -> void:
-	# The runway: the angled landing line, the centerline, the numbers.
+func _draw_deck(ci: CanvasItem) -> void:
+	# The runway: the centerline, the angled landing line, the number, skid marks.
 	var deck := _px(Rect2i(2, 56, 56, 20))
 	for k in 20:
-		_decor.draw_rect(Rect2(deck.position.x + 20 + k * 54, deck.get_center().y - 2, 26, 4), Color(1, 1, 1, 0.75))
-	_decor.draw_line(deck.position + Vector2(0, deck.size.y - 30), deck.end - Vector2(120, deck.size.y - 10), Color8(240, 200, 40), 3.0)
-	_decor.draw_string(_font, deck.position + Vector2(30, 60), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color(1, 1, 1, 0.6))
-	# The island tower: windows, a radar dish turning.
-	_decor.draw_rect(_px(Rect2i(44, 57, 6, 6)), Color8(110, 116, 128))
-	for x in range(44, 50):
-		_decor.draw_rect(Rect2(x * T + 4, 58 * T, 12, 8), Color(1.0, 0.85, 0.5, 0.7) if not _night or x % 2 == 0 else Color8(30, 30, 36))
-	var dish := Vector2(47 * T, 57 * T - 6)
-	_decor.draw_line(dish, dish + Vector2.from_angle(_time * 1.5) * 14.0, Color8(200, 200, 210), 3.0)
+		ci.draw_rect(Rect2(deck.position.x + 20 + k * 54, deck.get_center().y - 2, 26, 4), Color(1, 1, 1, 0.75))
+	ci.draw_line(deck.position + Vector2(0, deck.size.y - 30), deck.end - Vector2(120, deck.size.y - 10), Color8(240, 200, 40), 3.0)
+	ci.draw_line(deck.position + Vector2(0, deck.size.y - 36), deck.end - Vector2(120, deck.size.y - 4), Color8(240, 200, 40), 1.0)
+	ci.draw_string(ThemeDB.fallback_font, deck.position + Vector2(30, 60), "41", HORIZONTAL_ALIGNMENT_LEFT, -1, 48, Color(1, 1, 1, 0.6))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	for k in 14:
+		var at := Vector2(rng.randf_range(deck.position.x + 100, deck.end.x - 200), rng.randf_range(deck.position.y + 30, deck.end.y - 30))
+		ci.draw_line(at, at + Vector2(rng.randf_range(30, 60), rng.randf_range(-3, 3)), Color(0, 0, 0, 0.18), 3.0)
+	# Deck edge: a safety net all the way around, and the edge lights.
+	ci.draw_rect(Rect2(deck.position, Vector2(deck.size.x, 3)), Color8(150, 150, 140))
+	ci.draw_rect(Rect2(deck.position.x, deck.end.y - 3, deck.size.x, 3), Color8(150, 150, 140))
+	var lx := deck.position.x + 10
+	while lx < deck.end.x:
+		ci.draw_rect(Rect2(lx, deck.position.y + 4, 2, 2), Color8(250, 214, 120) if _night else Color8(200, 200, 190))
+		ci.draw_rect(Rect2(lx, deck.end.y - 6, 2, 2), Color8(250, 214, 120) if _night else Color8(200, 200, 190))
+		lx += 40
+	# The island tower.
+	Scenery.island_tower(ci, _px(Rect2i(44, 57, 6, 6)), _night)
 	# The elevator up here, and the arresting wires across the deck.
-	_decor.draw_rect(Rect2(8 * T, 65 * T, 3 * T, 3 * T), Color8(80, 84, 90))
-	_decor.draw_string(_font, Vector2(8 * T + 4, 68 * T - 4), "DOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
+	Scenery.hazard_platform(ci, Rect2(8 * T, 65 * T, 3 * T, 3 * T))
+	ci.draw_string(ThemeDB.fallback_font, Vector2(8 * T + 14, 68 * T - 10), "DOWN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color8(240, 200, 40))
 	for k in 4:
-		_decor.draw_line(Vector2(14 * T + k * 40, 57 * T), Vector2(14 * T + k * 40, 75 * T), Color8(60, 60, 60), 1.0)
+		var x := 14 * T + k * 40
+		ci.draw_line(Vector2(x, 57 * T), Vector2(x, 75 * T), Color8(50, 50, 52), 2.0)
+		ci.draw_line(Vector2(x + 1, 57 * T), Vector2(x + 1, 75 * T), Color8(110, 110, 112), 1.0)
 
 
 ## Sunset over the water, and night later (Corps), when the deck goes dark.

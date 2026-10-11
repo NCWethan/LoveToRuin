@@ -37,6 +37,8 @@ var _chunks: Array[Node] = []
 var details: GroundDetails
 ## What the tile drawing draws onto (the chunk being drawn).
 var _ci: CanvasItem = self
+## How each kind of tile looks (tile_art.gd).
+var _art: TileArt
 
 
 func setup(map_width: int, map_height: int, fill_tile: int) -> void:
@@ -180,14 +182,26 @@ func _build_chunks() -> void:
 
 
 func _draw_chunk(painter: Node2D, area: Rect2i) -> void:
+	if _art == null:
+		_art = TileArt.new(self)
+	_art.ci = painter
 	_ci = painter
+	# The ground, the shadows walls cast on it, and the little things lying on it...
 	for y in range(area.position.y, area.end.y):
 		for x in range(area.position.x, area.end.x):
-			_draw_tile(x, y, get_tile(x, y))
+			_art.ground(x, y, get_tile(x, y))
 	_draw_wall_shadows(area)
 	_ci = self
 	if details:
 		details.draw_area(painter, area)
+	# ...then everything that stands up out of it, top row first, so trees further
+	# down overlap the ones behind them. (One tile past the edge too: a tree just
+	# outside this piece can still hang over into it.)
+	for y in range(area.position.y - 1, area.end.y + 1):
+		for x in range(area.position.x - 1, area.end.x + 1):
+			var tile := get_tile(x, y)
+			if tile in TileArt.TALL:
+				_art.tall(x, y, tile)
 
 
 func _all_void(area: Rect2i) -> bool:
@@ -233,266 +247,6 @@ func _ground_shadow(center: Vector2, radius: float) -> void:
 func _hash(x: int, y: int, salt: int = 0) -> int:
 	var h := (x * 73856093) ^ (y * 19349663) ^ (salt * 83492791)
 	return absi(h)
-
-
-func _draw_tile(x: int, y: int, tile: int) -> void:
-	var r := Rect2(x * TILE, y * TILE, TILE, TILE)
-	var p := r.position
-	match tile:
-		GRASS:
-			_grass(x, y, r)
-		SIDEWALK:
-			_ci.draw_rect(r, Color8(178, 178, 170))
-			_ci.draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(150, 150, 142))
-			_ci.draw_rect(Rect2(p, Vector2(1, TILE)), Color8(150, 150, 142))
-		ASPHALT, PARKING_LINE:
-			_ci.draw_rect(r, Color8(58, 58, 64))
-			_specks(x, y, r, Color8(72, 72, 78), 3)
-			if tile == PARKING_LINE:
-				_ci.draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(230, 230, 230))
-		WALL:
-			_ci.draw_rect(r, Color8(200, 172, 132))
-			# Bricks: a line every 5 pixels, staggered.
-			for row in 4:
-				_ci.draw_rect(Rect2(p + Vector2(0, row * 5), Vector2(TILE, 1)), Color8(172, 146, 110))
-				var offset := 5 if (row + y) % 2 == 0 else 15
-				_ci.draw_rect(Rect2(p + Vector2(offset, row * 5), Vector2(1, 5)), Color8(172, 146, 110))
-		ROOF:
-			_ci.draw_rect(r, Color8(120, 70, 60))
-			_ci.draw_rect(Rect2(p + Vector2(0, 14), Vector2(TILE, 2)), Color8(95, 55, 48))
-		WINDOW:
-			_ci.draw_rect(r, Color8(200, 172, 132))
-			_ci.draw_rect(Rect2(p + Vector2(3, 3), Vector2(14, 14)), Color8(90, 90, 100))
-			_ci.draw_rect(Rect2(p + Vector2(4, 4), Vector2(12, 12)), Color8(120, 170, 215))
-			_ci.draw_rect(Rect2(p + Vector2(9, 4), Vector2(2, 12)), Color8(90, 90, 100))
-			_ci.draw_rect(Rect2(p + Vector2(5, 5), Vector2(3, 3)), Color8(200, 230, 250))
-		DOOR:
-			_ci.draw_rect(r, Color8(120, 82, 52))
-			_ci.draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(90, 60, 38))
-			_ci.draw_rect(Rect2(p + Vector2(13, 10), Vector2(2, 2)), Color8(230, 200, 90))
-		TREE:
-			_grass(x, y, r)
-			_ground_shadow(p + Vector2(12, 18), 9.0)
-			_ci.draw_rect(Rect2(p + Vector2(8, 12), Vector2(4, 8)), Color8(100, 70, 40))
-			_ci.draw_circle(p + Vector2(10, 9), 9.0, Color8(36, 92, 44))
-			# A darker underside on the leaves, lit from the top-left.
-			_ci.draw_circle(p + Vector2(12, 11), 6.0, Color8(28, 74, 36))
-			_ci.draw_circle(p + Vector2(9, 8), 6.0, Color8(36, 92, 44))
-			_ci.draw_circle(p + Vector2(7, 6), 3.0, Color8(60, 125, 62))
-		FENCE:
-			_grass(x, y, r)
-			_ci.draw_rect(Rect2(p + Vector2(0, 4), Vector2(TILE, 2)), Color8(160, 160, 168))
-			_ci.draw_rect(Rect2(p + Vector2(0, 12), Vector2(TILE, 2)), Color8(160, 160, 168))
-			_ci.draw_rect(Rect2(p + Vector2(2, 2), Vector2(2, 16)), Color8(130, 130, 138))
-			_ci.draw_rect(Rect2(p + Vector2(12, 2), Vector2(2, 16)), Color8(130, 130, 138))
-		GATE:
-			# A chain-link gate, wrapped in a chain with a padlock.
-			_ci.draw_rect(r, Color8(178, 178, 170))
-			_ci.draw_rect(Rect2(p + Vector2(2, 0), Vector2(16, TILE)), Color8(150, 150, 158))
-			for i in 4:
-				_ci.draw_line(p + Vector2(2 + i * 4, 0), p + Vector2(6 + i * 4, TILE), Color8(110, 110, 118), 1.0)
-			_ci.draw_line(p + Vector2(0, 8), p + Vector2(TILE, 12), Color8(90, 90, 96), 2.0)
-			if y % 2 == 1:
-				_ci.draw_rect(Rect2(p + Vector2(7, 6), Vector2(6, 6)), Color8(215, 180, 60))
-				_ci.draw_rect(Rect2(p + Vector2(9, 8), Vector2(2, 2)), Color8(80, 60, 20))
-		FIELD, FIELD_LINE:
-			var stripe := Color8(84, 166, 74) if y % 2 == 0 else Color8(78, 156, 68)
-			_ci.draw_rect(r, stripe)
-			if tile == FIELD_LINE:
-				_ci.draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(235, 235, 235))
-		BLEACHERS:
-			_ci.draw_rect(r, Color8(150, 152, 162))
-			_ci.draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 2)), Color8(115, 117, 128))
-			_ci.draw_rect(Rect2(p + Vector2(0, 14), Vector2(TILE, 2)), Color8(115, 117, 128))
-		BENCH:
-			_grass(x, y, r)
-			_ci.draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 6)), Color8(140, 95, 55))
-			_ci.draw_rect(Rect2(p + Vector2(2, 12), Vector2(2, 5)), Color8(80, 80, 85))
-			_ci.draw_rect(Rect2(p + Vector2(16, 12), Vector2(2, 5)), Color8(80, 80, 85))
-		ROAD, ROAD_LINE:
-			_ci.draw_rect(r, Color8(48, 48, 54))
-			_specks(x, y, r, Color8(62, 62, 68), 2)
-			if tile == ROAD_LINE and x % 3 != 0:
-				_ci.draw_rect(Rect2(p + Vector2(0, 9), Vector2(TILE, 2)), Color8(230, 200, 60))
-		DIRT:
-			_ci.draw_rect(r, Color8(150, 120, 80))
-			_specks(x, y, r, Color8(130, 100, 65), 3)
-		SAND:
-			# Warm beach sand, with a few shells and footprints.
-			_ci.draw_rect(r, Color8(236, 214, 160))
-			_specks(x, y, r, Color8(214, 190, 136), 4)
-			if _hash(x, y, 7) % 23 == 0:
-				_ci.draw_rect(Rect2(p + Vector2(6, 9), Vector2(4, 3)), Color8(250, 236, 226))
-		WATER:
-			# The ocean: deep blue, with white lines of foam that get busier near
-			# the shore (the row of water just below the sand).
-			var shore := get_tile(x, y - 1) == SAND
-			_ci.draw_rect(r, Color8(40, 110, 170) if not shore else Color8(70, 150, 200))
-			var wave := _hash(x, y, 3) % 3
-			_ci.draw_rect(Rect2(p + Vector2(2 + wave * 4, 6 + wave * 3), Vector2(8, 1)), Color(1, 1, 1, 0.35))
-			if shore:
-				_ci.draw_rect(Rect2(p, Vector2(TILE, 3)), Color(1, 1, 1, 0.75))
-		ADOBE:
-			# Old Town's adobe walls: warm, uneven plaster with a few cracks.
-			_ci.draw_rect(r, Color8(214, 168, 120))
-			_specks(x, y, r, Color8(196, 150, 104), 3)
-			if _hash(x, y, 5) % 7 == 0:
-				_ci.draw_line(p + Vector2(4, 6), p + Vector2(9, 12), Color8(170, 126, 86), 1.0)
-		CLAY_ROOF:
-			# Red clay roof tiles, in rounded rows.
-			_ci.draw_rect(r, Color8(178, 82, 56))
-			for k in 4:
-				_ci.draw_line(p + Vector2(0, k * 5 + 4), p + Vector2(TILE, k * 5 + 4), Color8(140, 60, 40), 1.0)
-				_ci.draw_line(p + Vector2((k * 5 + x * 3) % TILE, k * 5), p + Vector2((k * 5 + x * 3) % TILE, k * 5 + 4), Color8(150, 66, 44), 1.0)
-		BOARDWALK:
-			# Sun-bleached wooden planks, running along the beach.
-			_ci.draw_rect(r, Color8(176, 140, 98))
-			for k in 4:
-				_ci.draw_rect(Rect2(p + Vector2(k * 5, 0), Vector2(1, TILE)), Color8(146, 112, 76))
-			_ci.draw_rect(Rect2(p + Vector2((x * 3) % 5 * 5 + 2, 4 + (y % 3) * 5), Vector2(1, 1)), Color8(110, 84, 58))
-		STUCCO:
-			# Cream shopping-center wall.
-			_ci.draw_rect(r, Color8(222, 208, 178))
-			_specks(x, y, r, Color8(206, 192, 162), 2)
-		WOOD_WALL:
-			# Dark wooden planks (Knotty Barrel).
-			_ci.draw_rect(r, Color8(110, 72, 44))
-			for row in 4:
-				_ci.draw_rect(Rect2(p + Vector2(0, row * 5), Vector2(TILE, 1)), Color8(80, 52, 32))
-			_ci.draw_rect(Rect2(p + Vector2((x * 7) % 16, 2), Vector2(2, 2)), Color8(70, 45, 28))
-		RED_WALL:
-			# White wall with a red stripe.
-			_ci.draw_rect(r, Color8(235, 235, 232))
-			_ci.draw_rect(Rect2(p + Vector2(0, 6), Vector2(TILE, 5)), Color8(205, 40, 45))
-		GLASS:
-			_ci.draw_rect(r, Color8(70, 90, 110))
-			_ci.draw_rect(Rect2(p + Vector2(1, 1), Vector2(18, 18)), Color8(95, 130, 160))
-			_ci.draw_line(p + Vector2(4, 16), p + Vector2(14, 4), Color8(160, 195, 220), 2.0)
-		PLANTER:
-			_ci.draw_rect(r, Color8(120, 90, 60))
-			_ci.draw_circle(p + Vector2(10, 9), 8.0, Color8(52, 120, 56))
-			_ci.draw_circle(p + Vector2(6, 7), 3.0, Color8(80, 150, 75))
-		PATIO:
-			# Terracotta tiles.
-			_ci.draw_rect(r, Color8(196, 120, 82))
-			_ci.draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(165, 98, 66))
-			_ci.draw_rect(Rect2(p, Vector2(1, TILE)), Color8(165, 98, 66))
-			_ci.draw_rect(Rect2(p + Vector2(10, 0), Vector2(1, TILE)), Color8(175, 106, 72))
-		TABLE:
-			# A round table under an umbrella.
-			_ci.draw_rect(r, Color8(196, 120, 82))
-			_ci.draw_circle(p + Vector2(10, 10), 9.0, Color8(40, 110, 70))
-			_ci.draw_circle(p + Vector2(10, 10), 2.0, Color8(230, 230, 220))
-		VOID:
-			_ci.draw_rect(r, Color.BLACK)
-		INTERIOR_WALL:
-			# Painted school wall with a darker strip along the bottom.
-			_ci.draw_rect(r, Color8(196, 190, 170))
-			_ci.draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(120, 110, 95))
-		HALL_FLOOR:
-			# Speckled school tiles in a checker pattern.
-			var light := (x + y) % 2 == 0
-			_ci.draw_rect(r, Color8(205, 205, 195) if light else Color8(185, 185, 178))
-			_specks(x, y, r, Color8(160, 160, 155), 2)
-		SCORCHED, STUMP:
-			# Ground burned black by the blast: ash, cracks, a few embers still glowing.
-			_ci.draw_rect(r, Color8(50, 40, 34))
-			_specks(x, y, r, Color8(95, 90, 86), 4)
-			_specks(x, y + 99, r, Color8(30, 24, 20), 3)
-			if _hash(x, y, 4) % 7 == 0:
-				_ci.draw_line(p + Vector2(2, 8), p + Vector2(10, 12), Color8(25, 18, 15), 1.0)
-				_ci.draw_line(p + Vector2(10, 12), p + Vector2(17, 9), Color8(25, 18, 15), 1.0)
-			if _hash(x, y, 5) % 11 == 0:
-				_ci.draw_rect(Rect2(p + Vector2(_hash(x, y, 6) % 16, _hash(x, y, 7) % 16), Vector2(2, 2)), Color8(230, 90, 40))
-			if tile == STUMP:
-				# What's left of a tree: a charred stump with a split top.
-				_ground_shadow(p + Vector2(10, 17), 7.0)
-				_ci.draw_rect(Rect2(p + Vector2(6, 8), Vector2(8, 10)), Color8(40, 28, 20))
-				_ci.draw_rect(Rect2(p + Vector2(6, 8), Vector2(2, 10)), Color8(60, 44, 32))
-				_ci.draw_colored_polygon(PackedVector2Array([p + Vector2(6, 8), p + Vector2(9, 4), p + Vector2(11, 8), p + Vector2(13, 5), p + Vector2(14, 8)]), Color8(30, 20, 15))
-				_ci.draw_rect(Rect2(p + Vector2(8, 9), Vector2(4, 2)), Color8(120, 60, 30))
-		HOUSE_FLOOR, HOUSE_PROP:
-			# Warm wooden floorboards (Hop's house). (HOUSE_PROP is solid floor that
-			# furniture is drawn on top of.)
-			_ci.draw_rect(r, Color8(150, 106, 72))
-			for row in 4:
-				_ci.draw_rect(Rect2(p + Vector2(0, row * 5 + 4), Vector2(TILE, 1)), Color8(124, 86, 56))
-			_ci.draw_rect(Rect2(p + Vector2((_hash(x, y, 2) % 3) * 6 + 2, (_hash(x, y, 3) % 4) * 5), Vector2(1, 5)), Color8(124, 86, 56))
-		HOUSE_WALL:
-			# Faded wallpaper with thin stripes, and a wooden baseboard.
-			_ci.draw_rect(r, Color8(132, 150, 140))
-			for stripe in 3:
-				_ci.draw_rect(Rect2(p + Vector2(stripe * 7 + 2, 0), Vector2(1, TILE)), Color8(118, 136, 126))
-			if get_tile(x, y + 1) != HOUSE_WALL:
-				_ci.draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(98, 70, 50))
-		BUNKER_FLOOR, PROP:
-			# Poured concrete, in big slabs. (PROP is solid floor that furniture is
-			# drawn on top of.)
-			_ci.draw_rect(r, Color8(96, 97, 100))
-			if x % 3 == 0:
-				_ci.draw_rect(Rect2(p, Vector2(1, TILE)), Color8(80, 81, 85))
-			if y % 3 == 0:
-				_ci.draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(80, 81, 85))
-			_specks(x, y, r, Color8(84, 85, 88), 3)
-			if _hash(x, y, 9) % 23 == 0:
-				# A crack.
-				_ci.draw_line(p + Vector2(3, 5), p + Vector2(9, 11), Color8(70, 70, 74), 1.0)
-				_ci.draw_line(p + Vector2(9, 11), p + Vector2(15, 12), Color8(70, 70, 74), 1.0)
-		BUNKER_WALL:
-			# Concrete blocks, with mortar lines and a darker base.
-			_ci.draw_rect(r, Color8(74, 76, 82))
-			var offset := 10 if y % 2 == 0 else 0
-			_ci.draw_rect(Rect2(p + Vector2(0, 9), Vector2(TILE, 1)), Color8(58, 60, 65))
-			_ci.draw_rect(Rect2(p + Vector2(0, 19), Vector2(TILE, 1)), Color8(58, 60, 65))
-			_ci.draw_rect(Rect2(p + Vector2(offset, 0), Vector2(1, 9)), Color8(58, 60, 65))
-			_ci.draw_rect(Rect2(p + Vector2((offset + 10) % 20, 10), Vector2(1, 9)), Color8(58, 60, 65))
-			_ci.draw_rect(Rect2(p, Vector2(TILE, 1)), Color8(90, 92, 98))
-			if get_tile(x, y + 1) != BUNKER_WALL:
-				_ci.draw_rect(Rect2(p + Vector2(0, 15), Vector2(TILE, 5)), Color8(52, 54, 58))
-		BUNKER_DOOR:
-			# A heavy steel door: riveted panels, and a wheel handle on the left half.
-			_ci.draw_rect(r, Color8(112, 118, 126))
-			_ci.draw_rect(Rect2(p + Vector2(2, 2), Vector2(TILE - 4, TILE - 4)), Color8(98, 104, 112))
-			for rivet in [Vector2(3, 3), Vector2(16, 3), Vector2(3, 16), Vector2(16, 16)]:
-				_ci.draw_rect(Rect2(p + rivet, Vector2(1, 1)), Color8(150, 156, 164))
-			if get_tile(x + 1, y) == BUNKER_DOOR:
-				_ci.draw_arc(p + Vector2(15, 10), 4.0, 0.0, TAU, 12, Color8(60, 64, 70), 1.5)
-				_ci.draw_line(p + Vector2(11, 10), p + Vector2(19, 10), Color8(60, 64, 70), 1.0)
-			_ci.draw_rect(Rect2(p, Vector2(1, TILE)), Color8(60, 64, 70))
-		LOCKER:
-			_ci.draw_rect(r, Color8(70, 95, 130))
-			_ci.draw_rect(Rect2(p + Vector2(0, 0), Vector2(1, TILE)), Color8(45, 62, 88))
-			_ci.draw_rect(Rect2(p + Vector2(4, 3), Vector2(12, 1)), Color8(45, 62, 88))
-			_ci.draw_rect(Rect2(p + Vector2(4, 5), Vector2(12, 1)), Color8(45, 62, 88))
-			_ci.draw_rect(Rect2(p + Vector2(15, 10), Vector2(2, 3)), Color8(190, 190, 190))
-		CHALKBOARD:
-			_ci.draw_rect(r, Color8(120, 90, 60))
-			_ci.draw_rect(Rect2(p + Vector2(0, 2), Vector2(TILE, 15)), Color8(40, 75, 55))
-			if (x + y) % 3 == 0:
-				_ci.draw_line(p + Vector2(3, 7), p + Vector2(15, 6), Color8(220, 225, 215), 1.0)
-		DESK:
-			var floor_light := (x + y) % 2 == 0
-			_ci.draw_rect(r, Color8(205, 205, 195) if floor_light else Color8(185, 185, 178))
-			_ci.draw_rect(Rect2(p + Vector2(2, 3), Vector2(16, 9)), Color8(170, 125, 80))
-			_ci.draw_rect(Rect2(p + Vector2(4, 12), Vector2(12, 5)), Color8(90, 90, 100))
-		GYM_FLOOR, GYM_LINE:
-			# Shiny wooden planks.
-			_ci.draw_rect(r, Color8(214, 168, 108))
-			_ci.draw_rect(Rect2(p + Vector2(0, (x % 2) * 10), Vector2(TILE, 1)), Color8(190, 145, 90))
-			if tile == GYM_LINE:
-				_ci.draw_rect(Rect2(p + Vector2(9, 0), Vector2(2, TILE)), Color8(250, 250, 250))
-		PALM:
-			_grass(x, y, r)
-			_ground_shadow(p + Vector2(12, 18), 8.0)
-			_ci.draw_rect(Rect2(p + Vector2(9, 8), Vector2(3, 12)), Color8(140, 105, 60))
-			for i in 5:
-				var dir := Vector2.from_angle(-PI / 2 + (i - 2) * 0.7) * 9.0
-				_ci.draw_line(p + Vector2(10, 7), p + Vector2(10, 7) + dir, Color8(50, 130, 60), 3.0)
-
-
-func _grass(x: int, y: int, r: Rect2) -> void:
-	_ci.draw_rect(r, Color8(72, 140, 62))
-	_specks(x, y, r, Color8(60, 122, 52), 4)
 
 
 ## A few darker pixels scattered on a tile.

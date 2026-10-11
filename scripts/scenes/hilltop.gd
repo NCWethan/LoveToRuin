@@ -221,6 +221,10 @@ func _process(delta: float) -> void:
 	_fx.queue_redraw()
 
 
+static func _px_rect(r: Rect2i) -> Rect2:
+	return Rect2(r.position * T, r.size * T)
+
+
 func _draw_decor() -> void:
 	# The old tent stakes: two short, blackened spikes, half buried, a scrap of
 	# melted fabric caught on one.
@@ -229,21 +233,25 @@ func _draw_decor() -> void:
 		_decor.draw_line(stake + Vector2(0, -6), stake + Vector2(1, 3), Color8(40, 34, 30), 2.0)
 		_decor.draw_circle(stake + Vector2(0, -6), 1.5, Color8(60, 52, 46))
 	_decor.draw_rect(Rect2(TENT_STAKES + Vector2(-9, -2), Vector2(5, 3)), Color8(80, 90, 60))
-	# Chapter 2: the hatch down to the base, in front of the shelter.
+	# The picnic shelter (the Corps' base is under it), its banner, and in Chapter
+	# 2 the hatch in front of it.
+	Scenery.picnic_shelter(_decor, _px_rect(Rect2i(2, 2, 7, 3)), "REVOLUTION")
 	if _day():
-		_decor.draw_rect(Rect2(HATCH + Vector2(-14, -10), Vector2(28, 18)), Color8(85, 90, 98))
-		_decor.draw_rect(Rect2(HATCH + Vector2(-14, -10), Vector2(28, 18)), Color8(50, 54, 60), false, 2.0)
-		_decor.draw_arc(HATCH + Vector2(0, -1), 5.0, 0.0, TAU, 12, Color8(150, 155, 165), 2.0)
-	# The REVOLUTION banner on the shelter.
-	var banner := Rect2(52, 46, 86, 16)
-	_decor.draw_rect(banner, Color8(235, 225, 200))
-	_decor.draw_string(_font, banner.position + Vector2(4, 12), "REVOLUTION", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(170, 30, 30))
+		Scenery.hatch(_decor, HATCH)
 
-	# The sprinkler control box by the benches.
-	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-8, -18), Vector2(16, 16)), Color8(60, 105, 70))
-	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-8, -18), Vector2(16, 16)), Color8(35, 60, 40), false, 1.0)
-	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-5, -15), Vector2(10, 4)), Color8(200, 200, 190))
+	# The sprinkler control box by the benches: a green metal cabinet on a post,
+	# four switches behind a little door, a warning label.
+	var box := Rect2(CONTROL_BOX + Vector2(-8, -18), Vector2(16, 16))
 	_decor.draw_rect(Rect2(CONTROL_BOX + Vector2(-2, -2), Vector2(4, 4)), Color8(80, 80, 80))
+	_decor.draw_rect(Rect2(box.position + Vector2(2, 2), box.size), Color(0, 0, 0, 0.25))
+	_decor.draw_rect(box, Color8(60, 105, 70))
+	_decor.draw_rect(Rect2(box.position, Vector2(box.size.x, 2)), Color8(90, 140, 100))
+	_decor.draw_rect(box, Color8(35, 60, 40), false, 1.0)
+	for k in 4:
+		var sx := box.position.x + 2 + k * 3.5
+		_decor.draw_rect(Rect2(sx, box.position.y + 4, 2, 5), Color8(30, 40, 34))
+		_decor.draw_rect(Rect2(sx, box.position.y + (4 if _sprinkler_on(SPRINKLERS[k]) else 7), 2, 2), Color8(230, 230, 220))
+	_decor.draw_rect(Rect2(box.position + Vector2(3, 11), Vector2(10, 3)), Color8(240, 200, 50))
 
 	# Sprinklers spraying in each corner of the field that's still switched on.
 	if not flag("hp_erupted"):

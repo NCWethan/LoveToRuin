@@ -330,6 +330,7 @@ func _place_hotspots() -> void:
 	]
 	for spot in spots:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
+	_place_room_things()
 	# Rooster's mirror, in his room (room 8).
 	var rooster_room := room_rect(8)
 	world.add_child(Hotspot.create(Vector2((rooster_room.position.x + 27) * T, (rooster_room.position.y + 6) * T - 4), _rooster_mirror))
@@ -874,22 +875,28 @@ func _centered(middle: Vector2, text: String, size: int, color: Color) -> void:
 
 
 ## A rectangle with a darker outline and a lighter top edge (furniture).
+## A piece of furniture: a shadow on the floor, the top lit, the front in shade,
+## and a little wear along the edges.
 func _block(rect: Rect2, color: Color) -> void:
+	_decor.draw_rect(Rect2(rect.position + Vector2(3, 4), rect.size), Color(0, 0, 0, 0.25))
 	_decor.draw_rect(rect, color)
+	_decor.draw_rect(Rect2(rect.position + Vector2(0, rect.size.y - 4), Vector2(rect.size.x, 4)), color.darkened(0.2))
 	_decor.draw_rect(Rect2(rect.position, Vector2(rect.size.x, 2)), color.lightened(0.2))
+	_decor.draw_rect(Rect2(rect.position, Vector2(2, rect.size.y)), color.lightened(0.1))
 	_decor.draw_rect(rect, color.darkened(0.4), false, 1.0)
 
 
 func _rug(rect: Rect2, color: Color) -> void:
-	_decor.draw_rect(rect, color)
-	_decor.draw_rect(rect.grow(-3), color.lightened(0.15), false, 2.0)
+	Scenery.rug(_decor, rect, color, color.lightened(0.18))
+	# The weave, faintly.
+	var y := rect.position.y + 8
+	while y < rect.end.y - 8:
+		_decor.draw_rect(Rect2(rect.position.x + 8, y, rect.size.x - 16, 1), color.darkened(0.08))
+		y += 4
 
 
 func _bed(at: Vector2, w: float, h: float, blanket: Color) -> void:
-	_block(Rect2(at, Vector2(w, h)), Color8(110, 80, 55))
-	_decor.draw_rect(Rect2(at + Vector2(3, 3), Vector2(w - 6, 10)), Color8(235, 235, 230))
-	_decor.draw_rect(Rect2(at + Vector2(2, 15), Vector2(w - 4, h - 18)), blanket)
-	_decor.draw_rect(Rect2(at + Vector2(2, 15), Vector2(w - 4, 3)), blanket.lightened(0.2))
+	Scenery.bed(_decor, Rect2(at, Vector2(w, h)), blanket)
 
 
 func _poster(at: Vector2, size: Vector2, color: Color, text: String, text_color: Color) -> void:
@@ -1391,3 +1398,114 @@ func _draw_agent(r: Rect2) -> void:
 	_decor.draw_rect(Rect2(shades + Vector2(2, -4), Vector2(12, 7)), Color8(20, 20, 24))
 	_decor.draw_line(shades + Vector2(-2, -2), shades + Vector2(2, -2), Color8(20, 20, 24), 2.0)
 	_bed(_tile(r, 3, 16), 3 * T, 2 * T, Color8(110, 80, 170))
+
+
+# --- Things to look at in everyone's rooms ---------------------------------------------
+
+## Everything in each member's room you can examine: [tile x, tile y (inside the
+## room, where you stand to look at it), lines]. Every room also has the shared
+## things (ROOM_SHARED): a clock, two plants, a stack of crates.
+const ROOM_THINGS := {
+	"BigJoe6": [
+		[4, 7, ["* (Big Joe's bed. The sheets are tucked in so tight\n*  you could bounce a coin off them.)", "* (Someone did. The coin is still on it.)"]],
+		[26, 5, ["* (A suit of armor on a stand, polished until it\n*  hurts to look at. A sticky note: SIR LANCE.)"]],
+		[22, 17, ["* (A sparring mannequin. It has been beaten so many\n*  times it's mostly tape now.)", "* (Its face is a smiley drawn in marker. It's trying.)"]],
+		[9, 4, ["* (Trophies: BEST FORM, MOST HONORABLE, and one that\n*  just says PARTICIPANT. That one's in the middle.)"]],
+		[16, 3, ["* (A banner: JUSTICE. Under it, two crossed lances,\n*  both made of pool noodles.)"]],
+		[11, 15, ["* (A red rug, worn in a circle where someone paces\n*  every night before bed.)"]],
+	],
+	"Eggo": [
+		[5, 8, ["* (A beanbag shaped like an egg. It's warm.\n*  Somebody was just sitting in it.)", "* (...It's always warm. That's concerning.)"]],
+		[24, 6, ["* (Toast's hutch. Hay, a water bottle, a little wooden\n*  sign: TOAST. HE BITES. (he doesn't))"]],
+		[29, 5, ["* (A fridge: EGGS ONLY. Inside there are eggs,\n*  and one jar of hot sauce, hidden behind them.)"]],
+		[23, 18, ["* (Eggo's bed. Unmade. There's a bunny-shaped dent\n*  in the pillow.)"]],
+		[15, 3, ["* (Two posters, side by side: EGG and CELLENT.)", "* (Fairy lights over them, half the bulbs out.\n*  Eggo says that's the look.)"]],
+	],
+	"Nassan": [
+		[15, 8, ["* (Nassan's desk: a lamp, a stack of maps, and a mug\n*  that says WORLD'S OKAYEST PLANNER.)", "* (The coffee in it is cold. It's always cold.)"]],
+		[4, 6, ["* (Filing cabinets, labeled A to Z. The drawer marked H\n*  is locked.)"]],
+		[27, 5, ["* (A radio, tuned to static. Nassan says he's listening\n*  for something. He won't say what.)"]],
+		[4, 20, ["* (A camp cot with one thin blanket. Nassan doesn't\n*  sleep much. You can tell.)"]],
+		[21, 3, ["* (The corkboard: reports, sightings, photos, and red\n*  string running between them all.)", "* (One photo is face-down, pinned anyway.)"]],
+	],
+	"Nat": [
+		[3, 4, ["* (Bookshelves: HISTORY OF SAN DIEGO, volumes 1 to 9.\n*  Volume 6 is missing. Nat lent it out in 2019.)"]],
+		[8, 4, ["* (More history. A book on adobe. A book on Spanish\n*  missions. A book on how to stop reading books.)"]],
+		[24, 4, ["* (Field guides: birds, bugs, trees, ghosts.\n*  The ghost one has the most bookmarks.)"]],
+		[28, 4, ["* (Nat's own notebooks, years of them, every spine\n*  dated in neat handwriting.)"]],
+		[3, 14, ["* (A long shelf of maps, rolled and tied. Some of them\n*  are older than the streets they show.)"]],
+		[15, 10, ["* (The old book on its stand, glowing faintly.\n*  The last page is torn out.)", "* (Nat says he's read it a hundred times.\n*  He still doesn't know how it ends.)"]],
+		[23, 14, ["* (An armchair with a candle beside it. The cushion\n*  has the exact shape of Nat, reading.)"]],
+	],
+	"NCWethan": [
+		[23, 8, ["* (A tesla coil, humming. The floor around it is\n*  scorched black in a perfect circle.)", "* (A sign taped to it: DO NOT TOUCH. Under that,\n*  in different handwriting: I TOUCHED IT. - N.C.)"]],
+		[6, 6, ["* (A workbench: wires, a soldering iron, a black hard\n*  hat with a yellow brim. The builders' hat.)"]],
+		[19, 17, ["* (The checkers table. Red is winning.\n*  Red is always winning.)"]],
+		[5, 19, ["* (N.C.'s bed. There's a lightning bolt drawn on the\n*  pillowcase. In glow-in-the-dark paint.)"]],
+		[14, 3, ["* (A poster: KING ME!!! It has three exclamation\n*  points. N.C. says that's the minimum.)"]],
+	],
+	"Ronin": [
+		[6, 8, ["* (Ronin's amp, plugged into nothing, still smoking\n*  a little. The guitar leans next to it.)", "* (Black, a quilted top, shark-fin inlays.\n*  You don't touch it. You know better.)"]],
+		[25, 8, ["* (A telescope, pointed straight at the air vent.)", "* (Ronin says the stars are up there somewhere.\n*  He's just making sure.)"]],
+		[23, 18, ["* (Ronin's bed, covered in picks. Dozens of them.\n*  Every color.)"]],
+		[28, 5, ["* (A fire extinguisher. A label in Nassan's writing:\n*  FOR RONIN. PLEASE.)"]],
+		[12, 3, ["* (Stars painted all over the wall. Some of them\n*  are constellations. Some of them are just stars.)"]],
+	],
+	"Supreme": [
+		[15, 5, ["* (Seven monitors, seven graphs, all going up.)", "* (One of them is labeled HAPPINESS OF THE CORPS.\n*  It's the only one that wiggles.)"]],
+		[5, 18, ["* (Boxes of printouts, all labeled DATA.\n*  One is labeled DATA (EMOTIONAL).)"]],
+		[26, 18, ["* (Supreme's bed. The sheets have a grid pattern.\n*  Of course they do.)"]],
+		[27, 3, ["* (A poster: FACTS > FEELINGS.)", "* (Someone has drawn a tiny heart next to FEELINGS.\n*  Supreme hasn't noticed. Or has, and left it.)"]],
+	],
+	"Crayola": [
+		[6, 9, ["* (An easel with a drawing of the whole Corps,\n*  stick figures, holding hands.)", "* (There's one more stick figure at the end,\n*  in purple. It looks a lot like you.)"]],
+		[20, 14, ["* (The card table, a game half played. Every card\n*  on it is the Seven of Hearts.)"]],
+		[26, 6, ["* (A pool float, shaped like a duck. Deflating,\n*  slowly, with dignity.)"]],
+		[4, 19, ["* (Crayola's bed. A stuffed rabbit wearing a tiny\n*  magician's hat sits on the pillow.)"]],
+		[12, 3, ["* (Crayon all over the walls: suns, cats, card suits,\n*  and a very detailed drawing of a sandwich.)"]],
+	],
+	"Rooster": [
+		[15, 7, ["* (A throne. Red velvet, gold paint, on a little\n*  platform. The gold is flaking off.)", "* (Underneath it: a cardboard box. It's a box\n*  painted to look like a throne.)"]],
+		[6, 14, ["* (A desk, and a notebook: ROASTS.)", "* (Page one: a list of everyone in the Corps.\n*  Next to every name, crossed out: TOO MEAN.)"]],
+		[25, 18, ["* (Rooster's bed, with silk sheets. Half black,\n*  half white. DUALITY.)"]],
+		[6, 3, ["* (A poster: DUALITY. It's half of a poster.)"]],
+		[22, 3, ["* (A poster: #1 ROOSTER. Signed. By Rooster.)"]],
+	],
+	"Agent": [
+		[11, 9, ["* (A chess table, mid-game. It's Agent against Agent.)", "* (A note: WHITE WINS IN 9. Another note, newer:\n*  ACTUALLY 11.)"]],
+		[26, 6, ["* (A pair of sunglasses on a little display stand.\n*  The tag says: FOR EMERGENCIES.)"]],
+		[4, 18, ["* (Agent's bed, made with hospital corners.\n*  There's a clipboard on the pillow.)"]],
+		[11, 3, ["* (A chalkboard of probability math. At the bottom,\n*  circled twice: P(EVERYONE MAKES IT) = ?)"]],
+		[25, 3, ["* (A dartboard. Every dart is in the bullseye.)", "* (Every single one. You check. You check again.)"]],
+	],
+	"MuffinMage": [
+		[6, 6, ["* (A little grill, still warm, and a salmon burger,\n*  wrapped in foil.)", "* (A note on the foil: FOR ELRIC. IN CASE.)"]],
+		[26, 5, ["* (A fish tank. One fish, orange, swimming laps.\n*  A label on the glass: BURGER.)", "* (Burger is a pet. Burger is not a burger.\n*  There is a second label just to say that.)"]],
+		[26, 18, ["* (MuffinMage's bed. Neatly made, and dusted with\n*  flour. It's everywhere in here.)"]],
+		[15, 3, ["* (A poster: SALMON BURGER FRIDAY.)", "* (It's taped over a calendar. Every day on the calendar\n*  says FRIDAY.)"]],
+	],
+	"Sansworth": [
+		[8, 4, ["* (A pegboard of keys, dozens of them. None of them\n*  open anything. Sansworth checked. Twice.)"]],
+		[25, 5, ["* (A steering wheel, mounted on the wall.\n*  Sansworth practices on it. VROOM, quietly.)"]],
+		[26, 18, ["* (A race car bed. It has a working horn.)", "* (You honk it. Somewhere down the hall,\n*  somebody honks back.)"]],
+		[13, 16, ["* (A parking spot, painted on the floor:\n*  RESERVED - SANSWORTH. It's empty.)", "* (He's saving it. For the van.)"]],
+	],
+}
+## In every room: the clock, two potted plants, a couple of supply crates.
+const ROOM_SHARED := [
+	[30, 3, ["* (A clock. It's a little fast. Everyone sets theirs\n*  five minutes ahead. Nassan's rule.)"]],
+	[2, 21, ["* (A potted plant. Real, this one, and watered.\n*  A tag on the pot: KEEP ALIVE.)"]],
+	[29, 21, ["* (Another plant. This one's plastic.\n*  It's doing great.)"]],
+	[13, 21, ["* (Supply crates: batteries, canned soup, a first aid\n*  kit, and a board game with half the pieces.)"]],
+]
+
+
+## Puts a Hotspot on everything in each member's room.
+func _place_room_things() -> void:
+	for i in MEMBERS.size():
+		var r := room_rect(i)
+		var things: Array = ROOM_THINGS.get(MEMBERS[i]["id"], []) + ROOM_SHARED
+		for thing in things:
+			var at := Vector2((r.position.x + float(thing[0])) * T + T / 2.0, (r.position.y + float(thing[1])) * T + T / 2.0)
+			var lines: Array = thing[2]
+			world.add_child(Hotspot.create(at, func() -> void: await Game.dialogue.say(lines)))

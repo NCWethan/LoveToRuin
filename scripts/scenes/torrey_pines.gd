@@ -60,6 +60,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -128,6 +129,8 @@ func _dress() -> void:
 
 func build_map() -> void:
 	room.setup(64, 32, Room.GRASS)
+	# (The trees here are Torrey pines, bent by the wind: see tile_art.gd.)
+	room.set_meta("tree_style", "torrey")
 	room.fill(0, 0, 10, 32, Room.WATER)
 	room.fill(10, 0, 2, 32, Room.SAND)
 	room.fill(12, 0, 3, 32, Room.ADOBE)        # the cliff face
@@ -157,33 +160,30 @@ func _draw_decor() -> void:
 	for k in 24:
 		var y := fmod(k * 37.0 + _time * 12.0, 32.0 * T)
 		_decor.draw_line(Vector2(2 * T + (k % 5) * 30, y), Vector2(2 * T + (k % 5) * 30 + 22, y), Color(1, 1, 1, 0.35), 1.0)
-	for y in range(0, 32 * T, 24):
-		_decor.draw_line(Vector2(12 * T, y), Vector2(15 * T, y + 8), Color8(180, 130, 90, 120), 1.0)
 	# The windsock, pointing out to sea.
-	var pole := Vector2(19 * T + 10, 4 * T)
-	_decor.draw_line(pole + Vector2(0, 16), pole + Vector2(0, -24), Color8(180, 180, 186), 2.0)
-	var flap := sin(_time * 4.0) * 3.0
-	_decor.draw_colored_polygon(PackedVector2Array([pole + Vector2(0, -24), pole + Vector2(0, -16), pole + Vector2(-26, -19 + flap), pole + Vector2(-26, -21 + flap)]), Color8(240, 120, 40))
+	Scenery.windsock(_decor, Vector2(19 * T + 10, 4 * T), _time)
 	# The gliderport's launch edge.
 	_decor.draw_string(_font, Vector2(17 * T, 2 * T + 6), "GLIDERPORT", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(255, 255, 240))
 	for k in 6:
 		_decor.draw_rect(Rect2(15 * T + 4, (2 + k * 2) * T, 6, T), Color8(240, 200, 40, 160))
-	# The lodge's sign.
-	_decor.draw_string(_font, Vector2(44 * T + 6, 4 * T), "LODGE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(240, 230, 210))
-	# The viewpoint plaque.
-	_decor.draw_rect(Rect2(18 * T + 4, 25 * T - 6, 12, 10), Color8(120, 90, 60))
-	# Doris, the four-hundred-year-old pine (a little bigger than the rest).
-	_decor.draw_circle(DORIS, 16.0, Color8(40, 90, 55))
-	_decor.draw_line(DORIS + Vector2(0, 16), DORIS + Vector2(-6, 30), Color8(90, 65, 40), 4.0)
-	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 	# The Glider's shadow on the water.
 	if glider and is_instance_valid(glider):
 		_decor.draw_set_transform(glider.position + Vector2(-30, 120), 0.0, Vector2(1.0, 0.35))
 		_decor.draw_circle(Vector2.ZERO, 22.0, Color(0, 0, 0, 0.2))
 		_decor.draw_set_transform(Vector2.ZERO)
+
+
+## What never changes: the lodge's roof and sign, the plaque, Doris. Drawn once.
+func _draw_scenery(ci: CanvasItem) -> void:
+	Scenery.shake_roof(ci, Rect2(44 * T, 2 * T - 4, 9 * T, T + 4))
+	var sign := Rect2(44 * T + 2, 3 * T + 4, 3 * T, 16)
+	ci.draw_rect(sign.grow(1), Color8(70, 46, 28))
+	ci.draw_rect(sign, Color8(120, 82, 50))
+	ci.draw_string(_font, sign.position + Vector2(10, 13), "LODGE", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color8(240, 230, 210))
+	Scenery.plaque(ci, Vector2(18 * T + 10, 25 * T + 4))
+	# Doris, the four-hundred-year-old pine (a good deal bigger than the rest).
+	Scenery.torrey_pine(ci, DORIS + Vector2(0, 44), 1.6)
+	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
 
 
 ## A golden afternoon, the light coming in low off the sea.

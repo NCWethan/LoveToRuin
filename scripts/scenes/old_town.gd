@@ -69,6 +69,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	# Over everything: the dusk outside, the dark inside once the candles go out.
 	_shade = Node2D.new()
 	add_child(_shade)
@@ -197,119 +198,112 @@ func build_map() -> void:
 	room.fill(20, 35, 5, 1, Room.HOUSE_PROP)  # the sideboard
 
 
-func _draw_decor() -> void:
-	# Papel picado: strings of paper flags across the plaza, in every color.
+## What never changes: the papel picado, the signs, Rosa's counter, the Casa's
+## windows, the flagpole, the wagon, the well, and the dining room's furniture.
+## Drawn once (Area.add_static_layer).
+func _draw_scenery(ci: CanvasItem) -> void:
 	var colors := [Color8(230, 70, 110), Color8(250, 190, 50), Color8(80, 190, 120), Color8(70, 150, 230), Color8(180, 90, 210), Color8(250, 120, 50)]
 	for row in 3:
 		var y := (11 + row * 4) * T + 4
-		_decor.draw_line(Vector2(15 * T, y), Vector2(37 * T, y + 6), Color8(90, 80, 70), 1.0)
-		for k in 22:
-			var at := Vector2(15 * T + 8 + k * 20, y + k * 6.0 / 22.0)
-			var flag_rect := Rect2(at, Vector2(12, 12))
-			_decor.draw_rect(flag_rect, Color(colors[(k + row) % colors.size()], 0.9))
-			_decor.draw_rect(Rect2(at + Vector2(4, 4), Vector2(4, 4)), Color8(60, 50, 50, 140))
-	# Signs over the shops.
-	_sign(Vector2(5 * T, 3 * T + 2), "TORTILLERÍA", Color8(200, 60, 40))
-	_sign(Vector2(18 * T, 3 * T + 2), "VELAS · CANDLES", Color8(120, 70, 140))
-	_decor.draw_string(_font, Vector2(19 * T + 6, 6 * T + 4), "BACK IN 5 MIN", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(80, 50, 40))
-	# Rosa's comal: a black griddle, steaming.
-	_decor.draw_rect(Rect2(7 * T, 7 * T + 2, 4 * T, 14), Color8(150, 110, 70))
-	_decor.draw_circle(Vector2(9 * T, 7 * T + 8), 10.0, Color8(40, 36, 36))
+		Scenery.papel_picado(ci, Vector2(15 * T, y), Vector2(37 * T, y + 6), colors, row)
+	Scenery.hanging_sign(ci, Vector2(5 * T, 3 * T + 4), "TORTILLERÍA", Color8(200, 60, 40))
+	Scenery.hanging_sign(ci, Vector2(18 * T, 3 * T + 4), "VELAS · CANDLES", Color8(120, 70, 140))
+	Scenery.hanging_sign(ci, Vector2(40 * T, 3 * T + 4), "CASA VIEJA · 1851", Color8(90, 70, 60))
+	var note := Rect2(19 * T + 4, 6 * T - 6, 32, 12)
+	ci.draw_rect(note, Color8(244, 240, 226))
+	ci.draw_string(_font, note.position + Vector2(2, 9), "BACK IN 5", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color8(80, 50, 40))
+	Scenery.comal_counter(ci, Rect2(7 * T, 7 * T + 2, 4 * T, 14))
+	for x in [39, 49]:
+		Scenery.shuttered_window(ci, Rect2(x * T + 2, 5 * T + 2, T - 4, T - 4), Color8(20, 18, 24))
+	Scenery.flagpole(ci, Vector2(25 * T + 10, 18 * T + 10), 4 * T + 10, [Color8(60, 140, 80), Color8(240, 240, 240), Color8(200, 50, 50)])
+	Scenery.old_wagon(ci, Rect2(4 * T - 2, 16 * T + 2, 3 * T + 4, 18))
+	Scenery.stone_well(ci, Vector2(11 * T + 10, 21 * T + 10))
+	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
+	_draw_dining_room(ci)
+
+
+func _draw_decor() -> void:
+	# Steam off Rosa's comal.
 	for k in 3:
 		var puff := fmod(_time * 12.0 + k * 8.0, 24.0)
 		_decor.draw_circle(Vector2(9 * T - 6 + k * 6, 7 * T - puff), 3.0, Color(1, 1, 1, 0.35 * (1.0 - puff / 24.0)))
-	# The Casa Vieja: the sign, and one candle in one window.
-	_sign(Vector2(40 * T, 3 * T + 2), "CASA VIEJA · 1851", Color8(90, 70, 60))
-	for x in [39, 49]:
-		_decor.draw_rect(Rect2(x * T + 2, 5 * T + 2, T - 4, T - 4), Color8(20, 18, 24))
+	# One candle in one window of the Casa.
 	if not flag("ot_candles_out"):
 		var glow := 0.55 + 0.25 * sin(_time * 9.0) * sin(_time * 3.7)
 		_decor.draw_circle(Vector2(49 * T + 10, 5 * T + 10), 7.0, Color(1.0, 0.8, 0.4, glow))
 		_decor.draw_rect(Rect2(49 * T + 9, 5 * T + 10, 2, 6), Color8(240, 235, 220))
-	# The flagpole, and its flag.
-	_decor.draw_rect(Rect2(25 * T + 9, 14 * T, 3, 4 * T + 10), Color8(190, 190, 196))
-	_decor.draw_rect(Rect2(25 * T + 12, 14 * T, 26, 16), Color8(60, 140, 80))
-	_decor.draw_rect(Rect2(25 * T + 20, 14 * T, 10, 16), Color8(240, 240, 240))
-	_decor.draw_rect(Rect2(25 * T + 30, 14 * T, 8, 16), Color8(200, 50, 50))
-	# The wagon: a wooden bed on two big wheels.
-	_decor.draw_rect(Rect2(4 * T - 2, 16 * T + 2, 3 * T + 4, 22), Color8(130, 90, 55))
-	_decor.draw_rect(Rect2(4 * T - 2, 16 * T + 2, 3 * T + 4, 22), Color8(80, 55, 35), false, 2.0)
-	for wx in [4 * T + 6, 7 * T - 6]:
-		_decor.draw_arc(Vector2(wx, 17 * T + 12), 11.0, 0, TAU, 16, Color8(70, 50, 30), 3.0)
-		for s in 4:
-			var dir := Vector2.from_angle(s * PI / 4.0)
-			_decor.draw_line(Vector2(wx, 17 * T + 12) - dir * 10.0, Vector2(wx, 17 * T + 12) + dir * 10.0, Color8(90, 65, 40), 1.0)
-	# The well.
-	_decor.draw_circle(Vector2(11 * T + 10, 21 * T + 10), 11.0, Color8(150, 140, 130))
-	_decor.draw_circle(Vector2(11 * T + 10, 21 * T + 10), 7.0, Color8(30, 40, 60))
 	# The feather, between the slats of the bench, until it's taken.
 	if flag("ot_fragment") and not flag("has_feather"):
 		_decor.draw_line(Vector2(19 * T + 14, 20 * T + 6), Vector2(20 * T + 4, 20 * T - 2), Color8(150, 150, 160), 3.0)
+		_decor.draw_line(Vector2(19 * T + 15, 20 * T + 5), Vector2(20 * T + 3, 20 * T - 1), Color8(210, 210, 220), 1.0)
 	# Pigeons, here and there in the plaza (all of them Gerald).
 	for spot in [Vector2(22, 19), Vector2(23, 16), Vector2(29, 17), Vector2(21, 15), Vector2(32, 19)]:
-		var hop := absf(sin(_time * 2.0 + spot.x)) * 2.0
-		_decor.draw_circle(spot * T + Vector2(0, -hop), 4.0, Color8(130, 130, 145))
-		_decor.draw_circle(spot * T + Vector2(4, -4 - hop), 2.5, Color8(110, 120, 140))
-	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
-	_draw_dining_room()
+		var bob := absf(sin(_time * 2.0 + spot.x)) * 2.0
+		Scenery.pigeon(_decor, spot * T, 1.0 if int(spot.x) % 2 == 0 else -1.0, bob)
+	_draw_candles()
 
 
-func _sign(at: Vector2, text: String, color: Color) -> void:
-	var w := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x + 8
-	_decor.draw_rect(Rect2(at, Vector2(w, 13)), Color8(245, 230, 200))
-	_decor.draw_rect(Rect2(at, Vector2(w, 13)), color, false, 1.0)
-	_decor.draw_string(_font, at + Vector2(4, 10), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, color)
-
-
-## The dining room: wallpaper, portraits, the clock (stopped at seven), twelve
-## chairs, twelve clean plates, the candles and the candelabra.
-func _draw_dining_room() -> void:
+## Inside the Casa: the wallpaper, portraits, the clock (stopped at seven), the
+## sideboard, twelve chairs and twelve clean plates.
+func _draw_dining_room(ci: CanvasItem) -> void:
 	for x in range(1, 29):
-		_decor.draw_rect(Rect2(x * T, 33 * T, 2, 2 * T), Color8(120, 60, 70, 120))
-	for x in [6, 12, 17]:
-		_decor.draw_rect(Rect2(x * T, 33 * T + 4, 2 * T, 28), Color8(130, 100, 50))
-		_decor.draw_rect(Rect2(x * T + 4, 33 * T + 8, 2 * T - 8, 20), Color8(60 + x * 4, 50, 70))
-		_decor.draw_circle(Vector2(x * T + T, 33 * T + 16), 5.0, Color8(200, 170, 140))
-	# The grandfather clock, stopped at seven o'clock.
-	_decor.draw_rect(Rect2(3 * T + 2, 34 * T, T - 4, 2 * T), Color8(90, 55, 35))
-	_decor.draw_circle(Vector2(3 * T + 10, 34 * T + 8), 6.0, Color8(235, 225, 200))
-	_decor.draw_line(Vector2(3 * T + 10, 34 * T + 8), Vector2(3 * T + 10, 34 * T + 3), Color8(30, 30, 30), 1.0)
-	_decor.draw_line(Vector2(3 * T + 10, 34 * T + 8), Vector2(3 * T + 10, 34 * T + 12), Color8(30, 30, 30), 1.0)
-	# The sideboard, with a punch bowl.
-	_decor.draw_rect(Rect2(20 * T, 35 * T, 5 * T, T), Color8(100, 65, 40))
-	_decor.draw_circle(Vector2(22 * T + 10, 35 * T + 4), 7.0, Color(0.85, 0.9, 1.0, 0.6))
-	# The table: a white cloth, chairs on both sides (and one at each end).
+		ci.draw_rect(Rect2(x * T, 33 * T, 2, 2 * T), Color8(120, 60, 70, 120))
+		ci.draw_rect(Rect2(x * T + 10, 33 * T + (x % 3) * 8 + 6, 2, 2), Color8(200, 170, 110, 120))
+	for i in 3:
+		var x: int = [6, 12, 17][i]
+		Scenery.painting(ci, Rect2(x * T, 33 * T + 4, 2 * T, 28), 1 + i * 3)
+	Scenery.grandfather_clock(ci, Rect2(3 * T + 2, 34 * T - 6, T - 4, 2 * T + 6), 7)
+	# The sideboard, with a punch bowl and silver.
+	ci.draw_rect(Rect2(20 * T, 35 * T, 5 * T, T), Color8(100, 65, 40))
+	ci.draw_rect(Rect2(20 * T, 35 * T, 5 * T, 2), Color8(130, 90, 58))
+	for k in 4:
+		ci.draw_rect(Rect2(20 * T + 6 + k * 24, 35 * T + 8, 18, 9), Color8(84, 54, 34))
+		ci.draw_rect(Rect2(20 * T + 14 + k * 24, 35 * T + 12, 2, 2), Color8(220, 190, 100))
+	ci.draw_circle(Vector2(22 * T + 10, 35 * T + 4), 7.0, Color(0.85, 0.9, 1.0, 0.6))
+	ci.draw_circle(Vector2(22 * T + 8, 35 * T + 2), 2.0, Color(1, 1, 1, 0.7))
+	# The table: chairs on both sides (and one at each end), a white cloth.
 	var table := Rect2(7 * T, 41 * T, 16 * T, 3 * T)
 	for k in 5:
 		var cx := (8 + k * 3) * T + 10
-		_decor.draw_rect(Rect2(cx - 7, 40 * T + 2, 14, 16), Color8(110, 60, 45))
-		_decor.draw_rect(Rect2(cx - 7, 44 * T + 2, 14, 16), Color8(110, 60, 45))
-	_decor.draw_rect(Rect2(5 * T + 3, 42 * T - 2, 14, 20), Color8(110, 60, 45))
-	_decor.draw_rect(Rect2(23 * T + 9, 42 * T - 2, 14, 20), Color8(130, 70, 50))
-	_decor.draw_rect(table, Color8(240, 236, 228))
-	_decor.draw_rect(table, Color8(200, 190, 180), false, 1.0)
+		Scenery.dining_chair(ci, Vector2(cx, 40 * T + 10), true, Color8(110, 60, 45))
+		Scenery.dining_chair(ci, Vector2(cx, 44 * T + 10), false, Color8(110, 60, 45))
+	Scenery.dining_chair(ci, Vector2(5 * T + 10, 42 * T + 8), true, Color8(110, 60, 45))
+	Scenery.dining_chair(ci, Vector2(24 * T, 42 * T + 8), true, Color8(130, 70, 50))
+	ci.draw_rect(Rect2(table.position + Vector2(3, 3), table.size), Color(0, 0, 0, 0.2))
+	ci.draw_rect(table, Color8(240, 236, 228))
+	ci.draw_rect(Rect2(table.position, Vector2(table.size.x, 2)), Color8(250, 248, 242))
+	ci.draw_rect(table, Color8(200, 190, 180), false, 1.0)
+	var lace := table.position.x + 4
+	while lace < table.end.x:
+		ci.draw_circle(Vector2(lace, table.end.y), 2.0, Color8(240, 236, 228))
+		lace += 6
 	for k in 5:
 		var cx := (8 + k * 3) * T + 10
 		for py in [41 * T + 8, 43 * T + 12]:
-			_decor.draw_circle(Vector2(cx, py), 6.0, Color8(250, 250, 250))
-			_decor.draw_arc(Vector2(cx, py), 6.0, 0, TAU, 12, Color8(170, 170, 190), 1.0)
-			_decor.draw_line(Vector2(cx - 9, py - 4), Vector2(cx - 9, py + 4), Color8(190, 190, 200), 1.0)
-			_decor.draw_line(Vector2(cx + 9, py - 4), Vector2(cx + 9, py + 4), Color8(190, 190, 200), 1.0)
-	# Candles: lit (flickering), or out.
+			Scenery.place_setting(ci, Vector2(cx, py))
+
+
+## The candles on the table (flickering, or out), and the candelabra in the middle
+## with the fragment glowing in it.
+func _draw_candles() -> void:
 	var out := flag("ot_candles_out")
 	for x in CANDLES:
 		var at := Vector2(x * T + 10, 42 * T + 4)
+		_decor.draw_rect(Rect2(at + Vector2(-3, -1), Vector2(6, 2)), Color8(200, 170, 80))
 		_decor.draw_rect(Rect2(at + Vector2(-2, -10), Vector2(4, 10)), Color8(240, 235, 215))
+		_decor.draw_rect(Rect2(at + Vector2(-2, -10), Vector2(1, 10)), Color8(250, 248, 236))
 		if not out:
 			var f := 0.7 + 0.3 * sin(_time * (9.0 + x) + x)
 			_decor.draw_circle(at + Vector2(0, -13), 5.0 * f + 3.0, Color(1.0, 0.75, 0.3, 0.25))
 			_decor.draw_circle(at + Vector2(0, -12), 2.5, Color(1.0, 0.9, 0.5, f))
-	# The candelabra in the middle, with the fragment glowing in it.
+		else:
+			_decor.draw_line(at + Vector2(0, -11), at + Vector2(1, -16), Color(0.7, 0.7, 0.7, 0.4), 1.0)
+	_decor.draw_rect(Rect2(CANDELABRA + Vector2(-6, 0), Vector2(12, 3)), Color8(200, 170, 80))
 	_decor.draw_rect(Rect2(CANDELABRA + Vector2(-2, -14), Vector2(4, 16)), Color8(200, 170, 80))
+	_decor.draw_rect(Rect2(CANDELABRA + Vector2(-2, -14), Vector2(1, 16)), Color8(236, 210, 120))
 	_decor.draw_line(CANDELABRA + Vector2(-10, -10), CANDELABRA + Vector2(10, -10), Color8(200, 170, 80), 2.0)
+	for side in [-10.0, 10.0]:
+		_decor.draw_rect(Rect2(CANDELABRA + Vector2(side - 1, -16), Vector2(3, 6)), Color8(240, 235, 215))
 	if not flag("ot_fragment"):
 		var pulse := 0.6 + 0.4 * sin(_time * 4.0)
 		_decor.draw_circle(CANDELABRA + Vector2(0, -18), 6.0 + pulse * 3.0, Color(1.0, 0.2, 0.25, 0.3))

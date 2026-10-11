@@ -67,6 +67,7 @@ func _ready() -> void:
 	add_child(_decor)
 	move_child(_decor, world.get_index())
 	_decor.draw.connect(_draw_decor)
+	add_static_layer(_draw_scenery)
 	_shade = Node2D.new()
 	add_child(_shade)
 	_shade.draw.connect(_draw_shade)
@@ -206,88 +207,73 @@ func build_map() -> void:
 	room.fill(27, 55, 6, 1, Room.FENCE)       # the dugout rail
 
 
-func _draw_decor() -> void:
-	# The diner's front: dark, with big lit windows.
-	_decor.draw_rect(Rect2(14 * T, 3 * T, 11 * T, 5 * T), Color8(48, 50, 62))
-	for x in [15, 17, 21, 23]:
-		_decor.draw_rect(Rect2(x * T + 2, 5 * T + 2, T - 4, T - 4), Color(1.0, 0.88, 0.6, 0.85))
-	_decor.draw_rect(Rect2(19 * T + 3, 7 * T, T - 6, T), Color8(90, 60, 40))
-	# The ballpark: red brick, with mortar lines.
-	_decor.draw_rect(Rect2(40 * T, 1 * T, 23 * T, 7 * T), Color8(150, 62, 48))
-	for row in 14:
-		var y := 1 * T + row * 10
-		_decor.draw_line(Vector2(40 * T, y), Vector2(63 * T, y), Color8(110, 44, 36), 1.0)
-		var x := 40 * T + (10 if row % 2 == 0 else 0)
-		while x < 63 * T:
-			_decor.draw_line(Vector2(x, y), Vector2(x, y + 10), Color8(110, 44, 36), 1.0)
-			x += 20
-	_decor.draw_rect(Rect2(50 * T, 6 * T, 2 * T, 2 * T), Color8(40, 40, 46))
-	_decor.draw_rect(Rect2(50 * T + 4, 6 * T + 4, 2 * T - 8, 2 * T - 4), Color8(70, 70, 78))
-	# The hotel's sign, the diner's neon, the ballpark's name.
-	_decor.draw_string(_font, Vector2(2 * T + 4, 1 * T + 14), "HOTEL GRANDE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 210, 120))
-	var neon := 0.7 + 0.3 * sin(_time * 5.0) if fmod(_time, 7.0) > 0.3 else 0.15
-	_decor.draw_rect(Rect2(14 * T + 6, 3 * T + 4, 10 * T, 18), Color(0.05, 0.05, 0.1, 0.8))
-	_decor.draw_string(_font, Vector2(14 * T + 14, 3 * T + 18), "ALL-NIGHT DINER", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.35, 0.55, neon))
-	# Brick lines on the ballpark wall, and its arch over the gates.
-	_decor.draw_arc(Vector2(51 * T, 7 * T), 2 * T, PI, TAU, 16, Color8(230, 220, 200), 3.0)
-	_decor.draw_string(_font, Vector2(46 * T, 3 * T), "THE BALLPARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color8(240, 230, 210))
-	# One lit window in the office tower, high up. (Someone's working late. Or
-	# someone forgot to turn it off five years ago.)
-	_decor.draw_rect(Rect2(33 * T + 2, 2 * T + 2, T - 4, T - 4), Color(1.0, 0.9, 0.55, 0.8))
-	# Gaslamps along the sidewalk.
+## What never changes: the diner and the ballpark's fronts, the lamp posts, the
+## rails, the fountain's basin, the field. Drawn once (Area.add_static_layer).
+func _draw_scenery(ci: CanvasItem) -> void:
+	var f := ThemeDB.fallback_font
+	Scenery.diner_front(ci, Rect2(14 * T, 3 * T, 11 * T, 5 * T), 19 * T + 10)
+	Scenery.ballpark_front(ci, Rect2(40 * T, 1 * T, 23 * T, 7 * T), Rect2(50 * T - 4, 5 * T, 2 * T + 8, 3 * T))
+	ci.draw_string(f, Vector2(46 * T + 1, 3 * T + 1), "THE BALLPARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0, 0, 0, 0.4))
+	ci.draw_string(f, Vector2(46 * T, 3 * T), "THE BALLPARK", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color8(240, 230, 210))
+	# The hotel's sign: a blade hanging off the corner, gold letters on maroon.
+	var blade := Rect2(1 * T + 6, 1 * T + 2, 7 * T + 4, 16)
+	ci.draw_rect(blade.grow(2), Color8(200, 170, 90))
+	ci.draw_rect(blade, Color8(110, 30, 40))
+	ci.draw_string(f, Vector2(2 * T + 4, 1 * T + 14), "HOTEL GRANDE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color8(240, 210, 120))
+	# One lit window high in the office tower. (Someone's working late. Or someone
+	# forgot to turn it off five years ago.)
+	ci.draw_rect(Rect2(33 * T + 2, 2 * T + 2, T - 4, T - 4), Color(1.0, 0.9, 0.55, 0.8))
+	ci.draw_rect(Rect2(33 * T + 6, 2 * T + 10, 6, 6), Color8(60, 50, 50))
+	# Lamp posts along the sidewalk (their light flickers: _draw_decor).
 	for x in range(3, 62, 6):
-		var at := Vector2(x * T + 10, 9 * T)
-		_decor.draw_rect(Rect2(at + Vector2(-1.5, -26), Vector2(3, 26)), Color8(40, 40, 46))
-		_decor.draw_rect(Rect2(at + Vector2(-5, -36), Vector2(10, 10)), Color8(40, 40, 46))
-		_decor.draw_rect(Rect2(at + Vector2(-3, -34), Vector2(6, 6)), Color(1.0, 0.85, 0.5, 0.9 + 0.1 * sin(_time * 7.0 + x)))
-	# The crosswalk, and the trolley tracks.
+		Scenery.gaslamp(ci, Vector2(x * T + 10, 9 * T), 0.0)
+	# The crosswalk, the trolley's rails (on ties) and its wire overhead.
 	for k in 5:
-		_decor.draw_rect(Rect2(30 * T + 4 + k * 8, 10 * T + 2, 5, 5 * T - 4), Color(1, 1, 1, 0.35))
+		ci.draw_rect(Rect2(30 * T + 4 + k * 8, 10 * T + 2, 5, 5 * T - 4), Color(1, 1, 1, 0.4))
+	var tie := T
+	while tie < 63 * T:
+		ci.draw_rect(Rect2(tie, 13 * T + 3, 4, 14), Color8(70, 62, 56))
+		tie += 12
 	for y in [13 * T + 6, 14 * T + 6]:
-		_decor.draw_line(Vector2(T, y), Vector2(63 * T, y), Color8(150, 150, 160), 2.0)
-	# The trolley: red, with a lit window and a little pole up to the wire.
+		ci.draw_line(Vector2(T, y), Vector2(63 * T, y), Color8(120, 120, 130), 3.0)
+		ci.draw_line(Vector2(T, y - 1), Vector2(63 * T, y - 1), Color8(190, 190, 200), 1.0)
+	ci.draw_line(Vector2(T, 10 * T), Vector2(63 * T, 10 * T), Color8(50, 50, 54), 1.0)
+	# The plaza fountain's basin.
+	Scenery.fountain(ci, Vector2(32 * T, 20 * T + 10), 20.0)
+	Scenery.bus_stop(ci, ENTRY + Vector2(9, -8))
+	# Inside the ballpark: the field, and the Big Screen's frame.
+	Scenery.ball_field(ci, HOME_PLATE, MOUND)
+	Scenery.big_screen_frame(ci, SCREEN)
+
+
+func _draw_decor() -> void:
+	# The diner's neon sign, buzzing (and now and then cutting out).
+	var neon := 0.7 + 0.3 * sin(_time * 5.0) if fmod(_time, 7.0) > 0.3 else 0.15
+	_decor.draw_rect(Rect2(14 * T + 6, 3 * T + 4, 10 * T, 18), Color(0.05, 0.05, 0.1, 0.85))
+	_decor.draw_rect(Rect2(14 * T + 6, 3 * T + 4, 10 * T, 18), Color(1.0, 0.35, 0.55, 0.5 * neon), false, 1.0)
+	_decor.draw_string(_font, Vector2(14 * T + 14, 3 * T + 18), "ALL-NIGHT DINER", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(1.0, 0.35, 0.55, neon))
+	# The lamps' glow, flickering.
+	for x in range(3, 62, 6):
+		var at := Vector2(x * T + 10, 9 * T - 39)
+		var glow := 0.85 + 0.15 * sin(_time * 7.0 + x)
+		_decor.draw_circle(at, 12.0, Color(1.0, 0.8, 0.45, 0.14 * glow))
+		_decor.draw_rect(Rect2(at + Vector2(-3, -4), Vector2(6, 8)), Color(1.0, 0.86, 0.5, 0.9 * glow))
+	# The trolley.
 	var tx := _trolley_x()
 	if tx > -200.0 and tx < 64 * T:
-		var body := Rect2(tx, 12 * T + 14, 5 * T, 30)
-		_decor.draw_rect(body, Color8(200, 40, 45))
-		_decor.draw_rect(Rect2(tx + 6, 12 * T + 18, 5 * T - 12, 10), Color(1.0, 0.92, 0.6, 0.85))
+		Scenery.trolley(_decor, Rect2(tx, 12 * T + 14, 5 * T, 30), "GASLAMP")
 		_decor.draw_line(Vector2(tx + 2.5 * T, 12 * T + 14), Vector2(tx + 3 * T, 10 * T), Color8(60, 60, 60), 2.0)
-		_decor.draw_string(_font, Vector2(tx + 8, 14 * T + 10), "TROLLEY", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
-	_decor.draw_line(Vector2(T, 10 * T), Vector2(63 * T, 10 * T), Color8(60, 60, 60), 1.0)
-	# The fountain.
-	_decor.draw_circle(Vector2(32 * T, 20 * T + 10), 24.0, Color8(200, 200, 210))
-	_decor.draw_circle(Vector2(32 * T, 20 * T + 10), 19.0, Color8(70, 120, 170))
+	# The fountain's spray.
 	for k in 5:
 		var arc := Vector2.from_angle(-PI / 2 + (k - 2) * 0.35)
 		_decor.draw_line(Vector2(32 * T, 20 * T + 6), Vector2(32 * T, 20 * T + 6) + arc * (14.0 + 3.0 * sin(_time * 6.0 + k)), Color(0.8, 0.95, 1.0, 0.7), 2.0)
-	# The bus stop.
-	_decor.draw_rect(Rect2(ENTRY + Vector2(8, -46), Vector2(3, 38)), Color8(150, 150, 156))
-	_decor.draw_rect(Rect2(ENTRY + Vector2(0, -54), Vector2(20, 12)), Color8(40, 90, 190))
-	_decor.draw_string(_font, ENTRY + Vector2(2, -44), "BUS", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 	_draw_ballpark()
 
 
 ## The field: the infield dirt, the bases, the mound, the foul lines; and the Big
 ## Screen over the outfield wall.
 func _draw_ballpark() -> void:
-	var dirt := Color8(176, 128, 82)
-	var home := HOME_PLATE
-	var diamond := PackedVector2Array([home + Vector2(0, 10), home + Vector2(130, -110), home + Vector2(0, -230), home + Vector2(-130, -110)])
-	_decor.draw_colored_polygon(diamond, dirt)
-	var grass := PackedVector2Array([home + Vector2(0, -26), home + Vector2(98, -110), home + Vector2(0, -196), home + Vector2(-98, -110)])
-	_decor.draw_colored_polygon(grass, Color8(70, 140, 70))
-	_decor.draw_circle(MOUND + Vector2(0, 6), 18.0, dirt)
-	_decor.draw_rect(Rect2(MOUND + Vector2(-6, 4), Vector2(12, 3)), Color.WHITE)
-	for base in [home + Vector2(120, -110), home + Vector2(0, -222), home + Vector2(-120, -110)]:
-		_decor.draw_rect(Rect2(base - Vector2(6, 6), Vector2(12, 12)), Color.WHITE)
-	_decor.draw_colored_polygon(PackedVector2Array([home + Vector2(-7, -6), home + Vector2(7, -6), home + Vector2(7, 0), home + Vector2(0, 6), home + Vector2(-7, 0)]), Color.WHITE)
-	_decor.draw_line(home, home + Vector2(400, -344), Color(1, 1, 1, 0.8), 2.0)
-	_decor.draw_line(home, home + Vector2(-400, -344), Color(1, 1, 1, 0.8), 2.0)
-	# The Big Screen.
-	_decor.draw_rect(Rect2(SCREEN.position + Vector2(40, SCREEN.size.y), Vector2(8, 10)), Color8(80, 80, 90))
-	_decor.draw_rect(Rect2(SCREEN.end + Vector2(-48, 0), Vector2(8, 10)), Color8(80, 80, 90))
-	_decor.draw_rect(SCREEN.grow(4), Color8(30, 30, 36))
-	_decor.draw_rect(SCREEN, Color8(14, 14, 20))
+	# (The field and the screen's frame are on the static layer.)
 	var on := flag("dt_arrived") and _inside()
 	if flag("dt_fragment") and flag("dt_screen_killed"):
 		return

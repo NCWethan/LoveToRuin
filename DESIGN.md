@@ -537,6 +537,20 @@ How it pays off on each route:
 | **Neutral** | Kept, or ignored in favor of exploring. | Elric keeps wandering. |
 | **Genocide** | Given to Hopkuna, making him unstoppable. | Elric destroys any chance of having one. |
 
+#### The road to each fragment (Chapter 2)
+From playtesting: after the first three fragments the game got easier and thinner (each area was mostly "arrive, talk, one boss"). Chapter 1 had a puzzle in every place. So every Chapter 2 area gets the same treatment: **a new scene to explore, a puzzle that stands between Elric and the fragment, and its own wild enemies** (three per area, tougher the further along: they replace the Chapter 1 seagulls and plastic bags). The puzzles work the same on every route; who's with Elric changes what's said, not what has to be solved.
+
+| # | Area | New scene | The puzzle | Its wild enemies |
+|---|---|---|---|---|
+| 4 | Mission Beach | **The arcade** on the boardwalk | The Dipper's gate is locked, and the key is the top prize at the arcade counter. Win tickets from three machines: a light-up memory game (repeat the pattern), Skee-Ball (pick the lane the scoreboard hints at), and the fortune teller's riddle. | Sand Crab, Jellyfish, Runaway Kite |
+| 5 | Balboa Park | **The Botanical Building** (the lath house) | The archive door has a keypad. The code is the years on four paintings in the armor hall, in the order the docent's plaque gives. The lath house is a hedge maze, and the plaque is in the middle of it. | Peacock, Marble Bust, Tour Group |
+| 6 | Old Town | **The candle shop** | Before the Hostess will serve dinner, the table has to be set: the four invitations on the sideboard say who sat where, and the name cards have to match. The candles need lighting first (the matches are in the candle shop). | Tumbleweed, Piñata, Wax Ghost |
+| 7 | Downtown | **The hotel's basement** | The ballpark's gate has no power. The hotel basement has the breaker panel: six breakers, and a fuse chart scrawled on the wall. Flip the right ones (wrong ones trip the whole panel). | Pigeon Gang, Parking Meter, Neon Sign |
+| 8 | The Harbor | **The engine room**, below the hangar | The elevator to the flight deck only moves when the signal flags are raised in the right order. The order is spelled out on the semaphore chart in the engine room. | Gull Captain, Lobster Trap, Rust Bot |
+| 9 | Torrey Pines | **The fog trail** | The trail to the gliderport fills with fog. Follow the cairns, and the stacked stones point the way; take a wrong turn and you're back at the start (like Westview's hallway). | Rattlesnake, Fog Wisp, Lost Kite |
+| 10 | The Burned Hills | **The fire road** | Spot fires block the switchbacks. Three valves on the hose line route water up the hill; open them in the right combination to put out the fires in your way. | Cinder, Smoke Wraith, Charred Stump |
+| 11 | The Junkyard | **The crane cab** | Scrap Heap's pile blocks the van. Work the crane's three levers in the right order to lift the crushed cars and clear a path. | Junk Rat, Magnet, Hubcap |
+
 ### The route choice
 When Elric **meets the REVOLUTION Corps**, they ask what Elric wants to do, and Elric must **manually choose a route**:
 
