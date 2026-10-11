@@ -332,7 +332,11 @@ func add_save_point(at: Vector2, flavor: String) -> void:
 	star.on_interact = func() -> void:
 		Game.play_sfx("heal")
 		Game.heal_party()
-		await Game.dialogue.say([flavor, "* (It fills you with DETERMINATION.)", Game.restored_line()])
+		# (On the Genocide path, there's nothing in the air worth mentioning.)
+		if Game.on_genocide_route():
+			await Game.dialogue.say(["* Determination.", Game.restored_line()])
+		else:
+			await Game.dialogue.say([flavor, "* (It fills you with DETERMINATION.)", Game.restored_line()])
 		var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 		if choice == 0:
 			Game.save_game(scene_file_path, player.position)

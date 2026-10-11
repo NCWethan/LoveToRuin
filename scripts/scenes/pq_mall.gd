@@ -654,11 +654,14 @@ func _head_west() -> void:
 func _use_save_point() -> void:
 	Game.play_sfx("heal")
 	Game.heal_party()
-	await Game.dialogue.say([
-		"* (The smell of curly fries drifts across the parking lot.)",
-		"* (It fills you with DETERMINATION.)",
-		Game.restored_line(),
-	])
+	if Game.on_genocide_route():
+		await Game.dialogue.say(["* Determination.", Game.restored_line()])
+	else:
+		await Game.dialogue.say([
+			"* (The smell of curly fries drifts across the parking lot.)",
+			"* (It fills you with DETERMINATION.)",
+			Game.restored_line(),
+		])
 	var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
 	if choice == 0:
 		Game.save_game(SCENE, player.position)
