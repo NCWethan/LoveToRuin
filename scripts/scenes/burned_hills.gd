@@ -74,6 +74,8 @@ func _ready() -> void:
 			[Vector2(36 * T + 10, 36 * T + 4), _trailhead_sign], [PUMP, _pump], [DIAGRAM, _diagram]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	Game.play_music("burned_hills")
+	# A SAVE point by the bus stop.
+	add_save_point(ENTRY + Vector2(-46, -6), "* (One of the saplings has a new leaf.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

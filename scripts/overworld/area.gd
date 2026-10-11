@@ -323,6 +323,24 @@ const PARTNER_CHEERS := {
 }
 
 
+## A SAVE point (a glowing star) at `at`: it heals everyone, then offers to save.
+## `flavor` is what's in the air here, before "It fills you with DETERMINATION."
+func add_save_point(at: Vector2, flavor: String) -> void:
+	var star := make_save_star()
+	star.glow = true
+	star.glow_color = Color(1.0, 1.0, 1.0, 0.55)
+	star.on_interact = func() -> void:
+		Game.play_sfx("heal")
+		Game.heal_party()
+		await Game.dialogue.say([flavor, "* (It fills you with DETERMINATION.)", Game.restored_line()])
+		var choice := await Game.dialogue.ask("* (Save your progress?)", ["Save", "Return"])
+		if choice == 0:
+			Game.save_game(scene_file_path, player.position)
+			Game.play_sfx("save")
+			await Game.dialogue.say(Game.saved_lines())
+	add_character(star, room.free_spot_near(at))
+
+
 ## A partner's reaction to a solved puzzle (see PARTNER_CHEERS).
 func partner_cheer(i: int) -> void:
 	var who := Game.partner()

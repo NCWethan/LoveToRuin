@@ -105,6 +105,8 @@ func _ready() -> void:
 	for seat in _seats():
 		world.add_child(Hotspot.create(_card_spot(seat), _place_card.bind(seat)))
 	_play_music_here()
+	# A SAVE point by the bus stop.
+	add_save_point(ENTRY + Vector2(-46, -6), "* (Somewhere, a trumpet. Badly. Happily.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

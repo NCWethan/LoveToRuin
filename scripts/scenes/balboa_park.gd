@@ -78,6 +78,8 @@ func _ready() -> void:
 	for i in labels.size():
 		world.add_child(Hotspot.create(labels[i], _plant_label.bind(i)))
 	add_static_layer(_draw_lath)
+	# A SAVE point by the bus stop.
+	add_save_point(ENTRY + Vector2(-46, -6), "* (The fountain throws water at the sky.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

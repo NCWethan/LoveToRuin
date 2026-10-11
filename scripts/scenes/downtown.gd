@@ -95,6 +95,8 @@ func _ready() -> void:
 			[CHART, _chart], [Vector2(48 * T + 10, 38 * T + 4), _boiler]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	_play_music_here()
+	# A SAVE point by the bus stop.
+	add_save_point(ENTRY + Vector2(-46, -6), "* (The trolley rings its bell, far away.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

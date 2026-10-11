@@ -66,6 +66,8 @@ func _ready() -> void:
 			[STICKER_SPOT, _skee_sticker], [FORTUNE_SPOT, _fortune_teller], [COUNTER_SPOT, _prize_counter]]:
 		world.add_child(Hotspot.create(spot[0], spot[1]))
 	add_static_layer(_draw_arcade)
+	# A SAVE point by the bus stop.
+	add_save_point(ENTRY + Vector2(-46, -6), "* (Salt, sunscreen, and somewhere, churros.)")
 	fit_camera_to_room()
 	_start.call_deferred()
 

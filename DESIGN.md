@@ -717,7 +717,7 @@ Use the Eggo & Big Joe fight as the target: when it plays start to finish, the b
 - [x] Meeting Hop
 - [x] Finding fragment 1
 - [x] Tutorial fight outside Mt. Carmel, with different reactions for sparing / fighting
-- [x] **SAVE points** and save/load (Continue on the title screen)
+- [x] **SAVE points** and save/load (Continue on the title screen). Every Chapter 2 area has one by its bus stop (`Area.add_save_point`), with its own line about the place.
 - [x] "To be continued" screen when leaving toward the PQ Mall
 
 ### Milestone 5 — The PQ Mall hub
