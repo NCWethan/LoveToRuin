@@ -7,9 +7,9 @@ extends CharacterBody2D
 ## How much faster sprinting is than walking.
 const SPRINT_MULTIPLIER := 1.75
 ## Stamina runs from 0 to 1. A full bar lasts this many seconds of sprinting...
-const SPRINT_SECONDS := 2.6
+const SPRINT_SECONDS := 6.0
 ## ...and refills in this many seconds, starting a moment after you stop.
-const REFILL_SECONDS := 3.2
+const REFILL_SECONDS := 4.0
 const REFILL_DELAY := 0.5
 ## Run the bar all the way down and Elric is winded: no sprinting again until it's
 ## back up to this much.

@@ -788,9 +788,12 @@ func _mirror() -> void:
 	await Game.dialogue.say(["* (A mirror. There's a towel taped over it.)"])
 	if await Game.dialogue.ask("* (Lift the towel?)", ["Lift it", "Leave it"]) != 0:
 		return
-	# (On the Genocide route, Relic finally says their name.)
-	if Game.on_genocide_route():
+	# (On the Genocide route, Relic says their name once Elric's all the way gone.
+	# Before that, the face in the glass is just... not quite yours.)
+	if Game.on_genocide_route() and Game.dread() >= 4:
 		await Game.dialogue.say(["* (You lift a corner of the towel.)", "* It's me, RELIC."])
+	elif Game.on_genocide_route():
+		await Game.dialogue.say(["* (You lift a corner of the towel.)", "* (In the glass: someone you almost know.)", "* You're unrecognizable."])
 	else:
 		await Game.dialogue.say(["* (You lift a corner of the towel.)", "* (In the glass: it's you.)"])
 

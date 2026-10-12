@@ -583,10 +583,13 @@ func _loop_back() -> void:
 ## The trophy case: its dark glass shows Elric's reflection. Mostly.
 func _trophy_case() -> void:
 	var lines: Array = ["* (A trophy case. Third place, 1998 regional\n*  spelling bee. The glass is dark.)"]
-	# (Relic only says their name on the Genocide route. Before then, a lot of
-	# killing just makes the reflection... wrong.)
-	if Game.on_genocide_route():
+	# (Relic only says their name once Elric is all the way gone: the Genocide
+	# route at its worst. Before that, the reflection is just... wrong.)
+	if Game.on_genocide_route() and Game.dread() >= 4:
 		lines.append("* It's me, RELIC.")
+	elif Game.on_genocide_route():
+		lines.append("* (In the glass: someone you almost know.)")
+		lines.append("* You're unrecognizable.")
 	elif Game.dread() >= 4:
 		lines.append("* (In the glass: someone in a scorched\n*  green hoodie.)")
 		lines.append("* (...It smiles.)\n* (You can't tell if you are.)")
@@ -834,11 +837,11 @@ const STUDENTS := [
 	["Student8", Vector2i(68, 10), "Don't stare into the trophy case too long.\nMy friend says her reflection winked at her.", ["Creepy.", "Mine smiled."], ["Right?? It's a SPELLING BEE trophy.\nWhat does it want?", "...Okay. I'm taking the long way to class now."], ["sad", "shocked", "shocked"]],
 	["Student6", Vector2i(75, 10), "Have you seen my hall pass? It ran away.", ["It RAN?", "Check the gym."], ["I said what I said.", "Why would it be in the... you know what, I'll check."], ["sad", "angry", "shocked"]],
 	["Student7", Vector2i(96, 13), "The library book I returned was 47 years overdue.\nThe fine is insane.", ["Yikes.", "Worth it?"], ["They want $4,000. In 1979 money.", "...It was a good book."], ["sad", "sad", "happy"]],
-	["Student8", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"], ["", "smug", "shocked"]],
-	["Student3", Vector2i(60, 46), "Shh! I'm trying to nap before class.", ["Sorry.", "WAKE UP!"], ["Zzz...", "AH! ...I was awake. Totally awake."], ["angry", "happy", "shocked"]],
-	["Student1", Vector2i(95, 40), "Somebody wrecked Wally's costume.\nHe's just... lying there. Empty.", ["Rest in peace.", "He'll be back."], ["Go Wolverines... :(", "You think?? GO WOLVERINES!!"], ["sad", "sad", "happy"]],
-	["Student6", Vector2i(104, 45), "Did you see the foam finger? It's GONE.\nTHE foam finger!", ["No idea.", "...It's in my bag."], ["The whole team's freaking out.", "WHAT. ...Okay, keep it. It looks good on you."], ["shocked", "sad", "happy"]],
-	["Student2", Vector2i(112, 38), "The emergency exit goes out to the park.\nPractice is out there today.", ["Thanks.", "Is it safe?"], ["No prob. Watch out for the sprinklers.", "It's a park. What could happen?"], ["happy", "happy", "smug"]],
+	["Student9", Vector2i(50, 40), "The chalkboard says \"3, 1, 2.\"\nNobody knows who wrote it.", ["Weird.", "It's the bell order."], ["The teacher won't erase it. She says it's\n\"load-bearing.\"", "Bell... what?"], ["", "smug", "shocked"]],
+	["Student10", Vector2i(60, 46), "Shh! I'm trying to nap before class.", ["Sorry.", "WAKE UP!"], ["Zzz...", "AH! ...I was awake. Totally awake."], ["angry", "happy", "shocked"]],
+	["Student11", Vector2i(95, 40), "Somebody wrecked Wally's costume.\nHe's just... lying there. Empty.", ["Rest in peace.", "He'll be back."], ["Go Wolverines... :(", "You think?? GO WOLVERINES!!"], ["sad", "sad", "happy"]],
+	["Student12", Vector2i(104, 45), "Did you see the foam finger? It's GONE.\nTHE foam finger!", ["No idea.", "...It's in my bag."], ["The whole team's freaking out.", "WHAT. ...Okay, keep it. It looks good on you."], ["shocked", "sad", "happy"]],
+	["Student13", Vector2i(112, 38), "The emergency exit goes out to the park.\nPractice is out there today.", ["Thanks.", "Is it safe?"], ["No prob. Watch out for the sprinklers.", "It's a park. What could happen?"], ["happy", "happy", "smug"]],
 ]
 
 
@@ -865,7 +868,7 @@ func _place_day_people() -> void:
 		var student: Array = STUDENTS[i]
 		var spot: Vector2i = student[1]
 		# (Anyone beaten in a fight is gone for good.)
-		if Townsfolk.is_gone(_student_id(i)):
+		if Townsfolk.is_gone(_student_id(i)) or Townsfolk.is_gone(_old_student_id(i)):
 			continue
 		add_npc(student[0], Vector2(spot.x * T + 10, spot.y * T + 10), _talk_to_student.bind(i), "the student")
 
@@ -873,6 +876,13 @@ func _place_day_people() -> void:
 ## A student's id in townsfolk.gd: "student-<look>-<n>".
 func _student_id(i: int) -> String:
 	return "student-%s-%d" % [str(STUDENTS[i][0]).trim_prefix("Student"), i]
+
+
+## What a student's id was before every student had their own look (five of them
+## shared one): an old save may have one of them gone under that id.
+const OLD_LOOKS := [1, 2, 3, 4, 5, 8, 6, 7, 8, 3, 1, 6, 2]
+func _old_student_id(i: int) -> String:
+	return "student-%d-%d" % [OLD_LOOKS[i], i]
 
 
 ## A student says something, and Elric picks one of two answers (they react), or

@@ -62,6 +62,8 @@ const NOTES := {
 	],
 	"dex": "Took the night off. First one in a\nyear. I was saving up for college.\nThe fries are still warm.\nTake them. You take everything.\n\nStay away from us.\n\n- Dex",
 	"lou": "Kitchen's closed. First time in\nthirty years.\nMuffinMage never came in for his\nsalmon burger today.\nI kept it warm until midnight.\nI think you know why.\n\n- Lou",
+	# (Lou's note while MuffinMage is still alive: he came in. He didn't eat.)
+	"lou_waiting": "Kitchen's closed. First time in\nthirty years.\nMuffinMage came in for his salmon\nburger today. Didn't touch it.\nHe told me to close up and go home.\nHe said you'd be coming.\n\n- Lou",
 	"pip": "BACK IN 5 MINUTES\n\nI always said that. I always came\nback. Not this time.\nThe cards were for kids who laughed.\nThere aren't any left.\nWe're all better off without you.\n\n- Pip",
 }
 
@@ -69,6 +71,9 @@ const NOTES := {
 ## Nassan's pages are under it (he worked there by the time everyone left).
 static func note_pages(sprite: String) -> Array:
 	var note = NOTES.get(sprite, "...")
+	# (Lou only writes that MuffinMage never came in if he never will again.)
+	if sprite == "lou" and not Game.flags.get("beat_corps_muffinmage", false):
+		note = NOTES["lou_waiting"]
 	var pages: Array = note.duplicate() if note is Array else [note]
 	if sprite == "nassan_vons":
 		pages.push_front(NOTES["gloria"])

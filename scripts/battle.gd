@@ -197,9 +197,11 @@ func _ready() -> void:
 	else:
 		var music := _data.music if _data.music != "" else "battle"
 		# Once Elric has become Relic, ordinary fights play Relic's theme, slowed
-		# and drowned in reverb.
+		# and drowned in reverb. Before that, on the Genocide path, they play dread.
 		if music == "battle" and Game.dread() >= 4:
 			music = "relic_slow"
+		elif music == "battle" and Game.on_genocide_route():
+			music = "genocide_battle"
 		Game.play_music(music, 0.2)
 	# Some fights only let certain party members join in.
 	# (A new list, so the real party in Game isn't changed.)
@@ -3519,7 +3521,8 @@ func _slot_x(i: int) -> float:
 func _draw_party_sprites() -> void:
 	# Someone watching from behind the party (never fights): scared.
 	if _data.watcher != "":
-		var look := Cast.portrait(_data.watcher, "shocked")
+		# (Hop, watching Elric fight on the Genocide path, is worried sick, not just shocked.)
+		var look := Cast.portrait(_data.watcher, "worried" if _hop_watching() else "shocked")
 		if look:
 			var size := look.get_size() * 3.0
 			var feet := Vector2(42, 174 + sin(Time.get_ticks_msec() / 650.0) * 1.0)

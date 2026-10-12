@@ -2147,6 +2147,31 @@ $sprites['student8'] = @(
     ".......WWWWW.WWWW......."
 )
 
+# Five more students, so all thirteen at Westview look like themselves (no twins):
+# each is one of the eight above, recolored.
+function Recolor([string[]]$rows, [string]$from, [string]$to) {
+    $out = @()
+    foreach ($row in $rows) {
+        $c = $row.ToCharArray()
+        for ($i = 0; $i -lt $c.Length; $i++) {
+            $at = $from.IndexOf([string]$c[$i])
+            if ($at -ge 0) { $c[$i] = $to[$at] }
+        }
+        $out += -join $c
+    }
+    return [string[]]$out
+}
+# A snow leopard in a teal shirt, purple headphones (from the tiger).
+$sprites['student9'] = Recolor $sprites['student8'] '_CRJj' 'G#5x7'
+# A tan monkey in blue overalls (from the monkey).
+$sprites['student10'] = Recolor $sprites['student3'] 'w0p8' '9QJ6'
+# A brown bunny in a green letterman jacket (from the bunny).
+$sprites['student11'] = Recolor $sprites['student1'] 'WR' '61'
+# A gray wolf in a red shirt (from the fox).
+$sprites['student12'] = Recolor $sprites['student6'] 'eY' 'NR'
+# A gold robot with green eyes (from the robot).
+$sprites['student13'] = Recolor $sprites['student2'] 'Ggi' 'bH>'
+
 
 
 
@@ -2871,6 +2896,11 @@ $faces = [ordered]@{
     'student6'  = @('e', 'K')
     'student7'  = @('p', 'K')
     'student8'  = @('_', 'K')
+    'student9'  = @('G', 'K')
+    'student10' = @('Q', 'K')
+    'student11' = @('6', 'K')
+    'student12' = @('N', 'K')
+    'student13' = @('b', '>')
 }
 # Hop keeps his gritted-teeth grin for these moods (only his eyes change).
 # (Big Lou's beard and Pip's mustache stay put too.)
@@ -2878,7 +2908,7 @@ $faces = [ordered]@{
 # beards stay put too: only their eyes change.)
 $keepMouth = @{ 'hop' = @('happy', 'angry', 'smug'); 'lou' = @($moods.Keys); 'pip' = @($moods.Keys)
     'coach' = @($moods.Keys); 'mallcop' = @($moods.Keys); 'pigeons' = @($moods.Keys); 'jogger' = @($moods.Keys)
-    'guard' = @($moods.Keys); 'janitor' = @($moods.Keys); 'student8' = @($moods.Keys) }
+    'guard' = @($moods.Keys); 'janitor' = @($moods.Keys); 'student8' = @($moods.Keys); 'student9' = @($moods.Keys) }
 
 $portraits = [ordered]@{}
 foreach ($who in $faces.Keys) {
@@ -2901,6 +2931,21 @@ foreach ($who in $faces.Keys) {
         $portraits["${who}_$mood"] = $rows
     }
 }
+
+# Hop, worried sick: inner brows up, eyes wide, his mouth pressed into a wobble.
+# (Only Hop: it's how he looks watching Elric fight, on the Genocide path.)
+$worried = @(".sKssKs.", ".KssssK.", ".KKssKK.", ".KKssKKi", ".ssssss.", ".sKsKKs.")
+$rows = [string[]]($sprites['hop'].Clone())
+for ($r = 0; $r -lt $worried.Count; $r++) {
+    $chars = $rows[6 + $r].ToCharArray()
+    for ($c = 0; $c -lt 8; $c++) {
+        $s = $worried[$r][$c]
+        if ($s -eq '.') { continue }
+        $chars[8 + $c] = switch ($s) { 's' { 'N' } 'K' { 'K' } default { $s } }
+    }
+    $rows[6 + $r] = -join $chars
+}
+$portraits['hop_worried'] = $rows
 
 # BigJoe6's helmet hides his face, so his eyes glow through the visor slit instead.
 $visor = @{
@@ -2960,6 +3005,62 @@ foreach ($name in @($sprites.Keys)) {
     if ($rows[15][2] -eq '.' -or $rows[15][21] -eq '.' -or $rows[24][8] -eq '.') { continue }
     $walkFrames["${name}_walk1"] = Make-Step $rows $true
     $walkFrames["${name}_walk2"] = Make-Step $rows $false
+}
+
+# --- The Westview students: walking, and from behind ----------------------------
+# Their arms are part of their bodies (no gaps), so only the legs step. Their back
+# view is their front with the face taken away: filled with their hair, if hair
+# frames the face, or with plain skin (a bunny's head from behind is just white).
+
+function Make-LegStep([string[]]$rows, [bool]$leftLeg) {
+    $p = [string[]]$rows.Clone()
+    if ($leftLeg) { Shift-Block $p 7 11 22 31 -1 } else { Shift-Block $p 13 16 22 31 -1 }
+    return $p
+}
+
+function Make-Back([string[]]$rows, [string]$skin) {
+    $p = [string[]]$rows.Clone()
+    # The face rows: where the skin is, in the head (above the shoulders).
+    $faceRows = @()
+    for ($y = 0; $y -lt 12; $y++) { if ($p[$y].Contains($skin)) { $faceRows += $y } }
+    # Hair: a color right beside the face on two or more rows.
+    $beside = @{}
+    foreach ($y in $faceRows) {
+        $row = $p[$y]
+        $l = $row.IndexOf($skin); $r = $row.LastIndexOf($skin)
+        foreach ($x in @(($l - 1), ($r + 1))) {
+            if ($x -lt 0 -or $x -ge $row.Length) { continue }
+            $ch = [string]$row[$x]
+            if ($ch -ne '.' -and $ch -ne $skin) { $beside[$ch] = 1 + [int]$beside[$ch] }
+        }
+    }
+    $fill = $skin
+    # (...and over the top of the head too: a cheek ruff or headphones aren't hair.)
+    $above = if ($faceRows.Count -gt 0 -and $faceRows[0] -gt 0) { $p[$faceRows[0] - 1] } else { '' }
+    foreach ($k in $beside.Keys) {
+        $overTop = ([regex]::Matches($above, [regex]::Escape($k))).Count
+        if ($beside[$k] -ge 2 -and $overTop -ge 3) { $fill = $k }
+    }
+    foreach ($y in $faceRows) {
+        $c = $p[$y].ToCharArray()
+        $l = $p[$y].IndexOf($skin); $r = $p[$y].LastIndexOf($skin)
+        for ($x = $l; $x -le $r; $x++) {
+            if ($c[$x] -ne '.') { $c[$x] = [char]$fill }
+        }
+        $p[$y] = -join $c
+    }
+    return $p
+}
+
+foreach ($n in 1..13) {
+    $name = "student$n"
+    $rows = $sprites[$name]
+    $back = Make-Back $rows $faces[$name][0]
+    $walkFrames["${name}_walk1"] = Make-LegStep $rows $true
+    $walkFrames["${name}_walk2"] = Make-LegStep $rows $false
+    $walkFrames["${name}_back"] = $back
+    $walkFrames["${name}_back_walk1"] = Make-LegStep $back $true
+    $walkFrames["${name}_back_walk2"] = Make-LegStep $back $false
 }
 
 # --- Battle poses (Elric and Hop) ---------------------------------------------

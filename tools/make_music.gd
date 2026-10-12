@@ -767,6 +767,59 @@ const SONGS := {
 		],
 	},
 
+	# Ordinary fights on the Genocide path: dread. A buzzing saw-wave bass creeping by
+	# half steps and falling a tritone; two notes a half step apart trembling under
+	# everything like horror-film strings; a slow, heavy heartbeat that quickens at
+	# the end; and now and then, out of the silence, a shriek. Pitched down, drowned
+	# in echo.
+	"genocide_battle": {
+		"bpm": 76,
+		"pitch": 0.94,
+		"reverb": 0.5,
+		"lead_wave": "saw",
+		"bass_wave": "saw",
+		"lead": [
+			"- - - - - - - - - - - - - - - -",
+			"- - - - - - - - E6 . . . . . . -",
+			"- - - - - - - - - - - - - - - -",
+			"- - - - Bb5 . . . A5 . . . . . . -",
+			"- - - - - - - - - - - - F6 . . .",
+			"E6 . . . . . . . - - - - - - - -",
+			"- - - - - - - - Eb6 . . . D6 . . .",
+			"Db6 . . . . . . . C6 . . . . . . .",
+		],
+		"harm": [
+			"A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3",
+			"A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 Bb3 B3 Bb3 B3 Bb3 B3 Bb3 B3",
+			"A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3",
+			"Eb4 E4 Eb4 E4 Eb4 E4 Eb4 E4 D4 Eb4 D4 Eb4 D4 Eb4 D4 Eb4",
+			"A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3",
+			"A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3 Bb3 B3 Bb3 B3 Bb3 B3 Bb3 B3",
+			"C4 Db4 C4 Db4 C4 Db4 C4 Db4 B3 C4 B3 C4 B3 C4 B3 C4",
+			"Bb3 B3 Bb3 B3 Bb3 B3 Bb3 B3 A3 Bb3 A3 Bb3 A3 Bb3 A3 Bb3",
+		],
+		"bass": [
+			"A1 . . . . . . . . . . . . . . .",
+			"A1 . . . . . . . Bb1 . . . . . . .",
+			"A1 . . . . . . . . . . . . . . .",
+			"Eb2 . . . . . . . D2 . . . . . . .",
+			"A1 . . . . . . . . . . . . . . .",
+			"A1 . . . . . . . Bb1 . . . . . . .",
+			"C2 . . . . . . . B1 . . . . . . .",
+			"Bb1 . . . . . . . A1 . . . . . . .",
+		],
+		"drums": [
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - - - K - K - - - - -",
+			"K - K - - - K - K - K - - - K -",
+			"K - K - K - K - K - K - K - K K",
+		],
+	},
+
 	# Eggo and Big Joe's fight (the tutorial): a chase. Fast, in A minor, a galloping
 	# octave bass, arpeggios running underneath, hi-hats that never stop: like being
 	# chased down the hall by two kids who are having the time of their lives.
